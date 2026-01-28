@@ -52,6 +52,27 @@ main {
     max-width: 1140px;
 }
 
+/* Formulier-elementen */
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+label, legend, .form-helper-text {
+    display: block;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-regular);
+    margin-bottom: var(--space-4);
+}
+legend {
+    font-weight: var(--font-weight-semi-bold);
+}
+.form-helper-text {
+    color: var(--global-color-neutraal-donkergrijs);
+}
+
 button, [type=button], [type=submit] {
     background: var(--color-interactive-primary-background-idle);
     border: 2px solid var(--color-interactive-primary-background-idle);

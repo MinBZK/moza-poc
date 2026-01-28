@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOx design systeem</title>
+    <link rel="stylesheet" href="../style/style.css">
+    <meta name="description" content="Rijkshuisstijl voorbeeld met design tokens">
+    <link rel="shortcut icon" href="../favicon/favicon.ico" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="../favicon/touch-icon.png">
+    <link rel="apple-touch-icon" href="../favicon/apple-touch-icon.png">
+</head>
+<body>
+
+<header>
+    <figure class="logo">
+        <img src="../assets/images/beeldmerk-rijksoverheid.svg" alt="">
+    </figure>
+</header>
+
+<main>
+    <form action="/submit" method="POST">
+        <fieldset>
+            <legend>Tekstinvoer</legend>
+
+            <label for="input-text">Standaard tekstinvoerveld</label>
+            <div class="form-helper-text" id="input-text--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
+            <input type="text" id="input-text" aria-describedby="input-text--helper-text">
+
+            <pre>
+                <code>
+&lt;label for="input-text"&gt;Standaard tekstinvoerveld&lt;/label&gt;
+&lt;div class="form-helper-text" id="input-text--helper-text"&gt;Optionele help tekst&lt;/div&gt;
+&lt;input type="text" id="input-text" aria-describedby="input-text--helper-text"&gt;
+                </code>
+            </pre>
+            
+        </fieldset>
+    </form>
+</main>
+
+<footer></footer>
+    
+</body>
+</html>

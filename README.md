@@ -23,6 +23,7 @@ Dit resulteert in wijzigingen in `_variables.css`. Dit variabelen bestand wordt 
     📁 favicon          favicons voor diverse platformen
     📁 fonts            Rijksoverheid lettertype webfonts
     📁 images           afbeeldingen
+📂 componenten          HTML componenten
 📂 style
     📄 _reset.css       cross-browser stijl normalisatie, opgenomen in style.css
     📄 _variables.css   CSS variabelen vertaald van design tokens, opgenomen in style.css
