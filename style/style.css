@@ -88,11 +88,14 @@ button, [type=button], [type=submit] {
 /* Formulier: Tekstinvoer */
 [type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
     border: var(--border-form-textinput);
-    border-radius: var(--border-radius-form-input);
+    border-radius: var(--border-radius-sm);
     color: var(--color-text-body);
-    padding: var(--spacing-padding-textinput)
+    max-width: var(--form-control-max-inline-size);
     &:hover {
-        border-color: var(--color-interactive-primary-border-hover);
+    }
+    &:focus {
+    }
+    &:active {
     }
 }
 
