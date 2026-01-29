@@ -125,13 +125,13 @@
   --color-neutraal-zwart: #000000; /** Zwart */
   --color-neutraal-transparent: rgba(0, 0, 0, 0); /** Transparant */
   --color-neutraal-gebroken-zwart: #3b3b3b; /** Gebroken zwart */
-  --color-grijs-100: #f3f3f3; /** Grijs 1 */
-  --color-grijs-200: #e6e6e6; /** Grijs 2 */
-  --color-grijs-300: #cccccc; /** Grijs 3 */
-  --color-grijs-400: #b4b4b4; /** Grijs 4 */
-  --color-grijs-500: #999999; /** Grijs 5 */
-  --color-grijs-600: #696969; /** Grijs 6 */
-  --color-grijs-700: #535353; /** Grijs 7 */
+  --color-grijs-100: #f3f3f3; /** Grijs 100 */
+  --color-grijs-200: #e6e6e6; /** Grijs 200 */
+  --color-grijs-300: #cccccc; /** Grijs 300 */
+  --color-grijs-400: #b4b4b4; /** Grijs 400 */
+  --color-grijs-500: #999999; /** Grijs 500 */
+  --color-grijs-600: #696969; /** Grijs 600 */
+  --color-grijs-700: #535353; /** Grijs 700 */
   --color-interactive-idle: #154273; /** Primaire interactiekleur. Deze kleur duidt aan dat een element interactief is en een actie kan uitvoeren. De kleur wordt toegepast in de standaardstaat van een interactief element, voordat er sprake is van interactie zoals hover of selectie. */
   --color-interactive-input-border-idle: #3b3b3b;
   --color-interactive-input-border-hover: #154273;

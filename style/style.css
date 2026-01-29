@@ -20,7 +20,7 @@
 }
 
 body {
-    color: var(--global-color-neutraal-zwart);
+    color: var(  --color-text-body);
     font-family: 'RijksSansVF';
 }
 
@@ -71,7 +71,7 @@ legend, label {
     font-weight: var(--font-weight-semi-bold);
 }
 .form-helper-text {
-    color: var(--global-color-neutraal-donkergrijs);
+    color: var(--color-text-muted);
 }
 
 /* Formulier: Knoppen */
