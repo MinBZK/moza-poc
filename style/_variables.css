@@ -235,6 +235,7 @@
   --border-1: 0.0625rem;
   --border-2: 0.125rem;
   --border-input-selection: 0.125rem;
+  --border-form-textinput: 0.0625rem solid #3b3b3b;
   --space-1: 0.0625rem;
   --space-2: 0.125rem;
   --space-4: 0.25rem;
@@ -287,6 +288,7 @@
   --spacing-padding-vertical-start-end-8: 0.5rem;
   --spacing-padding-vertical-start-end-12: 0.75rem;
   --spacing-padding-vertical-start-end-16: 1rem;
+  --spacing-padding-textinput: 0.5rem 1rem;
   --spacing-container-base: 1rem;
   --spacing-grouping-2: 0.125rem;
   --spacing-grouping-4: 0.25rem;
@@ -296,4 +298,5 @@
   --spacing-grouping-24: 1.5rem;
   --spacing-separation-32: 2rem;
   --spacing-separation-48: 3rem;
+  --border-radius-form-input: 0.125rem;
 }

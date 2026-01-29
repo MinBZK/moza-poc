@@ -87,7 +87,10 @@ button, [type=button], [type=submit] {
 
 /* Formulier: Tekstinvoer */
 [type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
-    border: var;
+    border: var(--border-form-textinput);
+    border-radius: var(--border-radius-form-input);
+    color: var(--color-text-body);
+    padding: var(--spacing-padding-textinput)
 }
 
 /* Formulier: Selectie */
