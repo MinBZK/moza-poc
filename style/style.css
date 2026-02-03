@@ -111,7 +111,7 @@ main {
 footer {}
 
 /* Globale focus staat */
-:focus {
+:focus-visible {
     background: var(--focus-background-color);
     outline: var(--border-focus);
     outline-offset: var(--focus-outline-offset);
@@ -158,7 +158,7 @@ button {
         display: inline-block;
         padding: 0 var(--space-inline-sm) 0 0;
     }
-    &:hover, &:focus {
+    &:hover, &:focus-visible {
         background: var(--button-primary-hover-background-color);
         border-color: var(--button-primary-hover-border-color);
         color: var(--button-primary-hover-color);
@@ -177,7 +177,7 @@ button {
     &.negative {
         background: var(--button-negative-background-color);
         border-color: var(--button-negative-border-color);
-        &:hover, &:focus {
+        &:hover, &:focus-visible {
             background: var(--button-negative-hover-background-color);
             border-color: var(--button-negative-hover-border-color);
         }
@@ -199,7 +199,7 @@ button {
     max-width: var(--form-control-max-inline-size);
     &:hover {
     }
-    &:focus {
+    &:focus-visible {
     }
     &:active {
     }
