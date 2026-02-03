@@ -1,137 +1,264 @@
-/**
- * Do not edit directly, this file was auto-generated.
- */
-
 :root {
-  --color-lintblauw-50: #dce3ea; /** Lintblauw 15% */
-  --color-lintblauw-100: #b8c6d5; /** Lintblauw 30% */
-  --color-lintblauw-200: #95a9c0; /** Lintblauw 45% */
-  --color-lintblauw-300: #738eab; /** Lintblauw 60% */
-  --color-lintblauw-400: #4f7196; /** Lintblauw 75% */
-  --color-lintblauw-500: #154273; /** Lintblauw 100% */
-  --color-paars-50: #e3dce7; /** Paars 15% */
-  --color-paars-100: #c6b9cf; /** Paars 30% */
-  --color-paars-200: #a995b7; /** Paars 45% */
-  --color-paars-300: #8d729f; /** Paars 60% */
-  --color-paars-400: #714f87; /** Paars 75% */
-  --color-paars-500: #42145f; /** Paars 100% */
-  --color-violet-50: #f2d9e7; /** Violet 15% */
-  --color-violet-100: #e5b3d0; /** Violet 30% */
-  --color-violet-200: #d88cb7; /** Violet 45% */
-  --color-violet-300: #cb66a0; /** Violet 60% */
-  --color-violet-400: #be4088; /** Violet 75% */
-  --color-violet-500: #a90061; /** Violet 100% */
-  --color-robijnrood-50: #f7d9e7; /** Robijnrood 15% */
-  --color-robijnrood-100: #efb3ce; /** Robijnrood 30% */
-  --color-robijnrood-200: #e78cb6; /** Robijnrood 45% */
-  --color-robijnrood-300: #df669d; /** Robijnrood 60% */
-  --color-robijnrood-400: #d74085; /** Robijnrood 75% */
-  --color-robijnrood-500: #ca005d; /** Robijnrood 100% */
-  --color-roze-50: #fdeff8; /** Roze 15% */
-  --color-roze-100: #fbdef0; /** Roze 30% */
-  --color-roze-200: #f8cee8; /** Roze 45% */
-  --color-roze-300: #f6bde1; /** Roze 60% */
-  --color-roze-400: #f4add9; /** Roze 75% */
-  --color-roze-500: #f092cd; /** Roze 100% */
-  --color-rood-50: #f9dfdd; /** Rood 15% */
-  --color-rood-100: #f2bfbc; /** Rood 30% */
-  --color-rood-200: #ec9f99; /** Rood 45% */
-  --color-rood-300: #e67f78; /** Rood 60% */
-  --color-rood-400: #df6056; /** Rood 75% */
-  --color-rood-500: #d52b1e; /** Rood 100%^ */
-  --color-oranje-50: #fbead9; /** Oranje 15% */
-  --color-oranje-100: #f6d4b3; /** Oranje 30% */
-  --color-oranje-200: #f1be8c; /** Oranje 45% */
-  --color-oranje-300: #eda966; /** Oranje 60% */
-  --color-oranje-400: #e89440; /** Oranje 75% */
-  --color-oranje-500: #e17000; /** Oranje 100% */
-  --color-donkergeel-50: #fff4db; /** Donkergeel 15% */
-  --color-donkergeel-100: #ffe9b8; /** Donkergeel 30% */
-  --color-donkergeel-200: #fdde94; /** Donkergeel 45% */
-  --color-donkergeel-300: #fdd370; /** Donkergeel 60% */
-  --color-donkergeel-400: #fdc84d; /** Donkergeel 75% */
-  --color-donkergeel-500: #ffb612; /** Donkergeel 100% */
-  --color-geel-50: #fefbdd; /** Geel 15% */
-  --color-geel-100: #fdf6bb; /** Geel 30% */
-  --color-geel-200: #fcf199; /** Geel 45% */
-  --color-geel-300: #fbed78; /** Geel 60% */
-  --color-geel-400: #fae856; /** Geel 75% */
-  --color-geel-500: #f9e11e; /** Geel 100% */
-  --color-donkerbruin-50: #e8e0df; /** Donkerbruin 15% */
-  --color-donkerbruin-100: #d1c2be; /** Donkerbruin 30% */
-  --color-donkerbruin-200: #baa39d; /** Donkerbruin 45% */
-  --color-donkerbruin-300: #a3847d; /** Donkerbruin 60% */
-  --color-donkerbruin-400: #8d665d; /** Donkerbruin 75% */
-  --color-donkerbruin-500: #673327; /** Donkerbruin 100% */
-  --color-bruin-50: #efeada; /** Bruin 15% */
-  --color-bruin-100: #dfd4b6; /** Bruin 30% */
-  --color-bruin-200: #cfbf90; /** Bruin 45% */
-  --color-bruin-300: #bfa96c; /** Bruin 60% */
-  --color-bruin-400: #af9447; /** Bruin 75% */
-  --color-bruin-500: #94710a; /** Bruin 100% */
-  --color-donkergroen-50: #dfe6e1; /** Donkergroen 15% */
-  --color-donkergroen-100: #becdc3; /** Donkergroen 30% */
-  --color-donkergroen-200: #9db4a4; /** Donkergroen 45% */
-  --color-donkergroen-300: #7d9b87; /** Donkergroen 60% */
-  --color-donkergroen-400: #5d8269; /** Donkergroen 75% */
-  --color-donkergroen-500: #275937; /** Donkergroen 100% */
-  --color-groen-50: #e1eddb; /** Groen 15% */
-  --color-groen-100: #c4dbb6; /** Groen 30% */
-  --color-groen-200: #a5c991; /** Groen 45% */
-  --color-groen-300: #88b76d; /** Groen 60% */
-  --color-groen-400: #6aa549; /** Groen 75% */
-  --color-groen-500: #39870c; /** Groen 100% */
-  --color-mosgroen-50: #ebebd9; /** Mosgroen 15% */
-  --color-mosgroen-100: #d6d7b3; /** Mosgroen 30% */
-  --color-mosgroen-200: #c1c38c; /** Mosgroen 45% */
-  --color-mosgroen-300: #adaf66; /** Mosgroen 60% */
-  --color-mosgroen-400: #999c40; /** Mosgroen 75% */
-  --color-mosgroen-500: #777b00; /** Mosgroen 100% */
-  --color-mintgroen-50: #eaf8f4; /** Mintgroen 15% */
-  --color-mintgroen-100: #d6f2e9; /** Mintgroen 30% */
-  --color-mintgroen-200: #c1ebde; /** Mintgroen 45% */
-  --color-mintgroen-300: #ace4d3; /** Mintgroen 60% */
-  --color-mintgroen-400: #98ddc8; /** Mintgroen 75% */
-  --color-mintgroen-500: #76d2b6; /** Mintgroen 100% */
-  --color-donkerblauw-50: #d9e8f0; /** Donkerblauw 15% */
-  --color-donkerblauw-100: #b3d2e1; /** Donkerblauw 30% */
-  --color-donkerblauw-200: #8cbbd2; /** Donkerblauw 45% */
-  --color-donkerblauw-300: #66a4c3; /** Donkerblauw 60% */
-  --color-donkerblauw-400: #408eb4; /** Donkerblauw 75% */
-  --color-donkerblauw-500: #01689b; /** Donkerblauw 100% */
-  --color-hemelblauw-50: #d9ebf7; /** Hemelblauw 15% */
-  --color-hemelblauw-100: #b3d7ee; /** Hemelblauw 30% */
-  --color-hemelblauw-200: #8cc3e6; /** Hemelblauw 45% */
-  --color-hemelblauw-300: #66afdd; /** Hemelblauw 60% */
-  --color-hemelblauw-400: #409cd5; /** Hemelblauw 75% */
-  --color-hemelblauw-500: #007bc7; /** Hemelblauw 100% */
-  --color-lichtblauw-50: #eef7fb; /** Lichtblauw 15% */
-  --color-lichtblauw-100: #ddeff8; /** Lichtblauw 30% */
-  --color-lichtblauw-200: #cce7f4; /** Lichtblauw 45% */
-  --color-lichtblauw-300: #bcdff0; /** Lichtblauw 60% */
-  --color-lichtblauw-400: #abd7ed; /** Lichtblauw 75% */
-  --color-lichtblauw-500: #8fcae7; /** Lichtblauw 100% */
-  --color-cool-gray-50: #f8fafc; /** Cool gray 50 */
-  --color-cool-gray-100: #f1f5f9; /** Cool gray 100 */
-  --color-cool-gray-200: #e2e8f0; /** Cool gray 200 */
-  --color-cool-gray-300: #cbd5e1; /** Cool gray 300 */
-  --color-cool-gray-400: #94a3b8; /** Cool gray 400 */
-  --color-cool-gray-500: #64748b; /** Cool gray 500 */
-  --color-cool-gray-600: #475569; /** Cool gray 600 */
-  --color-cool-gray-700: #334155; /** Cool gray 700 */
-  --color-cool-gray-800: #1e293b; /** Cool gray 800 */
-  --color-cool-gray-900: #0f172a; /** Cool gray 900 */
-  --color-neutraal-wit: #ffffff; /** Wit */
-  --color-neutraal-zwart: #000000; /** Zwart */
-  --color-neutraal-transparent: rgba(0, 0, 0, 0); /** Transparant */
-  --color-neutraal-gebroken-zwart: #3b3b3b; /** Gebroken zwart */
-  --color-grijs-100: #f3f3f3; /** Grijs 100 */
-  --color-grijs-200: #e6e6e6; /** Grijs 200 */
-  --color-grijs-300: #cccccc; /** Grijs 300 */
-  --color-grijs-400: #b4b4b4; /** Grijs 400 */
-  --color-grijs-500: #999999; /** Grijs 500 */
-  --color-grijs-600: #696969; /** Grijs 600 */
-  --color-grijs-700: #535353; /** Grijs 700 */
+  --brand-color-lintblauw-50: #dce3ea; /** Lintblauw 15% */
+  --brand-color-lintblauw-100: #b8c6d5; /** Lintblauw 30% */
+  --brand-color-lintblauw-200: #95a9c0; /** Lintblauw 45% */
+  --brand-color-lintblauw-300: #738eab; /** Lintblauw 60% */
+  --brand-color-lintblauw-400: #4f7196; /** Lintblauw 75% */
+  --brand-color-lintblauw-500: #154273; /** Lintblauw 100% */
+  --brand-color-paars-50: #e3dce7; /** Paars 15% */
+  --brand-color-paars-100: #c6b9cf; /** Paars 30% */
+  --brand-color-paars-200: #a995b7; /** Paars 45% */
+  --brand-color-paars-300: #8d729f; /** Paars 60% */
+  --brand-color-paars-400: #714f87; /** Paars 75% */
+  --brand-color-paars-500: #42145f; /** Paars 100% */
+  --brand-color-violet-50: #f2d9e7; /** Violet 15% */
+  --brand-color-violet-100: #e5b3d0; /** Violet 30% */
+  --brand-color-violet-200: #d88cb7; /** Violet 45% */
+  --brand-color-violet-300: #cb66a0; /** Violet 60% */
+  --brand-color-violet-400: #be4088; /** Violet 75% */
+  --brand-color-violet-500: #a90061; /** Violet 100% */
+  --brand-color-robijnrood-50: #f7d9e7; /** Robijnrood 15% */
+  --brand-color-robijnrood-100: #efb3ce; /** Robijnrood 30% */
+  --brand-color-robijnrood-200: #e78cb6; /** Robijnrood 45% */
+  --brand-color-robijnrood-300: #df669d; /** Robijnrood 60% */
+  --brand-color-robijnrood-400: #d74085; /** Robijnrood 75% */
+  --brand-color-robijnrood-500: #ca005d; /** Robijnrood 100% */
+  --brand-color-roze-50: #fdeff8; /** Roze 15% */
+  --brand-color-roze-100: #fbdef0; /** Roze 30% */
+  --brand-color-roze-200: #f8cee8; /** Roze 45% */
+  --brand-color-roze-300: #f6bde1; /** Roze 60% */
+  --brand-color-roze-400: #f4add9; /** Roze 75% */
+  --brand-color-roze-500: #f092cd; /** Roze 100% */
+  --brand-color-rood-50: #f9dfdd; /** Rood 15% */
+  --brand-color-rood-100: #f2bfbc; /** Rood 30% */
+  --brand-color-rood-200: #ec9f99; /** Rood 45% */
+  --brand-color-rood-300: #e67f78; /** Rood 60% */
+  --brand-color-rood-400: #df6056; /** Rood 75% */
+  --brand-color-rood-500: #d52b1e; /** Rood 100%^ */
+  --brand-color-oranje-50: #fbead9; /** Oranje 15% */
+  --brand-color-oranje-100: #f6d4b3; /** Oranje 30% */
+  --brand-color-oranje-200: #f1be8c; /** Oranje 45% */
+  --brand-color-oranje-300: #eda966; /** Oranje 60% */
+  --brand-color-oranje-400: #e89440; /** Oranje 75% */
+  --brand-color-oranje-500: #e17000; /** Oranje 100% */
+  --brand-color-donkergeel-50: #fff4db; /** Donkergeel 15% */
+  --brand-color-donkergeel-100: #ffe9b8; /** Donkergeel 30% */
+  --brand-color-donkergeel-200: #fdde94; /** Donkergeel 45% */
+  --brand-color-donkergeel-300: #fdd370; /** Donkergeel 60% */
+  --brand-color-donkergeel-400: #fdc84d; /** Donkergeel 75% */
+  --brand-color-donkergeel-500: #ffb612; /** Donkergeel 100% */
+  --brand-color-geel-50: #fefbdd; /** Geel 15% */
+  --brand-color-geel-100: #fdf6bb; /** Geel 30% */
+  --brand-color-geel-200: #fcf199; /** Geel 45% */
+  --brand-color-geel-300: #fbed78; /** Geel 60% */
+  --brand-color-geel-400: #fae856; /** Geel 75% */
+  --brand-color-geel-500: #f9e11e; /** Geel 100% */
+  --brand-color-donkerbruin-50: #e8e0df; /** Donkerbruin 15% */
+  --brand-color-donkerbruin-100: #d1c2be; /** Donkerbruin 30% */
+  --brand-color-donkerbruin-200: #baa39d; /** Donkerbruin 45% */
+  --brand-color-donkerbruin-300: #a3847d; /** Donkerbruin 60% */
+  --brand-color-donkerbruin-400: #8d665d; /** Donkerbruin 75% */
+  --brand-color-donkerbruin-500: #673327; /** Donkerbruin 100% */
+  --brand-color-bruin-50: #efeada; /** Bruin 15% */
+  --brand-color-bruin-100: #dfd4b6; /** Bruin 30% */
+  --brand-color-bruin-200: #cfbf90; /** Bruin 45% */
+  --brand-color-bruin-300: #bfa96c; /** Bruin 60% */
+  --brand-color-bruin-400: #af9447; /** Bruin 75% */
+  --brand-color-bruin-500: #94710a; /** Bruin 100% */
+  --brand-color-donkergroen-50: #dfe6e1; /** Donkergroen 15% */
+  --brand-color-donkergroen-100: #becdc3; /** Donkergroen 30% */
+  --brand-color-donkergroen-200: #9db4a4; /** Donkergroen 45% */
+  --brand-color-donkergroen-300: #7d9b87; /** Donkergroen 60% */
+  --brand-color-donkergroen-400: #5d8269; /** Donkergroen 75% */
+  --brand-color-donkergroen-500: #275937; /** Donkergroen 100% */
+  --brand-color-groen-50: #e1eddb; /** Groen 15% */
+  --brand-color-groen-100: #c4dbb6; /** Groen 30% */
+  --brand-color-groen-200: #a5c991; /** Groen 45% */
+  --brand-color-groen-300: #88b76d; /** Groen 60% */
+  --brand-color-groen-400: #6aa549; /** Groen 75% */
+  --brand-color-groen-500: #39870c; /** Groen 100% */
+  --brand-color-mosgroen-50: #ebebd9; /** Mosgroen 15% */
+  --brand-color-mosgroen-100: #d6d7b3; /** Mosgroen 30% */
+  --brand-color-mosgroen-200: #c1c38c; /** Mosgroen 45% */
+  --brand-color-mosgroen-300: #adaf66; /** Mosgroen 60% */
+  --brand-color-mosgroen-400: #999c40; /** Mosgroen 75% */
+  --brand-color-mosgroen-500: #777b00; /** Mosgroen 100% */
+  --brand-color-mintgroen-50: #eaf8f4; /** Mintgroen 15% */
+  --brand-color-mintgroen-100: #d6f2e9; /** Mintgroen 30% */
+  --brand-color-mintgroen-200: #c1ebde; /** Mintgroen 45% */
+  --brand-color-mintgroen-300: #ace4d3; /** Mintgroen 60% */
+  --brand-color-mintgroen-400: #98ddc8; /** Mintgroen 75% */
+  --brand-color-mintgroen-500: #76d2b6; /** Mintgroen 100% */
+  --brand-color-donkerblauw-50: #d9e8f0; /** Donkerblauw 15% */
+  --brand-color-donkerblauw-100: #b3d2e1; /** Donkerblauw 30% */
+  --brand-color-donkerblauw-200: #8cbbd2; /** Donkerblauw 45% */
+  --brand-color-donkerblauw-300: #66a4c3; /** Donkerblauw 60% */
+  --brand-color-donkerblauw-400: #408eb4; /** Donkerblauw 75% */
+  --brand-color-donkerblauw-500: #01689b; /** Donkerblauw 100% */
+  --brand-color-hemelblauw-50: #d9ebf7; /** Hemelblauw 15% */
+  --brand-color-hemelblauw-100: #b3d7ee; /** Hemelblauw 30% */
+  --brand-color-hemelblauw-200: #8cc3e6; /** Hemelblauw 45% */
+  --brand-color-hemelblauw-300: #66afdd; /** Hemelblauw 60% */
+  --brand-color-hemelblauw-400: #409cd5; /** Hemelblauw 75% */
+  --brand-color-hemelblauw-500: #007bc7; /** Hemelblauw 100% */
+  --brand-color-lichtblauw-50: #eef7fb; /** Lichtblauw 15% */
+  --brand-color-lichtblauw-100: #ddeff8; /** Lichtblauw 30% */
+  --brand-color-lichtblauw-200: #cce7f4; /** Lichtblauw 45% */
+  --brand-color-lichtblauw-300: #bcdff0; /** Lichtblauw 60% */
+  --brand-color-lichtblauw-400: #abd7ed; /** Lichtblauw 75% */
+  --brand-color-lichtblauw-500: #8fcae7; /** Lichtblauw 100% */
+  --brand-color-cool-gray-50: #f8fafc; /** Cool gray 50 */
+  --brand-color-cool-gray-100: #f1f5f9; /** Cool gray 100 */
+  --brand-color-cool-gray-200: #e2e8f0; /** Cool gray 200 */
+  --brand-color-cool-gray-300: #cbd5e1; /** Cool gray 300 */
+  --brand-color-cool-gray-400: #94a3b8; /** Cool gray 400 */
+  --brand-color-cool-gray-500: #64748b; /** Cool gray 500 */
+  --brand-color-cool-gray-600: #475569; /** Cool gray 600 */
+  --brand-color-cool-gray-700: #334155; /** Cool gray 700 */
+  --brand-color-cool-gray-800: #1e293b; /** Cool gray 800 */
+  --brand-color-cool-gray-900: #0f172a; /** Cool gray 900 */
+  --brand-color-neutraal-wit: #ffffff; /** Wit */
+  --brand-color-neutraal-zwart: #000000; /** Zwart */
+  --brand-color-neutraal-transparent: rgba(0, 0, 0, 0); /** Transparant */
+  --brand-color-neutraal-gebroken-zwart: #3b3b3b; /** Gebroken zwart */
+  --brand-color-grijs-100: #f3f3f3; /** Grijs 100 */
+  --brand-color-grijs-200: #e6e6e6; /** Grijs 200 */
+  --brand-color-grijs-300: #cccccc; /** Grijs 300 */
+  --brand-color-grijs-400: #b4b4b4; /** Grijs 400 */
+  --brand-color-grijs-500: #999999; /** Grijs 500 */
+  --brand-color-grijs-600: #696969; /** Grijs 600 */
+  --brand-color-grijs-700: #535353; /** Grijs 700 */
+  --brand-size-0: 0;
+  --brand-size-1: 0.0625rem;
+  --brand-size-2: 0.125rem;
+  --brand-size-4: 0.25rem;
+  --brand-size-8: 0.5rem;
+  --brand-size-12: 0.75rem;
+  --brand-size-16: 1rem;
+  --brand-size-24: 1.5rem;
+  --brand-size-32: 2rem;
+  --brand-size-40: 2.5rem;
+  --brand-size-48: 3rem;
+  --brand-size-56: 3.5rem;
+  --brand-size-64: 4rem;
+  --brand-size-72: 4.5rem;
+  --brand-size-80: 5rem;
+  --brand-size-88: 5.5rem;
+  --brand-size-96: 6rem;
+  --brand-size-160: 10rem;
+  --brand-size-base: 0.5rem; /** Base size for calculation. Defaults to 8 to follow 8px grid. */
+  --brand-text-font-family-default: RijksSansVF; /** Rijksoverheid Sans variable font */
+  --brand-text-font-weight-default: 400;
+  --brand-text-font-weight-semibold: 600;
+  --brand-text-font-weight-bold: 700;
+  --brand-text-font-size-base: 1rem; /** Modifier voor de schaal van overige groottes. */
+  --brand-text-font-size-sm: roundTo(1rem / 1.3, 0);
+  --brand-text-font-size-md: 1rem;
+  --brand-text-font-size-lg: roundTo(1rem * 1.1, 0);
+  --brand-text-font-size-xl: 1.25rem;
+  --brand-text-font-size-2xl: 1.5rem;
+  --brand-text-font-size-3xl: 2rem;
+  --brand-text-font-size-4xl: 2.5rem;
+  --brand-text-line-height-sm: 1.5;
+  --brand-text-line-height-md: 1.5;
+  --brand-text-line-height-lg: 1.25;
+  --brand-text-line-height-xl: 1.25;
+  --brand-text-line-height-2xl: 1.25;
+  --brand-text-line-height-4xl: 1.25;
+  --brand-border-width-sm: 0.0625rem;
+  --brand-border-width-md: 0.125rem;
+  --brand-border-width-lg: 0.1875rem;
+  --brand-space-1: 0.0625rem;
+  --brand-space-2: 0.125rem;
+  --brand-space-4: 0.25rem;
+  --brand-space-8: 0.5rem;
+  --brand-space-12: 0.75rem;
+  --brand-space-16: 1rem;
+  --brand-space-24: 1.5rem;
+  --brand-space-32: 2rem;
+  --brand-space-40: 2.5rem;
+  --brand-space-48: 3rem;
+  --brand-space-56: 3.5rem;
+  --brand-space-64: 4rem;
+  --brand-space-72: 4.5rem;
+  --brand-space-80: 5rem;
+  --brand-space-base: 0.5rem; /** Base spacing-size for calculation. Defaults to 8 to follow 8px grid. */
+  --brand-typography-spacing-paragraph-default: 0.5rem;
+  --brand-border-radius-1: 0.0625rem;
+  --brand-border-radius-2: 0.125rem;
+  --brand-border-radius-4: 0.25rem;
+  --brand-box-shadow-sm: 0 2px 6px 0 #000000;
+  --brand-box-shadow-md: 0 8px 16px 0 #000000;
+  --size-5xs: 0.125rem;
+  --size-4xs: 0.25rem;
+  --size-3xs: 0.5rem;
+  --size-2xs: 1rem;
+  --size-xs: 1.5rem;
+  --size-sm: 2rem;
+  --size-md: 3rem;
+  --size-lg: 4rem;
+  --size-xl: 6rem;
+  --size-2xl: 10rem;
+  --size-logo-height: 5.5rem;
+  --size-logo-width: 3rem;
+  --size-main-nav-nav-item-height: 2.5rem;
+  --size-icon-sm: 1rem;
+  --size-icon-md: 1.5rem;
+  --size-icon-lg: 2rem;
+  --size-icon-xl: 3rem;
+  --pointer-target-min-block-size: 3rem;
+  --pointer-target-min-inline-size: 3rem;
+  --page-max-inline-size: 71.25rem;
+  --space-block-4xs: 0.0625rem;
+  --space-block-3xs: 0.125rem;
+  --space-block-2xs: 0.25rem;
+  --space-block-xs: 0.5rem;
+  --space-block-sm: 0.75rem;
+  --space-block-md: 1rem;
+  --space-block-lg: 1.5rem;
+  --space-block-xl: 2rem;
+  --space-block-2xl: 2.5rem;
+  --space-block-3xl: 3rem;
+  --space-block-4xl: 3.5rem;
+  --space-block-5xl: 4rem;
+  --space-inline-4xs: 0.0625rem;
+  --space-inline-3xs: 0.125rem;
+  --space-inline-2xs: 0.25rem;
+  --space-inline-xs: 0.5rem;
+  --space-inline-sm: 0.75rem;
+  --space-inline-md: 1rem;
+  --space-inline-lg: 1.5rem;
+  --space-inline-xl: 2rem;
+  --space-inline-2xl: 2.5rem;
+  --space-inline-3xl: 3rem;
+  --space-inline-4xl: 3.5rem;
+  --space-inline-5xl: 4rem;
+  --space-row-4xs: 0.0625rem;
+  --space-row-3xs: 0.125rem;
+  --space-row-2xs: 0.25rem;
+  --space-row-xs: 0.5rem;
+  --space-row-sm: 0.75rem;
+  --space-row-md: 1rem;
+  --space-row-lg: 1.5rem;
+  --space-row-xl: 2rem;
+  --space-row-2xl: 2.5rem;
+  --space-row-3xl: 3rem;
+  --space-row-4xl: 3.5rem;
+  --space-row-5xl: 4rem;
+  --space-column-4xs: 0.0625rem;
+  --space-column-3xs: 0.125rem;
+  --space-column-2xs: 0.25rem;
+  --space-column-xs: 0.5rem;
+  --space-column-sm: 0.75rem;
+  --space-column-md: 1rem;
+  --space-column-lg: 1.5rem;
+  --space-column-xl: 2rem;
+  --space-column-2xl: 2.5rem;
+  --space-column-3xl: 3rem;
+  --space-column-4xl: 3.5rem;
+  --space-column-5xl: 4rem;
+  --heading-font-family: RijksSansVF;
+  --heading-font-weight: 700;
   --color-transparent: rgba(0, 0, 0, 0);
   --color-default-bg-document: #ffffff;
   --color-default-bg-subtle: #f3f3f3;
@@ -413,151 +540,36 @@
   --color-selected-inverse-color-active: #ffffff;
   --color-selected-inverse-color-subtle: #b0c6df;
   --color-selected-inverse-color-document: #ffffff;
-  --size-0: 0;
-  --size-1: 0.0625rem;
-  --size-2: 0.125rem;
-  --size-4: 0.25rem;
-  --size-8: 0.5rem;
-  --size-12: 0.75rem;
-  --size-16: 1rem;
-  --size-24: 1.5rem;
-  --size-32: 2rem;
-  --size-40: 2.5rem;
-  --size-48: 3rem;
-  --size-56: 3.5rem;
-  --size-64: 4rem;
-  --size-72: 4.5rem;
-  --size-80: 5rem;
-  --size-88: 5.5rem;
-  --size-96: 6rem;
-  --size-160: 10rem;
-  --size-base: 0.5rem; /** Base size for calculation. Defaults to 8 to follow 8px grid. */
-  --size-5xs: 0.125rem;
-  --size-4xs: 0.25rem;
-  --size-3xs: 0.5rem;
-  --size-2xs: 1rem;
-  --size-xs: 1.5rem;
-  --size-sm: 2rem;
-  --size-md: 3rem;
-  --size-lg: 4rem;
-  --size-xl: 6rem;
-  --size-2xl: 10rem;
-  --size-logo-height: 5.5rem;
-  --size-logo-width: 3rem;
-  --size-main-nav-nav-item-height: 2.5rem;
-  --size-icon-sm: 1rem;
-  --size-icon-md: 1.5rem;
-  --size-icon-lg: 2rem;
-  --size-icon-xl: 3rem;
-  --text-font-family-default: RijksSansVF; /** Rijksoverheid Sans variable font */
-  --text-font-weight-default: 400;
-  --text-font-weight-semibold: 600;
-  --text-font-weight-bold: 700;
-  --text-font-size-base: 1rem; /** Modifier voor de schaal van overige groottes. */
-  --text-font-size-sm: roundTo(1rem / 1.3, 0);
-  --text-font-size-md: 1rem;
-  --text-font-size-lg: roundTo(1rem * 1.1, 0);
-  --text-font-size-xl: 1.25rem;
-  --text-font-size-2xl: 1.5rem;
-  --text-font-size-3xl: 2rem;
-  --text-font-size-4xl: 2.5rem;
-  --text-line-height-sm: 1.5;
-  --text-line-height-md: 1.5;
-  --text-line-height-lg: 1.25;
-  --text-line-height-xl: 1.25;
-  --text-line-height-2xl: 1.25;
-  --text-line-height-4xl: 1.25;
-  --border-width-sm: 0.0625rem;
-  --border-width-md: 0.125rem;
-  --space-1: 0.0625rem;
-  --space-2: 0.125rem;
-  --space-4: 0.25rem;
-  --space-8: 0.5rem;
-  --space-12: 0.75rem;
-  --space-16: 1rem;
-  --space-24: 1.5rem;
-  --space-32: 2rem;
-  --space-40: 2.5rem;
-  --space-48: 3rem;
-  --space-56: 3.5rem;
-  --space-64: 4rem;
-  --space-72: 4.5rem;
-  --space-80: 5rem;
-  --space-base: 0.5rem; /** Base spacing-size for calculation. Defaults to 8 to follow 8px grid. */
-  --space-block-4xs: 0.0625rem;
-  --space-block-3xs: 0.125rem;
-  --space-block-2xs: 0.25rem;
-  --space-block-xs: 0.5rem;
-  --space-block-sm: 0.75rem;
-  --space-block-md: 1rem;
-  --space-block-lg: 1.5rem;
-  --space-block-xl: 2rem;
-  --space-block-2xl: 2.5rem;
-  --space-block-3xl: 3rem;
-  --space-block-4xl: 3.5rem;
-  --space-block-5xl: 4rem;
-  --space-inline-4xs: 0.0625rem;
-  --space-inline-3xs: 0.125rem;
-  --space-inline-2xs: 0.25rem;
-  --space-inline-xs: 0.5rem;
-  --space-inline-sm: 0.75rem;
-  --space-inline-md: 1rem;
-  --space-inline-lg: 1.5rem;
-  --space-inline-xl: 2rem;
-  --space-inline-2xl: 2.5rem;
-  --space-inline-3xl: 3rem;
-  --space-inline-4xl: 3.5rem;
-  --space-inline-5xl: 4rem;
-  --space-row-4xs: 0.0625rem;
-  --space-row-3xs: 0.125rem;
-  --space-row-2xs: 0.25rem;
-  --space-row-xs: 0.5rem;
-  --space-row-sm: 0.75rem;
-  --space-row-md: 1rem;
-  --space-row-lg: 1.5rem;
-  --space-row-xl: 2rem;
-  --space-row-2xl: 2.5rem;
-  --space-row-3xl: 3rem;
-  --space-row-4xl: 3.5rem;
-  --space-row-5xl: 4rem;
-  --space-column-4xs: 0.0625rem;
-  --space-column-3xs: 0.125rem;
-  --space-column-2xs: 0.25rem;
-  --space-column-xs: 0.5rem;
-  --space-column-sm: 0.75rem;
-  --space-column-md: 1rem;
-  --space-column-lg: 1.5rem;
-  --space-column-xl: 2rem;
-  --space-column-2xl: 2.5rem;
-  --space-column-3xl: 3rem;
-  --space-column-4xl: 3.5rem;
-  --space-column-5xl: 4rem;
-  --typography-spacing-paragraph-default: 0.5rem;
-  --typography-nav-main-nav: 600 1.25rem/1.25 RijksSansVF;
-  --typography-heading-h1: 600 2.5rem/1.25 RijksSansVF;
-  --typography-heading-h2: 600 2rem/1.25 RijksSansVF;
-  --typography-heading-h3: 600 1.5rem/1.25 RijksSansVF;
-  --typography-heading-h4: 600 1.25rem/1.25 RijksSansVF;
-  --typography-heading-h5: 600 roundTo(1rem * 1.1, 0)/1.25 RijksSansVF;
-  --typography-heading-h6: 600 1rem/1.25 RijksSansVF;
-  --typography-footer-link: 600 roundTo(1rem * 1.1, 0)/1.25 RijksSansVF;
-  --typography-paragraph-p-regular: 400 1rem/1.5 RijksSansVF;
-  --typography-paragraph-p-semibold: 600 1rem/1.5 RijksSansVF;
-  --typography-paragraph-p-intro: 400 roundTo(1rem * 1.1, 0)/1.5 RijksSansVF;
-  --typography-smalltext-regular: 400 roundTo(1rem / 1.3, 0)/1.5 RijksSansVF;
-  --typography-smalltext-semibold: 600 roundTo(1rem / 1.3, 0)/1.5 RijksSansVF;
-  --border-radius-1: 0.0625rem;
-  --border-radius-2: 0.125rem;
-  --border-radius-4: 0.25rem;
-  --border-radius-sm: 0.125rem;
-  --border-radius-md: 0.25rem;
-  --box-shadow-sm: 0 2px 6px 0 #000000;
-  --box-shadow-md: 0 8px 16px 0 #000000;
-  --pointer-target-min-block-size: 1.5rem;
-  --pointer-target-min-inline-size: 1.5rem;
-  --page-max-inline-size: 71.25rem;
-  --heading-font-family: RijksSansVF;
-  --heading-font-weight: 700;
+  --color-form-control-accent-color: #ffffff;
+  --color-form-control-background-color: #ffffff;
+  --color-form-control-border-color: #999999;
+  --color-form-control-color: #3b3b3b;
+  --color-form-control-placeholder-color: #535353;
+  --color-form-control-font-family: RijksSansVF;
+  --color-form-control-font-weight: 400;
+  --color-form-control-line-height: 1.5;
+  --color-form-control-active-accent-color: #ffffff;
+  --color-form-control-active-background-color: #f3f3f3;
+  --color-form-control-active-border-color: #999999;
+  --color-form-control-active-color: #3b3b3b;
+  --color-form-control-disabled-accent-color: #999999;
+  --color-form-control-disabled-background-color: #999999;
+  --color-form-control-disabled-border-color: #b4b4b4;
+  --color-form-control-disabled-color: #535353;
+  --color-form-control-focus-background-color: #ffffff;
+  --color-form-control-focus-border-color: #999999;
+  --color-form-control-focus-color: #3b3b3b;
+  --color-form-control-hover-accent-color: #ffffff;
+  --color-form-control-hover-background-color: #f3f3f3;
+  --color-form-control-hover-border-color: #696969;
+  --color-form-control-hover-color: #3b3b3b;
+  --color-form-control-invalid-background-color: #feeded;
+  --color-form-control-invalid-border-color: #f14848;
+  --color-form-control-invalid-color: #b70000;
+  --color-form-control-read-only-background-color: #f3f3f3;
+  --color-form-control-read-only-border-color: rgba(0, 0, 0, 0);
+  --color-form-control-read-only-color: #3b3b3b;
+  --form-control-font-size: 1rem;
   --form-control-border-width: 0.0625rem;
   --form-control-font-family: RijksSansVF;
   --form-control-font-weight: 400;
@@ -568,6 +580,7 @@
   --form-control-hover-border-width: 0.125rem;
   --form-control-invalid-border-width: 0.125rem;
   --border-form-textinput: 0.0625rem solid #999999;
+  --border-focus: 0.1875rem dashed #154273;
   --spacing-padding-horizontal-start-end-4: 0.25rem;
   --spacing-padding-horizontal-start-end-8: 0.5rem;
   --spacing-padding-horizontal-start-end-12: 0.75rem;
@@ -586,7 +599,25 @@
   --spacing-grouping-24: 1.5rem;
   --spacing-separation-32: 2rem;
   --spacing-separation-48: 3rem;
-  --focus-outline-width: 0.125rem;
+  --typography-nav-main-nav: 600 1.25rem/1.25 RijksSansVF;
+  --typography-heading-h1: 600 2.5rem/1.25 RijksSansVF;
+  --typography-heading-h2: 600 2rem/1.25 RijksSansVF;
+  --typography-heading-h3: 600 1.5rem/1.25 RijksSansVF;
+  --typography-heading-h4: 600 1.25rem/1.25 RijksSansVF;
+  --typography-heading-h5: 600 roundTo(1rem * 1.1, 0)/1.25 RijksSansVF;
+  --typography-heading-h6: 600 1rem/1.25 RijksSansVF;
+  --typography-footer-link: 600 roundTo(1rem * 1.1, 0)/1.25 RijksSansVF;
+  --typography-paragraph-p-regular: 400 1rem/1.5 RijksSansVF;
+  --typography-paragraph-p-semibold: 600 1rem/1.5 RijksSansVF;
+  --typography-paragraph-p-intro: 400 roundTo(1rem * 1.1, 0)/1.5 RijksSansVF;
+  --typography-smalltext-regular: 400 roundTo(1rem / 1.3, 0)/1.5 RijksSansVF;
+  --typography-smalltext-semibold: 600 roundTo(1rem / 1.3, 0)/1.5 RijksSansVF;
+  --border-radius-sm: 0.125rem;
+  --border-radius-md: 0.25rem;
+  --focus-outline-width: 0.1875rem;
+  --focus-outline-color: #154273;
+  --focus-background-color: #ffffff;
+  --focus-outline-offset: 0.125rem;
   --button-border-radius: 0.125rem;
   --button-padding-block-start: 0.5rem;
   --button-padding-block-end: 0.5rem;
@@ -599,12 +630,12 @@
   --button-negative-background-color: #b70000;
   --button-negative-border-color: #b70000;
   --button-negative-color: #ffffff;
-  --button-negative-active-background-color: #b70000;
-  --button-negative-active-border-color: #b70000;
-  --button-negative-active-color: #b70000;
-  --button-negative-hover-background-color: #b70000;
-  --button-negative-hover-border-color: #b70000;
-  --button-negative-hover-color: #b70000;
+  --button-negative-active-background-color: #820000;
+  --button-negative-active-border-color: #820000;
+  --button-negative-active-color: #ffffff;
+  --button-negative-hover-background-color: #9c0000;
+  --button-negative-hover-border-color: #9c0000;
+  --button-negative-hover-color: #ffffff;
   --button-primary-background-color: #154273;
   --button-primary-border-color: #154273;
   --button-primary-color: #ffffff;
@@ -627,4 +658,26 @@
   --button-secondary-active-color: #ffffff;
   --button-secondary-disabled-background-color: #999999;
   --button-secondary-disabled-border-color: #b4b4b4;
+  --textbox-background-color: #ffffff;
+  --textbox-border-color: #999999;
+  --textbox-color: #3b3b3b;
+  --textbox-font-family: RijksSansVF;
+  --textbox-font-size: 1rem;
+  --textbox-font-weight: 400;
+  --textbox-line-height: 1.5;
+  --textbox-placeholder-color: #535353;
+  --textbox-disabled-background-color: #999999;
+  --textbox-disabled-border-color: #b4b4b4;
+  --textbox-disabled-color: #535353;
+  --textbox-focus-background-color: #ffffff;
+  --textbox-focus-border-color: #999999;
+  --textbox-focus-color: #3b3b3b;
+  --textbox-invalid-background-color: #feeded;
+  --textbox-invalid-border-color: #f14848;
+  --textbox-invalid-color: #3b3b3b;
+  --textbox-read-only-background-color: #f3f3f3;
+  --textbox-read-only-border-color: rgba(0, 0, 0, 0);
+  --textbox-read-only-color: #3b3b3b;
+  --textbox-border-width: 0.0625rem;
+  --textbox-border-radius: 0.125rem;
 }

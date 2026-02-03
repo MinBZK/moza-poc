@@ -110,6 +110,19 @@ main {
 }
 footer {}
 
+/* Globale focus staat */
+:focus {
+    background: var(--focus-background-color);
+    outline: var(--border-focus);
+    outline-offset: var(--focus-outline-offset);
+    &[aria-disabled] {
+        outline-color: var(--color-disabled-border-default);
+    }
+    &.negative {
+        outline-color: var(--color-negative-border-default);
+    }
+}
+
 /* Formulier elementen */
 form {}
 fieldset {
@@ -145,22 +158,17 @@ button {
         display: inline-block;
         padding: 0 var(--space-inline-sm) 0 0;
     }
-    &:hover {
+    &:hover, &:focus {
         background: var(--button-primary-hover-background-color);
         border-color: var(--button-primary-hover-border-color);
         color: var(--button-primary-hover-color);
-    }
-    &:focus {
-        background: var(--button-primary-focus-background-color);
-        border-color: var(--button-primary-focus-border-color);
-        color: var(--button-primary-focus-color);
     }
     &:active {
         background: var(--button-primary-active-background-color);
         border-color: var(--button-primary-active-border-color);
         color: var(--button-primary-active-color);
     }
-    &:disabled {
+    &[aria-disabled] {
         background: var(--button-primary-disabled-background-color);
         border-color: var(--button-primary-disabled-border-color);
         color: var(--button-primary-disabled-color);
@@ -169,6 +177,14 @@ button {
     &.negative {
         background: var(--button-negative-background-color);
         border-color: var(--button-negative-border-color);
+        &:hover, &:focus {
+            background: var(--button-negative-hover-background-color);
+            border-color: var(--button-negative-hover-border-color);
+        }
+        &:active {
+            background: var(--button-negative-active-background-color);
+            border-color: var(--button-negative-active-border-color);
+        }  
     }
     &.secondary {
         background: var(--button-secondary-background-color);
@@ -179,6 +195,7 @@ button {
 
 /* Formulier: Tekstinvoer */
 [type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
+    border: var(--textbox-border-width) solid var(--textbox-border-color);
     max-width: var(--form-control-max-inline-size);
     &:hover {
     }

@@ -9,7 +9,14 @@
     <link rel="shortcut icon" href="../assets/favicon/favicon.ico" type="image/x-icon">
     <link rel="icon" sizes="192x192" href="../assets/favicon/touch-icon.png">
     <link rel="apple-touch-icon" href="../assets/favicon/apple-touch-icon.png">
-    <!--<meta http-equiv="refresh" content="1"> <!-- even om te tesetn zonder een locale server op te moeten zetten -->
+    <style>
+        small.info {
+            background: #fdf;
+            border: 1px solid #f0f;
+            display: inline-block;
+            padding: 1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,6 +28,12 @@
 </header>
 
 <main>
+
+    <h1>MOx front-end componenten</h1>
+    <div class="space-md"></div>
+    <h2>Knoppen</h2>
+    <div class="space-md"></div>
+
     <form>
 
         <fieldset>
@@ -37,7 +50,7 @@
             
             <div class="space-md"></div>
             
-            <button disabled>Inactieve knop</button>
+            <button aria-disabled>Inactieve knop</button>
             
             <div class="space-md"></div>
             
@@ -59,24 +72,30 @@
             
             <!-- <button type="button">
                 Knop met icoon achter tekst <span>☀︎</span>
-            </button> -->
+            </button>
             
-            <div class="space-md"></div>
+            <div class="space-md"></div> -->
 
             <button type="button" class="secondary">Secundaire knop</button>
+            <div class="space-xs"></div>
+            <small class="info">ℹ️ Work in progress, de interactieve staten van deze knop zijn niet gedefinieerd in de rijkshuisstijl</small>
+
+            <div class="space-md"></div>
 
         </fieldset>
 
-        <fieldset>
-            <legend>Tekstinvoer</legend>
+        <div class="space-xl"></div>
 
-            <div class="space-16"></div>
+        <h2>Tekst invoer</h2>
+        <div class="space-md"></div>
+        
+        <fieldset>
 
             <label for="input-text">Standaard tekstinvoerveld</label>
             <div class="form-helper-text" id="input-text--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
             <input type="text" id="input-text" aria-describedby="input-text--helper-text">
 
-            <div class="space-16"></div>
+            <div class="space-md"></div>
 
             <label for="input-email">E-mailadres</label>
             <div class="form-helper-text" id="emailadress--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
