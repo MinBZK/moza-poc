@@ -65,3 +65,6 @@ Hernoeming van (iets in) een bestand.
 
 `↩️ Revert commit`
 Wijziging(en) in een vorige commit die ongedaan gemaakt worden.
+
+`🔀 IDE ↔︎ Figma`
+Twee-wegverkeer tussen IDE en Figma, met name om design tokens in beide omgevingen te kunnen aanpassen en testen (Style Dictionary → CSS variabelen en Figma Tokens Studio)
