@@ -19,6 +19,67 @@
     src: url('../fonts/RijksSansVF-Italic.ttf') format('ttf');
 }
 
+/* Layout */
+.space-4xs {
+    height: var(--space-block-4xs);
+    width: var(--space-inline-4xs);
+}
+
+.space-3xs {
+    height: var(--space-block-3xs);
+    width: var(--space-inline-3xs);
+}
+
+.space-2xs {
+    height: var(--space-block-2xs);
+    width: var(--space-inline-2xs);
+}
+
+.space-xs {
+    height: var(--space-block-xs);
+    width: var(--space-inline-xs);
+}
+
+.space-sm {
+    height: var(--space-block-sm);
+    width: var(--space-inline-sm);
+}
+
+.space-md {
+    height: var(--space-block-md);
+    width: var(--space-inline-md);
+}
+
+.space-lg {
+    height: var(--space-block-lg);
+    width: var(--space-inline-lg);
+}
+
+.space-xl {
+    height: var(--space-block-xl);
+    width: var(--space-inline-xl);
+}
+
+.space-2xl {
+    height: var(--space-block-2xl);
+    width: var(--space-inline-2xl);
+}
+
+.space-3xl {
+    height: var(--space-block-3xl);
+    width: var(--space-inline-3xl);
+}
+
+.space-4xl {
+    height: var(--space-block-4xl);
+    width: var(--space-inline-4xl);
+}
+
+.space-5xl {
+    height: var(--space-block-5xl);
+    width: var(--space-inline-5xl);
+}
+
 body {
     color: var(  --color-text-body);
     font-family: 'RijksSansVF';
@@ -72,7 +133,48 @@ legend, label {
 
 /* Formulier: Knoppen */
 button {
-    background: var(--);
+    background: var(--button-primary-background-color);
+    border: var(--button-border-width) solid var(--button-primary-border-color);
+    border-radius: var(--button-border-radius);
+    color: var(--button-primary-color);
+    cursor: pointer;
+    min-height: var(--pointer-target-min-block-size);
+    min-width: var(--pointer-target-min-inline-size);
+    padding: var(--button-padding-block-start) var(--button-padding-inline-start);
+    span {
+        display: inline-block;
+        padding: 0 var(--space-inline-sm) 0 0;
+    }
+    &:hover {
+        background: var(--button-primary-hover-background-color);
+        border-color: var(--button-primary-hover-border-color);
+        color: var(--button-primary-hover-color);
+    }
+    &:focus {
+        background: var(--button-primary-focus-background-color);
+        border-color: var(--button-primary-focus-border-color);
+        color: var(--button-primary-focus-color);
+    }
+    &:active {
+        background: var(--button-primary-active-background-color);
+        border-color: var(--button-primary-active-border-color);
+        color: var(--button-primary-active-color);
+    }
+    &:disabled {
+        background: var(--button-primary-disabled-background-color);
+        border-color: var(--button-primary-disabled-border-color);
+        color: var(--button-primary-disabled-color);
+        cursor: not-allowed;
+    }
+    &.negative {
+        background: var(--button-negative-background-color);
+        border-color: var(--button-negative-border-color);
+    }
+    &.secondary {
+        background: var(--button-secondary-background-color);
+        border-color: var(--button-secondary-border-color);
+        color: var(--button-secondary-color);
+    }
 }
 
 /* Formulier: Tekstinvoer */
