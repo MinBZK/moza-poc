@@ -9,15 +9,17 @@
     font-family: var(--font-family-primary);
     font-style: normal;
     font-weight: 400;
-    src: url('../fonts/RijksSansVF-Regular.ttf') format('ttf');
+    src: url('../assets/fonts/RijksSansVF-Regular.ttf') format('ttf');
 }
 
 @font-face {
     font-family: var(--font-family-primary);
     font-style: italic;
     font-weight: 400;
-    src: url('../fonts/RijksSansVF-Italic.ttf') format('ttf');
+    src: url('../assets/fonts/RijksSansVF-Italic.ttf') format('ttf');
 }
+
+/* Class namen zijn voor nu nog niet genamespaced, we kunnen mox- overwegen i.v.m. latere aansluiting op NLDS */
 
 /* Layout */
 .space-4xs {
@@ -110,17 +112,19 @@ main {
 }
 footer {}
 
-/* Globale focus staat */
-:focus-visible {
-    background: var(--focus-background-color);
-    outline: var(--border-focus);
-    outline-offset: var(--focus-outline-offset);
-    &[aria-disabled] {
-        outline-color: var(--color-disabled-border-default);
-    }
-    &.negative {
-        outline-color: var(--color-negative-border-default);
-    }
+/* Typografie */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--heading-font-family);
+    font-weight: var(--heading-font-weight);
+}
+
+p {}
+
+a {
+    color: var(--link-color);
+    text-decoration: var(--link-text-decoration-color) var(--link-text-decoration-line);
+    text-decoration-thickness: var(--link-text-decoration-thickness);
+    text-underline-offset: var(--link-text-underline-offset);
 }
 
 /* Formulier elementen */
@@ -144,7 +148,7 @@ legend, label {
 .form-helper-text {
 }
 
-/* Formulier: Knoppen */
+/* Knoppen */
 button {
     background: var(--button-primary-background-color);
     border: var(--button-border-width) solid var(--button-primary-border-color);
@@ -162,6 +166,16 @@ button {
         background: var(--button-primary-hover-background-color);
         border-color: var(--button-primary-hover-border-color);
         color: var(--button-primary-hover-color);
+    }
+    &:focus-visible {
+        outline: var(--border-focus);
+        outline-offset: var(--focus-outline-offset);
+        &[aria-disabled] {
+            outline-color: var(--color-disabled-border-default);
+        }
+        &.negative {
+            outline-color: var(--color-negative-border-default);
+        }
     }
     &:active {
         background: var(--button-primary-active-background-color);
@@ -193,15 +207,47 @@ button {
     }
 }
 
+/* Formulier: Label */
+label {
+    color: var(--form-field-label-color);
+    font-size: var(--form-field-label-font-size);
+    font-weight: var(--form-field-label-font-weight);
+    &:not([type=checkbox], [type=radio]) {
+        margin-bottom: var(--space-block-xs);
+    }
+}
+.form-field-description {
+    color: var(--form-field-description-color);
+    font-size: var(--form-field-description-font-size);
+    margin-bottom: var(--space-block-xs);
+}
+
 /* Formulier: Tekstinvoer */
 [type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
     border: var(--textbox-border-width) solid var(--textbox-border-color);
-    max-width: var(--form-control-max-inline-size);
+    border-radius: var(--textbox-border-radius);
+    color: var(--textbox-color);
+    font-size: var(--textbox-font-size);
+    min-height: var(--pointer-target-min-block-size);
+    min-width: var(--pointer-target-min-inline-size);
+    padding: var(--textbox-padding-block-start) var(--textbox-padding-inline-start);
     &:hover {
+        border-color: var(--textbox-hover-border-color);
+    }
+    &focus {
+        outline: none;
     }
     &:focus-visible {
+        background: var(--focus-background-color);
+        outline: var(--border-focus);
+        outline-offset: var(--focus-outline-offset);
     }
     &:active {
+        border-color: var(--textbox-active-border-color);
+    }
+    &[aria-invalid] {
+        border-color: var(--form-field-invalid-border-color);
+        border-width: var(--form-field-invalid-border-width);
     }
 }
 
@@ -216,15 +262,16 @@ option {}
 /* Formulier: Bestand selecteren */
 [type=file] {}
 
-
-/* Ruimtelijk systeem */
-/* Groeperen */
-.space-4 {height: var(--space-4);width: var(--space-4);}
-.space-8 {height: var(--space-8);width: var(--space-8);}
-.space-12 {height: var(--space-12);width: var(--space-12);}
-.space-16 {height: var(--space-16);width: var(--space-16);}
-.space-24 {height: var(--space-24);width: var(--space-24);}
-/* Afzonderen */
-.space-32 {height: var(--space-32);width: var(--space-32);}
-.space-40 {height: var(--space-40);width: var(--space-40);}
-.space-48 {height: var(--space-48);width: var(--space-48);}
+/* Navigatie: Kruimelpad */
+.breadcrumb {
+    ol {
+    list-style: none;
+        li {
+            display: inline-block;
+            &:not(:last-child)::after {
+                content: '/';
+                margin: 0 var(--space-inline-sm);
+            }
+        }
+    }
+}

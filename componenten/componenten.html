@@ -10,6 +10,9 @@
     <link rel="icon" sizes="192x192" href="../assets/favicon/touch-icon.png">
     <link rel="apple-touch-icon" href="../assets/favicon/apple-touch-icon.png">
     <style>
+        body {
+            padding-bottom: 2rem;
+        }
         small.info {
             background: #fdf;
             border: 1px solid #f0f;
@@ -92,17 +95,37 @@
         <fieldset>
 
             <label for="input-text">Standaard tekstinvoerveld</label>
-            <div class="form-helper-text" id="input-text--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
-            <input type="text" id="input-text" aria-describedby="input-text--helper-text">
+            <div class="form-field-description" id="input-text--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
+            <input type="text" id="input-text" aria-describedby="input-text--helper-text" placeholder="Placeholder tekst">
 
-            <div class="space-md"></div>
+            <div class="space-xl"></div>
 
             <label for="input-email">E-mailadres</label>
-            <div class="form-helper-text" id="emailadress--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
-            <input type="email" id="input-email" aria-describedby="emailadress--helper-text">
+            <div class="form-field-description" id="emailadress--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
+            <input type="email" id="input-email" aria-describedby="emailadress--helper-text" placeholder="voorbeeld@rijksoverheid.nl">
+
+             <div class="space-xl"></div>
+
+            <label for="input-invalid">Foutieve invoer</label>
+            <div class="form-field-description" id="input-invalid--helper-text">Optionele ondersteunende help tekst indien nodig, bijvoorbeeld een hint over het verwachte formaat van invoer.</div>
+            <input type="text" id="input-invalid" aria-describedby="input-invalid--helper-text" placeholder="voorbeeld@rijksoverheid.nl" aria-invalid>
           
         </fieldset>
     </form>
+
+    <div class="space-xl"></div>
+
+    <h2>Breadcrumb</h2>
+    <div class="space-md"></div>
+
+    <nav class="breadcrumb">
+        <ol>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Componenten</a></li>
+            <li aria-current="page">Breadcrumb</li>
+        </ol>
+    </nav>
+
 </main>
 
 <footer></footer>
