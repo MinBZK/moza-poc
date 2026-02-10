@@ -602,6 +602,8 @@
   --focus-outline-offset: 0.125rem;
   --form-field-invalid-border-color: #f14848;
   --form-field-invalid-border-width: 0.125rem;
+  --breadcrumb-separator-inline-space: 0.25rem;
+  --breadcrumb-padding-inline: 0;
   --button-border-radius: 0.125rem;
   --button-padding-block-start: 0.5rem;
   --button-padding-block-end: 0.5rem;
@@ -649,7 +651,16 @@
   --form-field-label-line-height: 1.5;
   --form-field-description-color: #535353;
   --form-field-description-font-size: 1rem;
-  --breadcrumb-separator-inline-space: 0.25rem;
+  --link-color: #154273;
+  --link-text-decoration-color: #154273;
+  --link-text-decoration-line: underline;
+  --link-text-decoration-thickness: 1;
+  --link-text-underline-offset: 2px;
+  --link-active-color: #4f7196;
+  --link-disabled-color: #535353;
+  --link-hover-color: #3b3b3b;
+  --link-hover-text-decoration-line: underline;
+  --link-hover-text-decoration-thickness: 1;
   --textbox-background-color: #ffffff;
   --textbox-border-color: #696969;
   --textbox-color: #3b3b3b;
@@ -678,14 +689,4 @@
   --textbox-padding-block-start: 0.25rem;
   --textbox-padding-inline-end: 0.75rem;
   --textbox-padding-inline-start: 0.75rem;
-  --link-color: #154273;
-  --link-text-decoration-color: #154273;
-  --link-text-decoration-line: underline;
-  --link-text-decoration-thickness: 1;
-  --link-text-underline-offset: 2px;
-  --link-active-color: #4f7196;
-  --link-disabled-color: #535353;
-  --link-hover-color: #3b3b3b;
-  --link-hover-text-decoration-line: underline;
-  --link-hover-text-decoration-thickness: 1;
 }

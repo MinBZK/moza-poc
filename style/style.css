@@ -82,6 +82,21 @@
     width: var(--space-inline-5xl);
 }
 
+/* Toewerken naar generieke interactieve en feedback staten */
+:focus:not(:focus-visible) {
+    outline: none; /* Verberg focus outline voor muis-gebruikers, behoud focus outline voor alle andere gebruikers (toetsenbord, spraak, switch) */
+}
+:focus-visible {
+    outline: var(--border-focus);
+    outline-offset: var(--focus-outline-offset);
+    &[aria-disabled] {
+        outline-color: var(--color-disabled-border-default);
+    }
+    &.negative {
+        outline-color: var(--color-negative-border-default);
+    }
+}
+
 body {
     color: var(  --color-text-body);
     font-family: 'RijksSansVF';
@@ -117,7 +132,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--heading-font-family);
     font-weight: var(--heading-font-weight);
 }
-
+x
 p {}
 
 a {
@@ -125,6 +140,12 @@ a {
     text-decoration: var(--link-text-decoration-color) var(--link-text-decoration-line);
     text-decoration-thickness: var(--link-text-decoration-thickness);
     text-underline-offset: var(--link-text-underline-offset);
+    &:hover {
+        color: var(--link-hover-color);
+    }
+    &:active {
+        color: var(--link-active-color);
+    }
 }
 
 /* Formulier elementen */
@@ -166,16 +187,6 @@ button {
         background: var(--button-primary-hover-background-color);
         border-color: var(--button-primary-hover-border-color);
         color: var(--button-primary-hover-color);
-    }
-    &:focus-visible {
-        outline: var(--border-focus);
-        outline-offset: var(--focus-outline-offset);
-        &[aria-disabled] {
-            outline-color: var(--color-disabled-border-default);
-        }
-        &.negative {
-            outline-color: var(--color-negative-border-default);
-        }
     }
     &:active {
         background: var(--button-primary-active-background-color);
@@ -234,7 +245,7 @@ label {
     &:hover {
         border-color: var(--textbox-hover-border-color);
     }
-    &focus {
+    &:focus {
         outline: none;
     }
     &:focus-visible {
@@ -265,12 +276,13 @@ option {}
 /* Navigatie: Kruimelpad */
 .breadcrumb {
     ol {
-    list-style: none;
+        list-style: none;
+        padding: 0 var(--breadcrumb-padding-inline);
         li {
             display: inline-block;
             &:not(:last-child)::after {
                 content: '/';
-                margin: 0 var(--space-inline-sm);
+                margin: 0 var(--space-inline-xs);
             }
         }
     }
