@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-MOx is a design token-based design system for the Dutch government (Rijksoverheid). It converts design tokens from Figma (via Tokens Studio) into CSS custom properties for use in web projects. The project is written and documented primarily in Dutch.
+MOx is a design token-based design system. It converts design tokens from Figma (via Tokens Studio) into CSS custom properties for use in web projects. The project is written and documented primarily in Dutch.
 
 **Key concept:** Design tokens in `tokens/tokens.json` are the single source of truth. They are transformed into CSS variables via Style Dictionary and consumed by plain HTML/CSS pages.
 
 ## Repository Structure
 
-```
+``` text
 MOx/
 ├── assets/
 │   ├── favicon/              # Platform-specific favicons
@@ -57,6 +57,7 @@ cd style-dictionary && npm run build
 ```
 
 This runs `node config.js`, which:
+
 1. Reads `tokens/tokens.json`
 2. Applies the Tokens Studio preprocessor
 3. Transforms names to kebab-case and converts px values to rem
@@ -73,7 +74,7 @@ This runs `node config.js`, which:
 
 ### Token Flow
 
-```
+``` text
 Figma (Tokens Studio) ←→ tokens/tokens.json → Style Dictionary → style/_variables.css → style/style.css → HTML pages
 ```
 
@@ -98,11 +99,12 @@ Token references use curly-brace syntax: `{color.action.bg-hover}`.
 
 Generated variables follow kebab-case with semantic hierarchy:
 
-```
+``` text
 --category-subcategory-attribute-state
 ```
 
 Examples:
+
 - `--brand-color-lintblauw-50`
 - `--button-primary-background-color`
 - `--button-primary-hover-border-color`
@@ -115,7 +117,6 @@ The project uses modern CSS features:
 - **CSS custom properties** (variables) for all design values
 - **`:focus-visible`** (not `:focus`) for keyboard-only focus indicators
 - **`aria-disabled`** and **`aria-invalid`** attributes for state styling (not `:disabled`)
-- **Spacing utility classes** (`.space-xs`, `.space-md`, `.space-xl`, etc.)
 
 ### Components Currently Implemented
 
@@ -130,6 +131,7 @@ The project uses modern CSS features:
 ## Testing
 
 There is no automated test framework. Visual verification is done by opening:
+
 - `index.html` — Landing page
 - `componenten/componenten.html` — Component showcase
 
@@ -144,7 +146,7 @@ No linting or formatting tools (ESLint, Prettier, stylelint) are configured. The
 The project uses emoji-prefixed commit messages (in Dutch):
 
 | Emoji | Type | Use when... |
-|-------|------|-------------|
+| ----- | ---- | ----------- |
 | ➕ | Added | Adding new content to a file |
 | ✏️ | Modified | Changing existing content |
 | ❌ | Deleted | Removing content from a file |
@@ -160,6 +162,7 @@ Example: `➕ Link component` or `🧼 padding-inline-start → padding-inline`
 ## Figma Integration
 
 Tokens Studio plugin syncs with this repository:
+
 - Source file: `tokens/tokens.json`
 - Designers can pull tokens into Figma, modify them, and push back via Git
 - Developers can edit the JSON directly in an IDE
