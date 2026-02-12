@@ -9,17 +9,17 @@
 
 /* Voeg Rijksoverheid Sans lettertype toe */
 @font-face {
-    font-family: var(--font-family-primary);
+    font-family: "RijksSansVF";
     font-style: normal;
     font-weight: 400;
-    src: url('../assets/fonts/RijksSansVF-Regular.ttf') format('ttf');
+    src: url('../assets/fonts/RijksSansVF-Regular.ttf') format('truetype');
 }
 
 @font-face {
-    font-family: var(--font-family-primary);
+    font-family: "RijksSansVF";
     font-style: italic;
     font-weight: 400;
-    src: url('../assets/fonts/RijksSansVF-Italic.ttf') format('ttf');
+    src: url('../assets/fonts/RijksSansVF-Italic.ttf') format('truetype');
 }
 
 /* Toewerken naar generieke interactieve en feedback staten */
@@ -39,13 +39,13 @@
 
 body {
     color: var(--mox-color-text-default);
-    font-family: 'RijksSansVF';
+    font-family: var(--mox-text-font-family-body), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
 }
 
 header {
     .logo {
         margin: 0 auto;
-        width: var(--size-logo-width);
+        width: var(--mox-size-md);
     }
     nav {
         li {
@@ -57,7 +57,7 @@ header {
     margin: 0 auto;
     max-width: 1140px;
     .title {
-        font: var(--typography-heading-h1);
+        font: var(--mox-text-heading-h1);
     }
 }
 
@@ -68,18 +68,32 @@ main {
 footer {}
 
 /* Typografie */
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--heading-font-family);
-    font-weight: var(--heading-font-weight);
+h1 { font: var(--mox-text-heading-h1); }
+h2 { font: var(--mox-text-heading-h2); }
+h3 { font: var(--mox-text-heading-h3); }
+h4 { font: var(--mox-text-heading-h4); }
+h5 { font: var(--mox-text-heading-h5); }
+h6 { font: var(--mox-text-heading-h6); }
+
+p {
+    font: var(--mox-text-paragraph-default);
+    &.intro {font: var(--mox-text-paragraph-intro);}
 }
-x
-p {}
+
+small {
+    font: var(--mox-text-smalltext-default);
+}
+
+strong, b {
+    font-weight: var(--mox-text-font-weight-bold);
+}
+em, i { font-style: italic; }
 
 a {
-    color: var(--link-color);
-    text-decoration: var(--link-text-decoration-color) var(--link-text-decoration-line);
-    text-decoration-thickness: var(--link-text-decoration-thickness);
-    text-underline-offset: var(--link-text-underline-offset);
+    color: var(--mox-color-interactive-active-text);
+    text-decoration: var(--mox-text-text-decoration-hyperlink);
+    text-underline-offset: var(--mox-text-text-underline-offset-hyperlink);
+    text-decoration-skip-ink: auto;
     &:hover {
         color: var(--link-hover-color);
     }

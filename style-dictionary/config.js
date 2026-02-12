@@ -53,18 +53,20 @@ StyleDictionary.registerFormat({
 });
 
 StyleDictionary.registerTransform({
-  name: 'size/pxToRem',
+  name: 'size/remToPxExceptions',
   type: 'value',
   filter: (token) => {
-    const val = `${token.value ?? token.$value}`;
-    if (!val.endsWith('px')) return false;
-
-    // Debug: log all px tokens
-    console.log(token.path.join('.'), '→', val, '| type:', token.type ?? token.$type);
-
-    return false; // don't transform yet
+    const path = token.path.join('.');
+    return (path.includes('border-width') || path.includes('border-radius'));
   },
-  transform: (token) => token.value,
+  transform: (token) => {
+    const val = `${token.value ?? token.$value}`;
+    if (val.endsWith('rem')) {
+      const rem = parseFloat(val);
+      return `${rem * 16}px`;
+    }
+    return val;
+  },
 });
 
 
@@ -115,6 +117,12 @@ async function run() {
 
   const tokenSetMap = buildTokenSetMap(sets);
 
+  // Get the tokens-studio transforms and remove their px-to-rem
+const tsTransforms = StyleDictionary.hooks.transformGroups['tokens-studio']
+  .filter(t => t !== 'ts/size/px');
+
+console.log('Filtered transforms:', tsTransforms);
+
   // Deep merge: rijkshuisstijl first, then mox on top (preserving groups)
   const setNames = Object.keys(sets);
   let merged = {};
@@ -146,8 +154,8 @@ async function run() {
     },
     platforms: {
       css: {
-        transformGroup: 'tokens-studio',
-        transforms: ['name/kebab', 'size/pxToRem','name/prefix-set'],
+        // transformGroup: 'tokens-studio',
+        transforms: [  ...StyleDictionary.hooks.transformGroups['tokens-studio'], 'name/kebab', 'size/pxToRem', 'size/remToPxExceptions', 'name/prefix-set'],
         files: setNames.map(setName => ({
           destination: `../style/_${setName}.css`,
           format: 'css/variables-sorted',

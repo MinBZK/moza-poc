@@ -1,7 +1,7 @@
 /**
  * Automatisch gegenereerd op basis van design tokens.
  * De bron is tokens.json uit de MOx repository.
- * Gegenereerd op 12-2-2026, 15:05:28
+ * Gegenereerd op 12-2-2026, 17:06:57
  * _rijkshuisstijl.css bevat opties uit de Rijkshuisstijl, _mox.css bevat de toepassing van deze opties. Refereer in het CSS bestand alleen aan de variabelen in _mox.css, niet aan die in _rijkshuisstijl.css.
  * CSS variabelen worden automatisch gegenereerd, bewerk deze niet handmatig.
  */
@@ -80,7 +80,6 @@
   --mox-focus-outline-offset: var(--rijkshuisstijl-space-2);
   --mox-focus-outline-width: var(--rijkshuisstijl-border-width-lg);
   --mox-form-control-max-inline-size: 1.5625rem;
-  --mox-heading-font-weight: var(--rijkshuisstijl-text-font-weight-semibold);
   --mox-opacity-interactive-disabled: 0.5;
   --mox-page-max-inline-size: 71.25rem;
   --mox-pointer-target-min-block-size: var(--rijkshuisstijl-size-48);
@@ -114,16 +113,18 @@
   --mox-space-sm: var(--rijkshuisstijl-space-12);
   --mox-space-xl: var(--rijkshuisstijl-space-32);
   --mox-space-xs: var(--rijkshuisstijl-space-8);
-  --mox-typography-footer-link: var(--mox-typography-heading-h5);
-  --mox-typography-heading-h1: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-4xl)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-heading-h2: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-3xl)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-heading-h3: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-2xl)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-heading-h4: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-xl)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-heading-h5: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-heading-h6: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-base)/var(--rijkshuisstijl-text-line-height-lg) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-paragraph-p-intro: var(--rijkshuisstijl-text-font-weight-default) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-paragraph-p-regular: var(--rijkshuisstijl-text-font-weight-default) var(--rijkshuisstijl-text-font-size-md)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-paragraph-p-semibold: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-md)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-smalltext-regular: var(--rijkshuisstijl-text-font-weight-default) var(--rijkshuisstijl-text-font-size-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
-  --mox-typography-smalltext-semibold: var(--rijkshuisstijl-text-font-weight-semibold) var(--rijkshuisstijl-text-font-size-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
+  --mox-text-font-family-body: var(--rijkshuisstijl-text-font-family-default);
+  --mox-text-font-weight-bold: var(--rijkshuisstijl-text-weight-bold);
+  --mox-text-font-weight-regular: var(--rijkshuisstijl-text-weight-default);
+  --mox-text-font-weight-semi-bold: var(--rijkshuisstijl-text-weight-semibold);
+  --mox-text-heading-h1: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-4xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h2: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-3xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h3: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-2xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h4: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h5: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h6: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-base)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-paragraph-default: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-md)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-paragraph-intro: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-smalltext-default: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-text-decoration-hyperlink: underline solid currentColor var(--rijkshuisstijl-border-width-md);
 }

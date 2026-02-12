@@ -1,18 +1,18 @@
 /**
  * Automatisch gegenereerd op basis van design tokens.
  * De bron is tokens.json uit de MOx repository.
- * Gegenereerd op 12-2-2026, 15:05:28
+ * Gegenereerd op 12-2-2026, 17:06:57
  * _rijkshuisstijl.css bevat opties uit de Rijkshuisstijl, _mox.css bevat de toepassing van deze opties. Refereer in het CSS bestand alleen aan de variabelen in _mox.css, niet aan die in _rijkshuisstijl.css.
  * CSS variabelen worden automatisch gegenereerd, bewerk deze niet handmatig.
  */
 :root {
-  --rijkshuisstijl-border-radius-1: 0.0625rem;
-  --rijkshuisstijl-border-radius-2: 0.125rem;
-  --rijkshuisstijl-border-radius-4: 0.25rem;
-  --rijkshuisstijl-border-radius-round: 62.4375rem;
-  --rijkshuisstijl-border-width-lg: 0.1875rem;
-  --rijkshuisstijl-border-width-md: 0.125rem;
-  --rijkshuisstijl-border-width-sm: 0.0625rem;
+  --rijkshuisstijl-border-radius-1: 1px;
+  --rijkshuisstijl-border-radius-2: 2px;
+  --rijkshuisstijl-border-radius-4: 4px;
+  --rijkshuisstijl-border-radius-round: 999px;
+  --rijkshuisstijl-border-width-lg: 3px;
+  --rijkshuisstijl-border-width-md: 2px;
+  --rijkshuisstijl-border-width-sm: 1px;
   --rijkshuisstijl-box-shadow-md: 0 8px 16px 0 #000000;
   --rijkshuisstijl-box-shadow-sm: 0 2px 6px 0 #000000;
   --rijkshuisstijl-color-bruin-100: #dfd4b6; /** Bruin 30% */
@@ -187,14 +187,14 @@
   --rijkshuisstijl-text-font-size-md: 1rem;
   --rijkshuisstijl-text-font-size-sm: roundTo(1rem / 1.3, 0);
   --rijkshuisstijl-text-font-size-xl: 1.25rem;
-  --rijkshuisstijl-text-font-weight-bold: 700;
-  --rijkshuisstijl-text-font-weight-default: 400;
-  --rijkshuisstijl-text-font-weight-semibold: 600;
   --rijkshuisstijl-text-line-height-2xl: 1.25;
   --rijkshuisstijl-text-line-height-4xl: 1.25;
   --rijkshuisstijl-text-line-height-lg: 1.25;
   --rijkshuisstijl-text-line-height-md: 1.5;
   --rijkshuisstijl-text-line-height-sm: 1.5;
   --rijkshuisstijl-text-line-height-xl: 1.25;
+  --rijkshuisstijl-text-weight-bold: 700;
+  --rijkshuisstijl-text-weight-default: 400;
+  --rijkshuisstijl-text-weight-semibold: 600;
   --rijkshuisstijl-typography-spacing-paragraph-default: 0.5rem;
 }
