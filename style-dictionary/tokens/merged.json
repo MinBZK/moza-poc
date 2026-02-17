@@ -783,8 +783,7 @@
       "default": {
         "background": {
           "$type": "color",
-          "$value": "{color.accent.default}",
-          "$description": "Ruststaat van klikbaar/tikbaar element"
+          "$value": "{color.neutraal.transparent}"
         },
         "border": {
           "$type": "color",
@@ -793,13 +792,11 @@
         },
         "text": {
           "$type": "color",
-          "$value": "{color.lintblauw.500}",
-          "$description": "Ruststaat van klikbaar/tikbaar element"
+          "$value": "{color.text.default}"
         },
         "icon": {
           "$type": "color",
-          "$value": "{color.interactive.default.text}",
-          "$description": "Ruststaat van klikbaar/tikbaar element"
+          "$value": "{color.interactive.default.text}"
         },
         "surface": {
           "$type": "color",
@@ -809,8 +806,7 @@
       "hover": {
         "background": {
           "$type": "color",
-          "$value": "{color.lintblauw.600}",
-          "$description": "Staat bij aanwijzen met de muis"
+          "$value": "{color.grijs.200}"
         },
         "border": {
           "$type": "color",
@@ -819,20 +815,17 @@
         },
         "text": {
           "$type": "color",
-          "$value": "{color.lintblauw.600}",
-          "$description": "Staat bij aanwijzen met de muis"
+          "$value": "{color.text.default}"
         },
         "icon": {
           "$type": "color",
-          "$value": "{color.interactive.hover.text}",
-          "$description": "Staat bij aanwijzen met de muis"
+          "$value": "{color.interactive.default.text}"
         }
       },
       "active": {
         "background": {
           "$type": "color",
-          "$value": "{color.interactive.hover.background}",
-          "$description": "Staat terwijl element ingedrukt is"
+          "$value": "{color.grijs.400}"
         },
         "border": {
           "$type": "color",
@@ -841,13 +834,11 @@
         },
         "text": {
           "$type": "color",
-          "$value": "{color.interactive.hover.text}",
-          "$description": "Staat terwijl element ingedrukt is"
+          "$value": "{color.text.default}"
         },
         "icon": {
           "$type": "color",
-          "$value": "{color.interactive.hover.icon}",
-          "$description": "Staat terwijl element ingedrukt is"
+          "$value": "{color.interactive.default.text}"
         }
       },
       "focus": {
@@ -882,8 +873,7 @@
       "selected": {
         "background": {
           "$type": "color",
-          "$value": "{color.hemelblauw.500}",
-          "$description": "Ingeschakeld, aangevinkt, actief element"
+          "$value": "{color.hemelblauw.50}"
         },
         "border": {
           "$type": "color",
@@ -892,13 +882,11 @@
         },
         "text": {
           "$type": "color",
-          "$value": "{color.hemelblauw.500}",
-          "$description": "Ingeschakeld, aangevinkt, actief element"
+          "$value": "{color.donkerblauw.500}"
         },
         "icon": {
           "$type": "color",
-          "$value": "{color.interactive.selected.text}",
-          "$description": "Ingeschakeld, aangevinkt, actief element"
+          "$value": "{color.interactive.selected.text}"
         }
       },
       "visited": {
@@ -1289,6 +1277,10 @@
         "$type": "sizing",
         "$value": "{size.48}"
       }
+    },
+    "width": {
+      "$type": "sizing",
+      "$value": "{size.64} * 3"
     }
   },
   "text": {
@@ -1383,7 +1375,7 @@
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.body}",
-          "fontWeight": "{text.font-weight.semi-bold}",
+          "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.font-size.4xl}",
           "lineHeight": "{text.line-height.lg}"
         }
@@ -1392,7 +1384,7 @@
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.body}",
-          "fontWeight": "{text.font-weight.semi-bold}",
+          "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.font-size.3xl}",
           "lineHeight": "{text.line-height.lg}"
         }
@@ -1401,7 +1393,7 @@
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.body}",
-          "fontWeight": "{text.font-weight.semi-bold}",
+          "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.font-size.2xl}",
           "lineHeight": "{text.line-height.lg}"
         }
@@ -1410,7 +1402,7 @@
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.body}",
-          "fontWeight": "{text.font-weight.semi-bold}",
+          "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.font-size.xl}",
           "lineHeight": "{text.line-height.lg}"
         }
@@ -1517,8 +1509,8 @@
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.default}",
-          "fontWeight": "{text.font-weight.semi-bold}",
-          "fontSize": "{text.font-size.xl}"
+          "fontWeight": "{text.font-weight.regular}",
+          "fontSize": "{text.font-size.lg}"
         }
       }
     }
@@ -1789,6 +1781,21 @@
       "$type": "other",
       "$value": "background .2s ease, border .2s ease, color .2s ease",
       "$description": "Standaard transitie die toegepast wordt op alle CSS properties."
+    }
+  },
+  "border": {
+    "card": {
+      "default": {
+        "$type": "boxShadow",
+        "$value": {
+          "x": "0",
+          "y": "0",
+          "blur": "6",
+          "spread": "0",
+          "color": "{color.border.subtle}",
+          "type": "dropShadow"
+        }
+      }
     }
   }
 }

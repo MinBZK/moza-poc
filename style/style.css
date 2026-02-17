@@ -7,7 +7,12 @@
 /* Importeer reset stijlen */
 @import '_reset.css';
 
+/* Importeer specifieke componenten */
+@import '_mox-component-sub-nav.css';
+
+
 /* Voeg Rijksoverheid Sans lettertype toe */
+
 @font-face {
     font-family: "RijksSansVF";
     font-style: normal;
@@ -22,6 +27,9 @@
     src: url('../assets/fonts/RijksSansVF-Italic.ttf') format('truetype');
 }
 
+
+/* Basis en layout */
+
 body {
     color: var(--mox-color-text-default);
     font-family: var(--mox-text-font-family-body), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
@@ -30,12 +38,15 @@ body {
 header {
     margin-bottom: var(--mox-space-margin-md);
     .logo {
-        margin: 0 auto;
-        width: var(--mox-size-md);
-    }
-    nav {
-        li {
-            display: inline-block;
+        margin-bottom: var(--mox-space-margin-xs);
+        text-align: center;
+        img {
+            width: var(--mox-size-logo-width);
+        }
+        nav {
+            li {
+                display: inline-block;
+            }
         }
     }
 }
@@ -53,13 +64,16 @@ main {
     @media (min-width: 30em) {
        display: flex;
     }
-    > article {
+    > article:first-of-type {
         padding: 0 var(--mox-space-padding-md);
+        width: 100%;
     }
 }
 footer {}
 
+
 /* Typografie */
+
 h1 { font: var(--mox-text-heading-h1); }
 h2 { font: var(--mox-text-heading-h2); }
 h3 { font: var(--mox-text-heading-h3); }
@@ -103,7 +117,9 @@ pre {
     padding: var(--mox-space-padding-sm);
 }
 
+
 /* Generieke interactie stijlen */
+
 &:hover, :active, &:checked {
     transition: var(--mox-transition-default);
 }
@@ -125,6 +141,7 @@ pre {
         outline-color: var(--mox-color-feedback-error-border);
     }
 }
+
 
 /* Formulier elementen */
 
@@ -173,8 +190,8 @@ legend, label {
     font: var(--mox-text-smalltext-default);
 }
 
-
 /* Knoppen */
+
 button {
     background: var(--mox-color-interactive-default-background);
     color: var(--mox-color-text-inverse);
@@ -213,7 +230,9 @@ button {
         }  
     }
 }
+
 /* Formulier: Tekstinvoer */
+
 [type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
     &:hover {}
     &:focus {}
@@ -236,6 +255,7 @@ textarea {
 }
 
 /* Formulier: Selectie */
+
 ul.selection {
     list-style: none;
     padding: 0;
@@ -266,15 +286,20 @@ optgroup {}
 option {}
 
 /* Formulier: Bestand selecteren */
+
 [type=file] {}
 
-/* Navigatie: Kruimelpad */
+
+/* Navigatie */
+
 nav {
     ol, ul {
         list-style: none;
         padding: 0;
     }
 }
+
+/* Navigatie: Hoofdnavigatie */
 
 .main-nav {
     background-color: var(--mox-color-interactive-active-background);
@@ -301,15 +326,35 @@ nav {
     }
 }
 
+/* Navigatie: Sub-navigatie */
+
 .sub-nav {
+    padding: 0 var(--mox-space-padding-md);
+    width: var(--mox-component-sub-nav-size-width);
     li {
         a {
+            background: var(--mox-component-sub-nav-color-interactive-default-background);
+            border-radius: var(--mox-border-radius-md);
+            color: var(--mox-component-sub-nav-color-interactive-default-text);
             display: block;
             font: var(--mox-text-nav-sub-nav);
-            padding: var(--mox-space-padding-xs) var(--mox-space-padding-md);
+            margin-bottom: var(--mox-space-padding-xs);
+            padding: var(--mox-space-padding-2xs) var(--mox-space-padding-md);
+            text-decoration: none;
+            &:hover {
+                background: var(--mox-component-sub-nav-color-interactive-hover-background);
+                color: var(--mox-component-sub-nav-color-interactive-hover-textext);
+            }
+        }
+        [aria-current] {
+            background: var(--mox-component-sub-nav-color-interactive-selected-background);
+            color: var(--mox-component-sub-nav-color-interactive-selected-text);
+            font-weight: var(--mox-text-font-weight-semi-bold);
         }
     }
 }
+
+/* Navigatie: Kruimelpad */
 
 .breadcrumb {
     li {
@@ -319,7 +364,44 @@ nav {
             margin: 0 var(--mox-space-padding-2xs);
         }
         &[aria-current="page"] {
-            font-weight: var(--mox-text-font-weight-bold);
+            font-weight: var(--mox-text-font-weight-semi-bold);
         }
     }
+}
+
+
+/* MijnOverheid Zakelijk */
+
+body.moza {
+    background: var(--mox-color-background-subtle);
+}
+
+.moza header {
+    background: var(--mox-color-background-default);
+    border-bottom: 2px solid var(--mox-color-interactive-default-border);
+}
+.page-title {
+    font: var(--mox-text-heading-h2);
+}
+.page-head {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: var(--mox-page-max-inline-size);
+    padding: var(--mox-space-padding-xs) var(--mox-space-padding-md);
+}
+
+.moza article {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mox-space-margin-xs);
+}
+
+.card {
+    background: var(--mox-color-background-default);
+    border: var(--mox-border-subtle);
+    border-radius: var(--mox-border-radius-md);
+    box-shadow: var(--mox-border-card-default);
+    padding: var(--mox-space-padding-md) var(--mox-space-padding-md);
 }

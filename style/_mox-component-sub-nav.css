@@ -1,0 +1,22 @@
+/**
+ * Automatisch gegenereerd op basis van design tokens.
+ * De bron is tokens.json uit de MOx repository.
+ * Gegenereerd op 17-2-2026, 16:54:47
+ * _rijkshuisstijl.css bevat opties uit de Rijkshuisstijl, _mox.css bevat de toepassing van deze opties. Refereer in het CSS bestand alleen aan de variabelen in _mox.css, niet aan die in _rijkshuisstijl.css.
+ * CSS variabelen worden automatisch gegenereerd, bewerk deze niet handmatig.
+ */
+:root {
+  --mox-component-sub-nav-color-interactive-active-background: #b4b4b4;
+  --mox-component-sub-nav-color-interactive-active-icon: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-active-text: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-default-background: rgba(0, 0, 0, 0);
+  --mox-component-sub-nav-color-interactive-default-icon: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-default-text: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-hover-background: #e6e6e6;
+  --mox-component-sub-nav-color-interactive-hover-icon: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-hover-text: #3b3b3b;
+  --mox-component-sub-nav-color-interactive-selected-background: #d9ebf7;
+  --mox-component-sub-nav-color-interactive-selected-icon: #01689b;
+  --mox-component-sub-nav-color-interactive-selected-text: #01689b;
+  --mox-component-sub-nav-size-width: 12rem;
+}
