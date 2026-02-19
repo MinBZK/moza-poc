@@ -1,14 +1,14 @@
 /**
  * Automatisch gegenereerd op basis van design tokens.
  * De bron is tokens.json uit de MOx repository.
- * Gegenereerd op 19-2-2026, 12:11:45
+ * Gegenereerd op 19-2-2026, 16:48:03
  * _rijkshuisstijl.css bevat opties uit de Rijkshuisstijl, _mox.css bevat de toepassing van deze opties. Refereer in het CSS bestand alleen aan de variabelen in _mox.css, niet aan die in _rijkshuisstijl.css.
  * CSS variabelen worden automatisch gegenereerd, bewerk deze niet handmatig.
  */
 :root {
   --mox-border-card-default: var(--mox-box-shadow-default);
   --mox-border-component-pageheader-border: var(--rijkshuisstijl-border-width-2) solid var(--rijkshuisstijl-color-hemelblauw-500);
-  --mox-border-default: 1px solid var(--rijkshuisstijl-color-grijs-300);
+  --mox-border-default: 1px solid var(--rijkshuisstijl-color-grijs-100);
   --mox-border-radius-md: var(--rijkshuisstijl-border-radius-4);
   --mox-border-radius-round: 999px;
   --mox-border-radius-sm: var(--rijkshuisstijl-border-radius-2);
@@ -29,18 +29,6 @@
   --mox-color-component-badge-background: var(--mox-color-feedback-info-emphasis);
   --mox-color-component-badge-text: var(--mox-color-text-inverse);
   --mox-color-component-footer-background: var(--rijkshuisstijl-color-grijs-700);
-  --mox-color-component-subnav-active-background: var(--rijkshuisstijl-color-grijs-400); /** Staat terwijl element ingedrukt is */
-  --mox-color-component-subnav-active-icon: var(--mox-color-component-subnav-active-text); /** Staat terwijl element ingedrukt is */
-  --mox-color-component-subnav-active-text: var(--mox-color-component-subnav-default-text); /** Staat terwijl element ingedrukt is */
-  --mox-color-component-subnav-default-background: var(--rijkshuisstijl-color-neutraal-transparent); /** Ruststaat van klikbaar/tikbaar element */
-  --mox-color-component-subnav-default-icon: var(--mox-color-component-subnav-default-text); /** Ruststaat van klikbaar/tikbaar element */
-  --mox-color-component-subnav-default-text: var(--mox-color-text-default); /** Ruststaat van klikbaar/tikbaar element */
-  --mox-color-component-subnav-hover-background: var(--rijkshuisstijl-color-grijs-200); /** Staat bij aanwijzen met de muis */
-  --mox-color-component-subnav-hover-icon: var(--mox-color-component-subnav-hover-text); /** Staat bij aanwijzen met de muis */
-  --mox-color-component-subnav-hover-text: var(--mox-color-component-subnav-default-text); /** Staat bij aanwijzen met de muis */
-  --mox-color-component-subnav-selected-background: var(--rijkshuisstijl-color-hemelblauw-50); /** Ingeschakeld, aangevinkt, actief element */
-  --mox-color-component-subnav-selected-icon: var(--mox-color-component-subnav-selected-text); /** Ingeschakeld, aangevinkt, actief element */
-  --mox-color-component-subnav-selected-text: var(--mox-color-interactive-selected-text); /** Ingeschakeld, aangevinkt, actief element */
   --mox-color-feedback-error-border: var(--mox-color-feedback-error-default);
   --mox-color-feedback-error-default: var(--rijkshuisstijl-color-rood-500);
   --mox-color-feedback-error-emphasis: var(--rijkshuisstijl-color-rood-600);
@@ -77,6 +65,18 @@
   --mox-color-interactive-active-border: var(--mox-color-interactive-hover-border); /** Staat terwijl element ingedrukt is */
   --mox-color-interactive-active-icon: var(--mox-color-interactive-hover-icon); /** Staat terwijl element ingedrukt is */
   --mox-color-interactive-active-text: var(--mox-color-interactive-hover-text); /** Staat terwijl element ingedrukt is */
+  --mox-color-interactive-alternate-active-background: var(--rijkshuisstijl-color-grijs-400); /** Staat terwijl element ingedrukt is */
+  --mox-color-interactive-alternate-active-icon: var(--mox-color-interactive-alternate-active-text); /** Staat terwijl element ingedrukt is */
+  --mox-color-interactive-alternate-active-text: var(--mox-color-interactive-alternate-default-text); /** Staat terwijl element ingedrukt is */
+  --mox-color-interactive-alternate-default-background: var(--rijkshuisstijl-color-neutraal-transparent); /** Ruststaat van klikbaar/tikbaar element */
+  --mox-color-interactive-alternate-default-icon: var(--mox-color-interactive-alternate-default-text); /** Ruststaat van klikbaar/tikbaar element */
+  --mox-color-interactive-alternate-default-text: var(--mox-color-text-default); /** Ruststaat van klikbaar/tikbaar element */
+  --mox-color-interactive-alternate-hover-background: var(--rijkshuisstijl-color-grijs-200); /** Staat bij aanwijzen met de muis */
+  --mox-color-interactive-alternate-hover-icon: var(--mox-color-interactive-alternate-hover-text); /** Staat bij aanwijzen met de muis */
+  --mox-color-interactive-alternate-hover-text: var(--mox-color-interactive-alternate-default-text); /** Staat bij aanwijzen met de muis */
+  --mox-color-interactive-alternate-selected-background: var(--rijkshuisstijl-color-hemelblauw-50); /** Ingeschakeld, aangevinkt, actief element */
+  --mox-color-interactive-alternate-selected-icon: var(--mox-color-interactive-alternate-selected-text); /** Ingeschakeld, aangevinkt, actief element */
+  --mox-color-interactive-alternate-selected-text: var(--mox-color-interactive-selected-text); /** Ingeschakeld, aangevinkt, actief element */
   --mox-color-interactive-default-background: var(--mox-color-accent-default); /** Ruststaat van klikbaar/tikbaar element */
   --mox-color-interactive-default-border: var(--mox-color-interactive-default-background); /** Ruststaat van klikbaar/tikbaar element */
   --mox-color-interactive-default-icon: var(--mox-color-interactive-default-text); /** Ruststaat van klikbaar/tikbaar element */
@@ -96,6 +96,7 @@
   --mox-color-interactive-selected-icon: var(--mox-color-interactive-selected-text); /** Ingeschakeld, aangevinkt, actief element */
   --mox-color-interactive-selected-text: var(--rijkshuisstijl-color-hemelblauw-500); /** Ingeschakeld, aangevinkt, actief element */
   --mox-color-interactive-visited-text: var(--rijkshuisstijl-color-paars-500); /** Voor reeds bezochte (tekst-) links */
+  --mox-color-logo-background: var(--rijkshuisstijl-color-lintblauw-500);
   --mox-color-text-default: var(--rijkshuisstijl-color-neutraal-gebroken-zwart); /** Primaire brood- en koptekst */
   --mox-color-text-disabled: var(--rijkshuisstijl-color-grijs-500); /** Niet-beschikbare tekst */
   --mox-color-text-inverse: var(--rijkshuisstijl-color-neutraal-wit); /** Tekst op color.background.inverse of op color.feedback.*.emphasis-oppervlakken */
@@ -113,8 +114,9 @@
   --mox-size-component-subnav-width: 13rem;
   --mox-size-icon-lg: var(--rijkshuisstijl-size-32);
   --mox-size-icon-md: var(--rijkshuisstijl-size-24);
+  --mox-size-icon-sm: var(--rijkshuisstijl-size-16);
   --mox-size-icon-xl: var(--rijkshuisstijl-size-48);
-  --mox-size-icon-xs: var(--rijkshuisstijl-size-8);
+  --mox-size-icon-xs: var(--rijkshuisstijl-size-12);
   --mox-size-lg: var(--rijkshuisstijl-size-64);
   --mox-size-logo-height: var(--rijkshuisstijl-size-88);
   --mox-size-logo-width: var(--rijkshuisstijl-size-48);
@@ -148,25 +150,35 @@
   --mox-space-sm: var(--rijkshuisstijl-space-12);
   --mox-space-xl: var(--rijkshuisstijl-space-32);
   --mox-space-xs: var(--rijkshuisstijl-space-8);
-  --mox-text-code: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-sm) monospace;
-  --mox-text-component-text-badge: var(--mox-text-font-weight-bold) var(--rijkshuisstijl-text-font-size-xs) var(--mox-text-font-family-body);
+  --mox-text-code: var(--mox-text-font-weight-semi-bold) var(--mox-text-size-body-sm) monospace;
+  --mox-text-component-text-badge: var(--mox-text-font-weight-bold) var(--mox-text-size-body-xs) var(--mox-text-font-family-body);
   --mox-text-font-family-body: var(--rijkshuisstijl-text-font-family-default);
   --mox-text-font-weight-bold: var(--rijkshuisstijl-text-weight-bold);
   --mox-text-font-weight-regular: var(--rijkshuisstijl-text-weight-default);
   --mox-text-font-weight-semi-bold: var(--rijkshuisstijl-text-weight-semibold);
-  --mox-text-heading-h1: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-4xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-heading-h2: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-3xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-heading-h3: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-2xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-heading-h4: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-heading-h5: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-heading-h6: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-base)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
-  --mox-text-label: var(--rijkshuisstijl-text-weight-semibold) var(--rijkshuisstijl-text-font-size-md)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
-  --mox-text-nav-footer: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-sm) var(--rijkshuisstijl-text-font-family-default);
-  --mox-text-nav-main-nav: var(--mox-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-2xl) var(--rijkshuisstijl-text-font-family-default);
-  --mox-text-nav-sub-nav: var(--mox-text-font-weight-regular) var(--rijkshuisstijl-text-font-size-md) var(--rijkshuisstijl-text-font-family-default);
-  --mox-text-paragraph-default: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-md)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
-  --mox-text-paragraph-intro: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-lg)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
-  --mox-text-smalltext: var(--rijkshuisstijl-text-weight-default) var(--rijkshuisstijl-text-font-size-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-heading-h1: var(--mox-text-font-weight-regular) var(--mox-text-size-title-3xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h2: var(--mox-text-font-weight-regular) var(--mox-text-size-title-2xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h3: var(--mox-text-font-weight-regular) var(--mox-text-size-title-xl)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h4: var(--mox-text-font-weight-regular) var(--mox-text-size-title-lg)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h5: var(--mox-text-font-weight-semi-bold) var(--mox-text-size-title-md)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-heading-h6: var(--mox-text-font-weight-semi-bold) var(--mox-text-size-title-sm)/var(--rijkshuisstijl-text-line-height-lg) var(--mox-text-font-family-body);
+  --mox-text-label: var(--rijkshuisstijl-text-weight-semibold) var(--mox-text-size-body-md)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-nav-footer: var(--mox-text-font-weight-regular) var(--mox-text-size-body-sm) var(--rijkshuisstijl-text-font-family-default);
+  --mox-text-nav-main-nav: var(--mox-text-font-weight-semi-bold) var(--mox-text-size-title-xl) var(--rijkshuisstijl-text-font-family-default);
+  --mox-text-nav-sub-nav: var(--mox-text-font-weight-regular) var(--mox-text-size-body-md) var(--rijkshuisstijl-text-font-family-default);
+  --mox-text-paragraph-default: var(--rijkshuisstijl-text-weight-default) var(--mox-text-size-body-md)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-paragraph-intro: var(--rijkshuisstijl-text-weight-default) var(--mox-text-size-body-lg)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
+  --mox-text-size-body-lg: var(--rijkshuisstijl-text-font-size-lg);
+  --mox-text-size-body-md: var(--rijkshuisstijl-text-font-size-md);
+  --mox-text-size-body-sm: var(--rijkshuisstijl-text-font-size-sm);
+  --mox-text-size-body-xs: var(--rijkshuisstijl-text-font-size-xs);
+  --mox-text-size-title-2xl: var(--rijkshuisstijl-text-font-size-3xl);
+  --mox-text-size-title-3xl: var(--rijkshuisstijl-text-font-size-4xl);
+  --mox-text-size-title-lg: var(--rijkshuisstijl-text-font-size-xl);
+  --mox-text-size-title-md: var(--rijkshuisstijl-text-font-size-lg);
+  --mox-text-size-title-sm: var(--rijkshuisstijl-text-font-size-md);
+  --mox-text-size-title-xl: var(--rijkshuisstijl-text-font-size-2xl);
+  --mox-text-smalltext: var(--rijkshuisstijl-text-weight-default) var(--mox-text-size-body-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--mox-text-font-family-body);
   --mox-text-text-decoration-hyperlink: underline solid currentColor var(--mox-border-width-xs);
   --mox-transition-default: background .2s ease, border .2s ease, color .2s ease; /** Standaard transitie die toegepast wordt op alle CSS properties. */
   --mox-transition-transform: transform .2s ease; /** Transitie die toegepast wordt op transform: */

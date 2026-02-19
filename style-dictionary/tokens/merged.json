@@ -1135,77 +1135,77 @@
         "$value": "{color.lintblauw.500}"
       }
     },
-    "component": {
-      "subnav": {
-        "default": {
-          "background": {
-            "$type": "color",
-            "$value": "{color.neutraal.transparent}",
-            "$description": "Ruststaat van klikbaar/tikbaar element"
-          },
-          "text": {
-            "$type": "color",
-            "$value": "{color.text.default}",
-            "$description": "Ruststaat van klikbaar/tikbaar element"
-          },
-          "icon": {
-            "$type": "color",
-            "$value": "{color.component.subnav.default.text}",
-            "$description": "Ruststaat van klikbaar/tikbaar element"
-          }
+    "interactive-alternate": {
+      "default": {
+        "background": {
+          "$type": "color",
+          "$value": "{color.neutraal.transparent}",
+          "$description": "Ruststaat van klikbaar/tikbaar element"
         },
-        "hover": {
-          "background": {
-            "$type": "color",
-            "$value": "{color.grijs.200}",
-            "$description": "Staat bij aanwijzen met de muis"
-          },
-          "text": {
-            "$type": "color",
-            "$value": "{color.component.subnav.default.text}",
-            "$description": "Staat bij aanwijzen met de muis"
-          },
-          "icon": {
-            "$type": "color",
-            "$value": "{color.component.subnav.hover.text}",
-            "$description": "Staat bij aanwijzen met de muis"
-          }
+        "text": {
+          "$type": "color",
+          "$value": "{color.text.default}",
+          "$description": "Ruststaat van klikbaar/tikbaar element"
         },
-        "active": {
-          "background": {
-            "$type": "color",
-            "$value": "{color.grijs.400}",
-            "$description": "Staat terwijl element ingedrukt is"
-          },
-          "text": {
-            "$type": "color",
-            "$value": "{color.component.subnav.default.text}",
-            "$description": "Staat terwijl element ingedrukt is"
-          },
-          "icon": {
-            "$type": "color",
-            "$value": "{color.component.subnav.active.text}",
-            "$description": "Staat terwijl element ingedrukt is"
-          }
-        },
-        "selected": {
-          "background": {
-            "$type": "color",
-            "$value": "{color.hemelblauw.50}",
-            "$description": "Ingeschakeld, aangevinkt, actief element"
-          },
-          "text": {
-            "$type": "color",
-            "$value": "{color.interactive.selected.text}",
-            "$description": "Ingeschakeld, aangevinkt, actief element"
-          },
-          "icon": {
-            "$type": "color",
-            "$value": "{color.component.subnav.selected.text}",
-            "$description": "Ingeschakeld, aangevinkt, actief element"
-          }
+        "icon": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.default.text}",
+          "$description": "Ruststaat van klikbaar/tikbaar element"
         }
       },
+      "hover": {
+        "background": {
+          "$type": "color",
+          "$value": "{color.grijs.200}",
+          "$description": "Staat bij aanwijzen met de muis"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.default.text}",
+          "$description": "Staat bij aanwijzen met de muis"
+        },
+        "icon": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.hover.text}",
+          "$description": "Staat bij aanwijzen met de muis"
+        }
+      },
+      "active": {
+        "background": {
+          "$type": "color",
+          "$value": "{color.grijs.400}",
+          "$description": "Staat terwijl element ingedrukt is"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.default.text}",
+          "$description": "Staat terwijl element ingedrukt is"
+        },
+        "icon": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.active.text}",
+          "$description": "Staat terwijl element ingedrukt is"
+        }
+      },
+      "selected": {
+        "background": {
+          "$type": "color",
+          "$value": "{color.hemelblauw.50}",
+          "$description": "Ingeschakeld, aangevinkt, actief element"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "{color.interactive.selected.text}",
+          "$description": "Ingeschakeld, aangevinkt, actief element"
+        },
+        "icon": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.selected.text}",
+          "$description": "Ingeschakeld, aangevinkt, actief element"
+        }
+      }
+    },
+    "component": {
       "footer": {
         "background": {
           "$type": "color",
@@ -1221,6 +1221,12 @@
           "$type": "color",
           "$value": "{color.text.inverse}"
         }
+      }
+    },
+    "logo": {
+      "background": {
+        "$type": "color",
+        "$value": "{color.lintblauw.500}"
       }
     }
   },
@@ -1363,7 +1369,11 @@
     "icon": {
       "xs": {
         "$type": "sizing",
-        "$value": "{size.8}"
+        "$value": "{size.12}"
+      },
+      "sm": {
+        "$type": "sizing",
+        "$value": "{size.16}"
       },
       "md": {
         "$type": "sizing",
@@ -1484,7 +1494,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.4xl}",
+          "fontSize": "{text.size.title.3xl}",
           "lineHeight": "{text.line-height.lg}"
         }
       },
@@ -1493,7 +1503,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.3xl}",
+          "fontSize": "{text.size.title.2xl}",
           "lineHeight": "{text.line-height.lg}"
         }
       },
@@ -1502,7 +1512,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.2xl}",
+          "fontSize": "{text.size.title.xl}",
           "lineHeight": "{text.line-height.lg}"
         }
       },
@@ -1511,7 +1521,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.xl}",
+          "fontSize": "{text.size.title.lg}",
           "lineHeight": "{text.line-height.lg}"
         }
       },
@@ -1520,7 +1530,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.semi-bold}",
-          "fontSize": "{text.font-size.lg}",
+          "fontSize": "{text.size.title.md}",
           "lineHeight": "{text.line-height.lg}"
         }
       },
@@ -1529,7 +1539,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.font-weight.semi-bold}",
-          "fontSize": "{text.font-size.base}",
+          "fontSize": "{text.size.title.sm}",
           "lineHeight": "{text.line-height.lg}"
         }
       }
@@ -1540,7 +1550,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.weight.default}",
-          "fontSize": "{text.font-size.md}",
+          "fontSize": "{text.size.body.md}",
           "lineHeight": "{text.line-height.sm}",
           "paragraphSpacing": "{typography.spacing.paragraph.default}"
         }
@@ -1550,7 +1560,7 @@
         "$value": {
           "fontFamily": "{text.font-family.body}",
           "fontWeight": "{text.weight.default}",
-          "fontSize": "{text.font-size.lg}",
+          "fontSize": "{text.size.body.lg}",
           "lineHeight": "{text.line-height.sm}",
           "paragraphSpacing": "{typography.spacing.paragraph.default}"
         }
@@ -1561,7 +1571,7 @@
       "$value": {
         "fontFamily": "{text.font-family.body}",
         "fontWeight": "{text.weight.semibold}",
-        "fontSize": "{text.font-size.md}",
+        "fontSize": "{text.size.body.md}",
         "lineHeight": "{text.line-height.sm}",
         "paragraphSpacing": "{typography.spacing.paragraph.default}"
       }
@@ -1571,7 +1581,7 @@
       "$value": {
         "fontFamily": "{text.font-family.body}",
         "fontWeight": "{text.weight.default}",
-        "fontSize": "{text.font-size.sm}",
+        "fontSize": "{text.size.body.sm}",
         "lineHeight": "{text.line-height.sm}",
         "paragraphSpacing": "{typography.spacing.paragraph.default}"
       }
@@ -1601,7 +1611,7 @@
       "$value": {
         "fontFamily": "monospace",
         "fontWeight": "{text.font-weight.semi-bold}",
-        "fontSize": "{text.font-size.sm}"
+        "fontSize": "{text.size.body.sm}"
       }
     },
     "nav": {
@@ -1610,7 +1620,7 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.semi-bold}",
-          "fontSize": "{text.font-size.2xl}"
+          "fontSize": "{text.size.title.xl}"
         }
       },
       "sub-nav": {
@@ -1618,7 +1628,7 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.md}"
+          "fontSize": "{text.size.body.md}"
         }
       },
       "footer": {
@@ -1626,7 +1636,7 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.font-size.sm}"
+          "fontSize": "{text.size.body.sm}"
         }
       }
     },
@@ -1637,8 +1647,54 @@
           "$value": {
             "fontFamily": "{text.font-family.body}",
             "fontWeight": "{text.font-weight.bold}",
-            "fontSize": "{text.font-size.xs}"
+            "fontSize": "{text.size.body.xs}"
           }
+        }
+      }
+    },
+    "size": {
+      "body": {
+        "xs": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.xs}"
+        },
+        "sm": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.sm}"
+        },
+        "md": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.md}"
+        },
+        "lg": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.lg}"
+        }
+      },
+      "title": {
+        "sm": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.md}"
+        },
+        "md": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.lg}"
+        },
+        "lg": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.xl}"
+        },
+        "xl": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.2xl}"
+        },
+        "2xl": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.3xl}"
+        },
+        "3xl": {
+          "$type": "fontSizes",
+          "$value": "{text.font-size.4xl}"
         }
       }
     }
@@ -1973,7 +2029,7 @@
       "$value": {
         "width": "1px",
         "style": "solid",
-        "color": "{color.grijs.300}"
+        "color": "{color.grijs.100}"
       }
     }
   }

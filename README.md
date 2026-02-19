@@ -103,6 +103,24 @@ Bij het gebruik van `npm run dev` worden design tokens automatisch opnieuw gebou
 
 ```
 
+## CSS conventies
+
+### Logical properties
+
+In de stylesheets worden [CSS logical properties](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values) gebruikt in plaats van fysieke properties. Logical properties passen zich automatisch aan op basis van de schrijfrichting (`direction`) en schrijfmodus (`writing-mode`), wat de CSS toekomstbestendig en beter geschikt maakt voor meertalige ondersteuning.
+
+| Fysiek | Logisch |
+| ------ | ------- |
+| `width` | `inline-size` |
+| `height` | `block-size` |
+| `max-width` | `max-inline-size` |
+| `min-height` | `min-block-size` |
+| `margin-top` / `margin-bottom` | `margin-block-start` / `margin-block-end` |
+| `margin-left` / `margin-right` | `margin-inline-start` / `margin-inline-end` |
+| `padding-top` / `padding-bottom` | `padding-block-start` / `padding-block-end` |
+| `padding-left` / `padding-right` | `padding-inline-start` / `padding-inline-end` |
+| `border-top` / `border-bottom` | `border-block-start` / `border-block-end` |
+
 ## Design tokens in Figma
 
 Om met de design tokens in Figma te werken dient gebruik gemaakt te worden van [de Tokens Studio plugin](https://www.figma.com/community/plugin/843461159747178978/tokens-studio-for-figma). Wanneer deze geïnstalleerd is kan je [middels deze uitleg de tokens in Figma importeren en synchroniseren](https://docs.tokens.studio/token-storage/remote/sync-git-github) (en vervolgens optioneel omzetten in Figma variabelen en/of stijlen).
