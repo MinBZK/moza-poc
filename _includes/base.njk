@@ -13,21 +13,21 @@
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 
-{% if headerType == "overheid" %}
-    {% include "header-overheid.njk" %}
-{% else %}
-    {% include "header-rijksoverheid.njk" %}
-{% endif %}
+    {% if headerType == "overheid" %}
+        {% include "header-overheid.njk" %}
+    {% else %}
+        {% include "header-rijksoverheid.njk" %}
+    {% endif %}
 
-<main>
-    {{ content | safe }}
-</main>
+    <main>
+        {{ content | safe }}
+    </main>
 
-{% if footerType == "overheid" %}
-    {% include "footer-overheid.njk" %}
-{% else %}
-<footer></footer>
-{% endif %}
+    {% if footerType == "overheid" %}
+        {% include "footer-overheid.njk" %}
+    {% else %}
+    <footer></footer>
+    {% endif %}
 
 </body>
 </html>

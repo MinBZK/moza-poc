@@ -106,9 +106,7 @@ h6 { font: var(--mox-text-heading-h6); }
 p {
     font: var(--mox-text-paragraph-default);
     &.intro {font: var(--mox-text-paragraph-intro);}
-    &:not(:last-of-type) {
-        margin-block-end: var(--mox-space-margin-2xs);
-    }
+    margin-block-end: var(--mox-space-margin-2xs);
 }
 
 small {
@@ -466,7 +464,7 @@ li {
 
 table {
     inline-size: 100%;
-    margin-block-end: var(--mox-space-margin-md);
+    margin-block: var(--mox-space-margin-xs);
 }
 tr {
     vertical-align: top;
@@ -529,7 +527,7 @@ summary {
     flex-direction: column;
     /* gap: var(--mox-space-padding-lg); */
     padding: var(--mox-space-component-card-padding);
-    h3, h4 {
+    h2, h3, h4 {
         font-size: var(--mox-text-size-title-xl);
         margin-block-end: var(--mox-space-margin-2xs);
         a {
@@ -551,9 +549,17 @@ summary {
             }
         }
     }
+    .list-content-links {
+        list-style: none;
+        margin-block-end: var(--mox-space-margin-md);
+        padding: 0;
+        li {
+            margin-block-end: 0;
+        }
+    }
     .content-link {
         border-block-end: var(--mox-border-default);
-        margin-block-end: var(--mox-space-margin-md);
+        display: block;
         padding-block: var(--mox-space-padding-lg);
     }
 }
@@ -565,6 +571,7 @@ summary {
     .card {
         display: flex;
         justify-content: space-between;
+        gap: var(--mox-space-margin-sm);
     }
 }
 
