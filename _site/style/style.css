@@ -481,6 +481,7 @@ th, td {
 caption {
     caption-side: block-end; /* Logical property wordt nog niet goed ondersteund voor caption-side */
     caption-side: bottom;
+    padding-block-start: var(--mox-space-padding-sm);
     text-align: end;
 }
 
@@ -538,11 +539,7 @@ summary {
         font-size: var(--mox-text-size-title-lg);
     }
     a:not(.btn-cta) {
-        /* padding-block-end: var(--mox-space-padding-lg); */
         text-decoration: none;
-        &:not(:last-of-type) {
-            border-block-end: var(--mox-border-default);
-        }
         p {
             color: var(--mox-color-text-default);
         }
@@ -554,6 +551,7 @@ summary {
         }
     }
     .content-link {
+        border-block-end: var(--mox-border-default);
         padding-block-end: var(--mox-space-padding-lg);
     }
 }
