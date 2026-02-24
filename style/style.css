@@ -466,6 +466,7 @@ li {
 
 table {
     inline-size: 100%;
+    margin-block-end: var(--mox-space-margin-md);
 }
 tr {
     vertical-align: top;
@@ -526,7 +527,7 @@ summary {
     box-shadow: var(--mox-border-card-default);
     display: flex;
     flex-direction: column;
-    gap: var(--mox-space-padding-lg);
+    /* gap: var(--mox-space-padding-lg); */
     padding: var(--mox-space-component-card-padding);
     h3, h4 {
         font-size: var(--mox-text-size-title-xl);
@@ -552,7 +553,8 @@ summary {
     }
     .content-link {
         border-block-end: var(--mox-border-default);
-        padding-block-end: var(--mox-space-padding-lg);
+        margin-block-end: var(--mox-space-margin-md);
+        padding-block: var(--mox-space-padding-lg);
     }
 }
 
