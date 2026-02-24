@@ -222,14 +222,14 @@ legend, label {
     display: flex;
     flex-direction: column;
     gap: var(--mox-space-padding-md);
-    margin-top: var(--mox-space-margin-sm);
+    margin-block-start: var(--mox-space-margin-sm);
     button, a.btn-cta {
-        width: 100%;
+        inline-size: 100%;
     }
     @media (min-width: 30em) {
         flex-direction: row;
         button, a.btn-cta {
-            width: initial;
+            inline-size: initial;
         }
     }
 }
@@ -465,21 +465,29 @@ li {
 /* Tabellen */
 
 table {
-    width: 100%;
+    inline-size: 100%;
 }
-
+tr {
+    vertical-align: top;
+}
 th, td {
     border-block-end: var(--mox-border-default);
     padding: var(--mox-space-padding-xs) 0;
     text-align: start;
-}
-th {
-    max-inline-size: var(--mox-size-xl);
+    .feedback {
+        margin-block-end: var(--mox-space-margin-xs);
+    }
 }
 caption {
     caption-side: block-end; /* Logical property wordt nog niet goed ondersteund voor caption-side */
     caption-side: bottom;
     text-align: end;
+}
+
+.data-overview {
+    th {
+        inline-size: calc(var(--mox-size-xl) * 2);
+    }
 }
 
 /* Uitklapblok */
@@ -500,7 +508,7 @@ summary {
         background: var(--mox-color-interactive-alternate-hover-background);
     }
     &::before {
-        content: url("/assets/icons/icon-chevron.svg");
+        content: url("../assets/icons/icon-chevron.svg");
         display: inline-block;
         margin-inline-end: var(--mox-space-margin-2xs);
         transition: var(--mox-transition-transform);
@@ -521,7 +529,7 @@ summary {
     padding: var(--mox-space-component-card-padding);
     h3, h4 {
         font-size: var(--mox-text-size-title-xl);
-        margin-bottom: var(--mox-space-margin-2xs);
+        margin-block-end: var(--mox-space-margin-2xs);
         a {
             color: var(--mox-color-interactive-default-text);
         }
@@ -530,7 +538,7 @@ summary {
         font-size: var(--mox-text-size-title-lg);
     }
     a:not(.btn-cta) {
-        padding-block-end: var(--mox-space-padding-lg);
+        /* padding-block-end: var(--mox-space-padding-lg); */
         text-decoration: none;
         &:not(:last-of-type) {
             border-block-end: var(--mox-border-default);
@@ -544,6 +552,9 @@ summary {
                 text-decoration: underline;
             }
         }
+    }
+    .content-link {
+        padding-block-end: var(--mox-space-padding-lg);
     }
 }
 
@@ -570,6 +581,9 @@ summary {
 
 /* Links en labels voorzien van SVG iconen */
 .icon-link, .icon-label {
+    align-items: center;
+    display: flex;
+    gap: var(--mox-space-padding-xs);
     text-decoration: none;
     svg {
         block-size: var(--mox-size-icon-sm);

@@ -1,0 +1,84 @@
+---
+title: "MijnOverheid Zakelijk: Contactvoorkeuren"
+---
+
+{% include "sub-nav-overheid.njk" %}
+
+<article>
+
+    <nav class="breadcrumb">
+        <ol>
+            <li><a href="{{ '/moza/' | url }}">Home</a></li>
+            <li><a href="{{ '/moza/contactvoorkeuren/' | url }}">Contactvoorkeuren</a></li>
+            <li aria-current="page">Communicatiekanalen wijzigen</li>
+        </ol>
+    </nav>
+
+    <h1>Contactvoorkeuren</h1>
+
+    <section class="card">
+
+        <h2>Berichtgevingen</h2>
+
+        <p>Kies per berichttype uw voorkeurskanaal.</p>
+
+        <form action="{{ '/moza/contactvoorkeuren/' | url }}">
+
+            <table class="data-overview">
+                <tr>
+                    <th scope="row">Ontvangstbevestiging</th>
+                    <td>
+                        <ul class="list-plain">
+                            <li><input type="checkbox" id="contact-message-receiptconfirmation-email" checked><label for="contact-message-receiptconfirmation-email">E-mail</label></li>
+                            <li><input type="checkbox" id="contact-message-receiptconfirmation-post" checked><label for="contact-message-receiptconfirmation-post">Post</label></li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Statuswijzigingen</th>
+                    <td>
+                        <ul class="list-plain">
+                            <li><input type="checkbox" id="contact-message-statuschange-email" checked><label for="contact-message-statuschange-email">E-mail</label></li>
+                            <li><input type="checkbox" id="contact-message-statuschange-post"><label for="contact-message-statuschange-post">Post</label></li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Besluiten</th>
+                    <td>
+                        <ul class="list-plain">
+                            <li><input type="checkbox" id="contact-message-decision-email" checked><label for="contact-message-decision-email">E-mail</label></li>
+                            <li><input type="checkbox" id="contact-message-decision-post"><label for="contact-message-decision-post">Post</label></li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Taken</th>
+                    <td>
+                        <div class="feedback feedback-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 24 24">
+                                <path class="feedback-icon-color-background" d="M22.04 3.78c-.16-.95-.88-1.67-1.83-1.83-2.73-.45-7.3-.45-8.21-.45-.91 0-5.48 0-8.22.46-.94.15-1.67.88-1.82 1.82C1.5 6.52 1.5 11.09 1.5 12s0 5.48.46 8.22c.16.95.88 1.67 1.83 1.83 2.74.46 7.3.46 8.22.46.91 0 5.48 0 8.22-.46.95-.16 1.67-.88 1.83-1.83.46-2.74.46-7.3.46-8.22-.02-2.74-.02-5.48-.48-8.22z" />
+                                <path class="feedback-icon-color-foreground" d="M10.71 6.93c0-.34.11-.63.33-.88.22-.25.54-.38.95-.38.41 0 .72.12.94.36.22.24.33.54.33.9 0 .32-.11.61-.33.86s-.54.37-.94.37c-.41 0-.72-.12-.95-.35-.22-.24-.33-.53-.33-.88zm2.4 2.39v8.96H10.9V9.41l2.21-.09z" />
+                            </svg>
+                            <div>
+                                <p>U dient minimaal één optie voor berichtgeving over taken te selecteren.</p>
+                            </div>
+                        </div>
+                        <ul class="list-plain">
+                            <li><input type="checkbox" id="contact-message-task-email"><label for="contact-message-task-email">E-mail</label></li>
+                            <li><input type="checkbox" id="contact-message-task-post"><label for="contact-message-task-post">Post</label></li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="action-group">
+                <button type="submit">Opslaan</button>
+                <button class="secondary">Annuleren</button>
+            </div>
+
+        </form>
+
+    </section>
+
+</article>
