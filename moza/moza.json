@@ -18,7 +18,7 @@
 		{
 			"label": "Bedrijfsgegevens",
 			"url": "/moza/bedrijfsgegevens/",
-			"icon": "/assets/icons/icon-map.svg"
+			"icon": "/assets/icons/icon-gegevens.svg"
 		},
 		{
 			"label": "Contactvoorkeuren",

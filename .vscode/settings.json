@@ -1,8 +1,8 @@
 {
-    "files.associations": {
-        "*.njk": "html"
-    },
-    "emmet.includeLanguages": {
-        "nunjucks": "html"
-    }
+	"files.associations": {
+		"*.njk": "html"
+	},
+	"emmet.includeLanguages": {
+		"nunjucks": "html"
+	}
 }

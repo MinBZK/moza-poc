@@ -1,16 +1,16 @@
 <aside>
-    <nav class="sub-nav">
-        <ul>
-            {% for item in subNav %}
-                <li>
-                    <a href="{{ item.url | url }}"{% if page.url == item.url or subNavActive == item.url %} aria-current="page"{% endif %}>
-                        {% if item.icon %}{% icon item.icon %}{% endif %}
-                        {{ item.label }}
-                        {% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
-                    </a>
-                </li>
-                {% if loop.index == 3 %}{% include "sub-nav-temp.njk" ignore missing %}{% endif %} <!-- tijdelijk, voor de preview van functionaliteit tijdens gebruikers onderzoeken -->
-            {% endfor %}
-        </ul>
-    </nav>
+	<nav class="sub-nav">
+		<ul>
+			{% for item in subNav %}
+			<li>
+				<a href="{{ item.url | url }}"{% if page.url == item.url or subNavActive == item.url %} aria-current="page"{% endif %}>
+					{% if item.icon %}{% icon item.icon %}{% endif %}
+					{{ item.label }}
+					{% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
+				</a>
+			</li>
+			{% if loop.index == 3 %}{% include "sub-nav-temp.njk" ignore missing %}{% endif %} <!-- tijdelijk, voor de preview van functionaliteit tijdens gebruikers onderzoeken -->
+			{% endfor %}
+		</ul>
+	</nav>
 </aside>

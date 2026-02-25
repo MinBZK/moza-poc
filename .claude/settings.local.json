@@ -1,8 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "mcp__figma__generate_figma_design",
-      "Bash(npx @11ty/eleventy --serve)"
-    ]
-  }
+	"permissions": {
+		"allow": [
+			"mcp__figma__generate_figma_design",
+			"Bash(npx @11ty/eleventy --serve)"
+		]
+	}
 }

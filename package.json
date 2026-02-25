@@ -1,14 +1,14 @@
 {
-    "name": "mox",
-    "private": true,
-    "scripts": {
-        "build": "cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
-        "dev": "concurrently \"npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\"",
-        "tokens": "cd style-dictionary && npm run build"
-    },
-    "devDependencies": {
-        "@11ty/eleventy": "^3.1.2",
-        "concurrently": "^9.1.2",
-        "chokidar-cli": "^3.0.0"
-    }
+	"name": "mox",
+	"private": true,
+	"scripts": {
+		"build": "cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
+		"dev": "concurrently \"npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\"",
+		"tokens": "cd style-dictionary && npm run build"
+	},
+	"devDependencies": {
+		"@11ty/eleventy": "^3.1.2",
+		"concurrently": "^9.1.2",
+		"chokidar-cli": "^3.0.0"
+	}
 }

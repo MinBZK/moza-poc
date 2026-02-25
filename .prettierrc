@@ -1,11 +1,3 @@
 {
-	"useTabs": true,
-	"overrides": [
-		{
-			"files": "*.njk",
-			"options": {
-				"parser": "html"
-			}
-		}
-	]
+	"useTabs": true
 }
