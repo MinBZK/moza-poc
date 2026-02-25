@@ -1,716 +1,803 @@
 /* Importeer Rijkhuisstijl design tokens als variabelen */
-@import '_rijkshuisstijl.css';
+@import "_rijkshuisstijl.css";
 
 /* Importeer MOx common design tokens als variabelen */
-@import '_mox.css';
+@import "_mox.css";
 
 /* Importeer reset stijlen */
-@import '_reset.css';
-
+@import "_reset.css";
 
 /* Voeg Rijksoverheid Sans lettertype toe */
 
 @font-face {
-    font-family: "RijksSansVF";
-    font-style: normal;
-    font-weight: 400;
-    src: url('../assets/fonts/RijksSansVF-Regular.ttf') format('truetype');
+	font-family: "RijksSansVF";
+	font-style: normal;
+	font-weight: 400;
+	src: url("../assets/fonts/RijksSansVF-Regular.ttf") format("truetype");
 }
 
 @font-face {
-    font-family: "RijksSansVF";
-    font-style: italic;
-    font-weight: 400;
-    src: url('../assets/fonts/RijksSansVF-Italic.ttf') format('truetype');
+	font-family: "RijksSansVF";
+	font-style: italic;
+	font-weight: 400;
+	src: url("../assets/fonts/RijksSansVF-Italic.ttf") format("truetype");
 }
-
 
 /* Basis en layout */
 
 body {
-    color: var(--mox-color-text-default);
-    display: flex;
-    flex-direction: column;
-    font-family: var(--mox-text-font-family-body), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-    min-block-size: 100vh;
-    min-block-size: 100dvh;
+	color: var(--mox-color-text-default);
+	display: flex;
+	flex-direction: column;
+	font-family:
+		var(--mox-text-font-family-body),
+		system-ui,
+		-apple-system,
+		"Segoe UI",
+		Roboto,
+		"Helvetica Neue",
+		Arial,
+		"Noto Sans",
+		"Liberation Sans",
+		sans-serif;
+	min-block-size: 100vh;
+	min-block-size: 100dvh;
 }
 
 header {
-    margin-block-end: var(--mox-space-margin-md);
-    .logo {
-        margin-block-end: var(--mox-space-margin-xs);
-        text-align: center;
-        img {
-            inline-size: var(--mox-size-logo-width);
-        }
-        nav {
-            li {
-                display: inline-block;
-            }
-        }
-    }
-    .user-menu {
-        display: flex;
-        gap: var(--mox-space-padding-md);
-    }
+	margin-block-end: var(--mox-space-margin-md);
+	.logo {
+		margin-block-end: var(--mox-space-margin-xs);
+		text-align: center;
+		img {
+			inline-size: var(--mox-size-logo-width);
+		}
+		nav {
+			li {
+				display: inline-block;
+			}
+		}
+	}
+	.user-menu {
+		display: flex;
+		gap: var(--mox-space-padding-md);
+	}
 }
 .page-head {
-    margin-inline: auto;
-    max-inline-size: 1140px;
-    .title {
-        font: var(--mox-text-heading-h1);
-    }
+	margin-inline: auto;
+	max-inline-size: 1140px;
+	.title {
+		font: var(--mox-text-heading-h1);
+	}
 }
 
 main {
-    flex: 1;
-    margin-inline: auto;
-    max-inline-size: var(--mox-page-max-inline-size);
-    inline-size: 100%;
-    @media (min-width: 30em) {
-       display: grid;
-       grid-template-columns: auto 1fr;
-    }
-    > article:first-of-type {
-        margin-block-end: var(--mox-space-margin-lg);
-        padding-inline: var(--mox-space-padding-md);
-        inline-size: 100%;
-    }
-    &::after {
-        background: var(--mox-color-logo-background);
-        content: "";
-        display: block;
-        grid-column: 1 / -1;
-        block-size: var(--mox-size-sm);
-        margin-inline: auto;
-        inline-size: var(--mox-size-logo-width);
-    }
+	flex: 1;
+	margin-inline: auto;
+	max-inline-size: var(--mox-page-max-inline-size);
+	inline-size: 100%;
+	@media (min-width: 30em) {
+		display: grid;
+		grid-template-columns: auto 1fr;
+	}
+	> article:first-of-type {
+		margin-block-end: var(--mox-space-margin-lg);
+		padding-inline: var(--mox-space-padding-md);
+		inline-size: 100%;
+	}
+	&::after {
+		background: var(--mox-color-logo-background);
+		content: "";
+		display: block;
+		grid-column: 1 / -1;
+		block-size: var(--mox-size-sm);
+		margin-inline: auto;
+		inline-size: var(--mox-size-logo-width);
+	}
 }
 footer {
-    background: var(--mox-color-component-footer-background);
-    color: var(--mox-color-text-inverse);
-    padding: var(--mox-space-padding-xl) var(--mox-space-padding-md);
+	background: var(--mox-color-component-footer-background);
+	color: var(--mox-color-text-inverse);
+	padding: var(--mox-space-padding-xl) var(--mox-space-padding-md);
 }
-
 
 /* Typografie */
 
-h1 { font: var(--mox-text-heading-h1); }
-h2 { font: var(--mox-text-heading-h2); }
-h3 { font: var(--mox-text-heading-h3); }
-h4 { font: var(--mox-text-heading-h4); }
-h5 { font: var(--mox-text-heading-h5); }
-h6 { font: var(--mox-text-heading-h6); }
+h1 {
+	font: var(--mox-text-heading-h1);
+}
+h2 {
+	font: var(--mox-text-heading-h2);
+}
+h3 {
+	font: var(--mox-text-heading-h3);
+}
+h4 {
+	font: var(--mox-text-heading-h4);
+}
+h5 {
+	font: var(--mox-text-heading-h5);
+}
+h6 {
+	font: var(--mox-text-heading-h6);
+}
 
 p {
-    font: var(--mox-text-paragraph-default);
-    &.intro {font: var(--mox-text-paragraph-intro);}
-    margin-block-end: var(--mox-space-margin-2xs);
+	font: var(--mox-text-paragraph-default);
+	&.intro {
+		font: var(--mox-text-paragraph-intro);
+	}
+	margin-block-end: var(--mox-space-margin-2xs);
 }
 
 small {
-    font: var(--mox-text-smalltext-default);
+	font: var(--mox-text-smalltext-default);
 }
 
-strong, b {
-    font-weight: var(--mox-text-font-weight-bold);
+strong,
+b {
+	font-weight: var(--mox-text-font-weight-bold);
 }
-em, i { font-style: italic; }
+em,
+i {
+	font-style: italic;
+}
 
 a {
-    color: var(--mox-color-interactive-default-text);
-    text-decoration: var(--mox-text-text-decoration-hyperlink);
-    text-underline-offset: 3px; /* Vaste waarde voor onderstreping offset, niet in design tokens gedefinieerd omdat deze slechts eenmaal voorkomt */
-    text-decoration-skip-ink: auto;
-    &:hover {
-        color: var(--mox-color-interactive-hover-text);
-        text-decoration: none;
-    }
-    &:active {
-        color: var(--mox-color-interactive-active-text);
-    }
+	color: var(--mox-color-interactive-default-text);
+	text-decoration: var(--mox-text-text-decoration-hyperlink);
+	text-underline-offset: 3px; /* Vaste waarde voor onderstreping offset, niet in design tokens gedefinieerd omdat deze slechts eenmaal voorkomt */
+	text-decoration-skip-ink: auto;
+	&:hover {
+		color: var(--mox-color-interactive-hover-text);
+		text-decoration: none;
+	}
+	&:active {
+		color: var(--mox-color-interactive-active-text);
+	}
 }
 
-code, kbd, pre, samp, var {
-    background: var(--mox-color-background-subtle);
-    font: var(--mox-text-code);
+code,
+kbd,
+pre,
+samp,
+var {
+	background: var(--mox-color-background-subtle);
+	font: var(--mox-text-code);
 }
 pre {
-    padding: var(--mox-space-padding-sm);
+	padding: var(--mox-space-padding-sm);
 }
-
 
 /* Generieke interactie stijlen */
 
-&:hover, :active, &:checked {
-    transition: var(--mox-transition-default);
+&:hover,
+:active,
+&:checked {
+	transition: var(--mox-transition-default);
 }
 [aria-disabled] {
-    opacity: .6; /* Opacity gebruiken i.p.v. specifieke kleuren heeft diverse voordelen waaronder het automatisch aanpassen aan modus (donker/licht/hoog-contrast) en vergt minder onderhoud, nadeel: ook focus-ring (aria-disabled i.p.v. reguliere disabled attribuut maakt het juist mogelijk om focus te leggen op inactieve elementen zodat gebruikers die afhankelijk van :focus zijn alsnog inhoud en context begrijpen) wordt hierdoor semi-transparant */
+	opacity: 0.6; /* Opacity gebruiken i.p.v. specifieke kleuren heeft diverse voordelen waaronder het automatisch aanpassen aan modus (donker/licht/hoog-contrast) en vergt minder onderhoud, nadeel: ook focus-ring (aria-disabled i.p.v. reguliere disabled attribuut maakt het juist mogelijk om focus te leggen op inactieve elementen zodat gebruikers die afhankelijk van :focus zijn alsnog inhoud en context begrijpen) wordt hierdoor semi-transparant */
 }
 
 /* Focus voor keyboard, spraak en switch gebruikers */
-    :focus:not(:focus-visible) {
-    outline: none; /* Verberg focus outline voor muis-gebruikers, behoud focus outline voor alle andere gebruikers (toetsenbord, spraak, switch) */
+:focus:not(:focus-visible) {
+	outline: none; /* Verberg focus outline voor muis-gebruikers, behoud focus outline voor alle andere gebruikers (toetsenbord, spraak, switch) */
 }
 :focus-visible {
-    outline: var(--mox-focus-outline);
-    outline-offset: var(--mox-size-5xs);
-    &[aria-disabled] {
-        outline-color: var(--mox-color-interactive-disabled-border);
-    }
-    &.negative {
-        outline-color: var(--mox-color-feedback-error-border);
-    }
+	outline: var(--mox-focus-outline);
+	outline-offset: var(--mox-size-5xs);
+	&[aria-disabled] {
+		outline-color: var(--mox-color-interactive-disabled-border);
+	}
+	&.negative {
+		outline-color: var(--mox-color-feedback-error-border);
+	}
 }
-
 
 /* Formulier elementen */
 
-form {}
+form {
+}
 
-fieldset {}
+fieldset {
+}
 
-button, input, select, textarea, a.btn-cta {
-    align-self: flex-start; /* Voorkomt dat elementen de volledige breedte aannemen in een flexbox container */
-    background: var(--mox-color-interactive-default-surface);
-    border: var(--mox-border-width-md) solid var(--mox-color-interactive-default-border);
-    border-radius: var(--mox-border-radius-sm);
-    font: inherit;
-    min-block-size: var(--mox-pointer-target-min-size);
-    min-inline-size: var(--mox-pointer-target-min-size);
-    padding-block: var(--mox-space-padding-sm);
-    padding-inline: var(--mox-space-padding-md);
-    transition: var(--mox-transition-default);
-    &:hover {
-        border-color: var(--mox-color-interactive-hover-border);
-    }
-    &:active {
-        border-color: var(--mox-color-interactive-active-border);
-    }
-    /* &[aria-disabled] {
+button,
+input,
+select,
+textarea,
+a.btn-cta {
+	align-self: flex-start; /* Voorkomt dat elementen de volledige breedte aannemen in een flexbox container */
+	background: var(--mox-color-interactive-default-surface);
+	border: var(--mox-border-width-md) solid
+		var(--mox-color-interactive-default-border);
+	border-radius: var(--mox-border-radius-sm);
+	font: inherit;
+	min-block-size: var(--mox-pointer-target-min-size);
+	min-inline-size: var(--mox-pointer-target-min-size);
+	padding-block: var(--mox-space-padding-sm);
+	padding-inline: var(--mox-space-padding-md);
+	transition: var(--mox-transition-default);
+	&:hover {
+		border-color: var(--mox-color-interactive-hover-border);
+	}
+	&:active {
+		border-color: var(--mox-color-interactive-active-border);
+	}
+	/* &[aria-disabled] {
         border-color: var(--mox-color-interactive-disabled-border);
     } */
-    &[aria-invalid] {
-        border-color: var(--mox-color-feedback-error-border);
-    }
-    &.negative {
-        border-color: var(--mox-color-feedback-error-border);
-    }
+	&[aria-invalid] {
+		border-color: var(--mox-color-feedback-error-border);
+	}
+	&.negative {
+		border-color: var(--mox-color-feedback-error-border);
+	}
 }
 
 /* Formulieren: Labeling */
 
-legend, label {
-    display: block;
-    font: var(--mox-text-label);
-    &:has(+ [aria-disabled]) {
-        opacity: .6;
-    }
+legend,
+label {
+	display: block;
+	font: var(--mox-text-label);
+	&:has(+ [aria-disabled]) {
+		opacity: 0.6;
+	}
 }
 
 .form-field-helper-text {
-    color: var(--mox-color-text-subtle-1);
-    font: var(--mox-text-smalltext-default);
+	color: var(--mox-color-text-subtle-1);
+	font: var(--mox-text-smalltext-default);
 }
 
 /* Actiegroep; groeperen van gerelateerde acties */
 .action-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--mox-space-padding-md);
-    margin-block-start: var(--mox-space-margin-sm);
-    button, a.btn-cta {
-        inline-size: 100%;
-    }
-    @media (min-width: 30em) {
-        flex-direction: row;
-        button, a.btn-cta {
-            inline-size: initial;
-        }
-    }
+	display: flex;
+	flex-direction: column;
+	gap: var(--mox-space-padding-md);
+	margin-block-start: var(--mox-space-margin-sm);
+	button,
+	a.btn-cta {
+		inline-size: 100%;
+	}
+	@media (min-width: 30em) {
+		flex-direction: row;
+		button,
+		a.btn-cta {
+			inline-size: initial;
+		}
+	}
 }
 
 /* Knoppen */
 
-button, a.btn-cta {
-    background: var(--mox-color-interactive-default-background);
-    color: var(--mox-color-text-inverse);
-    cursor: pointer;
-    span {
-        display: inline-block;
-    }
-    &.secondary {
-        background: var(--mox-color-interactive-default-surface);
-        border-color: var(--mox-color-interactive-default-border);
-        color: var(--mox-color-interactive-default-text);
-    }
-    &:hover, &:focus {
-        background: var(--mox-color-interactive-hover-background);
-        border-color: var(--mox-color-interactive-hover-border);
-        color: var(--mox-color-text-inverse);
-    }
-    &:active {
-        background: var(--mox-color-interactive-active-background);
-        border-color: var(--mox-color-interactive-active-border);
-    }
-    &[aria-disabled] {
-        /* background: var(--mox-color-interactive-disabled-background);
+button,
+a.btn-cta {
+	background: var(--mox-color-interactive-default-background);
+	color: var(--mox-color-text-inverse);
+	cursor: pointer;
+	span {
+		display: inline-block;
+	}
+	&.secondary {
+		background: var(--mox-color-interactive-default-surface);
+		border-color: var(--mox-color-interactive-default-border);
+		color: var(--mox-color-interactive-default-text);
+	}
+	&:hover,
+	&:focus {
+		background: var(--mox-color-interactive-hover-background);
+		border-color: var(--mox-color-interactive-hover-border);
+		color: var(--mox-color-text-inverse);
+	}
+	&:active {
+		background: var(--mox-color-interactive-active-background);
+		border-color: var(--mox-color-interactive-active-border);
+	}
+	&[aria-disabled] {
+		/* background: var(--mox-color-interactive-disabled-background);
         border-color: var(--mox-color-interactive-disabled-border); */
-        cursor: not-allowed;
-    }
-    &.negative {
-        background: var(--mox-color-feedback-error-default);
-        &:hover, &:focus-visible {
-            background: var(--mox-color-feedback-error-emphasis);
-            border-color: var(--mox-color-feedback-error-border);
-        }
-        &:active {
-            background: var(--mox-color-interactive-active-background);
-            border-color: var(--mox-color-interactive-active-border);
-        }  
-    }
+		cursor: not-allowed;
+	}
+	&.negative {
+		background: var(--mox-color-feedback-error-default);
+		&:hover,
+		&:focus-visible {
+			background: var(--mox-color-feedback-error-emphasis);
+			border-color: var(--mox-color-feedback-error-border);
+		}
+		&:active {
+			background: var(--mox-color-interactive-active-background);
+			border-color: var(--mox-color-interactive-active-border);
+		}
+	}
 }
 a.btn-cta {
-    display: inline-block;
-    text-decoration: none;
+	display: inline-block;
+	text-decoration: none;
 }
 
 /* Formulier: Tekstinvoer */
 
-[type=email], [type=number], [type=password], [type=search], [type=tel], [type=text], [type=url] {
-    &:hover {}
-    &:focus {}
-    &:focus-visible {}
-    &:active {}
-    &[aria-invalid] {}
+[type="email"],
+[type="number"],
+[type="password"],
+[type="search"],
+[type="tel"],
+[type="text"],
+[type="url"] {
+	&:hover {
+	}
+	&:focus {
+	}
+	&:focus-visible {
+	}
+	&:active {
+	}
+	&[aria-invalid] {
+	}
 }
 
-[type=search]:has(+ button) {
-    border-end-start-radius: 0;
-    border-end-end-radius: 0;
-    + button {
-        display: inline-block;
-        margin-inline-start: -2px;
-    }
+[type="search"]:has(+ button) {
+	border-end-start-radius: 0;
+	border-end-end-radius: 0;
+	+ button {
+		display: inline-block;
+		margin-inline-start: -2px;
+	}
 }
 
 textarea {
-    resize: block; /* Alleen verticaal grootte aan kunnen passen zodat de layout over de breedte ongewijzigd blijft */ 
+	resize: block; /* Alleen verticaal grootte aan kunnen passen zodat de layout over de breedte ongewijzigd blijft */
 }
 
 /* Formulier: Selectie */
 
 ul.selection {
-    list-style: none;
-    padding: 0;
-    li:not(:has(.selection)) {
-        padding-block-end: var(--mox-space-padding-md);
-    }
-    .selection {
-        padding-block-start: var(--mox-space-padding-md);
-        padding-inline-start: var(--mox-space-padding-md);
-    }
+	list-style: none;
+	padding: 0;
+	li:not(:has(.selection)) {
+		padding-block-end: var(--mox-space-padding-md);
+	}
+	.selection {
+		padding-block-start: var(--mox-space-padding-md);
+		padding-inline-start: var(--mox-space-padding-md);
+	}
 }
-[type=checkbox], [type=radio] {
-    min-block-size: var(--mox-size-icon-md);
-    min-inline-size: var(--mox-size-icon-md);
-    transition: var(--mox-transition-default);
-    vertical-align: top;
-    + label {
-        display: inline-block;
-        padding-inline: var(--mox-space-padding-xs);
-    }
-    &[disabled] + label {
-        color: var(--mox-color-interactive-disabled-text);
-    }
+[type="checkbox"],
+[type="radio"] {
+	min-block-size: var(--mox-size-icon-md);
+	min-inline-size: var(--mox-size-icon-md);
+	transition: var(--mox-transition-default);
+	vertical-align: top;
+	+ label {
+		display: inline-block;
+		padding-inline: var(--mox-space-padding-xs);
+	}
+	&[disabled] + label {
+		color: var(--mox-color-interactive-disabled-text);
+	}
 }
-[type=radio] {}
-select {}
-select[multiple] {}
-optgroup {}
-option {}
+[type="radio"] {
+}
+select {
+}
+select[multiple] {
+}
+optgroup {
+}
+option {
+}
 
 /* Formulier: Bestand selecteren */
 
-[type=file] {}
-
+[type="file"] {
+}
 
 /* Navigatie */
 
 nav {
-    ol, ul {
-        list-style: none;
-        padding: 0;
-    }
+	ol,
+	ul {
+		list-style: none;
+		padding: 0;
+	}
 }
 
 /* Navigatie: Hoofdnavigatie */
 
 .main-nav {
-    background-color: var(--mox-color-interactive-active-background);
-    ul {
-        margin-inline: auto;
-        max-inline-size: var(--mox-page-max-inline-size);
-    }
-    li {
-        display: inline-block;
-    }
-    a {
-        color: var(--mox-color-text-inverse);
-        display: inline-block;
-        font: var(--mox-text-nav-main-nav);
-        padding: var(--mox-space-padding-md);
-        text-decoration: none;
-    }
-    [aria-current], a:hover {
-        text-decoration: var(--mox-text-text-decoration-hyperlink);
-        text-underline-offset: 8px;
-    }
-    [aria-current] {
-        font-weight: var(--mox-text-font-weight-bold);
-    }
+	background-color: var(--mox-color-interactive-active-background);
+	ul {
+		margin-inline: auto;
+		max-inline-size: var(--mox-page-max-inline-size);
+	}
+	li {
+		display: inline-block;
+	}
+	a {
+		color: var(--mox-color-text-inverse);
+		display: inline-block;
+		font: var(--mox-text-nav-main-nav);
+		padding: var(--mox-space-padding-md);
+		text-decoration: none;
+	}
+	[aria-current],
+	a:hover {
+		text-decoration: var(--mox-text-text-decoration-hyperlink);
+		text-underline-offset: 8px;
+	}
+	[aria-current] {
+		font-weight: var(--mox-text-font-weight-bold);
+	}
 }
 
 /* Navigatie: Sub-navigatie */
 
 .sub-nav {
-    padding-inline: var(--mox-space-padding-md);
-    li {
-        inline-size: var(--mox-size-component-subnav-width);
-        a {
-            align-items: center;
-            background: var(--mox-color-interactive-alternate-default-background);
-            border-radius: var(--mox-border-radius-md);
-            color: var(--mox-color-interactive-alternate-default-text);
-            column-gap: var(--mox-space-padding-2xs);
-            display: flex;
-            font: var(--mox-text-nav-sub-nav);
-            gap: var(--mox-space-padding-sm);
-            margin-block-end: var(--mox-space-padding-xs);
-            padding-block: var(--mox-space-padding-2xs);
-            padding-inline: var(--mox-space-padding-md);
-            text-decoration: none;
-            &:hover, &:focus {
-                background: var(--mox-color-interactive-alternate-hover-background);
-                color: var(--mox-color-interactive-alternate-default-text);
-            }
-            &:active {
-                background: var(--mox-color-interactive-alternate-active-background);
-                color: var(--mox-color-interactive-alternate-active-text);
-            }
-        }
-        [aria-current] {
-            background: var(--mox-color-interactive-alternate-selected-background);
-            color: var(--mox-color-interactive-alternate-selected-text);
-                font-weight: var(--mox-text-font-weight-semi-bold);
-            }
-        svg {
-            block-size: var(--mox-size-icon-md);
-        }
-    }
+	padding-inline: var(--mox-space-padding-md);
+	li {
+		inline-size: var(--mox-size-component-subnav-width);
+		a {
+			align-items: center;
+			background: var(--mox-color-interactive-alternate-default-background);
+			border-radius: var(--mox-border-radius-md);
+			color: var(--mox-color-interactive-alternate-default-text);
+			column-gap: var(--mox-space-padding-2xs);
+			display: flex;
+			font: var(--mox-text-nav-sub-nav);
+			gap: var(--mox-space-padding-sm);
+			margin-block-end: var(--mox-space-padding-xs);
+			padding-block: var(--mox-space-padding-2xs);
+			padding-inline: var(--mox-space-padding-md);
+			text-decoration: none;
+			&:hover,
+			&:focus {
+				background: var(--mox-color-interactive-alternate-hover-background);
+				color: var(--mox-color-interactive-alternate-default-text);
+			}
+			&:active {
+				background: var(--mox-color-interactive-alternate-active-background);
+				color: var(--mox-color-interactive-alternate-active-text);
+			}
+		}
+		[aria-current] {
+			background: var(--mox-color-interactive-alternate-selected-background);
+			color: var(--mox-color-interactive-alternate-selected-text);
+			font-weight: var(--mox-text-font-weight-semi-bold);
+		}
+		svg {
+			block-size: var(--mox-size-icon-md);
+		}
+	}
 }
 
 /* Navigatie: Kruimelpad */
 
 .breadcrumb {
-    li {
-        display: inline-block;
-        &:not(:last-child)::after {
-            content: ' /';
-            margin-inline: var(--mox-space-padding-2xs);
-        }
-        &[aria-current="page"] {
-            font-weight: var(--mox-text-font-weight-semi-bold);
-        }
-    }
+	li {
+		display: inline-block;
+		&:not(:last-child)::after {
+			content: " /";
+			margin-inline: var(--mox-space-padding-2xs);
+		}
+		&[aria-current="page"] {
+			font-weight: var(--mox-text-font-weight-semi-bold);
+		}
+	}
 }
 
 /* Navigatie: Footerlinks */
 
 footer {
-    a {
-        color: inherit;
-        display: inline-block;
-        font: var(--mox-text-nav-footer);
-        padding-block: var(--mox-space-padding-xs);
-        text-decoration: none;
-        &:hover {
-            color: inherit;
-        }
-    }
+	a {
+		color: inherit;
+		display: inline-block;
+		font: var(--mox-text-nav-footer);
+		padding-block: var(--mox-space-padding-xs);
+		text-decoration: none;
+		&:hover {
+			color: inherit;
+		}
+	}
 }
 .footer-links {
-    display: flex;
-    justify-content: space-between;
-    margin-inline: auto;
-    max-inline-size: var(--mox-page-max-inline-size);
+	display: flex;
+	justify-content: space-between;
+	margin-inline: auto;
+	max-inline-size: var(--mox-page-max-inline-size);
 }
-
 
 /* Lijsten */
 
 .list-plain {
-    list-style: none;
-    padding: 0;
+	list-style: none;
+	padding: 0;
 }
 li {
-    margin-block-end: var(--mox-space-margin-2xs);
+	margin-block-end: var(--mox-space-margin-2xs);
 }
-
 
 /* Tabellen */
 
 table {
-    inline-size: 100%;
-    margin-block: var(--mox-space-margin-xs);
+	inline-size: 100%;
+	margin-block: var(--mox-space-margin-xs);
 }
 tr {
-    vertical-align: top;
+	vertical-align: top;
 }
-th, td {
-    border-block-end: var(--mox-border-default);
-    padding: var(--mox-space-padding-xs) 0;
-    text-align: start;
-    .feedback {
-        margin-block-end: var(--mox-space-margin-xs);
-    }
+th,
+td {
+	border-block-end: var(--mox-border-default);
+	padding: var(--mox-space-padding-xs) 0;
+	text-align: start;
+	.feedback {
+		margin-block-end: var(--mox-space-margin-xs);
+	}
 }
 caption {
-    caption-side: block-end; /* Logical property wordt nog niet goed ondersteund voor caption-side */
-    caption-side: bottom;
-    padding-block-start: var(--mox-space-padding-sm);
-    text-align: end;
+	caption-side: block-end; /* Logical property wordt nog niet goed ondersteund voor caption-side */
+	caption-side: bottom;
+	padding-block-start: var(--mox-space-padding-sm);
+	text-align: end;
 }
 
 .data-overview {
-    th {
-        inline-size: calc(var(--mox-size-xl) * 2);
-    }
+	th {
+		inline-size: calc(var(--mox-size-xl) * 2);
+	}
 }
 
 /* Uitklapblok */
 
 details {
-    border: var(--mox-border-default);
-    border-radius: var(--mox-border-radius-md);
-    &[open] summary::before {
-        transform: rotate(90deg);
-    }
+	border: var(--mox-border-default);
+	border-radius: var(--mox-border-radius-md);
+	&[open] summary::before {
+		transform: rotate(90deg);
+	}
 }
 summary {
-    background: var(--mox-color-background-subtle);
-    cursor: pointer;
-    display: flex;
-    padding: var(--mox-space-padding-sm);
-    &:hover, &:focus {
-        background: var(--mox-color-interactive-alternate-hover-background);
-    }
-    &::before {
-        content: url("../assets/icons/icon-chevron.svg");
-        display: inline-block;
-        margin-inline-end: var(--mox-space-margin-2xs);
-        transition: var(--mox-transition-transform);
-        inline-size: var(--mox-size-icon-xs);
-    }
+	background: var(--mox-color-background-subtle);
+	cursor: pointer;
+	display: flex;
+	padding: var(--mox-space-padding-sm);
+	&:hover,
+	&:focus {
+		background: var(--mox-color-interactive-alternate-hover-background);
+	}
+	&::before {
+		content: url("../assets/icons/icon-chevron.svg");
+		display: inline-block;
+		margin-inline-end: var(--mox-space-margin-2xs);
+		transition: var(--mox-transition-transform);
+		inline-size: var(--mox-size-icon-xs);
+	}
 }
-
 
 /* Cards */
 
 .card {
-    background: var(--mox-color-background-default);
-    border-radius: var(--mox-border-radius-md);
-    box-shadow: var(--mox-border-card-default);
-    display: flex;
-    flex-direction: column;
-    /* gap: var(--mox-space-padding-lg); */
-    padding: var(--mox-space-component-card-padding);
-    h2, h3, h4 {
-        font-size: var(--mox-text-size-title-xl);
-        margin-block-end: var(--mox-space-margin-2xs);
-        a {
-            color: var(--mox-color-interactive-default-text);
-        }
-    }
-    h4 {
-        font-size: var(--mox-text-size-title-lg);
-    }
-    a:not(.btn-cta) {
-        text-decoration: none;
-        p {
-            color: var(--mox-color-text-default);
-        }
-        &:hover {
-            h3, h4 {
-                color: var(--mox-color-interactive-hover-text);
-                text-decoration: underline;
-            }
-        }
-    }
-    .list-content-links {
-        list-style: none;
-        margin-block-end: var(--mox-space-margin-md);
-        padding: 0;
-        li {
-            margin-block-end: 0;
-        }
-    }
-    .content-link {
-        border-block-end: var(--mox-border-default);
-        display: block;
-        padding-block: var(--mox-space-padding-lg);
-    }
+	background: var(--mox-color-background-default);
+	border-radius: var(--mox-border-radius-md);
+	box-shadow: var(--mox-border-card-default);
+	display: flex;
+	flex-direction: column;
+	/* gap: var(--mox-space-padding-lg); */
+	padding: var(--mox-space-component-card-padding);
+	h2,
+	h3,
+	h4 {
+		font-size: var(--mox-text-size-title-xl);
+		margin-block-end: var(--mox-space-margin-2xs);
+		a {
+			color: var(--mox-color-interactive-default-text);
+		}
+	}
+	h4 {
+		font-size: var(--mox-text-size-title-lg);
+	}
+	a:not(.btn-cta) {
+		text-decoration: none;
+		p {
+			color: var(--mox-color-text-default);
+		}
+		&:hover {
+			h3,
+			h4 {
+				color: var(--mox-color-interactive-hover-text);
+				text-decoration: underline;
+			}
+		}
+	}
+	.list-content-links {
+		list-style: none;
+		margin-block-end: var(--mox-space-margin-md);
+		padding: 0;
+		li {
+			margin-block-end: 0;
+		}
+	}
+	.content-link {
+		border-block-end: var(--mox-border-default);
+		display: block;
+		padding-block: var(--mox-space-padding-lg);
+	}
 }
 
 .tiles {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--mox-space-margin-sm);
-    .card {
-        display: flex;
-        justify-content: space-between;
-        gap: var(--mox-space-margin-sm);
-    }
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--mox-space-margin-sm);
+	.card {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--mox-space-margin-sm);
+	}
 }
 
 .card-faq {
-    gap: var(--mox-space-padding-2xs);
-    h4 {
-        font-size: var(--mox-text-size-body-md);
-        margin-block-end: 0;
-    }
-    section {
-        padding: var(--mox-space-padding-sm);
-    }
+	gap: var(--mox-space-padding-2xs);
+	h4 {
+		font-size: var(--mox-text-size-body-md);
+		margin-block-end: 0;
+	}
+	section {
+		padding: var(--mox-space-padding-sm);
+	}
 }
 
 /* Links en labels voorzien van SVG iconen */
-.icon-link, .icon-label {
-    align-items: center;
-    display: flex;
-    gap: var(--mox-space-padding-xs);
-    text-decoration: none;
-    svg {
-        block-size: var(--mox-size-icon-sm);
-    }
+.icon-link,
+.icon-label {
+	align-items: center;
+	display: flex;
+	gap: var(--mox-space-padding-xs);
+	text-decoration: none;
+	svg {
+		block-size: var(--mox-size-icon-sm);
+	}
 }
 .icon-link {
-    &:hover {
-        color: var(--mox-color-interactive-hover-text);
-        text-decoration: underline !important;
-    }
+	&:hover {
+		color: var(--mox-color-interactive-hover-text);
+		text-decoration: underline !important;
+	}
 }
 
 /* Badge component */
 .badge {
-    background: var(--mox-color-component-badge-background);
-    border-radius: var(--mox-border-radius-round);
-    color:var(--mox-color-component-badge-text);
-    font: var(--mox-text-component-text-badge);
-    block-size: var(--mox-size-icon-sm);
-    margin-inline-start: auto;
-    text-align: center;
-    inline-size: var(--mox-size-icon-sm);
+	background: var(--mox-color-component-badge-background);
+	border-radius: var(--mox-border-radius-round);
+	color: var(--mox-color-component-badge-text);
+	font: var(--mox-text-component-text-badge);
+	block-size: var(--mox-size-icon-sm);
+	margin-inline-start: auto;
+	text-align: center;
+	inline-size: var(--mox-size-icon-sm);
 }
-
 
 /* Notificaties */
 
 .feedback {
-    background: var(--mox-color-feedback-neutral-subtle);
-    border: var(--mox-border-default);
-    border-color: var(--mox-color-feedback-neutral-border);
-    border-radius: var(--mox-border-radius-md);
-    display: flex;
-    padding: var(--mox-space-padding-md);
-    svg {
-        align-self: self-start;
-        inline-size: var(--mox-size-icon-md);
-        margin-inline-end: var(--mox-space-margin-2xs);
-    }
+	background: var(--mox-color-feedback-neutral-subtle);
+	border: var(--mox-border-default);
+	border-color: var(--mox-color-feedback-neutral-border);
+	border-radius: var(--mox-border-radius-md);
+	display: flex;
+	padding: var(--mox-space-padding-md);
+	svg {
+		align-self: self-start;
+		inline-size: var(--mox-size-icon-md);
+		margin-inline-end: var(--mox-space-margin-2xs);
+	}
 }
 .feedback-icon-color-foreground {
-    fill: var(--mox-color-text-inverse);
+	fill: var(--mox-color-text-inverse);
 }
 .feedback-info {
-    background: var(--mox-color-feedback-info-subtle);
-    border-color: var(--mox-color-feedback-info-border);
-    svg {
-        fill: var(--mox-color-feedback-info-icon);
-    }
+	background: var(--mox-color-feedback-info-subtle);
+	border-color: var(--mox-color-feedback-info-border);
+	svg {
+		fill: var(--mox-color-feedback-info-icon);
+	}
 }
 .feedback-succes {
-    background: var(--mox-color-feedback-success-subtle);
-    border-color: var(--mox-color-feedback-success-border);
-    svg {
-        fill: var(--mox-color-feedback-success-icon);
-    }
+	background: var(--mox-color-feedback-success-subtle);
+	border-color: var(--mox-color-feedback-success-border);
+	svg {
+		fill: var(--mox-color-feedback-success-icon);
+	}
 }
 .feedback-warning {
-    background: var(--mox-color-feedback-warning-subtle);
-    border-color: var(--mox-color-feedback-warning-border);
-    svg {
-        fill: var(--mox-color-feedback-warning-icon);
-    }
+	background: var(--mox-color-feedback-warning-subtle);
+	border-color: var(--mox-color-feedback-warning-border);
+	svg {
+		fill: var(--mox-color-feedback-warning-icon);
+	}
 }
 .feedback-error {
-    background: var(--mox-color-feedback-error-subtle);
-    border-color: var(--mox-color-feedback-error-border);
-    svg {
-        fill: var(--mox-color-feedback-error-icon);
-    }
+	background: var(--mox-color-feedback-error-subtle);
+	border-color: var(--mox-color-feedback-error-border);
+	svg {
+		fill: var(--mox-color-feedback-error-icon);
+	}
 }
-
 
 /* MijnOverheid Zakelijk */
 
-/* Proof of concept banner */
-.moza-poc-banner {
-    background: var(--mox-color-feedback-success-default);
-    color: var(--mox-color-text-inverse);
-    font-size: var(--mox-text-font-weight-bold);
-    margin-inline-start: -3rem;
-    padding: var(--mox-space-padding-sm) var(--mox-space-padding-lg);
-    position: fixed;
-    right: -4rem;
-    text-align: center;
-    text-decoration: none;
-    top: 2rem;
-    transform: rotate(45deg);
-    transform-origin: center;
-    width: 280px;
-    &:hover {
-        background: var(--mox-color-feedback-success-emphasis);
-        color: var(--mox-color-text-inverse);
-    }
-}
-
 body.moza {
-    background: var(--mox-color-background-subtle);
+	background: var(--mox-color-background-subtle);
 }
 
 .moza header {
-    background: var(--mox-color-background-default);
-    border-block-end: var(--mox-border-component-pageheader-border);
-    box-shadow: var(--mox-box-shadow-default);
+	background: var(--mox-color-background-default);
+	border-block-end: var(--mox-border-component-pageheader-border);
+	box-shadow: var(--mox-box-shadow-default);
 }
 .page-title {
-    font: var(--mox-text-heading-h2);
+	font: var(--mox-text-heading-h2);
 }
 .page-head {
-    align-items: baseline;
-    display: flex;
-    justify-content: space-between;
-    margin-inline: auto;
-    max-inline-size: var(--mox-page-max-inline-size);
-    padding-block: var(--mox-space-padding-xs);
-    padding-inline: var(--mox-space-padding-md);
+	align-items: baseline;
+	display: flex;
+	justify-content: space-between;
+	margin-inline: auto;
+	max-inline-size: var(--mox-page-max-inline-size);
+	padding-block: var(--mox-space-padding-xs);
+	padding-inline: var(--mox-space-padding-md);
 }
 
 .moza article {
-    display: flex;
-    flex-direction: column;
-    row-gap: var(--mox-space-margin-sm);
+	display: flex;
+	flex-direction: column;
+	row-gap: var(--mox-space-margin-sm);
+}
+
+/* Tijdelijk, voornamelijk voor gebruikersonderzoeken */
+
+/* Proof of concept banner */
+.temp-moza-poc-banner {
+	background: var(--mox-color-feedback-success-default);
+	color: var(--mox-color-text-inverse);
+	font-size: var(--mox-text-font-weight-bold);
+	margin-inline-start: -3rem;
+	padding: var(--mox-space-padding-sm) var(--mox-space-padding-lg);
+	position: fixed;
+	right: -4rem;
+	text-align: center;
+	text-decoration: none;
+	top: 2rem;
+	transform: rotate(45deg);
+	transform-origin: center;
+	width: 280px;
+	&:hover {
+		background: var(--mox-color-feedback-success-emphasis);
+		color: var(--mox-color-text-inverse);
+	}
+}
+
+/* Doorkijkjes navigatie */
+.temp-moza-subnav-preview {
+	display: flex;
+	opacity: 0.6;
+	a {
+		padding-block: var(--mox-space-padding-2xs);
+		padding-inline: var(--mox-space-padding-md);
+		width: 100%;
+	}
+	&:not(:has(~ .temp-moza-subnav-preview)) {
+		border-block-end: var(--mox-border-default);
+		border-color: var(--mox-color-text-default);
+	}
+}
+.temp-moza-subnav-preview-heading {
+	border-block-end: var(--mox-border-default);
+	border-color: var(--mox-color-text-default);
+	font-style: italic;
+	margin-top: 1rem;
+	padding: 0.5rem;
 }

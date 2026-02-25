@@ -9,6 +9,7 @@
                         {% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
                     </a>
                 </li>
+                {% if loop.index == 3 %}{% include "sub-nav-temp.njk" ignore missing %}{% endif %} <!-- tijdelijk, voor de preview van functionaliteit tijdens gebruikers onderzoeken -->
             {% endfor %}
         </ul>
     </nav>

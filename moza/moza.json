@@ -1,29 +1,29 @@
 {
-    "layout": "base.njk",
-    "bodyClass": "moza",
-    "headerType": "overheid",
-    "footerType": "overheid",
-    "subNav": [
-        {
-            "label": "Home",
-            "url": "/moza/",
-            "icon": "/assets/icons/icon-home.svg"
-        },
-        {
-            "label": "Actualiteiten",
-            "url": "/moza/actueel/",
-            "icon": "/assets/icons/icon-nieuws.svg",
-            "badge": "3"
-        },
-        {
-            "label": "Bedrijfsgegevens",
-            "url": "/moza/bedrijfsgegevens/",
-            "icon": "/assets/icons/icon-map.svg"
-        },
-        {
-            "label": "Contactvoorkeuren",
-            "url": "/moza/contactvoorkeuren/",
-            "icon": "/assets/icons/icon-instellingen.svg"
-        }
-    ]
+	"layout": "base.njk",
+	"bodyClass": "moza",
+	"headerType": "overheid",
+	"footerType": "overheid",
+	"subNav": [
+		{
+			"label": "Home",
+			"url": "/moza/",
+			"icon": "/assets/icons/icon-home.svg"
+		},
+		{
+			"label": "Actualiteiten",
+			"url": "/moza/actueel/",
+			"icon": "/assets/icons/icon-nieuws.svg",
+			"badge": "3"
+		},
+		{
+			"label": "Bedrijfsgegevens",
+			"url": "/moza/bedrijfsgegevens/",
+			"icon": "/assets/icons/icon-map.svg"
+		},
+		{
+			"label": "Contactvoorkeuren",
+			"url": "/moza/contactvoorkeuren/",
+			"icon": "/assets/icons/icon-instellingen.svg"
+		}
+	]
 }
