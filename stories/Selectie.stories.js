@@ -6,9 +6,8 @@ export default {
 			options: ["checkbox", "radio"],
 		},
 		aantalOpties: {
-			control: { type: "range", min: 2, max: 8, step: 1 },
+			control: { type: "range", min: 3, max: 7, step: 1 },
 		},
-		inactiefLaatste: { control: "boolean" },
 	},
 };
 
@@ -16,16 +15,13 @@ export const Speeltuin = {
 	args: {
 		type: "checkbox",
 		aantalOpties: 3,
-		inactiefLaatste: false,
 	},
-	render: ({ type, aantalOpties, inactiefLaatste }) => {
+	render: ({ type, aantalOpties }) => {
 		const name = type === "radio" ? ` name="sb-${type}"` : "";
 		const items = Array.from({ length: aantalOpties }, (_, i) => {
-			const isLast = i === aantalOpties - 1;
-			const disabled = isLast && inactiefLaatste ? " disabled" : "";
 			const checked = i === 0 ? " checked" : "";
 			return `<li>
-			<input type="${type}"${name} id="sb-${type}-${i}"${checked}${disabled} />
+			<input type="${type}"${name} id="sb-${type}-${i}"${checked} />
 			<label for="sb-${type}-${i}">${type === "checkbox" ? "Checkbox" : "Radio button"} optie ${i + 1}</label>
 		</li>`;
 		}).join("\n\t\t");

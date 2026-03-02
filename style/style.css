@@ -177,9 +177,7 @@ pre {
 	transition: var(--mox-transition-default);
 }
 [aria-disabled] {
-	opacity: var(
-		--mox-opacity-interactive-disabled
-	); /* Opacity gebruiken i.p.v. specifieke kleuren heeft diverse voordelen waaronder het automatisch aanpassen aan modus (donker/licht/hoog-contrast) en vergt minder onderhoud, nadeel: ook focus-ring (aria-disabled i.p.v. reguliere disabled attribuut maakt het juist mogelijk om focus te leggen op inactieve elementen zodat gebruikers die afhankelijk van :focus zijn alsnog inhoud en context begrijpen) wordt hierdoor semi-transparant */
+	opacity: var(--mox-opacity-interactive-disabled); /* Opacity gebruiken i.p.v. specifieke kleuren heeft diverse voordelen waaronder het automatisch aanpassen aan modus (donker/licht/hoog-contrast) en vergt minder onderhoud, nadeel: ook focus-ring (aria-disabled i.p.v. reguliere disabled attribuut maakt het juist mogelijk om focus te leggen op inactieve elementen zodat gebruikers die afhankelijk van :focus zijn alsnog inhoud en context begrijpen) wordt hierdoor semi-transparant */
 }
 
 /* Focus voor keyboard, spraak en switch gebruikers */
@@ -199,9 +197,7 @@ pre {
 
 /* Opties die door gebruiker al goedgekeurd zijn en niet meer gewijzigd kunnen worden */
 .option--confirmed input[disabled] {
-	accent-color: var(
-		--mox-color-feedback-success-emphasis
-	); /* Werkt niet in Chromium */
+	accent-color: var(--mox-color-feedback-success-emphasis); /* Werkt niet in Chromium */
 }
 li.option--confirmed {
 	border-block-end: var(--mox-border-default);
@@ -224,8 +220,7 @@ textarea,
 .btn-cta {
 	align-self: flex-start; /* Voorkomt dat elementen de volledige breedte aannemen in een flexbox container */
 	background: var(--mox-color-interactive-default-surface);
-	border: var(--mox-border-width-md) solid
-		var(--mox-color-interactive-default-border);
+	border: var(--mox-border-width-md) solid var(--mox-color-interactive-default-border);
 	border-radius: var(--mox-border-radius-sm);
 	font: inherit;
 	min-block-size: var(--mox-pointer-target-min-size);
@@ -247,7 +242,7 @@ textarea,
 	}
 }
 .btn-cta::after {
-	content: url("../assets/icons/icon-link-internal.svg");
+	content: url("../assets/icons/icon-link-intern.svg");
 	display: inline-block;
 	inline-size: var(--mox-size-icon-xs);
 	margin-inline-start: var(--mox-space-margin-2xs);
@@ -709,6 +704,17 @@ summary {
 	.content-link {
 		display: block;
 		padding-block: var(--mox-space-padding-lg);
+		&[rel="external"] h3::after {
+			content: "";
+			display: inline-block;
+			inline-size: var(--mox-size-icon-sm);
+			block-size: var(--mox-size-icon-sm);
+			margin-inline-start: var(--mox-space-margin-2xs);
+			background-color: currentColor;
+			mask-image: url("../assets/icons/icon-link-extern.svg");
+			mask-size: contain;
+			mask-repeat: no-repeat;
+		}
 	}
 	li:not(:last-child) {
 		border-block-end: var(--mox-border-default);

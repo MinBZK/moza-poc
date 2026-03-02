@@ -13,8 +13,8 @@ export default {
 
 export const Speeltuin = {
 	args: {
-		kolommen: 3,
-		rijen: 3,
+		kolommen: 5,
+		rijen: 5,
 		bijschrift: "Voorbeeld tabel met bijschrift",
 	},
 	render: ({ kolommen, rijen, bijschrift }) => {
