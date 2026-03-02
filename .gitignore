@@ -2,4 +2,5 @@
 style-dictionary/node_modules/*
 */.DS_Store
 node_modules/
+storybook-static/
 *.crdownload
