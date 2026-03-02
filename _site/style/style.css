@@ -584,6 +584,9 @@ footer {
 	justify-content: space-between;
 	margin-inline: auto;
 	max-inline-size: var(--mox-page-max-inline-size);
+	@media (min-width: 799px) {
+		flex-direction: row;
+	}
 }
 
 /* Lijsten */
@@ -742,7 +745,7 @@ summary {
 .icon-link,
 .icon-label {
 	align-items: center;
-	display: flex;
+	display: inline-flex;
 	gap: var(--mox-space-padding-xs);
 	text-decoration: none;
 	svg {
@@ -837,7 +840,7 @@ body.moza {
 	max-inline-size: var(--mox-page-max-inline-size);
 	padding-block: var(--mox-space-padding-xs);
 	padding-inline: var(--mox-space-padding-md);
-	@media (max-width: var(--mox-breakpoint-md)) {
+	@media (max-width: 799px) ) {
 		/* display: none; */
 	}
 }
