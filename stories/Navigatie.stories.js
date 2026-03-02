@@ -36,7 +36,7 @@ export const Speeltuin = {
 			return `<nav class="breadcrumb"><ol>\n\t\t\t${items}\n\t\t</ol></nav>`;
 		}
 
-		const navClass = type === "hoofdnavigatie" ? "main-nav" : "sub-nav";
+		const navClass = type === "hoofdnavigatie" ? "main-nav" : "side-nav";
 		const items = labels.slice(0, aantalItems).map((label, i) => {
 			const current = i + 1 === actievePagina ? ' aria-current="page"' : "";
 			return `<li><a href="#"${current}>${label}</a></li>`;
@@ -58,7 +58,7 @@ export const Hoofdnavigatie = () => `
 `;
 
 export const Subnavigatie = () => `
-	<nav class="sub-nav">
+	<nav class="side-nav">
 		<ul>
 			<li><a href="#" aria-current="page">Sectie 1</a></li>
 			<li><a href="#">Sectie 2</a></li>

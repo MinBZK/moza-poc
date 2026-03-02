@@ -51,9 +51,9 @@
     <main>
         
 <aside>
-	<nav class="sub-nav">
-		<button class="sub-nav-toggle" aria-expanded="false" aria-controls="sub-nav-menu">Menu</button>
-		<ul id="sub-nav-menu">
+	<nav class="side-nav">
+		<button class="side-nav-toggle" aria-expanded="false" aria-controls="side-nav-menu">Menu</button>
+		<ul id="side-nav-menu">
 			
 			<li>
 				<a href="/MOx/moza/">
@@ -152,7 +152,7 @@
 		</ul>
 	</nav>
 	<script>
-		document.querySelector(".sub-nav-toggle").addEventListener("click", function () {
+		document.querySelector(".side-nav-toggle").addEventListener("click", function () {
 			const expanded = this.getAttribute("aria-expanded") === "true";
 			this.setAttribute("aria-expanded", !expanded);
 		});

@@ -454,7 +454,7 @@ nav {
 /* Navigatie: Sub-navigatie */
 
 /* Responsive menu */
-button.sub-nav-toggle {
+button.side-nav-toggle {
 	align-items: center;
 	background: var(--mox-color-background-default);
 	color: var(--mox-color-interactive-default-text);
@@ -492,7 +492,7 @@ button.sub-nav-toggle {
 		display: flex;
 	}
 }
-.sub-nav ul {
+.side-nav ul {
 	@media (max-width: 799px) {
 		background: var(--mox-color-background-default);
 		display: none;
@@ -503,10 +503,10 @@ button.sub-nav-toggle {
 		inline-size: 100%;
 	}
 }
-.sub-nav-toggle[aria-expanded="true"] + ul {
+.side-nav-toggle[aria-expanded="true"] + ul {
 	display: block;
 }
-.sub-nav {
+.side-nav {
 	padding-inline: var(--mox-space-padding-md);
 	li {
 		inline-size: var(--mox-size-component-subnav-width);
@@ -517,7 +517,7 @@ button.sub-nav-toggle {
 			color: var(--mox-color-interactive-alternate-default-text);
 			column-gap: var(--mox-space-padding-2xs);
 			display: flex;
-			font: var(--mox-text-nav-sub-nav);
+			font: var(--mox-text-nav-side-nav);
 			gap: var(--mox-space-padding-sm);
 			margin-block-end: var(--mox-space-padding-xs);
 			padding-block: var(--mox-space-padding-2xs);

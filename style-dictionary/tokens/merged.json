@@ -1623,7 +1623,7 @@
           "fontSize": "{text.size.title.xl}"
         }
       },
-      "sub-nav": {
+      "side-nav": {
         "$type": "typography",
         "$value": {
           "fontFamily": "{text.font-family.default}",
