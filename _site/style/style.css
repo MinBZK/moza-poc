@@ -65,11 +65,29 @@ header {
 	}
 	.side-nav-secret-toggle {
 		/* Tijdelijk voor gebruikersonderzoeken */
-		position: absolute;
+		block-size: 3rem;
 		inset-block-start: 0;
 		inset-inline-end: 0;
 		inline-size: 3rem;
-		block-size: 3rem;
+		position: absolute;
+		text-decoration: none;
+		&::after {
+			block-size: 3rem;
+			content: "🟢";
+			font-size: 0;
+			inline-size: 3rem;
+			opacity: 0;
+			transition:
+				font-size 1s ease,
+				opacity 0.5s ease;
+		}
+		&:hover::after {
+			font-size: 2.5rem;
+			opacity: 1;
+			transition:
+				font-size 1s ease,
+				opacity 0.5s ease;
+		}
 	}
 }
 .page-head {
@@ -106,6 +124,7 @@ main {
 }
 
 aside {
+	inline-size: var(--mox-size-component-subnav-width);
 }
 
 footer {
@@ -525,7 +544,6 @@ button.side-nav-toggle {
 .side-nav {
 	padding-inline: var(--mox-space-padding-md);
 	li {
-		max-inline-size: var(--mox-size-component-subnav-width);
 		a {
 			align-items: center;
 			background: var(--mox-color-interactive-alternate-default-background);

@@ -26,9 +26,10 @@
 	</div>
 
 	<!-- Proof of concept banner -->
-	<a class="temp-moza-poc-banner" href="https://www.mijnoverheidzakelijk.nl/">Proof of Concept</a>
+	<!-- <a class="temp-moza-poc-banner" href="https://www.mijnoverheidzakelijk.nl/">Proof of Concept</a> -->
+	<a class="temp-moza-poc-banner">Proof of Concept</a>
 
-	<a href="#" class="side-nav-secret-toggle" aria-label="Toggle navigatie" onclick="event.preventDefault(); const hidden = sessionStorage.getItem('subnav-preview') === 'hidden' ? '' : 'hidden'; sessionStorage.setItem('subnav-preview', hidden); document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.toggle('hidden', !!hidden));"></a>
-	<script>document.addEventListener('DOMContentLoaded', function() { if (sessionStorage.getItem('subnav-preview') === 'hidden') document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.add('hidden')); });</script>
+	<a href="#" class="side-nav-secret-toggle" aria-label="Toggle navigatie" onclick="event.preventDefault(); const visible = sessionStorage.getItem('subnav-preview') === 'visible' ? '' : 'visible'; sessionStorage.setItem('subnav-preview', visible); document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.toggle('hidden', !visible));"></a>
+	<script>document.addEventListener('DOMContentLoaded', function() { if (sessionStorage.getItem('subnav-preview') !== 'visible') document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.add('hidden')); });</script>
 
 </header>

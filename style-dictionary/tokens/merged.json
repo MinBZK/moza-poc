@@ -1392,7 +1392,7 @@
       "subnav": {
         "width": {
           "$type": "sizing",
-          "$value": "208"
+          "$value": "288"
         }
       }
     }

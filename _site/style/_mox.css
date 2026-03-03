@@ -1,7 +1,7 @@
 /**
  * Automatisch gegenereerd op basis van design tokens.
  * De bron is tokens.json uit de MOx repository.
- * Gegenereerd op 3-3-2026, 16:07:26
+ * Gegenereerd op 3-3-2026, 19:52:51
  * _rijkshuisstijl.css bevat opties uit de Rijkshuisstijl, _mox.css bevat de toepassing van deze opties. Refereer in het CSS bestand alleen aan de variabelen in _mox.css, niet aan die in _rijkshuisstijl.css.
  * CSS variabelen worden automatisch gegenereerd, bewerk deze niet handmatig.
  */
@@ -112,7 +112,7 @@
   --mox-size-3xs: var(--rijkshuisstijl-size-8);
   --mox-size-4xs: var(--rijkshuisstijl-size-4);
   --mox-size-5xs: var(--rijkshuisstijl-size-2);
-  --mox-size-component-subnav-width: 13rem;
+  --mox-size-component-subnav-width: 18rem;
   --mox-size-icon-lg: var(--rijkshuisstijl-size-32);
   --mox-size-icon-md: var(--rijkshuisstijl-size-24);
   --mox-size-icon-sm: var(--rijkshuisstijl-size-16);
