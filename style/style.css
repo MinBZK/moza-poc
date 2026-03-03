@@ -943,3 +943,8 @@ body.moza {
 .temp-moza-disabled {
 	opacity: var(--mox-opacity-interactive-disabled);
 }
+
+/* Overige tijdelijke styling */
+.card h2 + ul {
+	margin-block-start: var(--mox-space-margin-xs);
+}
