@@ -17,7 +17,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image: ${{ steps.deploy-ref.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,6 +51,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Set deploy image reference
+        id: deploy-ref
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: echo "image=${IMAGE}:sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
   deploy:
     runs-on: ubuntu-latest
