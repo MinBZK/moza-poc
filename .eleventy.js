@@ -14,6 +14,7 @@ module.exports = function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy("assets");
     eleventyConfig.addPassthroughCopy("style");
     eleventyConfig.addPassthroughCopy("tokens");
+    eleventyConfig.addPassthroughCopy("_gebruikersonderzoek");
 
     return {
         pathPrefix: "/MOx/",
