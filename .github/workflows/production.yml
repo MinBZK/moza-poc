@@ -17,7 +17,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,8 +38,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=sha,format=short,priority=300
             type=raw,value=latest
-            type=sha,format=short
 
       - name: Build and push container image
         uses: docker/build-push-action@v6
@@ -68,6 +68,6 @@ jobs:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: pm-5sj
           deployment-name: poc
-          component: frontend
+          component: proef
           image: ${{ needs.build.outputs.image }}
           wait-for-ready: true
