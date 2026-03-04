@@ -358,6 +358,20 @@ a.btn-cta {
 	display: inline-block;
 	text-decoration: none;
 }
+.link-button,
+.icon-button {
+	background: none;
+	border: none;
+	color: var(--mox-color-interactive-default-text);
+	cursor: pointer;
+	min-block-size: unset;
+	min-inline-size: unset;
+	padding: 0;
+	&:hover {
+		background: inherit !important;
+		color: inherit !important;
+	}
+}
 
 /* Formulier: Tekstinvoer */
 
@@ -493,10 +507,7 @@ button.side-nav-toggle {
 		content: "";
 		background-color: currentColor;
 		block-size: var(--mox-size-icon-xs);
-		mask-image: url("../assets/icons/icon-menu.svg");
-		mask-size: contain;
-		mask-repeat: no-repeat;
-		mask-position: center;
+		mask: url("../assets/icons/icon-menu.svg") no-repeat center / contain;
 		margin-inline-end: var(--mox-space-margin-2xs);
 		transition: var(--mox-transition-transform);
 		inline-size: var(--mox-size-icon-sm);
@@ -755,9 +766,7 @@ summary {
 			block-size: var(--mox-size-icon-sm);
 			margin-inline-start: var(--mox-space-margin-2xs);
 			background-color: currentColor;
-			mask-image: url("../assets/icons/icon-link-extern.svg");
-			mask-size: contain;
-			mask-repeat: no-repeat;
+			mask: url("../assets/icons/icon-link-extern.svg") no-repeat center / contain;
 		}
 	}
 	li:not(:last-child) {
@@ -876,6 +885,24 @@ h4 {
 	svg {
 		fill: var(--mox-color-feedback-error-icon);
 	}
+}
+.feedback-close {
+	margin-inline-start: auto;
+	&::after {
+		content: "";
+		display: inline-block;
+		inline-size: var(--mox-size-icon-sm);
+		block-size: var(--mox-size-icon-sm);
+		background-color: currentColor;
+		mask: url("../assets/icons/icon-sluiten.svg") no-repeat center / contain;
+	}
+}
+.feedback-page-banner {
+	inline-size: 100%;
+	margin-block-end: var(--mox-space-margin-md);
+	margin-inline: auto;
+	max-inline-size: var(--mox-page-max-inline-size);
+	padding: var(--mox-space-padding-md);
 }
 
 /* MijnOverheid Zakelijk */
