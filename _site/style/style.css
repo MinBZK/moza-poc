@@ -809,6 +809,7 @@ summary {
 	border-radius: var(--mox-border-radius-round);
 	color: var(--mox-color-component-badge-text);
 	font: var(--mox-text-component-text-badge);
+	line-height: 1.5;
 	margin-inline-start: auto;
 	min-inline-size: var(--mox-size-icon-sm);
 	padding: 0 var(--mox-space-padding-xs);
