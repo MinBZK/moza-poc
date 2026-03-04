@@ -931,7 +931,7 @@ body.moza {
 /* Doorkijkjes navigatie */
 .temp-moza-subnav-preview {
 	display: flex;
-	opacity: var(--mox-opacity-interactive-disabled);
+	/* opacity: var(--mox-opacity-interactive-disabled); */
 	a {
 		padding-block: var(--mox-space-padding-2xs);
 		padding-inline: var(--mox-space-padding-md);
