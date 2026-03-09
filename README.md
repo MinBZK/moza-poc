@@ -3,8 +3,7 @@
 ## MOx omgeving installeren
 
 1. Clone deze repository lokaal
-2. [Installeer Style Dictionary](https://styledictionary.com/getting-started/using_the_cli/#installation) in `/style-dictionary`, deze vertaald design tokens naar CSS variabelen
-3. [Instaleer SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms#installation) in `/style-dictionary`, dit is een pakketje met extra transformatie-opties die nodig zijn om design tokens uit Figma [Tokens Studio](https://docs.tokens.studio/) te vertalen
+2. Installeer dependancies met `npm i`
 
 ## Eleventy installeren
 

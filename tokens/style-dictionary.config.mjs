@@ -110,7 +110,7 @@ function buildTokenSetMap(sets) {
 }
 
 async function run() {
-  const tokens = JSON.parse(await readFile('../tokens/tokens.json', 'utf-8'));
+  const tokens = JSON.parse(await readFile('./tokens/tokens.json', 'utf-8'));
   const { $themes, $metadata, ...sets } = tokens;
 
   console.log('Sets:', Object.keys(sets));
@@ -144,7 +144,7 @@ console.log('Filtered transforms:', tsTransforms);
   });
 
   const sd = new StyleDictionary({
-    source: ['tokens/merged.json'],
+    source: ['./tokens/merged.json'],
     preprocessors: ['tokens-studio'],
     log: {
       verbosity: 'silent',
@@ -157,7 +157,7 @@ console.log('Filtered transforms:', tsTransforms);
         // transformGroup: 'tokens-studio',
         transforms: [  ...StyleDictionary.hooks.transformGroups['tokens-studio'], 'name/kebab', 'size/pxToRem', 'size/remToPxExceptions', 'ts/resolveMath', 'name/prefix-set'],
         files: setNames.map(setName => ({
-          destination: `../style/_${setName}.css`,
+          destination: `./style/_${setName}.css`,
           format: 'css/variables-sorted',
           filter: (token) => {
             const tokenPath = token.path.join('.');

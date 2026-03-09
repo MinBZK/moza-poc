@@ -1,24 +1,26 @@
 {
-  "name": "mox",
-  "private": true,
-  "scripts": {
-    "build": "cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
-    "dev": "concurrently \"npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\"",
-    "tokens": "cd style-dictionary && npm run build",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
-  },
-  "devDependencies": {
-    "@11ty/eleventy": "^3.1.2",
-    "@storybook/addon-a11y": "^10.2.14",
-    "@storybook/html-vite": "^10.2.14",
-    "chokidar-cli": "^3.0.0",
-    "concurrently": "^9.1.2",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "storybook": "^10.2.14",
-    "stylelint": "^17.4.0",
-    "stylelint-use-logical": "^2.1.3",
-    "vite": "^6.0.0"
-  }
+	"name": "moza-mockups",
+	"private": true,
+	"scripts": {
+		"build": "npm run build:tokens && npm run build && cd .. && npx @11ty/eleventy",
+		"dev": "concurrently \"npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'npm run build:tokens'\"",
+		"build:tokens": "node tokens/style-dictionary.config.mjs",
+		"storybook": "storybook dev -p 6006",
+		"build-storybook": "storybook build"
+	},
+	"devDependencies": {
+		"@11ty/eleventy": "^3.1.2",
+		"@storybook/addon-a11y": "^10.2.14",
+		"@storybook/html-vite": "^10.2.14",
+		"chokidar-cli": "^3.0.0",
+		"concurrently": "^9.1.2",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4",
+		"storybook": "^10.2.14",
+		"stylelint": "^17.4.0",
+		"stylelint-use-logical": "^2.1.3",
+		"vite": "^6.0.0",
+		"style-dictionary": "^5.2.0",
+		"@tokens-studio/sd-transforms": "^2.0.3"
+	}
 }
