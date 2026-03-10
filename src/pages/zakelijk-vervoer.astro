@@ -1,0 +1,73 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="MijnOverheid Zakelijk: Zakelijk vervoer">
+	<article>
+		<nav class="breadcrumb">
+			<ol>
+				<li><a href="/moza/">Home</a></li>
+				<li aria-current="page">Zakelijk vervoer</li>
+			</ol>
+		</nav>
+
+		<h1>Zakelijk vervoer</h1>
+
+		<section class="card">
+			<h2>Binnenkort beschikbaar <span class="badge">medio 2028</span></h2>
+			<p>Straks vindt u hier alles over de voertuigen van uw bedrijf.</p>
+		</section>
+
+		<section class="card">
+			<video controls style="inline-size: 100%; aspect-ratio: 16 / 9; background: var(--mox-color-background-subtle)" src="https://placeholdervideo.dev/1920x1080" poster="/gebruikersonderzoek/video-placeholder-poster.png">
+				<p>Uw browser ondersteunt geen video.</p>
+			</video>
+		</section>
+
+		<section class="card">
+			<h2>Wat kunt u zoal verwachten?</h2>
+			<ul>
+				<li>Zie welke voertuigen op naam van uw bedrijf staan</li>
+				<li>Bekijk wanneer de APK verloopt</li>
+				<li>Ontvang meldingen bij terugroepacties (recalls)</li>
+			</ul>
+		</section>
+
+		<section class="card card-faq">
+			<h3>Veelgestelde vragen</h3>
+
+			<details name="faq">
+				<summary>
+					<h4>Wat valt er onder zakelijk vervoer?</h4>
+				</summary>
+				<section>
+					<p>Onder zakelijk vervoer vallen zaken als kentekenregistraties op naam van uw onderneming, ontheffingen voor zwaar transport, vergunningen voor beroepsgoederenvervoer en milieuzones.</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Kan ik hier mijn wagenpark beheren?</h4>
+				</summary>
+				<section>
+					<p>
+						U vindt hier een overzicht van voertuigen die op naam van uw organisatie staan geregistreerd bij de RDW, inclusief APK-vervaldatums en eventuele recalls. Voor wijzigingen in tenaamstelling gaat u naar
+						<a href="https://www.rdw.nl/">rdw.nl</a>.
+					</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Hoe vraag ik een ontheffing aan voor zwaar transport?</h4>
+				</summary>
+				<section>
+					<p>
+						Ontheffingen voor exceptioneel transport vraagt u aan bij de RDW via
+						<a href="https://www.rdw.nl/">rdw.nl</a>. De status van uw aanvraag kunt u vervolgens terugvinden bij uw lopende zaken.
+					</p>
+				</section>
+			</details>
+		</section>
+	</article>
+</BaseLayout>

@@ -1,0 +1,70 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="MijnOverheid Zakelijk: Ziekte en verlof">
+	<article>
+		<nav class="breadcrumb">
+			<ol>
+				<li><a href="/moza/">Home</a></li>
+				<li aria-current="page">Ziekte en verlof</li>
+			</ol>
+		</nav>
+
+		<h1>Ziekte en verlof</h1>
+
+		<section class="card">
+			<h2>Binnenkort beschikbaar <span class="badge">medio 2029</span></h2>
+			<p>Straks vindt u hier een overzicht van ziekte- en verlofzaken van uw onderneming. Denk aan meldingen bij het UWV, de voortgang van re-integratietrajecten en relevante termijnen.</p>
+		</section>
+
+		<section class="card">
+			<video controls style="inline-size: 100%; aspect-ratio: 16 / 9; background: var(--mox-color-background-subtle)" src="https://placeholdervideo.dev/1920x1080" poster="/gebruikersonderzoek/video-placeholder-poster.png">
+				<p>Uw browser ondersteunt geen video.</p>
+			</video>
+		</section>
+
+		<section class="card">
+			<h2>Wat kunt u zoal verwachten?</h2>
+			<ul>
+				<li>Zie welke ziekmeldingen er lopen bij het UWV</li>
+				<li>Houd belangrijke termijnen bij, zoals de 42e-weeksmelding</li>
+				<li>Volg de voortgang van re-integratietrajecten</li>
+			</ul>
+		</section>
+
+		<section class="card card-faq">
+			<h3>Veelgestelde vragen</h3>
+
+			<details name="faq">
+				<summary>
+					<h4>Wat kan ik hier regelen rondom ziekte en verlof?</h4>
+				</summary>
+				<section>
+					<p>Hier vindt u informatie over uw verplichtingen als werkgever bij ziekte van medewerkers, zoals de Wet verbetering poortwachter, en een overzicht van lopende zaken bij het UWV.</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Hoe meld ik langdurige ziekte van een medewerker?</h4>
+				</summary>
+				<section>
+					<p>
+						Bij langdurige ziekte (langer dan 42 weken) bent u verplicht dit te melden bij het UWV. Dit kan via
+						<a href="https://www.uwv.nl/">uwv.nl</a>. Na de melding verschijnt de zaak in uw overzicht van lopende zaken.
+					</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Waar vind ik informatie over re-integratieverplichtingen?</h4>
+				</summary>
+				<section>
+					<p>Als werkgever bent u samen met uw medewerker verantwoordelijk voor re-integratie. Uitgebreide informatie over uw verplichtingen vindt u op <a href="https://www.uwv.nl/">uwv.nl</a> en bij de <a href="https://www.rijksoverheid.nl/">Rijksoverheid</a>.</p>
+				</section>
+			</details>
+		</section>
+	</article>
+</BaseLayout>

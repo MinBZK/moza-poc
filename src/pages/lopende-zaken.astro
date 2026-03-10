@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="MijnOverheid Zakelijk: Lopende zaken">
+	<article>
+		<nav class="breadcrumb">
+			<ol>
+				<li><a href="/moza/">Home</a></li>
+				<li aria-current="page">Lopende zaken</li>
+			</ol>
+		</nav>
+
+		<h1>Lopende zaken</h1>
+
+		<section class="card">
+			<h2>Binnenkort beschikbaar <span class="badge">juni 2027</span></h2>
+			<p>Straks vindt u hier een overzicht van al uw aanvragen, vergunningen en meldingen bij de overheid. U ziet direct de status en voortgang per zaak.</p>
+		</section>
+
+		<section class="card">
+			<video controls style="inline-size: 100%; aspect-ratio: 16 / 9; background: var(--mox-color-background-subtle)" src="https://placeholdervideo.dev/1920x1080" poster="/gebruikersonderzoek/video-placeholder-poster.png">
+				<p>Uw browser ondersteunt geen video.</p>
+			</video>
+		</section>
+
+		<section class="card">
+			<h2>Wat kunt u zoal verwachten?</h2>
+			<ul>
+				<li>Bekijk de status van uw aanvragen, vergunningen en meldingen</li>
+				<li>Zie direct of er actie van u nodig is</li>
+				<li>Volg de voortgang van begin tot eind</li>
+			</ul>
+		</section>
+
+		<section class="card card-faq">
+			<h3>Veelgestelde vragen</h3>
+
+			<details name="faq">
+				<summary>
+					<h4>Wat zijn lopende zaken?</h4>
+				</summary>
+				<section>
+					<p>Lopende zaken zijn aanvragen, vergunningen en meldingen die u heeft ingediend bij de overheid en die nog in behandeling zijn. Hier vindt u een overzicht van de voortgang per zaak.</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Hoe lang duurt de behandeling van mijn zaak?</h4>
+				</summary>
+				<section>
+					<p>De behandeltijd verschilt per type zaak en per overheidsorganisatie. Bij elke zaak ziet u de verwachte doorlooptijd en de huidige status. Bij overschrijding van de wettelijke termijn ontvangt u hierover automatisch bericht.</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Kan ik aanvullende documenten toevoegen aan een lopende zaak?</h4>
+				</summary>
+				<section>
+					<p>Dat hangt af van de betreffende organisatie en het type zaak. Als het mogelijk is om documenten na te sturen, vindt u bij de zaak een optie om bestanden toe te voegen. Neem anders contact op met de behandelende organisatie.</p>
+				</section>
+			</details>
+		</section>
+	</article>
+</BaseLayout>

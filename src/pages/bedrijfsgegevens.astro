@@ -1,0 +1,176 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="MijnOverheid Zakelijk: Bedrijfsgegevens">
+	<article>
+		<nav class="breadcrumb">
+			<ol>
+				<li><a href="/moza/">Home</a></li>
+				<li aria-current="page">Mijn bedrijfsgegevens</li>
+			</ol>
+		</nav>
+
+		<h1>Bedrijfsgegevens</h1>
+
+		<section class="card">
+			<h2>Algemeen</h2>
+
+			<p>
+				Dit zijn de gegevens die bij de overheid bekend zijn over jouw
+				organisatie.
+			</p>
+
+			<table class="data-overview">
+				<caption>
+					Bron:
+					<a href="https://kvk.nl/">KVK</a>
+					en
+					<a href="https://belastingdienst.nl/">Belastingdienst</a>
+				</caption>
+				<tr>
+					<th scope="row">Handelsnaam</th>
+					<td>Bloom B.V.</td>
+				</tr>
+				<tr>
+					<th scope="row">KVK-nummer</th>
+					<td>12345678</td>
+				</tr>
+				<tr>
+					<th scope="row">RSIN-nummer</th>
+					<td>12345678</td>
+				</tr>
+				<tr>
+					<th scope="row">BTW-nummer</th>
+					<td>NL00012345678</td>
+				</tr>
+				<tr>
+					<th scope="row">Startdatum</th>
+					<td>12 februari 2018</td>
+				</tr>
+				<tr>
+					<th scope="row">Rechtsvorm</th>
+					<td>Besloten vennootschap</td>
+				</tr>
+			</table>
+		</section>
+
+		<section class="card">
+			<h2>Adressen</h2>
+
+			<table class="data-overview">
+				<caption>
+					Bron:
+					<a href="https://kvk.nl/">KVK</a>
+				</caption>
+				<tr>
+					<th scope="row">Vestigingsadres</th>
+					<td>
+						Kerkstraat 15
+						<br />
+						1234AB Amsterdam
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">Postadres</th>
+					<td>
+						Postbus 123
+						<br />
+						1234AB Amsterdam
+					</td>
+				</tr>
+			</table>
+		</section>
+
+		<section class="card">
+			<h2>Contactgegevens</h2>
+
+			<table class="data-overview">
+				<caption>
+					Bron:
+					<a href="https://kvk.nl/">KVK</a>
+				</caption>
+				<tr>
+					<th scope="row">Telefoonnummer</th>
+					<td>06-12345678</td>
+				</tr>
+				<tr>
+					<th scope="row">E-mailadres</th>
+					<td>info@bloom.nl</td>
+				</tr>
+				<tr>
+					<th scope="row">Website</th>
+					<td>
+						<a href="https://www.bloom.nl">www.bloom.nl</a>
+					</td>
+				</tr>
+			</table>
+
+			<p>
+				<a href="/moza/contactgegevens-wijzigen/">Contactgegevens wijzigen</a>
+			</p>
+		</section>
+
+		<section class="card">
+			<h2>Activiteiten</h2>
+
+			<table class="data-overview">
+				<caption>
+					Bron:
+					<a href="https://kvk.nl/">KVK</a>
+				</caption>
+				<tr>
+					<th scope="row">Hoofdactiviteit</th>
+					<td>Detailhandel in bloemen en planten</td>
+				</tr>
+				<tr>
+					<th scope="row">SBI-code</th>
+					<td>47.76 - Detailhandel in bloemen, planten en zaden</td>
+				</tr>
+			</table>
+		</section>
+
+		<section class="card">
+			<h2>Medewerkers</h2>
+
+			<table class="data-overview">
+				<caption>
+					Bron:
+					<a href="https://kvk.nl/">KVK</a>
+				</caption>
+				<tr>
+					<th scope="row">Aantal medewerkers</th>
+					<td>5</td>
+				</tr>
+			</table>
+		</section>
+
+		<section class="card card-faq">
+			<h3>Veelgestelde vragen</h3>
+
+			<details name="faq">
+				<summary>
+					<h4>Hoe kan ik mijn bedrijfsgegevens wijzigen?</h4>
+				</summary>
+				<section>
+					<p>
+						Wijzigingen in uw bedrijfsgegevens doet u via de
+						<a href="https://www.kvk.nl/">Kamer van Koophandel (KVK)</a>. Wijzigingen worden automatisch doorgevoerd in MijnOverheid Zakelijk.
+					</p>
+				</section>
+			</details>
+
+			<details name="faq">
+				<summary>
+					<h4>Waarom zie ik niet alle gegevens?</h4>
+				</summary>
+				<section>
+					<p>
+						MijnOverheid Zakelijk toont een overzicht van uw belangrijkste bedrijfsgegevens zoals die bij de KVK en Belastingdienst bekend zijn. Voor een volledig overzicht gaat u naar
+						<a href="https://www.kvk.nl/">kvk.nl</a>.
+					</p>
+				</section>
+			</details>
+		</section>
+	</article>
+</BaseLayout>

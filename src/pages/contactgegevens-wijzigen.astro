@@ -1,0 +1,80 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="MijnOverheid Zakelijk: Contactvoorkeuren">
+	<article>
+		<nav class="breadcrumb">
+			<ol>
+				<li><a href="/moza/">Home</a></li>
+				<li>
+					<a href="/moza/contactvoorkeuren/">Contactvoorkeuren</a>
+				</li>
+				<li aria-current="page">Contactgegevens wijzigen</li>
+			</ol>
+		</nav>
+
+		<h1>Contactvoorkeuren</h1>
+
+		<section class="card">
+			<h2>Contactgegevens</h2>
+
+			<div class="feedback feedback-info">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					xml:space="preserve"
+					viewBox="0 0 24 24"
+				>
+					<path
+						class="feedback-icon-color-background"
+						d="M22.04 3.78c-.16-.95-.88-1.67-1.83-1.83-2.73-.45-7.3-.45-8.21-.45-.91 0-5.48 0-8.22.46-.94.15-1.67.88-1.82 1.82C1.5 6.52 1.5 11.09 1.5 12s0 5.48.46 8.22c.16.95.88 1.67 1.83 1.83 2.74.46 7.3.46 8.22.46.91 0 5.48 0 8.22-.46.95-.16 1.67-.88 1.83-1.83.46-2.74.46-7.3.46-8.22-.02-2.74-.02-5.48-.48-8.22z"
+					/>
+					<path
+						class="feedback-icon-color-foreground"
+						d="M10.71 6.93c0-.34.11-.63.33-.88.22-.25.54-.38.95-.38.41 0 .72.12.94.36.22.24.33.54.33.9 0 .32-.11.61-.33.86s-.54.37-.94.37c-.41 0-.72-.12-.95-.35-.22-.24-.33-.53-.33-.88zm2.4 2.39v8.96H10.9V9.41l2.21-.09z"
+					/>
+				</svg>
+				<div>
+					<p>
+						Contactgegevens die u hier aanpast, worden automatisch bijgewerkt bij
+						alle organisaties waarmee u uw gegevens centraal deelt.
+					</p>
+				</div>
+			</div>
+
+			<form action="/moza/contactvoorkeuren/">
+				<table>
+					<tr>
+						<th scope="row">
+							<label for="contact-change-email">E-mailadres</label>
+						</th>
+						<td>
+							<input
+								type="text"
+								id="contact-change-email"
+								value="info@bloombv.nl"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="contact-change-phonenumber">Telefoonnummer</label>
+						</th>
+						<td>
+							<input
+								type="text"
+								id="contact-change-phonenumber"
+								value="06 12 34 56 78"
+							/>
+						</td>
+					</tr>
+				</table>
+
+				<div class="action-group">
+					<button type="submit">Opslaan</button>
+					<button class="secondary">Annuleren</button>
+				</div>
+			</form>
+		</section>
+	</article>
+</BaseLayout>
