@@ -592,6 +592,9 @@ button.side-nav-toggle {
 		}
 	}
 }
+.side-nav-group--start {
+	margin-block-start: var(--mox-space-margin-sm);
+}
 
 /* Navigatie: Kruimelpad */
 
