@@ -614,6 +614,7 @@ button.side-nav-toggle {
 /* Navigatie: Footerlinks */
 
 footer {
+	background: var(--mox-color-component-footer-background);
 	h4 {
 		margin-block-end: var(--mox-space-margin-2xs);
 	}
