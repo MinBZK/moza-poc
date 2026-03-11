@@ -27,8 +27,6 @@
 
 body {
 	color: var(--mox-color-text-default);
-	display: flex;
-	flex-direction: column;
 	font-family:
 		var(--mox-text-font-family-body),
 		system-ui,
