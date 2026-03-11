@@ -1,42 +1,40 @@
 ---
-import { MoxPageGrid, MoxShelf, MoxSiteHeader, MoxBox, MoxTextBlock, MoxSvg, MoxHeading } from 'mox-nlds/react';
+import { MoxPageGrid, MoxShelf, MoxSiteHeader, MoxBox, MoxTextBlock, MoxSvg, MoxHeading } from "mox-nlds/react";
 ---
+
 <MoxBox as="header" borderWidth="2px" borderBlockEndStyle="solid" borderColor="primary" paddingBlockEnd="sm">
 	<MoxSiteHeader />
 	<MoxPageGrid>
 		<MoxShelf gap="md" alignItems="end" justifyContent="spaceBetween">
 			<MoxHeading level={1}>MijnOverheid Zakelijk</MoxHeading>
-			<div><MoxShelf gap="md" alignItems="start">
-				<MoxShelf gap="2xs" alignItems="end">
-				<MoxSvg size="xs"><svg xmlns="http://www.w3.org/2000/svg" baseProfile="tiny" version="1.2" viewBox="0 0 24 24">
-					<path fill="none" d="M0 0h24v24H0z"/>
-					<path fill="currentColor" d="M8.115 3.513c-.328.501-.362 1.274-.359 2.003.003.699-.014 1.358.048 1.698-.48-.023-.68.362-.607 1.666.066 1.156.527 1.406.803 1.565.243 1.17.712 2.277 1.541 3.114l.002-.012c-.051.304-.116.627-.2.948-1.141.401-3.944 1.445-4.764 2.31C3.545 17.896 3 22 3 22h18s-.545-4.105-1.58-5.194c-.818-.864-3.611-1.906-4.757-2.309a8.608 8.608 0 0 1-.219-.938c.83-.837 1.313-1.945 1.556-3.114.275-.159.723-.409.788-1.565.074-1.304-.127-1.69-.607-1.666.062-.338.067-.98.062-1.667-.005-.727-.04-1.507-.333-2.034-.365-.656-.878-1.04-1.878-.803-.875-.421-1.797-.873-3.34-.532-1.739.385-2.353.993-2.577 1.335z"/>
-				</svg></MoxSvg>
-				<MoxTextBlock fontSize="sm">
-					R.J. Vogel
-				</MoxTextBlock>
-			</MoxShelf>
-			<a href="#">
-				<MoxShelf gap="2xs" alignItems="end">
-					<MoxSvg size="xs"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<path fill="none" d="M0 0h24v24H0z"/>
-						<path fill="currentColor" d="M20.5 1h-15C4.7 1 4 1.7 4 2.5V7h3V4h12v15H7v-3H4v4.5c0 .8.7 1.5 1.5 1.5h15c.8 0 1.5-.7 1.5-1.5v-18c0-.8-.7-1.5-1.5-1.5z"/>
-						<path fill="currentColor" d="M9.5 15.4a1.07 1.07 0 0 0 1.5 1.5l5.7-4.6c.5-.4.6-1.1 0-1.6L11 6.1a1.07 1.07 0 0 0-1.5 1.5l2.1 2.4H2.8c-1 0-1.2.7-1.2 1.5 0 .7.2 1.5 1.2 1.5h8.7l-2 2.4z"/>
-					</svg></MoxSvg>
-					<MoxTextBlock fontSize="sm">
-						Uitloggen
-					</MoxTextBlock>
+			<div>
+				<MoxShelf gap="md" alignItems="start">
+					<MoxShelf gap="2xs" alignItems="end">
+						<MoxSvg size="xs"
+							><svg xmlns="http://www.w3.org/2000/svg" baseProfile="tiny" version="1.2" viewBox="0 0 24 24">
+								<path fill="none" d="M0 0h24v24H0z"></path>
+								<path fill="currentColor" d="M8.115 3.513c-.328.501-.362 1.274-.359 2.003.003.699-.014 1.358.048 1.698-.48-.023-.68.362-.607 1.666.066 1.156.527 1.406.803 1.565.243 1.17.712 2.277 1.541 3.114l.002-.012c-.051.304-.116.627-.2.948-1.141.401-3.944 1.445-4.764 2.31C3.545 17.896 3 22 3 22h18s-.545-4.105-1.58-5.194c-.818-.864-3.611-1.906-4.757-2.309a8.608 8.608 0 0 1-.219-.938c.83-.837 1.313-1.945 1.556-3.114.275-.159.723-.409.788-1.565.074-1.304-.127-1.69-.607-1.666.062-.338.067-.98.062-1.667-.005-.727-.04-1.507-.333-2.034-.365-.656-.878-1.04-1.878-.803-.875-.421-1.797-.873-3.34-.532-1.739.385-2.353.993-2.577 1.335z"></path>
+							</svg></MoxSvg
+						>
+						<MoxTextBlock fontSize="sm"> R.J. Vogel </MoxTextBlock>
+					</MoxShelf>
+					<a href="#">
+						<MoxShelf gap="2xs" alignItems="end">
+							<MoxSvg size="xs"
+								><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+									<path fill="none" d="M0 0h24v24H0z"></path>
+									<path fill="currentColor" d="M20.5 1h-15C4.7 1 4 1.7 4 2.5V7h3V4h12v15H7v-3H4v4.5c0 .8.7 1.5 1.5 1.5h15c.8 0 1.5-.7 1.5-1.5v-18c0-.8-.7-1.5-1.5-1.5z"></path>
+									<path fill="currentColor" d="M9.5 15.4a1.07 1.07 0 0 0 1.5 1.5l5.7-4.6c.5-.4.6-1.1 0-1.6L11 6.1a1.07 1.07 0 0 0-1.5 1.5l2.1 2.4H2.8c-1 0-1.2.7-1.2 1.5 0 .7.2 1.5 1.2 1.5h8.7l-2 2.4z"></path>
+								</svg></MoxSvg
+							>
+							<MoxTextBlock fontSize="sm"> Uitloggen </MoxTextBlock>
+						</MoxShelf>
+					</a>
 				</MoxShelf>
-				</a>
-			</MoxShelf>
 			</div>
 		</MoxShelf>
 	</MoxPageGrid>
 
 	<!-- Proof of concept banner -->
 	<a class="temp-moza-poc-banner">Proof of Concept</a>
-
-	<a href="#" class="side-nav-secret-toggle" aria-label="Toggle navigatie" onclick="event.preventDefault(); const visible = sessionStorage.getItem('subnav-preview') === 'visible' ? '' : 'visible'; sessionStorage.setItem('subnav-preview', visible); document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.toggle('hidden', !visible));"></a>
-	<script>document.addEventListener('DOMContentLoaded', function() { if (sessionStorage.getItem('subnav-preview') !== 'visible') document.querySelectorAll('.temp-moza-subnav-preview').forEach(el => el.classList.add('hidden')); });</script>
-
 </MoxBox>
