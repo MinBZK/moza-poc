@@ -977,32 +977,6 @@ body.moza {
 	}
 }
 
-/* Doorkijkjes navigatie */
-.temp-moza-subnav-preview {
-	display: flex;
-	/* opacity: var(--mox-opacity-interactive-disabled); */
-	a {
-		padding-block: var(--mox-space-padding-2xs);
-		padding-inline: var(--mox-space-padding-md);
-		inline-size: 100%;
-	}
-	&:not(:has(~ .temp-moza-subnav-preview)) {
-		border-block-end: var(--mox-border-default);
-		border-color: var(--mox-color-interactive-disabled-border);
-		margin-block-end: var(--mox-space-margin-xs);
-	}
-}
-.temp-moza-subnav-preview-heading {
-	border-block-end: var(--mox-border-default);
-	border-color: var(--mox-color-interactive-disabled-border);
-	font-style: italic;
-	margin-block-start: 1rem;
-	padding: 0.5rem;
-}
-.temp-moza-disabled {
-	opacity: var(--mox-opacity-interactive-disabled);
-}
-
 /* Overige tijdelijke styling */
 .card h2 + ul {
 	margin-block-start: var(--mox-space-margin-xs);
