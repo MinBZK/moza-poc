@@ -10,20 +10,48 @@
 			"icon": "/assets/icons/icon-home.svg"
 		},
 		{
+			"label": "Bedrijfsgegevens",
+			"url": "/moza/bedrijfsgegevens/",
+			"icon": "/assets/icons/icon-gegevens.svg",
+			"class": "side-nav-group--start"
+		},
+		{
+			"label": "Berichtenbox",
+			"url": "/moza/berichtenbox/",
+			"icon": "/assets/icons/icon-berichtenbox.svg"
+		},
+		{
+			"label": "Lopende zaken",
+			"url": "/moza/lopende-zaken/",
+			"icon": "/assets/icons/icon-lopende-zaken.svg"
+		},
+		{
 			"label": "Actualiteiten",
 			"url": "/moza/actueel/",
 			"icon": "/assets/icons/icon-nieuws.svg",
 			"badge": "3"
 		},
 		{
-			"label": "Bedrijfsgegevens",
-			"url": "/moza/bedrijfsgegevens/",
-			"icon": "/assets/icons/icon-gegevens.svg"
+			"label": "Belastingen",
+			"url": "/moza/belastingen/",
+			"icon": "/assets/icons/icon-financieen.svg",
+			"class": "side-nav-group--start"
+		},
+		{
+			"label": "Zakelijk vervoer",
+			"url": "/moza/zakelijk-vervoer/",
+			"icon": "/assets/icons/icon-vervoer.svg"
+		},
+		{
+			"label": "Ziekte en verlof",
+			"url": "/moza/ziekte-verlof/",
+			"icon": "/assets/icons/icon-gezondheid.svg"
 		},
 		{
 			"label": "Contactvoorkeuren",
 			"url": "/moza/contactvoorkeuren/",
-			"icon": "/assets/icons/icon-instellingen.svg"
+			"icon": "/assets/icons/icon-instellingen.svg",
+			"class": "side-nav-group--start"
 		}
 	]
 }

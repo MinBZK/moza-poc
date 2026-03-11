@@ -3,21 +3,14 @@
 		<button class="side-nav-toggle" aria-expanded="false" aria-controls="side-nav-menu">Menu</button>
 		<ul id="side-nav-menu">
 			{% for item in subNav %}
-			<li>
+			<li{% if item.class %} class="{{ item.class }}"{% endif %}>
 				<a href="{{ item.url | url }}"{% if page.url == item.url or subNavActive == item.url %} aria-current="page"{% endif %}>
 					{% if item.icon %}{% icon item.icon %}{% endif %}
 					{{ item.label }}
 					{% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
 				</a>
 			</li>
-			{% if loop.index == 3 %}{% include "side-nav-temp.njk" ignore missing %}{% endif %} <!-- tijdelijk, voor de preview van functionaliteit tijdens gebruikers onderzoeken -->
 			{% endfor %}
 		</ul>
 	</nav>
-	<script>
-		document.querySelector(".side-nav-toggle").addEventListener("click", function () {
-			const expanded = this.getAttribute("aria-expanded") === "true";
-			this.setAttribute("aria-expanded", !expanded);
-		});
-	</script>
 </aside>

@@ -1,12 +1,12 @@
-# MOx design systeem
+# MOZa proof of concept prototype
 
-## MOx omgeving installeren
+## Omgeving installeren
 
 1. Clone deze repository lokaal
 2. [Installeer Style Dictionary](https://styledictionary.com/getting-started/using_the_cli/#installation) in `/style-dictionary`, deze vertaald design tokens naar CSS variabelen
 3. [Instaleer SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms#installation) in `/style-dictionary`, dit is een pakketje met extra transformatie-opties die nodig zijn om design tokens uit Figma [Tokens Studio](https://docs.tokens.studio/) te vertalen
 
-## Eleventy installeren
+## Statische site-generator installeren
 
 [Eleventy](https://www.11ty.dev/) wordt gebruikt om herhalende componenten zoals headers en footers als includes te beheren. Installeer Eleventy in de root van het project:
 
@@ -16,7 +16,7 @@ npm install @11ty/eleventy
 
 ### Pagina's bouwen
 
-Om de HTML pagina's te bouwen voer je dit commando uit vanuit de root van het project:
+Om de HTML pagina's te bouwen voer je het commando uit vanuit de root van het project:
 
 ``` bash
 npx @11ty/eleventy
@@ -40,10 +40,10 @@ Herhalende componenten staan in de `_includes` map:
 
 | Bestand | Beschrijving |
 | ------- | ------------ |
-| `base.njk` | Basis layout met `<html>`, `<head>` en `<body>` |
-| `header-rijksoverheid.njk` | Standaard header met logo en optionele navigatie |
-| `header-overheid.njk` | MijnOverheid Zakelijk header |
-| `footer-overheid.njk` | MijnOverheid Zakelijk footer |
+| `base.njk` | Basis layout |
+| `header-rijksoverheid.njk` | Rijksoverheid header met logo en navigatie |
+| `header-overheid.njk` | Overheid header header met logo |
+| `footer-overheid.njk` | Overheid footer |
 
 Elke pagina selecteert zijn layout en opties via front matter bovenaan het bestand:
 
@@ -69,6 +69,51 @@ npm install
 | `npm run dev` | Eleventy serve + token watcher | Beide parallel, met live reload |
 | `npm run build` | Tokens + Eleventy | Volledige productie-build |
 | `npm run tokens` | Alleen Style Dictionary | Handmatig tokens bouwen |
+| `npm run storybook` | Storybook dev server | Componentenbibliotheek lokaal bekijken |
+| `npm run build-storybook` | Storybook productie-build | Statische Storybook-site bouwen |
+
+## Storybook
+
+[Storybook](https://storybook.js.org/) is de omgeving om afzonderlijke componenten te bekijken, testen en documenteren.
+
+### Lokaal opstarten
+
+``` bash
+npm run storybook
+```
+
+Storybook is vervolgens te bekijken op `http://localhost:6006`.
+
+### Stories
+
+De stories staan in de `stories/` map. Elk bestand beschrijft één component en toont varianten:
+
+| Bestand | Beschrijving |
+| ------- | ------------ |
+| `Knop.stories.js` | Knopvarianten (primair, secundair, negatief) |
+| `Link.stories.js` | Linkvarianten |
+| `Tekstinvoer.stories.js` | Tekstinvoervelden |
+| `Selectie.stories.js` | Selectievakjes en keuzerondjes |
+| `Feedback.stories.js` | Notificaties en foutmeldingen |
+| `Navigatie.stories.js` | Navigatiecomponenten |
+| `Typografie.stories.js` | Koppen en tekststijlen |
+| `Tabel.stories.js` | Tabelopmaak |
+
+### Publiceren naar Chromatic
+
+[Chromatic](https://www.chromatic.com/) host Storybook online en biedt visuele regressietests. Eenmalige installatie:
+
+``` bash
+npm install --save-dev chromatic
+```
+
+Publiceren:
+
+``` bash
+npx chromatic --project-token=<jouw-token>
+```
+
+Het project token vind je na het aanmaken van een project op [chromatic.com](https://www.chromatic.com/). Chromatic bouwt en uploadt Storybook automatisch — je hoeft zelf niets te builden.
 
 ## Design tokens vertalen naar CSS variabelen
 
