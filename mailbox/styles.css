@@ -775,3 +775,79 @@ a.mail-item { color: inherit;
 	.mail-view, .mail-list { display: none; }
 	.mail-list.show, .mail-view.show { display: block; }
 }
+
+/* Feature flags: verborgen elementen respecteren hidden, ook bij display-overrides */
+[data-feature][hidden] { display: none; }
+
+/* Toggle-knop rechtsonder (verborgen tot hover) */
+.feature-flags-toggle {
+	background: #1f2937;
+	border: none;
+	border-start-start-radius: 6px;
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	inset-block-end: 0;
+	inset-inline-end: 0;
+	opacity: 0;
+	padding: 6px 12px;
+	position: fixed;
+	transition: opacity 0.2s;
+	z-index: 2;
+}
+.feature-flags-toggle:hover { opacity: 1; }
+
+.feature-flags-panel {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	box-shadow: 0 10px 30px rgba(0,0,0,.15);
+	inset-block-end: 2rem;
+	inset-inline-end: 2rem;
+	max-block-size: 70vh;
+	overflow-y: auto;
+	padding: 16px;
+	position: fixed;
+	min-inline-size: 280px;
+	z-index: 1;
+}
+.feature-flags-heading { font-weight: 600; margin: 0 0 8px; }
+.feature-flags-group-heading {
+	border-block-start: 1px solid #e5e7eb;
+	color: #6b7280;
+	font-size: 13px;
+	margin-block: 12px 6px;
+	padding-block-start: 8px;
+}
+.feature-flags-panel ul { list-style: none; padding: 0; margin: 0; }
+.feature-flags-panel label {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: 6px;
+	padding-block: 3px;
+}
+.feature-flags-clear {
+	background: #dc2626;
+	border: none;
+	border-radius: 4px;
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	inline-size: 100%;
+	margin-block-start: 16px;
+	padding: 6px 12px;
+}
+.settings-radio-group,
+.settings-field { display: none; }
+
+/* Feature-flag link-action: strip anchor-styling als href is verwijderd */
+.feature-link-disabled,
+.message-body a.feature-link-disabled {
+	color: inherit;
+	cursor: default;
+	text-decoration: none;
+}
+.feature-link-disabled:hover {
+	text-decoration: none;
+}

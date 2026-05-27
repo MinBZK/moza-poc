@@ -52,7 +52,22 @@ function isFeatureEnabled(name) {
 
 function applyFeatureFlags() {
 	document.querySelectorAll("[data-feature]").forEach((el) => {
-		el.hidden = !isFeatureEnabled(el.dataset.feature);
+		const enabled = isFeatureEnabled(el.dataset.feature);
+		if (el.dataset.featureAction === "link") {
+			// Toggle href + class. Bij off: href weg, class erop. Bij on: href terug, class weg.
+			if (enabled) {
+				if (el.dataset.featureHref) el.setAttribute("href", el.dataset.featureHref);
+				el.classList.remove("feature-link-disabled");
+			} else {
+				if (el.hasAttribute("href")) {
+					el.dataset.featureHref = el.getAttribute("href");
+					el.removeAttribute("href");
+				}
+				el.classList.add("feature-link-disabled");
+			}
+		} else {
+			el.hidden = !enabled;
+		}
 	});
 	// Wijs inloglinks naar Ondernemersplein als de Inlogflow-flag aan staat
 	const inlogflowAan = isFeatureEnabled("Inlogflow");
