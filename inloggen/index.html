@@ -19,20 +19,23 @@ layout: "base.njk"
 				</summary>
 				<div>
 					<ul>
-						<li>
+						<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
 							<a href="{{ '/inloggen/digid/' | url }}">Inloggen <b>voor mezelf</b></a>
 						</li>
-						<li>
+						<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
+							<a href="{{ '/inloggen/digid/' | url }}">Inloggen <b>voor mijn onderneming</b></a>
+						</li>
+						<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
 							<a href="#">Inloggen <b>met een machtiging</b></a>
 						</li>
-						<li>
+						<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
 							<a href="#">Inloggen <b>als bewindvoerder, curator of mentor</b></a>
 						</li>
-						<li>
+						<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
 							<a href="#">Inloggen <b>voor een kind onder de 12</b></a>
 						</li>
 					</ul>
-					<div class="feedback feedback-info">
+					<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
 						{% include "icon-feedback.njk" %}
 						<div>
 							<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>

@@ -2,11 +2,15 @@
 title: "MijnOverheid Zakelijk"
 permalink: "/page-index/"
 headerType: "overheid-uitgelogd"
-footerType: "overheid"
+bodyClass: "page-login"
 layout: "base.njk"
 ---
 
-<p>
-	U wordt doorgestuurd naar
-	<a href="{{ '/moza/' | url }}">MijnOverheid Zakelijk</a>.
-</p>
+<ul>
+	<li><a href="{{ '/inloggen/' | url }}" target="_blank">Uniform inloggen flow</a> (verborgen feature-flags rechtsonder maken het mogelijk om de links onder DigiD te configureren)</li>
+	<li><a href="{{ '/inloggen/digid/' | url }}" target="_blank">DigiD flow</a></li>
+	<li><a href="{{ '/mailbox/' | url }}" target="_blank">Fictieve mailbox</a></li>
+	<li><a href="{{ '/mobu/' | url }}" target="_blank">MijnOverheid (burgers) homepage</a></li>
+	<li><a href="{{ '/moza/' | url }}" target="_blank">MijnOverheid Zakelijk homepage</a> (verborgen feature-flags rechtsonder maken het mogelijk om o.a. veschillende personas te</li>
+	<li><a href="{{ '/storybook/' | url }}" target="_blank">Storybook (merkidentiteit, ontwerp-rationale en principes, componenten en ontwerp-patronen)</a></li>
+</ul>
