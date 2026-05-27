@@ -1903,6 +1903,9 @@ h1, h2, h3, h4, h5, h6, a, button {
 	article:first-of-type {
 		container-type: initial;
 	}
+	.user-menu {
+		display: none;
+	}
 	main {
 		@media (min-width: 800px) {
 			grid-template-columns: initial;
@@ -2016,7 +2019,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 					border-color: var(--rijkshuisstijl-color-hemelblauw-600);
 					color: var(--rijkshuisstijl-color-hemelblauw-600);
 				}
-				li:first-child & {
+				li:nth-child(1 of :not([hidden])) & {
 					background: var(--rijkshuisstijl-color-hemelblauw-500);
 					color: var(--toepassing-color-text-inverse);
 					&:hover, &:focus-visible {
