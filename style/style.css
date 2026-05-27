@@ -2074,7 +2074,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	text-decoration: none;
 	transform: rotate(45deg);
 	transform-origin: center;
-	z-index: 1;
+	z-index: 2;
 	&:hover {
 		background: var(--toepassing-color-feedback-success-emphasis);
 		color: var(--toepassing-color-text-inverse);
