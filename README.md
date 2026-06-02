@@ -138,11 +138,11 @@ Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-fla
 
 ### Containerisatie
 
-De `container/Containerfile` bouwt een single-image deployment: een Node-builder genereert de Eleventy-site, een Python-release-image installeert de host-dependencies en serveert alles via `uvicorn` op poort 8080. Dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD).
+De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een nginx-image serveert die op poort 8080. Dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD). De Digitale-Assistent-backend draait apart (zie [Digitale Assistent](#digitale-assistent)).
 
 ``` bash
 docker build -f container/Containerfile -t moza .
-docker run --rm -p 8080:8080 --env-file services/host/.env moza
+docker run --rm -p 8080:8080 moza
 ```
 
 ---
@@ -210,7 +210,7 @@ npm install
     📁 icons                iconen
     📁 images               afbeeldingen
     📁 javascript           interactielogica per pagina-type (personas, content-interactions, berichtenbox, etc.)
-📂 container                Containerfile voor de gebundelde deployment (site + host)
+📂 container                Containerfile + nginx-config voor de statische site-deployment
 📂 mobu                     prototype voor MijnOverheid Burger
 📂 moza                     prototype voor MijnOverheid Zakelijk, gebaseerd op deze omgeving
 📂 stories                  'stories' om componenten weer te geven in Storybook

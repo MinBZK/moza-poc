@@ -1,3 +1,4 @@
+# 1) Bouw de statische Eleventy-site (inclusief Storybook)
 FROM node:20-alpine AS site_builder
 
 WORKDIR /app
@@ -9,32 +10,10 @@ RUN npx @11ty/eleventy && ls -d _site
 RUN npx storybook build -o _site/storybook
 
 
-FROM python:3.12-slim
+# 2) Serveer de statische site via nginx (frontend-only, non-root, poort 8080)
+FROM nginxinc/nginx-unprivileged:alpine
 
-WORKDIR /app
+COPY container/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=site_builder /app/_site /usr/share/nginx/html
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends bash jq curl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY services/host/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-COPY services /app/services
-COPY --from=site_builder /app/_site /app/_site
-
-RUN adduser --disabled-password --gecos "" --uid 1001 app \
-    && chown -R app:app /app
-USER app
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/services/host \
-    STATIC_DIR=/app/_site \
-    VLAM_HOST=0.0.0.0 \
-    VLAM_PORT=8080 \
-    ALLOW_API_KEY_OVERRIDE=true
-
-WORKDIR /app/services/host
 EXPOSE 8080
-
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8080"]
