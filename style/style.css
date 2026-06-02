@@ -170,6 +170,7 @@ h6, .h6 {
 
 p {
 	font: var(--toepassing-text-paragraph-default);
+	max-inline-size: 77ch;
 	&.intro {
 		font: var(--toepassing-text-paragraph-intro);
 	}
@@ -1428,65 +1429,157 @@ dd .feedback {
 
 /* -- OVERIGE COMPONENTEN -- */
 
-/* Uitklapblok (details/summary) */
-details {
-	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
-	&[open] {
-		border-color: var(--toepassing-color-interactive-alternate-selected-border);
-		summary {
-			background: var(--toepassing-color-interactive-alternate-selected-background);
-			&:hover, &:focus-visible {
-				background: var(--toepassing-color-interactive-alternate-hover-background);
-			}
-			&::before {
-				transform: rotate(90deg);
-				transition: var(--toepassing-transition-transform);
-			}
-		}
-	}
-	&:has(summary:hover) {
-		border-color: var(--toepassing-color-interactive-alternate-hover-border);
-	}
-	&:has(summary:focus-visible) {
-		border-color: var(--toepassing-color-interactive-alternate-focus-border);
-	}
-	&:has(summary:active) {
-		border-color: var(--toepassing-color-interactive-alternate-active-border);
-	}
-}
-summary {
-	background: var(--toepassing-color-background-subtle);
-	cursor: pointer;
-	display: flex;
-	gap: var(--toepassing-space-layout-2xs);
-	padding: var(--toepassing-space-padding-sm);
-	transition: var(--toepassing-transition-default);
-	&:hover, &:focus-visible, &:active {
-		background: var(--toepassing-color-interactive-alternate-hover-background);
-		color: var(--toepassing-color-text-default);
-	}
-	&:active {
-		background: var(--toepassing-color-interactive-alternate-active-background);
-	}
-	&::before {
-		content: url("../assets/icons/icon-chevron.svg");
-		flex-shrink: 0;
-		inline-size: var(--toepassing-size-icon-xs);
-		transform: rotate(0deg);
-		transition: var(--toepassing-transition-transform);
-	}
-}
-
-/* Accordion (o.a. FAQ-lijst met uitklapbare vragen) */
+/* Accordion (uitklapblok (details/summary) o.a. voor FAQ-lijst met uitklapbare vragen) */
 .accordion {
 	list-style: none;
 	padding: 0;
+	details {
+		border: var(--toepassing-border-subtle);
+		border-radius: var(--toepassing-border-radius-md);
+		&[open] {
+			border-color: var(--toepassing-color-interactive-alternate-selected-border);
+			summary {
+				background: var(--toepassing-color-interactive-alternate-selected-background);
+				&:hover, &:focus-visible {
+					background: var(--toepassing-color-interactive-alternate-hover-background);
+				}
+				&::before {
+					transform: rotate(90deg);
+					transition: var(--toepassing-transition-transform);
+				}
+			}
+		}
+		&:has(summary:hover) {
+			border-color: var(--toepassing-color-interactive-alternate-hover-border);
+		}
+		&:has(summary:focus-visible) {
+			border-color: var(--toepassing-color-interactive-alternate-focus-border);
+		}
+		&:has(summary:active) {
+			border-color: var(--toepassing-color-interactive-alternate-active-border);
+		}
+	}
+	summary {
+		background: var(--toepassing-color-background-subtle);
+		cursor: pointer;
+		display: flex;
+		gap: var(--toepassing-space-layout-2xs);
+		padding: var(--toepassing-space-padding-sm);
+		transition: var(--toepassing-transition-default);
+		&:hover, &:focus-visible, &:active {
+			background: var(--toepassing-color-interactive-alternate-hover-background);
+			color: var(--toepassing-color-text-default);
+		}
+		&:active {
+			background: var(--toepassing-color-interactive-alternate-active-background);
+		}
+		&::before {
+			content: url("../assets/icons/icon-chevron.svg");
+			flex-shrink: 0;
+			inline-size: var(--toepassing-size-icon-xs);
+			transform: rotate(0deg);
+			transition: var(--toepassing-transition-transform);
+		}
+	}
 	h3, h4, h5, h6 {
 		font-size: var(--toepassing-text-size-body-md);
 	}
 	p {
 		padding: var(--toepassing-space-padding-sm);
+	}
+}
+
+/* Status-/takenoverzicht */
+.status-track {
+	counter-reset: step;
+	gap: var(--toepassing-space-margin-sm);
+	list-style: none;
+	padding-inline-start: var(--toepassing-space-padding-2xs);
+	li {
+		counter-increment: step;
+		display: flex;
+		gap: var(--toepassing-space-margin-xs);
+		position: relative;
+		&::before {
+			background: var(--toepassing-color-feedback-success-emphasis);
+			block-size: var(--toepassing-size-icon-lg);
+			border-radius: var(--toepassing-border-radius-round);
+			color: var(--toepassing-color-text-inverse);
+			content: counter(step);
+			display: grid;
+			inline-size: var(--toepassing-size-icon-lg);
+			place-items: center;
+		}
+		&:has(~ [aria-current="step"])::before {
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M20.63 3.081a1.357 1.357 0 0 0-1.818.186l-7.94 8.883-4.774-4.134a1.355 1.355 0 0 0-2.05 1.721l5.781 9.65c.244.407.684.657 1.158.658h.005c.473 0 .912-.246 1.158-.651l8.83-14.52a1.355 1.355 0 0 0-.35-1.793z'/%3E%3C/svg%3E");
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: 60%;
+			content: "";
+		}
+		&::after {
+			background: var(--toepassing-color-feedback-success-border);
+			content: "";
+			inline-size: var(--toepassing-size-4xs);
+			inset-block: var(--toepassing-size-icon-lg) calc(-1 * var(--toepassing-space-margin-sm));
+			inset-inline-start: calc(var(--toepassing-size-icon-lg) / 2);
+			position: absolute;
+			transform: translateX(-50%);
+		}
+		&:has(+ [aria-current="step"])::after {
+			background: var(--toepassing-color-feedback-neutral-border);
+		}
+		&:last-child::after {
+			content: none;
+		}
+	}
+	[aria-current="step"] {
+		&::before, ~ li::before {
+			background: var(--toepassing-color-feedback-neutral-emphasis);
+		}
+		&::after, ~ li::after {
+			background: var(--toepassing-color-feedback-neutral-border);
+		}
+	}
+	summary {
+		align-items: center;
+		display: flex;
+		font: var(--toepassing-text-heading-h5);
+		list-style: none;
+		min-block-size: var(--toepassing-size-icon-lg);
+		&::after {
+			content: url("../assets/icons/icon-chevron.svg");
+			flex-shrink: 0;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-start: var(--toepassing-space-margin-2xs);
+			transform: rotate(0deg);
+			transition: var(--toepassing-transition-transform);
+		}
+	}
+	details {
+		&[open] {
+			summary::after {
+				transform: rotate(90deg);
+				transition: var(--toepassing-transition-transform);
+			}
+		}
+	}
+	.status-details {
+		padding: var(--toepassing-space-padding-sm) 0;
+	}
+	.status-date {
+		color: var(--toepassing-color-text-subtle-2);
+		font: var(--toepassing-text-smalltext);
+		&::before {
+			content: url("../assets/icons/icon-kalender.svg");
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-sm);
+			margin-inline-end: var(--toepassing-space-margin-2xs);
+			vertical-align: text-top;
+		}
+	}
+	.feedback {
+		margin-block-start: var(--toepassing-space-margin-2xs);
 	}
 }
 
