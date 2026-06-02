@@ -122,7 +122,15 @@ De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assist
 
 ### Verbinden met de backend
 
-De chat praat over HTTP met de backend. De backend-URL is instelbaar via `window.MOZA_CHAT_API` (default `http://localhost:8000`). Zet een lege string (`""`) voor een relatieve URL achter een reverse proxy op dezelfde origin.
+De chat praat over HTTP met de backend. De backend-URL wordt via `window.MOZA_CHAT_API` gezet en is per omgeving instelbaar met de build-variabele `MOZA_CHAT_API` (Eleventy-data `_data/chatApi.js` → `_includes/base.njk`):
+
+| `MOZA_CHAT_API` | Resultaat |
+| --------------- | --------- |
+| niet gezet | `http://localhost:8000` (lokale backend, dev) |
+| `""` | relatief, zelfde origin (reverse proxy) |
+| `https://…` | expliciete backend-URL (cross-origin; vereist `ALLOWED_ORIGINS` in de backend) |
+
+In de container-build geef je dit mee als `--build-arg MOZA_CHAT_API=…` (default leeg = relatief).
 
 Lokaal end-to-end draaien:
 
@@ -138,11 +146,11 @@ Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-fla
 
 ### Containerisatie
 
-De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een nginx-image serveert die op poort 8080. Dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD). De Digitale-Assistent-backend draait apart (zie [Digitale Assistent](#digitale-assistent)).
+De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een nginx-image serveert die op poort 8080. Diezelfde nginx doet een **same-origin reverse proxy**: `/chat`, `/chat/stream`, `/health` en `/tools` gaan naar de backend op `BACKEND_ORIGIN` (runtime instelbaar via env, default `127.0.0.1:8000`). Zo is er geen CORS nodig — de browser praat alleen met deze origin en `window.MOZA_CHAT_API` blijft leeg (`""`). De Digitale-Assistent-backend draait apart (zie [Digitale Assistent](#digitale-assistent)); dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD).
 
 ``` bash
 docker build -f container/Containerfile -t moza .
-docker run --rm -p 8080:8080 moza
+docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=host.docker.internal:8000 moza
 ```
 
 ---

@@ -1,0 +1,47 @@
+server {
+    listen       8080;
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # Relatieve redirects (bv. /pad -> /pad/) zodat de interne poort 8080 niet
+    # in de Location-header lekt achter een reverse proxy / ingress.
+    absolute_redirect off;
+    server_tokens off;
+
+    # --- Same-origin reverse proxy naar de Digitale-Assistent-backend ---
+    # BACKEND_ORIGIN is per omgeving instelbaar via een runtime env-var
+    # (envsubst bij container-start), bv. de ZAD-service van de backend.
+    # Zo is er geen CORS nodig: de browser praat alleen met deze origin.
+    location /chat {
+        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Server-Sent Events (/chat/stream): niet bufferen, lange read-timeout.
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
+    }
+
+    location = /health {
+        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_set_header Host $host;
+    }
+
+    location = /tools {
+        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_set_header Host $host;
+    }
+
+    # --- Statische Eleventy-site ---
+    # Eleventy genereert mappen met een index.html. Val voor extensieloze URLs
+    # terug op <pad>.html en geef anders een nette 404.
+    location / {
+        try_files $uri $uri/ $uri.html =404;
+    }
+}

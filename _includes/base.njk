@@ -38,6 +38,7 @@
     {% endif %}
 
     <script>window.PATH_PREFIX = "{{ '/' | url }}";</script>
+    <script>window.MOZA_CHAT_API = {{ chatApi | dump | safe }};</script>
     <script src="{{ '/assets/javascript/side-nav-toggle.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/aria-disabled.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/indeterminate.js' | url }}" defer></script>
