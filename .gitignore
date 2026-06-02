@@ -5,16 +5,11 @@ _test_build/
 storybook-static/
 style-dictionary/node_modules/
 
-# Python
-__pycache__/
-.ruff_cache/
-
 # Node
 node_modules/
 
 # Secrets
 .env
-services/host/.env
 
 # Caches en temp
 .claude/*

@@ -112,42 +112,29 @@ Bij het gebruik van `npm run dev` worden design tokens automatisch opnieuw gebou
 
 ---
 
-## Digitale Assistent (backend)
+## Digitale Assistent
 
-De [Digitale Assistent](services/README.md) draait op een Python-host (FastAPI) die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI.
+De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assistent.html` + `assets/javascript/digitale-assistent.js`). De **backend** — een FastAPI-host die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI — leeft in een eigen repo en draait standalone:
 
-### Lokaal draaien geïntegreerd via `npm run dev`
+[![backend: moza-poc-digitale-assistent](https://img.shields.io/badge/backend-moza--poc--digitale--assistent-blue?logo=github)](https://github.com/MinBZK/moza-poc-digitale-assistent)
 
-`npm run dev` start drie processen tegelijk via `concurrently`:
+→ **<https://github.com/MinBZK/moza-poc-digitale-assistent>**
 
-- **eleventy** — `eleventy --watch`, herbouwt `_site/` bij elke wijziging
-- **tokens** — chokidar-watcher die Style Dictionary triggert bij `tokens/tokens.json`
-- **backend** — `python api.py` in `services/host/`, serveert de API én de gebouwde `_site/` op dezelfde poort
+### Verbinden met de backend
 
-Doordat de backend ook de statische site serveert is er één origin: geen CORS-gedoe, geen aparte `--serve` van Eleventy. De poort wordt gelezen uit `services/host/.env` (`VLAM_PORT`, standaard `8001` in deze setup omdat poort `8000` op macOS vaak door `pinniped` wordt gebruikt).
+De chat praat over HTTP met de backend. De backend-URL is instelbaar via `window.MOZA_CHAT_API` (default `http://localhost:8000`). Zet een lege string (`""`) voor een relatieve URL achter een reverse proxy op dezelfde origin.
 
-De Digitale Assistent is dan bereikbaar op [`localhost:8001/moza/digitale-assistent/`](http://localhost:8001/moza/digitale-assistent/).
+Lokaal end-to-end draaien:
 
-> **Let op — geen hot-reload:** Eleventy draait in `--watch` (alleen rebuild, geen BrowserSync). Bij wijzigingen moet je de browser handmatig verversen. Doe eenmalig `npm run build` voordat je `npm run dev` start, zodat `_site/` bestaat als de backend mount.
+1. Start deze frontend met `npm run dev` — Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080).
+2. Start de backend volgens de instructies in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent) (FastAPI, poort `8000`).
+3. Zorg dat de backend de frontend-origin toelaat: `ALLOWED_ORIGINS=http://localhost:8080`.
 
-### Lokaal draaien met `uv` (alleen backend)
-
-Als alternatief, alleen de host zonder Eleventy-watcher:
-
-``` bash
-cd services/host
-uv run --with-requirements requirements.txt \
-  uvicorn api:app --host 0.0.0.0 --port 8090
-```
+> Voor losse demo's van de CLI-tools (`kvk-cli`, `koop-cli`, …) gebruik je de backend-repo; die bevat de standalone bash-tools.
 
 ### API-sleutels
 
-API-sleutels kunnen op twee manieren worden gezet:
-
-- via `services/host/.env` (zie `services/host/.env.example`)
-- via het feature-flags paneel rechtsonder in de site — deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header meegestuurd en overrulen de `.env`
-
-UI-keys werken alleen als `ALLOW_API_KEY_OVERRIDE=true` in `services/host/.env`. Lege UI-velden vallen automatisch terug op de `.env`-keys.
+Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd. Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys uit de backend-`.env`.
 
 ### Containerisatie
 
@@ -203,7 +190,7 @@ npm install
 
 | Script | Commando | Beschrijving |
 | ------ | -------- | ------------ |
-| `npm run dev` | Eleventy watch + token watcher + FastAPI-backend | Alle drie parallel. Backend serveert `_site/` én de chat-API op dezelfde poort (`VLAM_PORT` uit `services/host/.env`, default `8001`). Geen hot-reload, browser handmatig verversen. |
+| `npm run dev` | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
 | `npm run build` | Tokens + Eleventy | Volledige productie-build |
 | `npm run tokens` | Alleen Style Dictionary | Handmatig tokens bouwen |
 | `npm run storybook` | Storybook dev server | Componentenbibliotheek lokaal bekijken |
@@ -226,10 +213,6 @@ npm install
 📂 container                Containerfile voor de gebundelde deployment (site + host)
 📂 mobu                     prototype voor MijnOverheid Burger
 📂 moza                     prototype voor MijnOverheid Zakelijk, gebaseerd op deze omgeving
-📂 services                 Digitale Assistent — FastAPI-host, MCP-servers en CLI-tools
-    📁 host                 FastAPI-host die statische site én chat-API serveert
-    📁 mcp                  MCP-servers (kvk, koop, regelrecht, rvo)
-    📁 cli                  Bash-CLI's als alternatief transport
 📂 stories                  'stories' om componenten weer te geven in Storybook
 📂 style
     📄 _reset.css           cross-browser stijl normalisatie

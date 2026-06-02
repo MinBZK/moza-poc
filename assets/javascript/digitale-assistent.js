@@ -2,9 +2,12 @@
  * digitale-assistent.js
  *
  * Client-side gedrag voor de Digitale Assistent (chat).
- * Praat met een lokale backend (poort 8001 op localhost) via /chat/stream
- * met Server-Sent Events. Bewaart per LLM/transport-combinatie een
- * sessie-id en gespreksgeschiedenis zodat wisselen niet leidt tot verlies.
+ * Praat met de Digitale-Assistent-backend via /chat/stream met Server-Sent
+ * Events. De backend-URL is instelbaar via window.MOZA_CHAT_API (default
+ * http://localhost:8000). De backend leeft in een eigen repo:
+ * github.com/MinBZK/moza-poc-digitale-assistent
+ * Bewaart per LLM/transport-combinatie een sessie-id en gespreksgeschiedenis
+ * zodat wisselen niet leidt tot verlies.
  */
 
 (function () {
@@ -13,7 +16,9 @@
 	var form = document.getElementById("chat-form");
 	if (!form) return;
 
-	var API_BASE = window.location.hostname === "localhost" ? "http://localhost:8001" : "";
+	// Backend-URL is instelbaar via window.MOZA_CHAT_API (bv. een deploy-snippet of
+	// reverse proxy). Een lege string ("") betekent relatief: zelfde origin als de site.
+	var API_BASE = typeof window.MOZA_CHAT_API === "string" ? window.MOZA_CHAT_API : "http://localhost:8000";
 	var input = document.getElementById("chat-input");
 	var messages = document.getElementById("chat-messages");
 	var statusEl = document.getElementById("chat-status");
@@ -220,6 +225,15 @@
 	}
 
 	window.addEventListener("setting-changed", handleSwitch);
+
+	// Suggestie-chips: vul het invoerveld en verstuur direct.
+	messages.addEventListener("click", function (e) {
+		var chip = e.target.closest(".chat-suggestion");
+		if (!chip || submitting) return;
+		input.value = chip.textContent.trim();
+		input.focus();
+		form.requestSubmit();
+	});
 
 	input.addEventListener("input", function () {
 		this.style.blockSize = "auto";
