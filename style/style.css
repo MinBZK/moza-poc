@@ -1750,6 +1750,9 @@ h1, h2, h3, h4, h5, h6, a, button {
 	cursor: pointer;
 	font: inherit;
 	padding: 0;
+	&.icon-label svg {
+		block-size: var(--toepassing-size-icon-md);
+	}
 	&::after {
 		background-color: currentcolor;
 		block-size: var(--toepassing-size-icon-xs);
@@ -1769,6 +1772,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
 	box-shadow: var(--toepassing-box-shadow-default);
+	display: block;
 	inset-block-start: 100%;
 	inset-inline-end: 0;
 	list-style: none;
@@ -1776,14 +1780,14 @@ h1, h2, h3, h4, h5, h6, a, button {
 	opacity: 1;
 	padding: var(--toepassing-space-padding-md);
 	position: absolute;
-	transition: var(--toepassing-transition-opacity) allow-discrete;
+	transition: var(--toepassing-transition-opacity) allow-discrete, display var(--toepassing-motion-speed-fast) allow-discrete;
 	z-index: 1;
 	@starting-style {
 		opacity: 0;
 	}
 	&[hidden] {
+		display: none;
 		opacity: 0;
-		transition: var(--toepassing-transition-opacity) allow-discrete;
 	}
 	a {
 		align-items: baseline;
@@ -1816,6 +1820,23 @@ h1, h2, h3, h4, h5, h6, a, button {
 			margin-block-start: var(--toepassing-space-padding-sm);
 			padding-block-start: var(--toepassing-space-padding-md);
 		}
+		&.account-switcher-section-label {
+			margin-block-start: var(--toepassing-space-margin-md);
+			padding-block-start: var(--toepassing-space-padding-xl);
+		}
+		svg {
+			inline-size: var(--toepassing-size-icon-md);
+			vertical-align: text-bottom;
+		}
+	}
+	.group-label-private svg {
+		color: var(--toepassing-color-role-private);
+	}
+	.group-label-business svg {
+		color: var(--toepassing-color-role-business);
+	}
+	.group-label-authorized svg {
+		color: var(--toepassing-color-role-authorized);
 	}
 }
 
@@ -2164,11 +2185,9 @@ h1, h2, h3, h4, h5, h6, a, button {
 /* MijnOverheid Zakelijk/Zakelijk gemachtigd/Privé/Privé gemachtigd afwijkende styling */
 body.moza {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-lintblauw-500);
-	#side-nav-menu {
-		svg {
-			color: var(--rijkshuisstijl-color-lintblauw-500);
-		}
-	}
+}
+body.moza.authorized {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-oranje-500);
 }
 body.mobu {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-hemelblauw-500);
@@ -2179,13 +2198,8 @@ body.mobu {
 	--toepassing-color-interactive-hover-border: var(--rijkshuisstijl-color-hemelblauw-600);
 	--toepassing-color-interactive-hover-icon: var(--rijkshuisstijl-color-hemelblauw-600);
 }
-body.authorized {
+body.mobu.authorized {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
-	#side-nav-menu {
-		svg {
-			color: var(--rijkshuisstijl-color-oranje-500);
-		}
-	}
 }
 
 /* Tijdelijk: proof-of-concept banner (roterend lint rechtsboven) */

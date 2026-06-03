@@ -37,7 +37,7 @@
  *   <ul data-profiel-lijst="vestigingen"> … </ul>      → { nummer, type, adres }
  *   <ul data-profiel-lijst="ubo"> … </ul>              → { naam, aardVanBelang, groottevanBelang }
  *
- * Bij een lege array wordt de container verborgen en — indien aanwezig — een
+ * Bij een lege array wordt de container verborgen en, indien aanwezig, een
  * sibling <div data-profiel-leeg="sleutel" hidden> getoond als feedback-bericht.
  */
 
@@ -253,9 +253,13 @@
 			}
 		});
 
-		// Markeer de actieve persona in de kiezer.
+		// Markeer de actieve persona (bv. in de accountwisselaar). Alleen in de
+		// eigenaar-context van /moza/: in belang- of /mobu/-contexten is geen
+		// onderneming "huidig" en bepaalt de server-side aria-current het actieve item.
+		var pad = location.pathname;
+		var eigenaarContext = pad.indexOf("/moza/") !== -1 && pad.indexOf("/moza/belang-") === -1;
 		document.querySelectorAll("[data-profiel-id]").forEach(function (el) {
-			var isActief = el.getAttribute("data-profiel-id") === persona.id;
+			var isActief = eigenaarContext && el.getAttribute("data-profiel-id") === persona.id;
 			if (isActief) {
 				el.setAttribute("aria-current", "true");
 			} else {

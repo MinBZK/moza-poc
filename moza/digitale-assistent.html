@@ -232,7 +232,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			if (!sources) sources = {};
 			var keys = Object.keys(sources);
 			if (keys.length === 0) {
-				statusEl.innerHTML = '<p class="chat-status-warning">Geen bronnen verbonden — de assistent antwoordt op basis van eigen kennis.</p>';
+				statusEl.innerHTML = '<p class="chat-status-warning">Geen bronnen verbonden. De assistent antwoordt op basis van eigen kennis.</p>';
 				return;
 			}
 			var items = keys.map(function (key) {
@@ -248,7 +248,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			var items = Object.keys(SERVER_LABELS).map(function (key) {
 				return '<li class="chat-status-disconnected">' + SERVER_LABELS[key] + "</li>";
 			});
-			statusEl.innerHTML = '<p class="chat-status-warning">Host niet bereikbaar — geen connectie met de bronnen.</p>' + "<ul>" + items.join("") + "</ul>";
+			statusEl.innerHTML = '<p class="chat-status-warning">Host niet bereikbaar. Geen connectie met de bronnen.</p>' + "<ul>" + items.join("") + "</ul>";
 		}
 
 		// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)

@@ -172,10 +172,12 @@ document.addEventListener("click", (e) => {
 document.addEventListener("click", (e) => {
 	const btn = e.target.closest(".btn-close");
 	if (!btn) return;
-	const feedback = btn.closest(".feedback[id]");
+	const feedback = btn.closest(".feedback");
 	if (!feedback) return;
 	feedback.hidden = true;
-	localStorage.setItem("dismissed:" + feedback.id, "true");
+	// Onthoud alleen wanneer het blok een id heeft; blokken zonder id sluiten
+	// voor deze sessie en verschijnen weer na herladen.
+	if (feedback.id) localStorage.setItem("dismissed:" + feedback.id, "true");
 });
 
 document.querySelectorAll(".feedback[id]").forEach((feedback) => {
@@ -194,7 +196,7 @@ document.querySelectorAll(".list-content-links li.reserve-topic").forEach((li) =
 });
 
 // Verberg eerder verborgen topics bij laden en schuif reserve-topics door
-// Alleen voor items die nog zichtbaar waren — items die al hidden zijn
+// Alleen voor items die nog zichtbaar waren, items die al hidden zijn
 // (bijv. reserves waarvan .reserve-topic hierboven is verwijderd) overslaan
 document.querySelectorAll(".list-content-links li:not(.reserve-topic)").forEach((li) => {
 	if (li.closest("#saved-groups") || li.closest("#hidden-groups")) return;

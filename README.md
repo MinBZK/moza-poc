@@ -73,8 +73,8 @@ Design tokens zijn ontwerp-waarden — zoals kleuren, typografie, maatvoering �
 
 Het bestand `tokens/tokens.json` is de *single source of truth* voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
 
-- **Figma** — via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
-- **IDE** — ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
+- **Figma**; via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
+- **IDE**; ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
 
 ### Style Dictionary
 
@@ -91,10 +91,10 @@ Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom 
 
 Het resultaat wordt opgesplitst in twee automatisch gegenereerde CSS-bestanden:
 
-- **`_rijkshuisstijl.css`** — bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
-- **`_toepassing.css`** — bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
+- **`_rijkshuisstijl.css`**; bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
+- **`_toepassing.css`**; bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
 
-Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden — de toepassingslaag vangt de verandering op.
+Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden, de toepassingslaag vangt de verandering op.
 
 Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt worden. Alle wijzigingen aan ontwerp-waarden horen thuis in `tokens/tokens.json`.
 
@@ -120,15 +120,15 @@ De [Digitale Assistent](services/README.md) draait op een Python-host (FastAPI) 
 
 `npm run dev` start drie processen tegelijk via `concurrently`:
 
-- **eleventy** — `eleventy --watch`, herbouwt `_site/` bij elke wijziging
-- **tokens** — chokidar-watcher die Style Dictionary triggert bij `tokens/tokens.json`
-- **backend** — `python api.py` in `services/host/`, serveert de API én de gebouwde `_site/` op dezelfde poort
+- **eleventy**; `eleventy --watch`, herbouwt `_site/` bij elke wijziging
+- **tokens**; chokidar-watcher die Style Dictionary triggert bij `tokens/tokens.json`
+- **backend**; `python api.py` in `services/host/`, serveert de API én de gebouwde `_site/` op dezelfde poort
 
 Doordat de backend ook de statische site serveert is er één origin: geen CORS-gedoe, geen aparte `--serve` van Eleventy. De poort wordt gelezen uit `services/host/.env` (`VLAM_PORT`, standaard `8001` in deze setup omdat poort `8000` op macOS vaak door `pinniped` wordt gebruikt).
 
 De Digitale Assistent is dan bereikbaar op [`localhost:8001/moza/digitale-assistent/`](http://localhost:8001/moza/digitale-assistent/).
 
-> **Let op — geen hot-reload:** Eleventy draait in `--watch` (alleen rebuild, geen BrowserSync). Bij wijzigingen moet je de browser handmatig verversen. Doe eenmalig `npm run build` voordat je `npm run dev` start, zodat `_site/` bestaat als de backend mount.
+> **Let op: geen hot-reload:** Eleventy draait in `--watch` (alleen rebuild, geen BrowserSync). Bij wijzigingen moet je de browser handmatig verversen. Doe eenmalig `npm run build` voordat je `npm run dev` start, zodat `_site/` bestaat als de backend mount.
 
 ### Lokaal draaien met `uv` (alleen backend)
 
@@ -145,7 +145,7 @@ uv run --with-requirements requirements.txt \
 API-sleutels kunnen op twee manieren worden gezet:
 
 - via `services/host/.env` (zie `services/host/.env.example`)
-- via het feature-flags paneel rechtsonder in de site — deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header meegestuurd en overrulen de `.env`
+- via het feature-flags paneel rechtsonder in de site, deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header meegestuurd en overrulen de `.env`
 
 UI-keys werken alleen als `ALLOW_API_KEY_OVERRIDE=true` in `services/host/.env`. Lege UI-velden vallen automatisch terug op de `.env`-keys.
 
@@ -226,7 +226,7 @@ npm install
 📂 container                Containerfile voor de gebundelde deployment (site + host)
 📂 mobu                     prototype voor MijnOverheid Burger
 📂 moza                     prototype voor MijnOverheid Zakelijk, gebaseerd op deze omgeving
-📂 services                 Digitale Assistent — FastAPI-host, MCP-servers en CLI-tools
+📂 services                 Digitale Assistent: FastAPI-host, MCP-servers en CLI-tools
     📁 host                 FastAPI-host die statische site én chat-API serveert
     📁 mcp                  MCP-servers (kvk, koop, regelrecht, rvo)
     📁 cli                  Bash-CLI's als alternatief transport

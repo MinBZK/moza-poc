@@ -119,7 +119,7 @@ const leverendeMagazijnen = [
 ];
 
 if (leverendeMagazijnen.length === 0) {
-	throw new Error("Geen leverende magazijnen — berichten kunnen niet worden gegenereerd.");
+	throw new Error("Geen leverende magazijnen: berichten kunnen niet worden gegenereerd.");
 }
 
 function datumVoorIndex(i) {

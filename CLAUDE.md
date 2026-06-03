@@ -4,7 +4,7 @@ Dit bestand wordt automatisch geladen bij elke Claude Code-sessie. Het bevat de 
 
 ## Project
 
-MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy en gedocumenteerd in Storybook. Geen frameworks, geen preprocessors. De code is het ontwerp.
+MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy en gedocumenteerd in Storybook. Geen frameworks, geen preprocessors. De code is het ontwerp.
 
 - Prototype: `moza/` (zakelijk) en `mobu/` (burger)
 - Storybook stories: `stories/`
@@ -17,13 +17,13 @@ MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy 
 
 ## Ontwerp-principes (kernregels)
 
-1. **Semantische HTML eerst** — gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
-2. **Toegankelijkheid altijd** — toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
-3. **CSS logical properties** — gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
-4. **Design tokens** — gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
-5. **Eenvoudigst mogelijke oplossing** — HTML en CSS waar het kan, JavaScript waar het moet. Platform boven framework.
-6. **Spacing** — gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
-7. **Feature flags** — gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
+1. **Semantische HTML eerst**; gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
+2. **Toegankelijkheid altijd**; toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
+3. **CSS logical properties**; gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
+4. **Design tokens**; gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
+5. **Eenvoudigst mogelijke oplossing**; HTML en CSS waar het kan, JavaScript waar het moet. Platform boven framework.
+6. **Spacing**; gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
+7. **Feature flags**; gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
 
 ## Schrijfwijzer (kernregels)
 
