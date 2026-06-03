@@ -4,13 +4,14 @@
  * `window.MOZA_CHAT_API` gezet en door `assets/javascript/digitale-assistent.js`
  * gebruikt voor de chat-fetch.
  *
- *   (niet gezet)             -> http://localhost:8000  (lokale backend, dev)
- *   MOZA_CHAT_API=""         -> relatief, zelfde origin (reverse proxy)
- *   MOZA_CHAT_API=https://…  -> expliciete backend-URL (cross-origin + CORS)
+ *   (niet gezet)             -> ""  (same-origin: de nginx-proxy van de frontend)
+ *   MOZA_CHAT_API=""         -> ""  (idem, expliciet)
+ *   MOZA_CHAT_API=http://…   -> expliciete backend-URL (lokale dev zonder proxy)
  *
- * In de container-build is de default leeg (""), zie container/Containerfile.
+ * Productie draait achter de reverse proxy, dus same-origin ("") is de default.
+ * Voor lokale dev zet `npm run dev` MOZA_CHAT_API=http://localhost:8000 (zie
+ * package.json); de backend draai je dan los met ALLOWED_ORIGINS=http://localhost:8080.
  */
 module.exports = function () {
-	const value = process.env.MOZA_CHAT_API;
-	return value === undefined ? "http://localhost:8000" : value;
+	return process.env.MOZA_CHAT_API || "";
 };

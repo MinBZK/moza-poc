@@ -20,10 +20,18 @@ RUN npx storybook build -o _site/storybook
 #    (frontend-only, non-root, poort 8080)
 FROM nginxinc/nginx-unprivileged:alpine
 
-# /chat, /health en /tools worden naar de backend geproxyd. BACKEND_ORIGIN is
-# runtime instelbaar (envsubst). Default 127.0.0.1:8000 zodat nginx altijd start;
-# zonder backend faalt alleen de chat (502), de statische site blijft werken.
-ENV BACKEND_ORIGIN=127.0.0.1:8000
+# /chat, /chat/stream, /health en /tools worden intern naar de backend geproxyd.
+# BACKEND_ORIGIN is een RUNTIME env-var: zet 'm op het ZAD-component `proef` via de
+# ZAD-UI (de zad-actions/deploy-action kan geen runtime-env zetten). Default = het
+# interne cluster-adres van de backend.
+#  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
+#    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
+#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot deze twee vars, zodat nginx-eigen
+#    variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven.
+# De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
+ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+    NGINX_ENVSUBST_FILTER='^(BACKEND_ORIGIN|NGINX_LOCAL_RESOLVERS)$'
 
 COPY container/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=site_builder /app/_site /usr/share/nginx/html

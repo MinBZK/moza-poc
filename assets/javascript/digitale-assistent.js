@@ -16,9 +16,10 @@
 	var form = document.getElementById("chat-form");
 	if (!form) return;
 
-	// Backend-URL is instelbaar via window.MOZA_CHAT_API (bv. een deploy-snippet of
-	// reverse proxy). Een lege string ("") betekent relatief: zelfde origin als de site.
-	var API_BASE = typeof window.MOZA_CHAT_API === "string" ? window.MOZA_CHAT_API : "http://localhost:8000";
+	// Standaard same-origin (lege string = relatieve paden zoals /chat): in productie
+	// proxyt de nginx van de frontend naar de interne backend, dus geen CORS nodig.
+	// window.MOZA_CHAT_API is een optionele override (bv. lokaal: "http://localhost:8000").
+	var API_BASE = typeof window.MOZA_CHAT_API === "string" ? window.MOZA_CHAT_API : "";
 	var input = document.getElementById("chat-input");
 	var messages = document.getElementById("chat-messages");
 	var statusEl = document.getElementById("chat-status");

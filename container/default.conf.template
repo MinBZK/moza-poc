@@ -10,31 +10,42 @@ server {
     absolute_redirect off;
     server_tokens off;
 
-    # --- Same-origin reverse proxy naar de Digitale-Assistent-backend ---
-    # BACKEND_ORIGIN is per omgeving instelbaar via een runtime env-var
-    # (envsubst bij container-start), bv. de ZAD-service van de backend.
-    # Zo is er geen CORS nodig: de browser praat alleen met deze origin.
+    # Runtime-DNS-resolver, afgeleid uit /etc/resolv.conf door het image-script
+    # 15-local-resolvers.envsh (vereist NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1).
+    # Nodig omdat de upstream via een variabele gaat: dan resolvet nginx per
+    # request i.p.v. bij config-load, dus de container start ook als de backend
+    # nog niet up is en IP-wijzigingen worden opgepakt.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
+    # Backend-origin, runtime instelbaar via env BACKEND_ORIGIN
+    # (default http://dabackend:8000; op ZAD te zetten op het frontend-component).
+    set $backend_origin "${BACKEND_ORIGIN}";
+
+    # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
+    # Browser praat alleen met deze origin; nginx proxyt server-side. Geen CORS.
+    # Dekt /chat, /chat/stream (SSE) en DELETE /chat/<session_id>.
     location /chat {
-        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_pass $backend_origin$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # Server-Sent Events (/chat/stream): niet bufferen, lange read-timeout.
+        # Server-Sent Events (/chat/stream): niet bufferen, lange timeout.
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
-        proxy_read_timeout 1h;
+        chunked_transfer_encoding off;
+        proxy_read_timeout 3600s;
     }
 
     location = /health {
-        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
     }
 
     location = /tools {
-        proxy_pass http://${BACKEND_ORIGIN};
+        proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
     }
 

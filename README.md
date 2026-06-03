@@ -122,35 +122,37 @@ De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assist
 
 ### Verbinden met de backend
 
-De chat praat over HTTP met de backend. De backend-URL wordt via `window.MOZA_CHAT_API` gezet en is per omgeving instelbaar met de build-variabele `MOZA_CHAT_API` (Eleventy-data `_data/chatApi.js` → `_includes/base.njk`):
+In productie draait alles achter **één origin**: de nginx van de frontend **proxyt** de chat-endpoints (`/chat`, `/chat/stream`, `/health`, `/tools`) intern naar de backend. De browser praat dus alleen met de frontend-origin — **geen CORS nodig**, en de backend hoeft niet publiek te zijn. Twee instellingen:
 
-| `MOZA_CHAT_API` | Resultaat |
-| --------------- | --------- |
-| niet gezet | `http://localhost:8000` (lokale backend, dev) |
-| `""` | relatief, zelfde origin (reverse proxy) |
-| `https://…` | expliciete backend-URL (cross-origin; vereist `ALLOWED_ORIGINS` in de backend) |
+| Variabele | Waar | Betekenis |
+| --------- | ---- | --------- |
+| `MOZA_CHAT_API` | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg. |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
-In de container-build geef je dit mee als `--build-arg MOZA_CHAT_API=…` (default leeg = relatief).
+**Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
-Lokaal end-to-end draaien:
+1. `npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
+2. Start de backend (FastAPI, poort `8000`) volgens de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent).
+3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080`.
 
-1. Start deze frontend met `npm run dev` — Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080).
-2. Start de backend volgens de instructies in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent) (FastAPI, poort `8000`).
-3. Zorg dat de backend de frontend-origin toelaat: `ALLOWED_ORIGINS=http://localhost:8080`.
+> ⚠️ **Preview-deploys (`pr<nr>`):** het backend-component `dabackend` draait alleen in de gedeelde deployments (`poc`, gebruikersonderzoek), niet in per-PR previews. In een PR-preview is er dus geen backend en werkt de chat niet, tenzij `dabackend` aan die deployment wordt toegevoegd.
 
 > Voor losse demo's van de CLI-tools (`kvk-cli`, `koop-cli`, …) gebruik je de backend-repo; die bevat de standalone bash-tools.
 
 ### API-sleutels
 
-Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd. Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys uit de backend-`.env`.
+Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd (de proxy laat die headers door). Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys.
+
+> Let op: een **Claude**-sleutel uit de UI werkt zelfstandig. Voor **VLAM** vraagt de UI alleen de sleutel, maar VLAM heeft ook `VLAM_BASE_URL` + `VLAM_MODEL_ID` nodig — die moeten server-side op de backend staan. Het eenvoudigst is om de server-side keys op de backend-deployment te zetten, dan werkt de chat voor iedereen zonder iets in te vullen.
 
 ### Containerisatie
 
-De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een nginx-image serveert die op poort 8080. Diezelfde nginx doet een **same-origin reverse proxy**: `/chat`, `/chat/stream`, `/health` en `/tools` gaan naar de backend op `BACKEND_ORIGIN` (runtime instelbaar via env, default `127.0.0.1:8000`). Zo is er geen CORS nodig — de browser praat alleen met deze origin en `window.MOZA_CHAT_API` blijft leeg (`""`). De Digitale-Assistent-backend draait apart (zie [Digitale Assistent](#digitale-assistent)); dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD).
+De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een **nginx**-image serveert die op poort 8080 én doet de **same-origin reverse proxy** naar de backend (zie [Verbinden met de backend](#verbinden-met-de-backend)). De proxy-config (`container/default.conf.template`) wordt bij container-start gerenderd met `envsubst`; `BACKEND_ORIGIN` (runtime env, default `http://dabackend:8000`) bepaalt de upstream, met runtime-DNS-resolutie zodat nginx ook start als de backend nog niet up is. Dezelfde image (non-root, poort 8080) wordt gebruikt voor preview- en productiedeploys (ZAD).
 
 ``` bash
 docker build -f container/Containerfile -t moza .
-docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=host.docker.internal:8000 moza
+# wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
+docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
 
 ---
