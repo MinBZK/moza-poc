@@ -1271,6 +1271,20 @@
         "$type": "color",
         "$value": "{color.lintblauw.500}"
       }
+    },
+    "role": {
+      "private": {
+        "$type": "color",
+        "$value": "{color.hemelblauw.500}"
+      },
+      "business": {
+        "$type": "color",
+        "$value": "{color.lintblauw.500}"
+      },
+      "authorized": {
+        "$type": "color",
+        "$value": "{color.oranje.500}"
+      }
     }
   },
   "size": {

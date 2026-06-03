@@ -112,6 +112,9 @@
 	--toepassing-color-interactive-selected-text: var(--rijkshuisstijl-color-lintblauw-600); /** Ingeschakeld, aangevinkt, actief element */
 	--toepassing-color-interactive-visited-text: var(--rijkshuisstijl-color-paars-500); /** Voor reeds bezochte (tekst-) links */
 	--toepassing-color-logo-background: var(--rijkshuisstijl-color-lintblauw-500);
+	--toepassing-color-role-authorized: var(--rijkshuisstijl-color-oranje-500);
+	--toepassing-color-role-business: var(--rijkshuisstijl-color-lintblauw-500);
+	--toepassing-color-role-private: var(--rijkshuisstijl-color-hemelblauw-500);
 	--toepassing-color-side-nav-background-hover: var(--rijkshuisstijl-color-grijs-200);
 	--toepassing-color-text-default: var(--rijkshuisstijl-color-neutraal-gebroken-zwart); /** Primaire brood- en koptekst */
 	--toepassing-color-text-disabled: var(--rijkshuisstijl-color-grijs-500); /** Niet-beschikbare tekst */

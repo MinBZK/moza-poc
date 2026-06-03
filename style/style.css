@@ -1741,6 +1741,15 @@ h1, h2, h3, h4, h5, h6, a, button {
 /* Accountwisselaar */
 .account-switcher {
 	position: relative;
+	.group-label-private svg {
+		color: var(--toepassing-color-role-private);
+	}
+	.group-label-business svg {
+		color: var(--toepassing-color-role-business);
+	}
+	.group-label-authorized svg {
+		color: var(--toepassing-color-role-authorized);
+	}
 }
 .account-switcher-toggle {
 	appearance: none;
@@ -1814,7 +1823,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	.account-switcher-group-label {
 		color: var(--toepassing-color-text-subtle-2);
 		font: var(--toepassing-text-heading-h5);
-		padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm) var(--toepassing-space-padding-sm);
+		padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
 		&:not(:first-child) {
 			border-block-start: var(--toepassing-border-subtle);
 			margin-block-start: var(--toepassing-space-padding-sm);
@@ -1828,15 +1837,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 			inline-size: var(--toepassing-size-icon-md);
 			vertical-align: text-bottom;
 		}
-	}
-	.group-label-private svg {
-		color: var(--toepassing-color-role-private);
-	}
-	.group-label-business svg {
-		color: var(--toepassing-color-role-business);
-	}
-	.group-label-authorized svg {
-		color: var(--toepassing-color-role-authorized);
 	}
 }
 
@@ -2183,11 +2183,12 @@ h1, h2, h3, h4, h5, h6, a, button {
 }
 
 /* MijnOverheid Zakelijk/Zakelijk gemachtigd/Privé/Privé gemachtigd afwijkende styling */
+/* Hier wordt momenteel direct gemapped naar de brand tokens, moet herzien worden later! */
 body.moza {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-lintblauw-500);
-}
-body.moza.authorized {
-	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-oranje-500);
+	&.authorized {
+		--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-oranje-500);
+	}
 }
 body.mobu {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-hemelblauw-500);
@@ -2197,9 +2198,20 @@ body.mobu {
 	--toepassing-color-interactive-hover-background: var(--rijkshuisstijl-color-hemelblauw-600);
 	--toepassing-color-interactive-hover-border: var(--rijkshuisstijl-color-hemelblauw-600);
 	--toepassing-color-interactive-hover-icon: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-border-radius-sm: var(--toepassing-border-radius-md);
+	--toepassing-border-radius-md: var(--toepassing-border-radius-lg);
+	&.authorized {
+		--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
+	}
 }
-body.mobu.authorized {
-	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
+body.authorized {
+	--toepassing-color-interactive-alternate-selected-background: var(--rijkshuisstijl-color-oranje-50);
+	.btn-cta {
+		&:hover, &:focus-visible {
+			background-color: var(--rijkshuisstijl-color-oranje-600);
+			border-color: var(--rijkshuisstijl-color-oranje-600);
+		}
+	}
 }
 
 /* Tijdelijk: proof-of-concept banner (roterend lint rechtsboven) */
