@@ -1820,6 +1820,10 @@ h1, h2, h3, h4, h5, h6, a, button {
 		color: var(--toepassing-color-text-subtle-2);
 		font: var(--toepassing-text-smalltext-default);
 	}
+	.account-switcher-name {
+		color: var(--toepassing-color-text-default);
+		font: inherit;
+	}
 	.account-switcher-group-label {
 		color: var(--toepassing-color-text-subtle-2);
 		font: var(--toepassing-text-heading-h5);
