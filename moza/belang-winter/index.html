@@ -7,11 +7,14 @@ title: "MijnOverheid Zakelijk: Familiebedrijf Winter"
 <article id="hoofd-inhoud" class="page-homepage">
 	<h1>Familiebedrijf Winter</h1>
 
-	<div class="feedback feedback-info">
-		{% include "icon-feedback.njk" %}
+	<div class="feedback feedback-warning">
+		{% include "icon-feedback-warning.njk" %}
 		<div>
 			<p>U bent <strong>gemachtigd</strong> om namens Familiebedrijf Winter belastingzaken te regelen. U heeft toegang tot de onderdelen die binnen uw machtiging vallen. Andere onderdelen van de onderneming ziet u niet.</p>
 		</div>
+		<button class="btn-close link-button">
+			<i>Sluit notificatie</i>
+		</button>
 	</div>
 
 	<div class="tiles">
@@ -33,7 +36,7 @@ title: "MijnOverheid Zakelijk: Familiebedrijf Winter"
 	</div>
 
 	<div class="feedback feedback-warning">
-		{% include "icon-feedback.njk" %}
+		{% include "icon-feedback-warning.njk" %}
 		<div>
 			<p>De aangifte omzetbelasting over het tweede kwartaal moet vóór <time datetime="2026-07-31">31 juli 2026</time> zijn ingediend. Bekijk de details bij <a href="{{ '/moza/belang-winter/belastingen/' | url }}">Belastingen</a>.</p>
 		</div>

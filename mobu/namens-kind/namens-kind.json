@@ -1,4 +1,5 @@
 {
+	"bodyClass": "mobu authorized",
 	"override:subNav": [
 		{ "label": "Home", "url": "/mobu/namens-kind/", "icon": "/assets/icons/icon-home-burger.svg" },
 		{ "label": "Identiteit", "url": "/mobu/namens-kind/identiteit/", "icon": "/assets/icons/icon-identiteit.svg", "class": "side-nav-group--start" },

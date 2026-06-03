@@ -31,12 +31,8 @@
 			],
 			"vestigingsadresVolledig": "Stationsweg 12, 2515 BA 's-Gravenhage",
 			"postadres": "Stationsweg 12, 2515 BA 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000012345678", "type": "Hoofdvestiging", "adres": "Stationsweg 12, 2515 BA 's-Gravenhage" }
-			],
-			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
-			],
+			"vestigingen": [{ "nummer": "000012345678", "type": "Hoofdvestiging", "adres": "Stationsweg 12, 2515 BA 's-Gravenhage" }],
+			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
 			"jaarrekeningen": [
 				{ "jaar": "2024", "gedeponeerd": "12 juni 2025" },
 				{ "jaar": "2023", "gedeponeerd": "8 juli 2024" },
@@ -91,9 +87,7 @@
 			],
 			"vestigingsadresVolledig": "Haagweg 45, 2275 CK Voorburg",
 			"postadres": "Haagweg 45, 2275 CK Voorburg",
-			"vestigingen": [
-				{ "nummer": "000023456789", "type": "Hoofdvestiging", "adres": "Haagweg 45, 2275 CK Voorburg" }
-			],
+			"vestigingen": [{ "nummer": "000023456789", "type": "Hoofdvestiging", "adres": "Haagweg 45, 2275 CK Voorburg" }],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -137,12 +131,8 @@
 			],
 			"vestigingsadresVolledig": "Laan van Meerdervoort 200, 2517 BL 's-Gravenhage",
 			"postadres": "Laan van Meerdervoort 200, 2517 BL 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000034567890", "type": "Hoofdvestiging", "adres": "Laan van Meerdervoort 200, 2517 BL 's-Gravenhage" }
-			],
-			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
-			],
+			"vestigingen": [{ "nummer": "000034567890", "type": "Hoofdvestiging", "adres": "Laan van Meerdervoort 200, 2517 BL 's-Gravenhage" }],
+			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
 			"jaarrekeningen": [
 				{ "jaar": "2024", "gedeponeerd": "20 mei 2025" },
 				{ "jaar": "2023", "gedeponeerd": "11 juni 2024" },
@@ -196,9 +186,7 @@
 				{ "nummer": "000045678901", "type": "Hoofdvestiging", "adres": "Bezuidenhoutseweg 50, 2594 AS 's-Gravenhage" },
 				{ "nummer": "000045678902", "type": "Nevenvestiging", "adres": "Kerkplein 8, 2611 GL Delft" }
 			],
-			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
-			],
+			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
 			"jaarrekeningen": [
 				{ "jaar": "2024", "gedeponeerd": "15 juni 2025" },
 				{ "jaar": "2023", "gedeponeerd": "12 juni 2024" },
@@ -247,9 +235,7 @@
 			],
 			"vestigingsadresVolledig": "Hobbemastraat 18, 2526 JG 's-Gravenhage",
 			"postadres": "Hobbemastraat 18, 2526 JG 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000056789012", "type": "Hoofdvestiging", "adres": "Hobbemastraat 18, 2526 JG 's-Gravenhage" }
-			],
+			"vestigingen": [{ "nummer": "000056789012", "type": "Hoofdvestiging", "adres": "Hobbemastraat 18, 2526 JG 's-Gravenhage" }],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -293,11 +279,9 @@
 			],
 			"vestigingsadresVolledig": "Industrieweg 7, 2272 AC Voorburg",
 			"postadres": "Postbus 567, 2270 AA Voorburg",
-			"vestigingen": [
-				{ "nummer": "000067890123", "type": "Hoofdvestiging", "adres": "Industrieweg 7, 2272 AC Voorburg" }
-			],
+			"vestigingen": [{ "nummer": "000067890123", "type": "Hoofdvestiging", "adres": "Industrieweg 7, 2272 AC Voorburg" }],
 			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" },
+				{ "naam": "Robin Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" },
 				{ "naam": "M.S. de Jong", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" }
 			],
 			"jaarrekeningen": []
@@ -342,9 +326,7 @@
 			],
 			"vestigingsadresVolledig": "Denneweg 62, 2514 CK 's-Gravenhage",
 			"postadres": "Denneweg 62, 2514 CK 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000078901234", "type": "Hoofdvestiging", "adres": "Denneweg 62, 2514 CK 's-Gravenhage" }
-			],
+			"vestigingen": [{ "nummer": "000078901234", "type": "Hoofdvestiging", "adres": "Denneweg 62, 2514 CK 's-Gravenhage" }],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -388,11 +370,9 @@
 			],
 			"vestigingsadresVolledig": "Weidelandweg 3, 2272 BV Voorburg",
 			"postadres": "Weidelandweg 3, 2272 BV Voorburg",
-			"vestigingen": [
-				{ "nummer": "000089012345", "type": "Hoofdvestiging", "adres": "Weidelandweg 3, 2272 BV Voorburg" }
-			],
+			"vestigingen": [{ "nummer": "000089012345", "type": "Hoofdvestiging", "adres": "Weidelandweg 3, 2272 BV Voorburg" }],
 			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Maat", "groottevanBelang": "50% – 75%" },
+				{ "naam": "Robin Vogel", "aardVanBelang": "Maat", "groottevanBelang": "50% – 75%" },
 				{ "naam": "A.J. Vogel-de Wit", "aardVanBelang": "Maat", "groottevanBelang": "25% – 50%" }
 			],
 			"jaarrekeningen": []
@@ -442,9 +422,7 @@
 				{ "nummer": "000090123456", "type": "Hoofdvestiging", "adres": "Binckhorstlaan 36, 2516 BE 's-Gravenhage" },
 				{ "nummer": "000090123457", "type": "Nevenvestiging — Werkplaats", "adres": "Plaspoelpolder 22, 2289 EE Rijswijk" }
 			],
-			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
-			],
+			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
 			"jaarrekeningen": [
 				{ "jaar": "2024", "gedeponeerd": "18 mei 2025" },
 				{ "jaar": "2023", "gedeponeerd": "14 juni 2024" },
@@ -495,11 +473,9 @@
 			],
 			"vestigingsadresVolledig": "Lange Voorhout 30, 2514 ED 's-Gravenhage",
 			"postadres": "Lange Voorhout 30, 2514 ED 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000024681012", "type": "Hoofdvestiging", "adres": "Lange Voorhout 30, 2514 ED 's-Gravenhage" }
-			],
+			"vestigingen": [{ "nummer": "000024681012", "type": "Hoofdvestiging", "adres": "Lange Voorhout 30, 2514 ED 's-Gravenhage" }],
 			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "50% – 75%" },
+				{ "naam": "Robin Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "50% – 75%" },
 				{ "naam": "P.S. Daalder", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" }
 			],
 			"jaarrekeningen": [
@@ -548,12 +524,8 @@
 			],
 			"vestigingsadresVolledig": "Javastraat 14, 2585 AN 's-Gravenhage",
 			"postadres": "Javastraat 14, 2585 AN 's-Gravenhage",
-			"vestigingen": [
-				{ "nummer": "000035792468", "type": "Hoofdvestiging", "adres": "Javastraat 14, 2585 AN 's-Gravenhage" }
-			],
-			"ubo": [
-				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
-			],
+			"vestigingen": [{ "nummer": "000035792468", "type": "Hoofdvestiging", "adres": "Javastraat 14, 2585 AN 's-Gravenhage" }],
+			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
 			"jaarrekeningen": [
 				{ "jaar": "2024", "gedeponeerd": "16 juni 2025" },
 				{ "jaar": "2023", "gedeponeerd": "11 juni 2024" }

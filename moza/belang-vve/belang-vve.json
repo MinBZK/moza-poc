@@ -1,4 +1,5 @@
 {
+	"bodyClass": "moza authorized",
 	"override:subNav": [
 		{ "label": "Home", "url": "/moza/belang-vve/", "icon": "/assets/icons/icon-home.svg", "exact": true },
 		{ "label": "Gegevens", "url": "/moza/belang-vve/gegevens/", "icon": "/assets/icons/icon-gegevens.svg", "class": "side-nav-group--start" },

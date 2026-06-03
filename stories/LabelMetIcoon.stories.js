@@ -27,7 +27,7 @@ export const Standaard = {
 		icoon: { control: "select", options: iconNames, name: "Icoon" },
 	},
 	args: {
-		label: "R.J. Vogel",
+		label: "Robin Vogel",
 		icoon: "persoon",
 	},
 	render: ({ label, icoon }) => {

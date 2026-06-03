@@ -12,16 +12,16 @@
 	<div class="page-head">
 		<span class="page-title">MijnOverheid</span>
 		<div class="user-menu">
-			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit" data-feature-default="off">
+			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit">
 				<button class="account-switcher-toggle icon-label" aria-expanded="false" aria-haspopup="true">
-					{% include "icon-persoon.njk" %}
-					<span class="account-switcher-label">R.J. Vogel</span>
+					{% if '/mobu/namens-' in page.url %}{% icon "/assets/icons/icon-vertegenwoordiging.svg" %}{% else %}{% include "icon-persoon.njk" %}{% endif %}
+					<span class="account-switcher-label">Robin Vogel</span>
 				</button>
 				{% include "account-switcher-menu.njk" %}
 			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}
-				R.J. Vogel
+				Robin Vogel
 			</span>
 			<a class="icon-link" href="{{ '/mobu/uitgelogd/' | url }}">
 				{% include "icon-inloggen.njk" %}

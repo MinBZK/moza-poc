@@ -172,10 +172,12 @@ document.addEventListener("click", (e) => {
 document.addEventListener("click", (e) => {
 	const btn = e.target.closest(".btn-close");
 	if (!btn) return;
-	const feedback = btn.closest(".feedback[id]");
+	const feedback = btn.closest(".feedback");
 	if (!feedback) return;
 	feedback.hidden = true;
-	localStorage.setItem("dismissed:" + feedback.id, "true");
+	// Onthoud alleen wanneer het blok een id heeft; blokken zonder id sluiten
+	// voor deze sessie en verschijnen weer na herladen.
+	if (feedback.id) localStorage.setItem("dismissed:" + feedback.id, "true");
 });
 
 document.querySelectorAll(".feedback[id]").forEach((feedback) => {

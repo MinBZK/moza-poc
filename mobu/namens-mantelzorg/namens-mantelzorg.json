@@ -1,4 +1,5 @@
 {
+	"bodyClass": "mobu authorized",
 	"override:subNav": [
 		{ "label": "Home", "url": "/mobu/namens-mantelzorg/", "icon": "/assets/icons/icon-home-burger.svg" },
 		{ "label": "Gegevens", "url": "/mobu/namens-mantelzorg/gegevens/", "icon": "/assets/icons/icon-identiteit.svg", "class": "side-nav-group--start" },
