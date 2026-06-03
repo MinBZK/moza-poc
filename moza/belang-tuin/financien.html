@@ -1,0 +1,101 @@
+---
+title: "MijnOverheid Zakelijk: Financiën vereniging"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/belang-tuin/' | url }}">Home</a></li>
+			<li aria-current="page">Financiën</li>
+		</ol>
+	</nav>
+
+	<h1>Financiën</h1>
+
+	<section class="card">
+		<h2>Saldo</h2>
+		<dl>
+			<dt>Verenigingsrekening</dt>
+			<dd>€ 12.480,55</dd>
+			<dt>Spaarrekening</dt>
+			<dd>€ 8.000,00</dd>
+			<dt>Bijgewerkt</dt>
+			<dd><time datetime="2026-05-31">31 mei 2026</time></dd>
+		</dl>
+	</section>
+
+	<section class="card">
+		<h2>Contributie {{ "2026" }}</h2>
+		<dl>
+			<dt>Tarief per lid</dt>
+			<dd>€ 95,00 per jaar</dd>
+			<dt>Geïnd</dt>
+			<dd>80 van 86 leden</dd>
+			<dt>Openstaand</dt>
+			<dd>6 leden: € 570,00</dd>
+		</dl>
+		<div class="feedback feedback-warning">
+			{% include "icon-feedback.njk" %}
+			<div>
+				<p>Van 6 leden is de contributie nog niet ontvangen. Wij sturen na de vervaldatum automatisch een herinnering via de Berichtenbox.</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card">
+		<h2>Begroting {{ "2026" }}</h2>
+		<dl>
+			<dt>Verwachte inkomsten</dt>
+			<dd>€ 8.170,00</dd>
+			<dt>Verwachte uitgaven</dt>
+			<dd>€ 7.450,00</dd>
+			<dt>Verwacht resultaat</dt>
+			<dd>€ 720,00</dd>
+		</dl>
+	</section>
+
+	<section class="card">
+		<h2>Jaarrekening</h2>
+		<h3>Voortgang</h3>
+		<ol class="status-track">
+			<li>
+				<details>
+					<summary>
+						<span class="visually-hidden">Voltooide stap: </span>
+						Boekjaar afgesloten
+					</summary>
+					<div class="status-details">
+						<p class="status-date"><time datetime="2026-01-31">31 januari 2026</time></p>
+						<p>Het boekjaar 2025 is afgesloten en de cijfers zijn vastgelegd.</p>
+					</div>
+				</details>
+			</li>
+			<li aria-current="step">
+				<details>
+					<summary>
+						<span class="visually-hidden">Huidige stap: </span>
+						Kascommissie controleert
+					</summary>
+					<div class="status-details">
+						<p class="status-date">sinds <time datetime="2026-02-10">10 februari 2026</time></p>
+						<p>De kascommissie controleert de jaarrekening. U hoeft nu niets te doen.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details>
+					<summary>
+						<span class="visually-hidden">Volgende stap: </span>
+						Vaststelling op ledenvergadering
+					</summary>
+					<div class="status-details">
+						<p class="status-date">verwacht in <time datetime="2026-06">juni 2026</time></p>
+						<p>De leden stellen de jaarrekening vast tijdens de algemene ledenvergadering.</p>
+					</div>
+				</details>
+			</li>
+		</ol>
+	</section>
+</article>

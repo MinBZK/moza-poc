@@ -1,0 +1,57 @@
+<ul class="account-switcher-menu" role="menu" hidden>
+	<li class="account-switcher-group-label">Privé</li>
+	<li role="menuitem">
+		<a href="{{ '/mobu/' | url }}"{% if page.url.startsWith('/mobu/') and '/mobu/namens-' not in page.url %} aria-current="true"{% endif %}>
+			R.J. Vogel
+		</a>
+	</li>
+	<li class="account-switcher-group-label">Ik handel namens</li>
+	<li role="menuitem">
+		<a href="{{ '/mobu/namens-mantelzorg/' | url }}"{% if '/mobu/namens-mantelzorg/' in page.url %} aria-current="true"{% endif %}>
+			A.M. Vogel-de Groot
+			<span>Mantelzorg</span>
+		</a>
+	</li>
+	<li role="menuitem">
+		<a href="{{ '/mobu/namens-kind/' | url }}"{% if '/mobu/namens-kind/' in page.url %} aria-current="true"{% endif %}>
+			S.R. Vogel
+			<span>Ouderlijk gezag</span>
+		</a>
+	</li>
+	<li class="account-switcher-group-label">Mijn ondernemingen</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/?persona=bloom' | url }}" data-profiel-id="bloom">
+			Bloom B.V. <span>Eigenaar</span>
+		</a>
+	</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/?persona=partners' | url }}" data-profiel-id="partners">
+			Vogel & Partners Consultancy <span>Eigenaar</span>
+		</a>
+	</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/?persona=kwartaal' | url }}" data-profiel-id="kwartaal">
+			Kwartaal Vastgoed B.V.
+			<span>Eigenaar</span>
+		</a>
+	</li>
+	<li class="account-switcher-group-label">Belangen</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/belang-vve/' | url }}"{% if '/moza/belang-vve/' in page.url %} aria-current="true"{% endif %}>
+			VvE Residentie Parkzicht
+			<span>Bestuurslid</span>
+		</a>
+	</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/belang-tuin/' | url }}"{% if '/moza/belang-tuin/' in page.url %} aria-current="true"{% endif %}>
+			Volkstuinvereniging De Groene Long
+			<span>Penningmeester</span>
+		</a>
+	</li>
+	<li role="menuitem">
+		<a href="{{ '/moza/belang-winter/' | url }}"{% if '/moza/belang-winter/' in page.url %} aria-current="true"{% endif %}>
+			Familiebedrijf Winter
+			<span>Gemachtigde</span>
+		</a>
+	</li>
+</ul>

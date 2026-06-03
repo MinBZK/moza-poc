@@ -1,0 +1,47 @@
+---
+title: "MijnOverheid Zakelijk: Berichtenbox vereniging"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/belang-tuin/' | url }}">Home</a></li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<section class="card">
+		<p class="metadata"><b>3</b> berichten, <b>1</b> ongelezen.</p>
+		<table class="data-overview">
+			<caption class="visually-hidden">Berichten</caption>
+			<thead>
+				<tr>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="berichtenbox-row is-unread">
+					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>Gemeente Voorburg</td>
+					<td class="berichtenbox-row-subject"><a href="#">Ontvangstbevestiging omgevingsvergunning</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-04-09">9 april 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Gemeente Voorburg</td>
+					<td class="berichtenbox-row-subject"><a href="#">Aanslag onroerendezaakbelasting</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-02-28">28 februari 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Kamer van Koophandel</td>
+					<td class="berichtenbox-row-subject"><a href="#">Bevestiging inschrijving bestuurswijziging</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-01-20">20 januari 2026</time></td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>

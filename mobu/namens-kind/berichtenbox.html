@@ -1,0 +1,47 @@
+---
+title: "MijnOverheid: Berichtenbox S.R. Vogel"
+---
+
+{% include "side-nav-mobu.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/mobu/namens-kind/' | url }}">Home</a></li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<section class="card">
+		<p class="metadata"><b>3</b> berichten, <b>1</b> ongelezen.</p>
+		<table class="data-overview">
+			<caption class="visually-hidden">Berichten</caption>
+			<thead>
+				<tr>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="berichtenbox-row is-unread">
+					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>GGD regio Utrecht</td>
+					<td class="berichtenbox-row-subject"><a href="#">Uitnodiging gezondheidsonderzoek</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-05-22">22 mei 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Basisschool De Regenboog</td>
+					<td class="berichtenbox-row-subject"><a href="#">Aanmelding voortgezet onderwijs</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-04-15">15 april 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Gemeente Utrecht</td>
+					<td class="berichtenbox-row-subject"><a href="#">Geldigheid paspoort</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-02-10">10 februari 2026</time></td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>

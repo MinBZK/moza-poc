@@ -18,7 +18,7 @@ export const Standaard = {
 	parameters: {
 		docs: {
 			description: {
-				story: "Een niet-klikbaar label met een icoon, bijvoorbeeld voor het tonen van een gebruikersnaam. Gebruik een icoon niet zonder begeleidend tekstlabel, tenzij het pictogram in het icoon universeel begrepen wordt — zoals een vergrootglas voor zoeken of een kruisje voor sluiten.",
+				story: "Een niet-klikbaar label met een icoon, bijvoorbeeld voor het tonen van een gebruikersnaam. Gebruik een icoon niet zonder begeleidend tekstlabel, tenzij het pictogram in het icoon universeel begrepen wordt, zoals een vergrootglas voor zoeken of een kruisje voor sluiten.",
 			},
 		},
 	},

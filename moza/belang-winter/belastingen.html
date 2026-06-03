@@ -1,0 +1,84 @@
+---
+title: "MijnOverheid Zakelijk: Belastingen onderneming"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/belang-winter/' | url }}">Home</a></li>
+			<li aria-current="page">Belastingen</li>
+		</ol>
+	</nav>
+
+	<h1>Belastingen</h1>
+
+	<section class="card">
+		<h2>Open te dienen aangiften</h2>
+		<dl>
+			<dt>Omzetbelasting tweede kwartaal 2026</dt>
+			<dd>Indienen vóór <time datetime="2026-07-31">31 juli 2026</time></dd>
+			<dt>Loonheffingen juni 2026</dt>
+			<dd>Indienen vóór <time datetime="2026-07-31">31 juli 2026</time></dd>
+		</dl>
+		<div class="feedback feedback-warning">
+			{% include "icon-feedback.njk" %}
+			<div>
+				<p>De aangifte omzetbelasting over het tweede kwartaal is nog niet ingediend. Dien deze op tijd in om een verzuimboete te voorkomen.</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="card">
+		<h2>Omzetbelasting</h2>
+		<h3>Voortgang tweede kwartaal 2026</h3>
+		<ol class="status-track">
+			<li>
+				<details>
+					<summary>
+						<span class="visually-hidden">Voltooide stap: </span>
+						Tijdvak geopend
+					</summary>
+					<div class="status-details">
+						<p class="status-date"><time datetime="2026-07-01">1 juli 2026</time></p>
+						<p>Het aangiftetijdvak voor het tweede kwartaal is geopend.</p>
+					</div>
+				</details>
+			</li>
+			<li aria-current="step">
+				<details>
+					<summary>
+						<span class="visually-hidden">Huidige stap: </span>
+						Aangifte indienen
+					</summary>
+					<div class="status-details">
+						<p class="status-date">vóór <time datetime="2026-07-31">31 juli 2026</time></p>
+						<p>Dien de aangifte omzetbelasting in en betaal het verschuldigde bedrag vóór de uiterste datum.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details>
+					<summary>
+						<span class="visually-hidden">Volgende stap: </span>
+						Verwerkt
+					</summary>
+					<div class="status-details">
+						<p>Na ontvangst verwerkt de Belastingdienst uw aangifte en ontvangt u een bevestiging in de Berichtenbox.</p>
+					</div>
+				</details>
+			</li>
+		</ol>
+	</section>
+
+	<section class="card">
+		<h2>Ingediende aangiften</h2>
+		<dl>
+			<dt>Omzetbelasting eerste kwartaal 2026</dt>
+			<dd>Ingediend op <time datetime="2026-04-22">22 april 2026</time></dd>
+			<dt>Omzetbelasting vierde kwartaal 2025</dt>
+			<dd>Ingediend op <time datetime="2026-01-19">19 januari 2026</time></dd>
+		</dl>
+	</section>
+</article>

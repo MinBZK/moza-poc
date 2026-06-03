@@ -1,0 +1,9 @@
+{
+	"override:subNav": [
+		{ "label": "Home", "url": "/mobu/namens-kind/", "icon": "/assets/icons/icon-home-burger.svg" },
+		{ "label": "Identiteit", "url": "/mobu/namens-kind/identiteit/", "icon": "/assets/icons/icon-identiteit.svg", "class": "side-nav-group--start" },
+		{ "label": "Berichtenbox", "url": "/mobu/namens-kind/berichtenbox/", "icon": "/assets/icons/icon-berichtenbox.svg" },
+		{ "label": "Onderwijs", "url": "/mobu/namens-kind/onderwijs/", "icon": "/assets/icons/icon-onderwijs.svg", "class": "side-nav-group--start" },
+		{ "label": "Gezondheid", "url": "/mobu/namens-kind/gezondheid/", "icon": "/assets/icons/icon-gezondheid.svg" }
+	]
+}

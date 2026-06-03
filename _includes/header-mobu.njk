@@ -17,35 +17,7 @@
 					{% include "icon-persoon.njk" %}
 					<span class="account-switcher-label">R.J. Vogel</span>
 				</button>
-				<ul class="account-switcher-menu" role="menu" hidden>
-					<li class="account-switcher-group-label">Mijn gegevens</li>
-					<li role="menuitem">
-						<a href="{{ '/mobu/' | url }}" aria-current="true">
-							R.J. Vogel
-							<span>Privé</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Ik handel namens</li>
-					<li role="menuitem">
-						<a href="#">
-							A.M. Vogel-de Groot
-							<span>Mantelzorg</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							S.R. Vogel
-							<span>Ouderlijk gezag</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Zakelijk</li>
-					<li role="menuitem">
-						<a href="{{ '/moza/' | url }}">
-							Bloom B.V.
-							<span>Eigenaar</span>
-						</a>
-					</li>
-				</ul>
+				{% include "account-switcher-menu.njk" %}
 			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}

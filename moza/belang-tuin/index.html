@@ -1,0 +1,41 @@
+---
+title: "MijnOverheid Zakelijk: Volkstuinvereniging De Groene Long"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud" class="page-homepage">
+	<h1>Volkstuinvereniging De Groene Long</h1>
+
+	<div class="feedback feedback-info">
+		{% include "icon-feedback.njk" %}
+		<div>
+			<p>U bekijkt deze vereniging in uw rol als <strong>penningmeester</strong>. U beheert de financiën en heeft inzage in de gegevens, berichten en lopende zaken van de vereniging.</p>
+		</div>
+	</div>
+
+	<div class="tiles">
+		<section class="card">
+			<h2>Financiën</h2>
+			<p>Saldo, contributie, begroting en de jaarrekening van de vereniging.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-tuin/financien/' | url }}">Ga naar Financiën</a>
+		</section>
+		<section class="card">
+			<h2>Lopende zaken</h2>
+			<p>Volg de voortgang van aanvragen en vergunningen van de vereniging.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-tuin/lopende-zaken/' | url }}">Ga naar Lopende zaken</a>
+		</section>
+		<section class="card">
+			<h2>Berichtenbox</h2>
+			<p>Officiële berichten gericht aan de vereniging.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-tuin/berichtenbox/' | url }}">Ga naar Berichtenbox</a>
+		</section>
+	</div>
+
+	<div class="feedback feedback-warning">
+		{% include "icon-feedback.njk" %}
+		<div>
+			<p>Van 6 leden is de contributie over dit jaar nog niet ontvangen. Bekijk de details bij <a href="{{ '/moza/belang-tuin/financien/' | url }}">Financiën</a>.</p>
+		</div>
+	</div>
+</article>

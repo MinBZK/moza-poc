@@ -16,46 +16,9 @@
 			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit" data-feature-default="off">
 				<button class="account-switcher-toggle icon-label" aria-expanded="false" aria-haspopup="true">
 					{% include "icon-persoon.njk" %}
-					<span class="account-switcher-label" data-profiel="initialen-bedrijf">R.J. Vogel van Bloom B.V.</span>
+					<span class="account-switcher-label"{% if '/moza/belang-' not in page.url %} data-profiel="initialen-bedrijf"{% endif %}>{% if '/moza/belang-vve/' in page.url %}R.J. Vogel voor VvE Residentie Parkzicht{% elif '/moza/belang-tuin/' in page.url %}R.J. Vogel voor Volkstuinvereniging De Groene Long{% elif '/moza/belang-winter/' in page.url %}R.J. Vogel voor Familiebedrijf Winter{% else %}R.J. Vogel van Bloom B.V.{% endif %}</span>
 				</button>
-				<ul class="account-switcher-menu" role="menu" hidden>
-					<li class="account-switcher-group-label">Mijn ondernemingen</li>
-					<li role="menuitem">
-						<a href="{{ '/moza/' | url }}" aria-current="true">
-							Bloom B.V. <span>Eigenaar</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Vogel & Partners Consultancy <span>Eigenaar</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Kwartaal Vastgoed B.V.
-							<span>Eigenaar</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Belangen</li>
-					<li role="menuitem">
-						<a href="#">
-							Stichting Groenrijk
-							<span>Bestuurslid</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Coöperatie ZuidWest U.A.
-							<span>Aandeelhouder</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Privé</li>
-					<li role="menuitem">
-						<a href="{{ '/mobu/' | url }}">
-							R.J. Vogel
-						</a>
-					</li>
-				</ul>
+				{% include "account-switcher-menu.njk" %}
 			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}

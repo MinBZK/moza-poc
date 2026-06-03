@@ -1773,17 +1773,18 @@ h1, h2, h3, h4, h5, h6, a, button {
 	inset-inline-end: 0;
 	list-style: none;
 	min-inline-size: 24rem;
+	display: block;
 	opacity: 1;
 	padding: var(--toepassing-space-padding-md);
 	position: absolute;
-	transition: var(--toepassing-transition-opacity) allow-discrete;
+	transition: var(--toepassing-transition-opacity) allow-discrete, display var(--toepassing-motion-speed-fast) allow-discrete;
 	z-index: 1;
 	@starting-style {
 		opacity: 0;
 	}
 	&[hidden] {
+		display: none;
 		opacity: 0;
-		transition: var(--toepassing-transition-opacity) allow-discrete;
 	}
 	a {
 		align-items: baseline;
@@ -2164,11 +2165,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 /* MijnOverheid Zakelijk/Zakelijk gemachtigd/Privé/Privé gemachtigd afwijkende styling */
 body.moza {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-lintblauw-500);
-	#side-nav-menu {
-		svg {
-			color: var(--rijkshuisstijl-color-lintblauw-500);
-		}
-	}
 }
 body.mobu {
 	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-hemelblauw-500);

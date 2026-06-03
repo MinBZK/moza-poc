@@ -1,0 +1,9 @@
+{
+	"override:subNav": [
+		{ "label": "Home", "url": "/moza/belang-winter/", "icon": "/assets/icons/icon-home.svg", "exact": true },
+		{ "label": "Gegevens", "url": "/moza/belang-winter/gegevens/", "icon": "/assets/icons/icon-gegevens.svg", "class": "side-nav-group--start" },
+		{ "label": "Berichtenbox", "url": "/moza/belang-winter/berichtenbox/", "icon": "/assets/icons/icon-berichtenbox.svg" },
+		{ "label": "Lopende zaken", "url": "/moza/belang-winter/lopende-zaken/", "icon": "/assets/icons/icon-lopende-zaken.svg" },
+		{ "label": "Belastingen", "url": "/moza/belang-winter/belastingen/", "icon": "/assets/icons/icon-financieen.svg", "class": "side-nav-group--start" }
+	]
+}

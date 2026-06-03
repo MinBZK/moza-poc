@@ -462,5 +462,109 @@
 		"buurt": "s-gravenhage",
 		"homepageSubsidies": ["toeristische-innovatie", "mkb-digitaliseringssubsidie"],
 		"homepageRegelgeving": ["dienstenwet-informatieplicht"]
+	},
+	{
+		"id": "partners",
+		"actief": false,
+		"label": "Partner-adviseur",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel",
+			"initialen": "R.J."
+		},
+		"bedrijf": {
+			"handelsnaam": "Vogel & Partners Consultancy",
+			"kvkNummer": "24681012",
+			"rsinNummer": "24681012",
+			"btwNummer": "NL00024681012",
+			"omzetbelastingnummer": "024681012B01",
+			"startdatum": "3 maart 2015",
+			"rechtsvorm": "Vennootschap onder firma",
+			"branche": "Advies en consultancy",
+			"vestigingsadres": "Lange Voorhout 30, 's-Gravenhage",
+			"gemeente": "'s-Gravenhage",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000024681012",
+			"iban": "NL24 INGB 0002 4681 01",
+			"loonheffingennummer": "024681012L01",
+			"werkzamePersonenFulltime": 4,
+			"werkzamePersonenParttime": 1,
+			"sbi": [
+				{ "code": "70221", "omschrijving": "Organisatieadviesbureaus" },
+				{ "code": "70222", "omschrijving": "Advisering op het gebied van management en bedrijfsvoering" }
+			],
+			"vestigingsadresVolledig": "Lange Voorhout 30, 2514 ED 's-Gravenhage",
+			"postadres": "Lange Voorhout 30, 2514 ED 's-Gravenhage",
+			"vestigingen": [
+				{ "nummer": "000024681012", "type": "Hoofdvestiging", "adres": "Lange Voorhout 30, 2514 ED 's-Gravenhage" }
+			],
+			"ubo": [
+				{ "naam": "R.J. Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "50% – 75%" },
+				{ "naam": "P.S. Daalder", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" }
+			],
+			"jaarrekeningen": [
+				{ "jaar": "2024", "gedeponeerd": "10 juni 2025" },
+				{ "jaar": "2023", "gedeponeerd": "14 juni 2024" },
+				{ "jaar": "2022", "gedeponeerd": "20 mei 2023" }
+			]
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["wbso", "bmkb", "kia", "mit", "eia"],
+		"regelgeving": ["avg", "minimumloon", "arbowet", "wwft", "loonbelasting"],
+		"buurt": "s-gravenhage",
+		"homepageSubsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["ai-verordening"]
+	},
+	{
+		"id": "kwartaal",
+		"actief": false,
+		"label": "Vastgoedeigenaar",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel",
+			"initialen": "R.J."
+		},
+		"bedrijf": {
+			"handelsnaam": "Kwartaal Vastgoed B.V.",
+			"kvkNummer": "35792468",
+			"rsinNummer": "35792468",
+			"btwNummer": "NL00035792468",
+			"omzetbelastingnummer": "035792468B01",
+			"startdatum": "8 januari 2017",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Vastgoed en makelaardij",
+			"vestigingsadres": "Javastraat 14, 's-Gravenhage",
+			"gemeente": "'s-Gravenhage",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000035792468",
+			"iban": "NL35 ABNA 0003 5792 46",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{ "code": "68201", "omschrijving": "Verhuur van onroerend goed" },
+				{ "code": "64202", "omschrijving": "Financiële holdings" }
+			],
+			"vestigingsadresVolledig": "Javastraat 14, 2585 AN 's-Gravenhage",
+			"postadres": "Javastraat 14, 2585 AN 's-Gravenhage",
+			"vestigingen": [
+				{ "nummer": "000035792468", "type": "Hoofdvestiging", "adres": "Javastraat 14, 2585 AN 's-Gravenhage" }
+			],
+			"ubo": [
+				{ "naam": "R.J. Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }
+			],
+			"jaarrekeningen": [
+				{ "jaar": "2024", "gedeponeerd": "16 juni 2025" },
+				{ "jaar": "2023", "gedeponeerd": "11 juni 2024" }
+			]
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["eia", "isde", "kia", "bmkb"],
+		"regelgeving": ["omgevingswet", "avg", "wwft", "minimumloon"],
+		"buurt": "s-gravenhage",
+		"homepageSubsidies": ["verduurzaming-bedrijfspanden"],
+		"homepageRegelgeving": ["ai-verordening"]
 	}
 ]
