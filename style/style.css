@@ -418,7 +418,7 @@ legend, label, dt {
 	margin-block-end: var(--toepassing-space-margin-3xs);
 }
 label {
-	cursor: pointer;
+	display: inline-block;
 }
 
 .form-field-helper-text {
@@ -474,7 +474,6 @@ ul.selection {
 	block-size: var(--toepassing-size-icon-md);
 	border: var(--toepassing-border-width-md) solid var(--toepassing-color-interactive-default-border);
 	border-radius: var(--toepassing-border-radius-md);
-	cursor: pointer;
 	display: inline-grid;
 	inline-size: var(--toepassing-size-icon-md);
 	place-content: center;
@@ -566,12 +565,16 @@ ul.selection {
 	gap: var(--toepassing-space-margin-xs);
 }
 
+/* Klik-affordance voor relevante interactieve elementen */
+button, label, select, summary, [type="checkbox"], [type="checkbox"] {
+	cursor: pointer;
+}
+
 /* -- KNOPPEN -- */
 
 button, a.btn, a.btn-cta {
 	background: var(--toepassing-color-interactive-default-background);
 	color: var(--toepassing-color-text-inverse);
-	cursor: pointer;
 	transition: var(--toepassing-transition-default);
 	@container (max-inline-size: 280px) {
 		inline-size: 100%;
@@ -1461,7 +1464,6 @@ dd .feedback {
 	}
 	summary {
 		background: var(--toepassing-color-background-subtle);
-		cursor: pointer;
 		display: flex;
 		gap: var(--toepassing-space-layout-2xs);
 		padding: var(--toepassing-space-padding-sm);
@@ -1547,6 +1549,9 @@ dd .feedback {
 		font: var(--toepassing-text-heading-h5);
 		list-style: none;
 		min-block-size: var(--toepassing-size-icon-lg);
+		&:hover {
+			color: var(--toepassing-color-interactive-hover-text);
+		}
 		&::after {
 			content: url("../assets/icons/icon-chevron.svg");
 			flex-shrink: 0;
@@ -1915,7 +1920,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 	}
 	label {
 		align-items: center;
-		cursor: pointer;
 		display: flex;
 		gap: var(--toepassing-space-padding-xs);
 		padding-block: var(--toepassing-space-padding-2xs);
@@ -2075,7 +2079,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 		gap: 0;
 		summary {
 			all: unset;
-			cursor: pointer;
 			&:hover {
 				background: none;
 			}
