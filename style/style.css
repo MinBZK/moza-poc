@@ -304,6 +304,7 @@ pre {
 	outline: none;
 }
 :focus-visible {
+	box-shadow: var(--toepassing-focus-outline-backing);
 	outline: var(--toepassing-focus-outline);
 	outline-offset: var(--toepassing-focus-outline-offset-md);
 	&[aria-disabled] {
