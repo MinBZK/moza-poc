@@ -1529,7 +1529,10 @@ dd .feedback {
 			transform: translateX(-50%);
 		}
 		&:has(+ [aria-current="step"])::after {
-			background: var(--toepassing-color-feedback-neutral-border);
+			background: repeating-linear-gradient(
+				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
+				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
+			);
 		}
 		&:last-child::after {
 			content: none;
@@ -1540,7 +1543,10 @@ dd .feedback {
 			background: var(--toepassing-color-feedback-neutral-emphasis);
 		}
 		&::after, ~ li::after {
-			background: var(--toepassing-color-feedback-neutral-border);
+			background: repeating-linear-gradient(
+				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
+				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
+			);
 		}
 	}
 	summary {
@@ -1740,7 +1746,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	appearance: none;
 	background: none;
 	border: none;
-	color: inherit;
+	color: var(--toepassing-color-interactive-default-text);
 	cursor: pointer;
 	font: inherit;
 	padding: 0;
@@ -2151,6 +2157,33 @@ h1, h2, h3, h4, h5, h6, a, button {
 		p {
 			margin-inline: var(--toepassing-space-margin-2xs);
 			padding-block: var(--toepassing-space-padding-md);
+		}
+	}
+}
+
+/* MijnOverheid Zakelijk/Zakelijk gemachtigd/Privé/Privé gemachtigd afwijkende styling */
+body.moza {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-lintblauw-500);
+	#side-nav-menu {
+		svg {
+			color: var(--rijkshuisstijl-color-lintblauw-500);
+		}
+	}
+}
+body.mobu {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-background: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-border: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-icon: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-hover-background: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-color-interactive-hover-border: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-color-interactive-hover-icon: var(--rijkshuisstijl-color-hemelblauw-600);
+}
+body.authorized {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
+	#side-nav-menu {
+		svg {
+			color: var(--rijkshuisstijl-color-oranje-500);
 		}
 	}
 }
