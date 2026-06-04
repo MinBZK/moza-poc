@@ -3,9 +3,10 @@
  *
  * Client-side gedrag voor de Digitale Assistent (chat).
  * Praat met de Digitale-Assistent-backend via /chat/stream met Server-Sent
- * Events. De backend-URL is instelbaar via window.MOZA_CHAT_API (default
- * http://localhost:8000). De backend leeft in een eigen repo:
- * github.com/MinBZK/moza-poc-digitale-assistent
+ * Events. De backend-URL komt uit window.MOZA_CHAT_API; standaard leeg ("")
+ * = same-origin, zodat de nginx-proxy van de frontend naar de interne backend
+ * stuurt (geen CORS). Lokaal zet `npm run dev` dit op http://localhost:8000.
+ * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
  * Bewaart per LLM/transport-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
  */
