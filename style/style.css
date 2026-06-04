@@ -958,8 +958,8 @@ dl.data-overview div {
 }
 
 /* -- TABELLEN -- */
-
 table {
+	border-collapse: collapse;
 	inline-size: 100%;
 }
 th {
@@ -967,14 +967,52 @@ th {
 	font-weight: var(--toepassing-text-font-weight-semi-bold);
 }
 tr {
+	background: var(--toepassing-color-background-default);
+	border-block-end: var(--toepassing-border-subtle);
+	position: relative;
+	transition: var(--toepassing-transition-default);
 	vertical-align: top;
+	a::after {
+		content: "";
+		inset: 0;
+		position: absolute;
+	}
+	&:hover a {
+		text-decoration: var(--toepassing-text-decoration-hyperlink);
+	}
+}
+tbody {
+	tr {
+		&:hover {
+			background: var(--toepassing-color-interactive-alternate-hover-background);
+			transition: var(--toepassing-transition-default);
+		}
+	}
 }
 th, td {
 	padding-block: var(--toepassing-space-padding-xs);
+	padding-inline: var(--toepassing-space-padding-sm);
 	text-align: start;
 	.feedback {
 		margin-block-end: var(--toepassing-space-margin-xs);
 	}
+	svg {
+		block-size: var(--toepassing-size-icon-sm);
+	}
+	.feedback {
+		gap: var(--toepassing-space-margin-3xs);
+		margin-block-end: 0;
+		padding: var(--toepassing-space-padding-2xs);
+	}
+	&:has(time) {
+		text-align: end;
+	}
+}
+.metadata {
+	font-size: var(--toepassing-text-size-body-sm);
+}
+.action-group {
+	font-size: var(--toepassing-text-size-body-sm);
 }
 caption {
 	caption-side: bottom; /* Logical property wordt nog niet ondersteund */
@@ -1191,45 +1229,6 @@ dd .feedback {
 .berichtenbox-search {
 	input {
 		inline-size: 100%;
-	}
-}
-.berichtenbox-content {
-	table {
-		border-collapse: collapse;
-	}
-	th {
-		font-weight: var(--toepassing-text-font-weight-semi-bold);
-	}
-	tr {
-		background: var(--toepassing-color-background-default);
-		border-block-end: var(--toepassing-border-subtle);
-		position: relative;
-		transition: var(--toepassing-transition-default);
-		a::after {
-			content: "";
-			inset: 0;
-			position: absolute;
-		}
-		&:hover a {
-			text-decoration: var(--toepassing-text-decoration-hyperlink);
-		}
-	}
-	tbody {
-		tr {
-			&:hover {
-				background: var(--toepassing-color-interactive-alternate-hover-background);
-				transition: var(--toepassing-transition-default);
-			}
-		}
-	}
-	th, td {
-		padding: var(--toepassing-space-padding-sm);
-	}
-	.metadata {
-		font-size: var(--toepassing-text-size-body-sm);
-	}
-	.action-group {
-		font-size: var(--toepassing-text-size-body-sm);
 	}
 }
 .berichtenbox-row-sender {
@@ -1498,7 +1497,7 @@ dd .feedback {
 	gap: var(--toepassing-space-margin-sm);
 	list-style: none;
 	padding-inline-start: var(--toepassing-space-padding-2xs);
-	li {
+	> li {
 		counter-increment: step;
 		display: flex;
 		gap: var(--toepassing-space-margin-xs);
@@ -1523,24 +1522,41 @@ dd .feedback {
 		&::after {
 			background: var(--toepassing-color-feedback-success-border);
 			content: "";
-			inline-size: var(--toepassing-size-4xs);
+			inline-size: var(--toepassing-size-5xs);
 			inset-block: var(--toepassing-size-icon-lg) calc(-1 * var(--toepassing-space-margin-sm));
 			inset-inline-start: calc(var(--toepassing-size-icon-lg) / 2);
 			position: absolute;
 			transform: translateX(-50%);
 		}
-		&:has(+ [aria-current="step"])::after {
-			background: repeating-linear-gradient(
-				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
-				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
-			);
+		&:has(+ [aria-current="step"]), &[aria-current="step"] {
+			.status-details::before {
+				background: var(--toepassing-color-background-default);
+				border-color: var(--toepassing-color-feedback-info-border);
+			}
+			&::after {
+				background: repeating-linear-gradient(
+					var(--toepassing-color-feedback-info-border) 0 var(--toepassing-size-4xs),
+					transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
+				);
+			}
 		}
 		&:last-child::after {
 			content: none;
 		}
+		&:last-child:has(details[open])::after {
+			block-size: calc(var(--toepassing-space-margin-xs) + var(--toepassing-size-icon-sm) / 2);
+			content: "";
+			inset-block-end: auto;
+		}
+		ul {
+			list-style-type: disc;
+		}
 	}
 	[aria-current="step"] {
-		&::before, ~ li::before {
+		&::before {
+			background: var(--toepassing-color-feedback-info-emphasis);
+		}
+		~ li::before {
 			background: var(--toepassing-color-feedback-neutral-emphasis);
 		}
 		&::after, ~ li::after {
@@ -1548,6 +1564,10 @@ dd .feedback {
 				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
 				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
 			);
+		}
+		~ li .status-details::before {
+			background: var(--toepassing-color-background-default);
+			border-color: var(--toepassing-color-feedback-neutral-border);
 		}
 	}
 	summary {
@@ -1577,7 +1597,22 @@ dd .feedback {
 		}
 	}
 	.status-details {
-		padding: var(--toepassing-space-padding-sm) 0;
+		margin-block-start: var(--toepassing-space-margin-xs);
+		position: relative;
+		/* Extra sub-stap-node op de connector-lijn, uitgelijnd met de datum */
+		&::before {
+			background: var(--toepassing-color-feedback-success-emphasis);
+			block-size: var(--toepassing-size-icon-sm);
+			border: var(--toepassing-border-width-md) solid var(--toepassing-color-feedback-success-border);
+			border-radius: var(--toepassing-border-radius-round);
+			content: "";
+			inline-size: var(--toepassing-size-icon-sm);
+			inset-block-start: var(--toepassing-size-5xs);
+			inset-inline-start: calc(-1 * (var(--toepassing-size-icon-lg) / 2 + var(--toepassing-space-margin-xs)));
+			position: absolute;
+			transform: translateX(-50%);
+			z-index: 1;
+		}
 	}
 	.status-date {
 		color: var(--toepassing-color-text-subtle-2);
@@ -1592,6 +1627,26 @@ dd .feedback {
 	}
 	.feedback {
 		margin-block-start: var(--toepassing-space-margin-2xs);
+	}
+}
+
+/* Sub-stappen binnen een status-track */
+.status-track--sub {
+	margin-block-start: var(--toepassing-space-margin-sm);
+	.status-track {
+		gap: var(--toepassing-space-margin-3xs);
+		margin-block-end: var(--toepassing-space-margin-sm);
+	}
+	li {
+		&::before {
+			block-size: var(--toepassing-size-icon-md);
+			font: var(--toepassing-text-smalltext);
+			inline-size: var(--toepassing-size-icon-md);
+		}
+		&::after {
+			inset-block: var(--toepassing-size-icon-md) calc(-1 * var(--toepassing-space-margin-sm));
+			inset-inline-start: calc(var(--toepassing-size-icon-md) / 2);
+		}
 	}
 }
 

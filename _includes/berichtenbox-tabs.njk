@@ -5,7 +5,7 @@
 {# Inbox is current voor alle berichtenbox-pagina's die niet archief/prullenbak zijn (ook detail en paginering). #}
 {% set isInbox = '/moza/berichtenbox' in path and not isArchief and not isPrullenbak %}
 
-<nav class="berichtenbox-nav" aria-label="Berichtenbox">
+<nav aria-label="Berichtenbox">
 	<ul role="tablist">
 		<li role="presentation">
 			<a role="tab" href="{{ '/moza/berichtenbox/' | url }}#hoofd-inhoud"{% if isInbox %} aria-current="page" aria-selected="true"{% endif %}>
