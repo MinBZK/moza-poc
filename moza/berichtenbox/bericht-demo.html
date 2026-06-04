@@ -22,21 +22,11 @@ title: "MijnOverheid Zakelijk: Bericht"
 			<p class="metadata" data-demo-meta></p>
 
 			<div class="action-group">
-				<button class="icon-button" data-actie="archiveren">
-					{% icon "/assets/icons/icon-archief.svg" %}
-					Archiveren
-				</button>
-				<button class="icon-button" data-actie="verplaatsen">
-					{% icon "/assets/icons/icon-archief.svg" %}Verplaatsen naar map
-				</button>
-				<button class="icon-button" data-actie="markeer-ongelezen">
-					{% include "icon-ongelezen.njk" %}Markeer als ongelezen
-				</button>
+				<button class="icon-button" data-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %} Archiveren</button>
+				<button class="icon-button" data-actie="verplaatsen">{% icon "/assets/icons/icon-archief.svg" %}Verplaatsen naar map</button>
+				<button class="icon-button" data-actie="markeer-ongelezen">{% include "icon-ongelezen.njk" %}Markeer als ongelezen</button>
 				<button class="icon-button" data-actie="naar-inbox" hidden>Verplaats naar inbox</button>
-				<button class="icon-button" data-actie="verwijderen">
-					{% icon "/assets/icons/icon-weggooien.svg" %}
-					Verwijderen
-				</button>
+				<button class="icon-button" data-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %} Verwijderen</button>
 			</div>
 
 			<div class="berichtenbox-detail-body" data-demo-body></div>
@@ -44,7 +34,7 @@ title: "MijnOverheid Zakelijk: Bericht"
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
 				<h2>Bijlagen</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
-				<ul class="berichtenbox-attachments-list" data-berichtenbox-attachments-list hidden></ul>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
 		</section>
 
