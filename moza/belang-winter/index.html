@@ -1,0 +1,44 @@
+---
+title: "MijnOverheid Zakelijk: Familiebedrijf Winter"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud" class="page-homepage">
+	<h1>Robin Vogel voor Familiebedrijf Winter</h1>
+
+	<div class="feedback feedback-warning">
+		{% include "icon-feedback-warning.njk" %}
+		<div>
+			<p>U bent <strong>gemachtigd</strong> om namens Familiebedrijf Winter belastingzaken te regelen. U heeft toegang tot de onderdelen die binnen uw machtiging vallen. Andere onderdelen van de onderneming ziet u niet.</p>
+		</div>
+		<button class="btn-close link-button">
+			<i>Sluit notificatie</i>
+		</button>
+	</div>
+
+	<div class="tiles">
+		<section class="card">
+			<h2>Belastingen</h2>
+			<p>Aangiften, betaaltermijnen en de status van uw belastingzaken.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-winter/belastingen/' | url }}">Ga naar Belastingen</a>
+		</section>
+		<section class="card">
+			<h2>Lopende zaken</h2>
+			<p>Volg de voortgang van zaken die binnen uw machtiging vallen.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-winter/lopende-zaken/' | url }}">Ga naar Lopende zaken</a>
+		</section>
+		<section class="card">
+			<h2>Berichtenbox</h2>
+			<p>Berichten over de belastingzaken van de onderneming.</p>
+			<a class="btn-cta" href="{{ '/moza/belang-winter/berichtenbox/' | url }}">Ga naar Berichtenbox</a>
+		</section>
+	</div>
+
+	<div class="feedback feedback-warning">
+		{% include "icon-feedback-warning.njk" %}
+		<div>
+			<p>De aangifte omzetbelasting over het tweede kwartaal moet vóór <time datetime="2026-07-31">31 juli 2026</time> zijn ingediend. Bekijk de details bij <a href="{{ '/moza/belang-winter/belastingen/' | url }}">Belastingen</a>.</p>
+		</div>
+	</div>
+</article>

@@ -860,6 +860,11 @@
           "$type": "color",
           "$value": "{color.lintblauw.600}",
           "$description": "Bij toetsenbord-, spraak-, en switchfocus"
+        },
+        "outline-backing": {
+          "$type": "color",
+          "$value": "{color.neutraal.wit}",
+          "$description": "Bij toetsenbord-, spraak-, en switchfocus"
         }
       },
       "disabled": {
@@ -1270,6 +1275,20 @@
       "background": {
         "$type": "color",
         "$value": "{color.lintblauw.500}"
+      }
+    },
+    "role": {
+      "private": {
+        "$type": "color",
+        "$value": "{color.hemelblauw.500}"
+      },
+      "business": {
+        "$type": "color",
+        "$value": "{color.lintblauw.500}"
+      },
+      "authorized": {
+        "$type": "color",
+        "$value": "{color.oranje.500}"
       }
     }
   },
@@ -2081,7 +2100,13 @@
   "focus": {
     "outline": {
       "$type": "other",
-      "$value": "{border-width.lg} dotted {color.interactive.focus.outline}"
+      "$value": "{border-width.lg} dashed {color.interactive.focus.outline}",
+      "$description": "Geblokte toetsenbordfocus: dashes met witte backing-ring (focus.outline-backing)"
+    },
+    "outline-backing": {
+      "$type": "other",
+      "$value": "0 0 0 calc({focus.outline-offset.md} + {border-width.lg}) {color.interactive.focus.outline-backing}",
+      "$description": "Witte ring achter de focus-dashes, leesbaar op elke achtergrond"
     },
     "outline-offset": {
       "md": {

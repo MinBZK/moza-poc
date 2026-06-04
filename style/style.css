@@ -170,6 +170,7 @@ h6, .h6 {
 
 p {
 	font: var(--toepassing-text-paragraph-default);
+	max-inline-size: 77ch;
 	&.intro {
 		font: var(--toepassing-text-paragraph-intro);
 	}
@@ -303,6 +304,7 @@ pre {
 	outline: none;
 }
 :focus-visible {
+	box-shadow: var(--toepassing-focus-outline-backing);
 	outline: var(--toepassing-focus-outline);
 	outline-offset: var(--toepassing-focus-outline-offset-md);
 	&[aria-disabled] {
@@ -417,7 +419,7 @@ legend, label, dt {
 	margin-block-end: var(--toepassing-space-margin-3xs);
 }
 label {
-	cursor: pointer;
+	display: inline-block;
 }
 
 .form-field-helper-text {
@@ -473,7 +475,6 @@ ul.selection {
 	block-size: var(--toepassing-size-icon-md);
 	border: var(--toepassing-border-width-md) solid var(--toepassing-color-interactive-default-border);
 	border-radius: var(--toepassing-border-radius-md);
-	cursor: pointer;
 	display: inline-grid;
 	inline-size: var(--toepassing-size-icon-md);
 	place-content: center;
@@ -565,12 +566,16 @@ ul.selection {
 	gap: var(--toepassing-space-margin-xs);
 }
 
+/* Klik-affordance voor relevante interactieve elementen */
+button, label, select, summary, [type="checkbox"], [type="checkbox"] {
+	cursor: pointer;
+}
+
 /* -- KNOPPEN -- */
 
 button, a.btn, a.btn-cta {
 	background: var(--toepassing-color-interactive-default-background);
 	color: var(--toepassing-color-text-inverse);
-	cursor: pointer;
 	transition: var(--toepassing-transition-default);
 	@container (max-inline-size: 280px) {
 		inline-size: 100%;
@@ -1428,65 +1433,165 @@ dd .feedback {
 
 /* -- OVERIGE COMPONENTEN -- */
 
-/* Uitklapblok (details/summary) */
-details {
-	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
-	&[open] {
-		border-color: var(--toepassing-color-interactive-alternate-selected-border);
-		summary {
-			background: var(--toepassing-color-interactive-alternate-selected-background);
-			&:hover, &:focus-visible {
-				background: var(--toepassing-color-interactive-alternate-hover-background);
-			}
-			&::before {
-				transform: rotate(90deg);
-				transition: var(--toepassing-transition-transform);
-			}
-		}
-	}
-	&:has(summary:hover) {
-		border-color: var(--toepassing-color-interactive-alternate-hover-border);
-	}
-	&:has(summary:focus-visible) {
-		border-color: var(--toepassing-color-interactive-alternate-focus-border);
-	}
-	&:has(summary:active) {
-		border-color: var(--toepassing-color-interactive-alternate-active-border);
-	}
-}
-summary {
-	background: var(--toepassing-color-background-subtle);
-	cursor: pointer;
-	display: flex;
-	gap: var(--toepassing-space-layout-2xs);
-	padding: var(--toepassing-space-padding-sm);
-	transition: var(--toepassing-transition-default);
-	&:hover, &:focus-visible, &:active {
-		background: var(--toepassing-color-interactive-alternate-hover-background);
-		color: var(--toepassing-color-text-default);
-	}
-	&:active {
-		background: var(--toepassing-color-interactive-alternate-active-background);
-	}
-	&::before {
-		content: url("../assets/icons/icon-chevron.svg");
-		flex-shrink: 0;
-		inline-size: var(--toepassing-size-icon-xs);
-		transform: rotate(0deg);
-		transition: var(--toepassing-transition-transform);
-	}
-}
-
-/* Accordion (o.a. FAQ-lijst met uitklapbare vragen) */
+/* Accordion (uitklapblok (details/summary) o.a. voor FAQ-lijst met uitklapbare vragen) */
 .accordion {
 	list-style: none;
 	padding: 0;
+	details {
+		border: var(--toepassing-border-subtle);
+		border-radius: var(--toepassing-border-radius-md);
+		&[open] {
+			border-color: var(--toepassing-color-interactive-alternate-selected-border);
+			summary {
+				background: var(--toepassing-color-interactive-alternate-selected-background);
+				&:hover, &:focus-visible {
+					background: var(--toepassing-color-interactive-alternate-hover-background);
+				}
+				&::before {
+					transform: rotate(90deg);
+					transition: var(--toepassing-transition-transform);
+				}
+			}
+		}
+		&:has(summary:hover) {
+			border-color: var(--toepassing-color-interactive-alternate-hover-border);
+		}
+		&:has(summary:focus-visible) {
+			border-color: var(--toepassing-color-interactive-alternate-focus-border);
+		}
+		&:has(summary:active) {
+			border-color: var(--toepassing-color-interactive-alternate-active-border);
+		}
+	}
+	summary {
+		background: var(--toepassing-color-background-subtle);
+		display: flex;
+		gap: var(--toepassing-space-layout-2xs);
+		padding: var(--toepassing-space-padding-sm);
+		transition: var(--toepassing-transition-default);
+		&:hover, &:focus-visible, &:active {
+			background: var(--toepassing-color-interactive-alternate-hover-background);
+			color: var(--toepassing-color-text-default);
+		}
+		&:active {
+			background: var(--toepassing-color-interactive-alternate-active-background);
+		}
+		&::before {
+			content: url("../assets/icons/icon-chevron.svg");
+			flex-shrink: 0;
+			inline-size: var(--toepassing-size-icon-xs);
+			transform: rotate(0deg);
+			transition: var(--toepassing-transition-transform);
+		}
+	}
 	h3, h4, h5, h6 {
 		font-size: var(--toepassing-text-size-body-md);
 	}
 	p {
 		padding: var(--toepassing-space-padding-sm);
+	}
+}
+
+/* Status-/takenoverzicht */
+.status-track {
+	counter-reset: step;
+	gap: var(--toepassing-space-margin-sm);
+	list-style: none;
+	padding-inline-start: var(--toepassing-space-padding-2xs);
+	li {
+		counter-increment: step;
+		display: flex;
+		gap: var(--toepassing-space-margin-xs);
+		position: relative;
+		&::before {
+			background: var(--toepassing-color-feedback-success-emphasis);
+			block-size: var(--toepassing-size-icon-lg);
+			border-radius: var(--toepassing-border-radius-round);
+			color: var(--toepassing-color-text-inverse);
+			content: counter(step);
+			display: grid;
+			inline-size: var(--toepassing-size-icon-lg);
+			place-items: center;
+		}
+		&:has(~ [aria-current="step"])::before {
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M20.63 3.081a1.357 1.357 0 0 0-1.818.186l-7.94 8.883-4.774-4.134a1.355 1.355 0 0 0-2.05 1.721l5.781 9.65c.244.407.684.657 1.158.658h.005c.473 0 .912-.246 1.158-.651l8.83-14.52a1.355 1.355 0 0 0-.35-1.793z'/%3E%3C/svg%3E");
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: 60%;
+			content: "";
+		}
+		&::after {
+			background: var(--toepassing-color-feedback-success-border);
+			content: "";
+			inline-size: var(--toepassing-size-4xs);
+			inset-block: var(--toepassing-size-icon-lg) calc(-1 * var(--toepassing-space-margin-sm));
+			inset-inline-start: calc(var(--toepassing-size-icon-lg) / 2);
+			position: absolute;
+			transform: translateX(-50%);
+		}
+		&:has(+ [aria-current="step"])::after {
+			background: repeating-linear-gradient(
+				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
+				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
+			);
+		}
+		&:last-child::after {
+			content: none;
+		}
+	}
+	[aria-current="step"] {
+		&::before, ~ li::before {
+			background: var(--toepassing-color-feedback-neutral-emphasis);
+		}
+		&::after, ~ li::after {
+			background: repeating-linear-gradient(
+				var(--toepassing-color-feedback-neutral-border) 0 var(--toepassing-size-4xs),
+				transparent var(--toepassing-size-4xs) calc(var(--toepassing-size-4xs) * 2)
+			);
+		}
+	}
+	summary {
+		align-items: center;
+		display: flex;
+		font: var(--toepassing-text-heading-h5);
+		list-style: none;
+		min-block-size: var(--toepassing-size-icon-lg);
+		&:hover {
+			color: var(--toepassing-color-interactive-hover-text);
+		}
+		&::after {
+			content: url("../assets/icons/icon-chevron.svg");
+			flex-shrink: 0;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-start: var(--toepassing-space-margin-2xs);
+			transform: rotate(0deg);
+			transition: var(--toepassing-transition-transform);
+		}
+	}
+	details {
+		&[open] {
+			summary::after {
+				transform: rotate(90deg);
+				transition: var(--toepassing-transition-transform);
+			}
+		}
+	}
+	.status-details {
+		padding: var(--toepassing-space-padding-sm) 0;
+	}
+	.status-date {
+		color: var(--toepassing-color-text-subtle-2);
+		font: var(--toepassing-text-smalltext);
+		&::before {
+			content: url("../assets/icons/icon-kalender.svg");
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-sm);
+			margin-inline-end: var(--toepassing-space-margin-2xs);
+			vertical-align: text-top;
+		}
+	}
+	.feedback {
+		margin-block-start: var(--toepassing-space-margin-2xs);
 	}
 }
 
@@ -1637,15 +1742,27 @@ h1, h2, h3, h4, h5, h6, a, button {
 /* Accountwisselaar */
 .account-switcher {
 	position: relative;
+	.group-label-private svg {
+		color: var(--toepassing-color-role-private);
+	}
+	.group-label-business svg {
+		color: var(--toepassing-color-role-business);
+	}
+	.group-label-authorized svg {
+		color: var(--toepassing-color-role-authorized);
+	}
 }
 .account-switcher-toggle {
 	appearance: none;
 	background: none;
 	border: none;
-	color: inherit;
+	color: var(--toepassing-color-interactive-default-text);
 	cursor: pointer;
 	font: inherit;
 	padding: 0;
+	&.icon-label svg {
+		block-size: var(--toepassing-size-icon-md);
+	}
 	&::after {
 		background-color: currentcolor;
 		block-size: var(--toepassing-size-icon-xs);
@@ -1665,6 +1782,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
 	box-shadow: var(--toepassing-box-shadow-default);
+	display: block;
 	inset-block-start: 100%;
 	inset-inline-end: 0;
 	list-style: none;
@@ -1672,14 +1790,14 @@ h1, h2, h3, h4, h5, h6, a, button {
 	opacity: 1;
 	padding: var(--toepassing-space-padding-md);
 	position: absolute;
-	transition: var(--toepassing-transition-opacity) allow-discrete;
+	transition: var(--toepassing-transition-opacity) allow-discrete, display var(--toepassing-motion-speed-fast) allow-discrete;
 	z-index: 1;
 	@starting-style {
 		opacity: 0;
 	}
 	&[hidden] {
+		display: none;
 		opacity: 0;
-		transition: var(--toepassing-transition-opacity) allow-discrete;
 	}
 	a {
 		align-items: baseline;
@@ -1703,14 +1821,26 @@ h1, h2, h3, h4, h5, h6, a, button {
 		color: var(--toepassing-color-text-subtle-2);
 		font: var(--toepassing-text-smalltext-default);
 	}
+	.account-switcher-name {
+		color: var(--toepassing-color-text-default);
+		font: inherit;
+	}
 	.account-switcher-group-label {
 		color: var(--toepassing-color-text-subtle-2);
 		font: var(--toepassing-text-heading-h5);
-		padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm) var(--toepassing-space-padding-sm);
+		padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
 		&:not(:first-child) {
 			border-block-start: var(--toepassing-border-subtle);
 			margin-block-start: var(--toepassing-space-padding-sm);
 			padding-block-start: var(--toepassing-space-padding-md);
+		}
+		&.account-switcher-section-label {
+			margin-block-start: var(--toepassing-space-margin-md);
+			padding-block-start: var(--toepassing-space-padding-xl);
+		}
+		svg {
+			inline-size: var(--toepassing-size-icon-md);
+			vertical-align: text-bottom;
 		}
 	}
 }
@@ -1822,7 +1952,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 	}
 	label {
 		align-items: center;
-		cursor: pointer;
 		display: flex;
 		gap: var(--toepassing-space-padding-xs);
 		padding-block: var(--toepassing-space-padding-2xs);
@@ -1982,7 +2111,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 		gap: 0;
 		summary {
 			all: unset;
-			cursor: pointer;
 			&:hover {
 				background: none;
 			}
@@ -2055,6 +2183,38 @@ h1, h2, h3, h4, h5, h6, a, button {
 		p {
 			margin-inline: var(--toepassing-space-margin-2xs);
 			padding-block: var(--toepassing-space-padding-md);
+		}
+	}
+}
+
+/* MijnOverheid Zakelijk/Zakelijk gemachtigd/Privé/Privé gemachtigd afwijkende styling */
+/* Hier wordt momenteel direct gemapped naar de brand tokens, moet herzien worden later! */
+body.moza {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-lintblauw-500);
+	&.authorized {
+		--toepassing-border-pageheader-border: var(--toepassing-border-width-lg) solid var(--rijkshuisstijl-color-oranje-500);
+	}
+}
+body.mobu {
+	--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-background: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-border: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-default-icon: var(--rijkshuisstijl-color-hemelblauw-500);
+	--toepassing-color-interactive-hover-background: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-color-interactive-hover-border: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-color-interactive-hover-icon: var(--rijkshuisstijl-color-hemelblauw-600);
+	--toepassing-border-radius-sm: var(--toepassing-border-radius-md);
+	--toepassing-border-radius-md: var(--toepassing-border-radius-lg);
+	&.authorized {
+		--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
+	}
+}
+body.authorized {
+	--toepassing-color-interactive-alternate-selected-background: var(--rijkshuisstijl-color-oranje-50);
+	.btn-cta {
+		&:hover, &:focus-visible {
+			background-color: var(--rijkshuisstijl-color-oranje-600);
+			border-color: var(--rijkshuisstijl-color-oranje-600);
 		}
 	}
 }

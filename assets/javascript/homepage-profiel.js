@@ -181,7 +181,7 @@
 		return items.map(function (item) { return { item: item, maakFn: maakFn }; });
 	}
 
-	// Telt alleen items uit homepageSubsidies/homepageRegelgeving — de gehoogde
+	// Telt alleen items uit homepageSubsidies/homepageRegelgeving, de gehoogde
 	// "nieuw sinds uw laatste bezoek"-items. De overzichten tonen meer items,
 	// maar die zijn deel van de algemene branche-lijst en tellen niet als nieuw.
 	var huidigeNieuweSubs = [];

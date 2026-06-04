@@ -93,7 +93,7 @@ De **Relevant** en **Niet relevant** opties zijn geïmplementeerd als een radio 
 ```
 
 - De `<fieldset>` met `<legend>` geeft screenreaders context: “Is dit relevant voor u?”
-- Radio buttons zijn natively wederzijds exclusief — de browser handhaaft dit zonder JavaScript
+- Radio buttons zijn natively wederzijds exclusief, de browser handhaaft dit zonder JavaScript
 - Toetsenbordnavigatie werkt automatisch via pijltoetsen binnen de groep
 - De radio inputs zijn visueel verborgen; de labels zijn gestyled als knoppen met iconen
 - Bij “Niet relevant” wordt het item verborgen en schuift een reserve-topic door
@@ -105,7 +105,7 @@ De pagina **Bewaarde items** leest alle `favorite:` en `hidden:` sleutels uit lo
 
 ## Berichtenbox
 
-De Berichtenbox simuleert het ophalen van berichten uit meerdere bronnen (overheidsinstanties en gemeentes) via het Federatief Berichtenstelsel. Er is geen backend — alle data wordt gegenereerd tijdens de Eleventy-build en opgeslagen in `window.berichtenboxData`.
+De Berichtenbox simuleert het ophalen van berichten uit meerdere bronnen (overheidsinstanties en gemeentes) via het Federatief Berichtenstelsel. Er is geen backend, alle data wordt gegenereerd tijdens de Eleventy-build en opgeslagen in `window.berichtenboxData`.
 
 ### Berichten ophalen
 
@@ -208,9 +208,9 @@ Het prototype kent meerdere voorgedefinieerde **persona's** (testaccounts) zodat
 
 Drie manieren:
 
-1. **Flags-paneel** — onder de groep _Persona's_ kies je een radio-button. De keuze wordt opgeslagen in localStorage onder de sleutel `persona` en blijft staan na herladen.
-2. **URL-parameter** — voeg `?persona=Adviseur` toe (of een ander label). Deze parameter heeft voorrang boven de localStorage-keuze, blijft op interne links bewaard, en is daardoor handig om een specifieke staat te delen.
-3. **Browserconsole** — `window.Personas.wissel("makelaar")` om programmatisch te wisselen, of `window.Personas.actief()` om de huidige persona te bekijken.
+1. **Flags-paneel**; onder de groep _Persona's_ kies je een radio-button. De keuze wordt opgeslagen in localStorage onder de sleutel `persona` en blijft staan na herladen.
+2. **URL-parameter**; voeg `?persona=Adviseur` toe (of een ander label). Deze parameter heeft voorrang boven de localStorage-keuze, blijft op interne links bewaard, en is daardoor handig om een specifieke staat te delen.
+3. **Browserconsole**; `window.Personas.wissel("makelaar")` om programmatisch te wisselen, of `window.Personas.actief()` om de huidige persona te bekijken.
 
 ### Hoe het werkt
 
@@ -230,22 +230,24 @@ Persona-data staat in [`_data/personas.json`](../_data/personas.json) en wordt d
 			<td>
 				<code>persona</code>
 			</td>
-			<td>id van de actieve persona (<code>"bloom"</code>, <code>"makelaar"</code>, ...)</td>
+			<td>
+				id van de actieve persona (<code>"bloom"</code>, <code>"makelaar"</code>, ...)
+			</td>
 		</tr>
 	</tbody>
 </table>
 
 ## Feature flags
 
-Het prototype bevat een ingebouwd feature-flag systeem waarmee pagina's en functionaliteit in- of uitgeschakeld kunnen worden — zonder aparte versies te hoeven bouwen.
+Het prototype bevat een ingebouwd feature-flag systeem waarmee pagina's en functionaliteit in- of uitgeschakeld kunnen worden, zonder aparte versies te hoeven bouwen.
 
 ### Hoe te gebruiken
 
 Klik op de **Flags**-knop rechtsonder in het prototype. Er opent een paneel met drie groepen:
 
-- **Pagina's** — navigatie-items zoals Berichtenbox, Belastingen en Zakelijk vervoer. Uitschakelen verbergt zowel het navigatie-item als de bijbehorende content op de homepage.
-- **Functionaliteit** — interactiemogelijkheden zoals _Delen_ en _Relevantie_. Uitschakelen verbergt de betreffende knoppen in alle actiegroepen.
-- **Persona's** — wisselen tussen voorgedefinieerde testaccounts. Bepaalt welke bedrijfsgegevens, subsidies, regelgeving en gemeente getoond worden. Zie de sectie [Persona's](#personas) hierboven.
+- **Pagina's**; navigatie-items zoals Berichtenbox, Belastingen en Zakelijk vervoer. Uitschakelen verbergt zowel het navigatie-item als de bijbehorende content op de homepage.
+- **Functionaliteit**; interactiemogelijkheden zoals _Delen_ en _Relevantie_. Uitschakelen verbergt de betreffende knoppen in alle actiegroepen.
+- **Persona's**; wisselen tussen voorgedefinieerde testaccounts. Bepaalt welke bedrijfsgegevens, subsidies, regelgeving en gemeente getoond worden. Zie de sectie [Persona's](#personas) hierboven.
 
 Feature flags worden opgeslagen in localStorage en blijven staan na herladen. Standaard staan alle features aan.
 

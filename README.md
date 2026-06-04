@@ -73,8 +73,8 @@ Design tokens zijn ontwerp-waarden — zoals kleuren, typografie, maatvoering �
 
 Het bestand `tokens/tokens.json` is de *single source of truth* voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
 
-- **Figma** — via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
-- **IDE** — ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
+- **Figma**; via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
+- **IDE**; ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
 
 ### Style Dictionary
 
@@ -91,10 +91,10 @@ Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom 
 
 Het resultaat wordt opgesplitst in twee automatisch gegenereerde CSS-bestanden:
 
-- **`_rijkshuisstijl.css`** — bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
-- **`_toepassing.css`** — bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
+- **`_rijkshuisstijl.css`**; bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
+- **`_toepassing.css`**; bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
 
-Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden — de toepassingslaag vangt de verandering op.
+Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden, de toepassingslaag vangt de verandering op.
 
 Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt worden. Alle wijzigingen aan ontwerp-waarden horen thuis in `tokens/tokens.json`.
 

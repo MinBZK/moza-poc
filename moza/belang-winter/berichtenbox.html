@@ -1,0 +1,47 @@
+---
+title: "MijnOverheid Zakelijk: Berichtenbox onderneming"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/belang-winter/' | url }}">Home</a></li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<section class="card">
+		<p class="metadata"><b>3</b> berichten, <b>2</b> ongelezen.</p>
+		<table class="data-overview">
+			<caption class="visually-hidden">Berichten</caption>
+			<thead>
+				<tr>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="berichtenbox-row is-unread">
+					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>Belastingdienst</td>
+					<td class="berichtenbox-row-subject"><a href="#">Ontvangstbevestiging verzoek om uitstel</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-05-20">20 mei 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row is-unread">
+					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>Belastingdienst</td>
+					<td class="berichtenbox-row-subject"><a href="#">Herinnering aangifte omzetbelasting tweede kwartaal</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-07-10">10 juli 2026</time></td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Belastingdienst</td>
+					<td class="berichtenbox-row-subject"><a href="#">Bevestiging aangifte omzetbelasting eerste kwartaal</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-04-22">22 april 2026</time></td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>
