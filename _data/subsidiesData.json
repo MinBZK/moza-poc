@@ -496,5 +496,83 @@
 		"maximaalBedrag": "€1.250",
 		"isOngelezen": false,
 		"budgetVergeven": 13
+	},
+	{
+		"id": "rotterdam-gevelverbetering",
+		"titel": "Subsidie Gevelaanpak Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Ondernemers in Rotterdam kunnen subsidie krijgen voor het opknappen van de gevel van hun bedrijfspand of winkel, zoals herstel, schilderwerk en nieuwe reclame-uitingen.",
+		"inhoud": ["De Subsidie Gevelaanpak helpt ondernemers en pandeigenaren in Rotterdam om de uitstraling van hun winkel- of bedrijfsgevel te verbeteren. Denk aan herstel van metsel- en voegwerk, schilderwerk, nieuwe kozijnen of een verzorgde reclame-uiting.", "De gemeente vergoedt maximaal 50% van de kosten, tot een maximum van 7.500 euro per pand. U vraagt de subsidie aan via het ondernemersloket van de gemeente Rotterdam. Het pand moet in Rotterdam liggen en u dient vooraf foto's en een kostenraming aan te leveren."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "Doorlopend open (zolang budget beschikbaar is)",
+		"maximaalBedrag": "7.500 euro",
+		"isOngelezen": true,
+		"budgetVergeven": 38
+	},
+	{
+		"id": "rotterdam-verduurzaming-bedrijfspand",
+		"titel": "Subsidie Verduurzaming Bedrijfspand Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Voor het energiezuiniger maken van uw bedrijfspand in Rotterdam, zoals isolatie, ledverlichting of zonnepanelen, kunt u een gemeentelijke subsidie aanvragen.",
+		"inhoud": ["Met de Subsidie Verduurzaming Bedrijfspand stimuleert de gemeente Rotterdam ondernemers om hun pand energiezuiniger te maken. Subsidiabel zijn maatregelen zoals dak- en gevelisolatie, hr++-glas, ledverlichting, warmtepompen en zonnepanelen.", "De subsidie bedraagt 30% van de investering, tot maximaal 10.000 euro. U vraagt de subsidie aan via de gemeente Rotterdam en levert offertes en een korte toelichting aan. Het pand moet in de gemeente Rotterdam staan en zakelijk in gebruik zijn."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "1 maart 2026 tot en met 31 december 2026",
+		"maximaalBedrag": "10.000 euro",
+		"isOngelezen": true,
+		"budgetVergeven": 52
+	},
+	{
+		"id": "rotterdam-ondernemen-in-de-wijk",
+		"titel": "Subsidie Ondernemen in de Wijk Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Kleine ondernemers die bijdragen aan een levendige Rotterdamse winkelstraat of wijk kunnen subsidie aanvragen voor initiatieven die de buurt versterken.",
+		"inhoud": ["De Subsidie Ondernemen in de Wijk ondersteunt kleine ondernemers die zich inzetten voor een aantrekkelijke en levendige wijk in Rotterdam. Denk aan een gezamenlijke straatactie, het opknappen van een winkelpui of een initiatief dat de buurteconomie versterkt.", "De bijdrage is maximaal 2.500 euro per initiatief en dekt tot 75% van de kosten. U vraagt de subsidie aan via de gemeente Rotterdam met een korte beschrijving van het initiatief en een begroting."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "Doorlopend open (zolang budget beschikbaar is)",
+		"maximaalBedrag": "2.500 euro",
+		"isOngelezen": true,
+		"budgetVergeven": 61
+	},
+	{
+		"id": "rotterdam-groene-daken",
+		"titel": "Subsidie Groene Daken en Regenwater Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Voor de aanleg van een groen dak of voorzieningen om regenwater op te vangen op uw bedrijfspand in Rotterdam is een gemeentelijke subsidie beschikbaar.",
+		"inhoud": ["De Subsidie Groene Daken en Regenwater helpt eigenaren van bedrijfspanden in Rotterdam om wateroverlast en hittestress tegen te gaan. Subsidiabel zijn de aanleg van een groen dak, de opvang en hergebruik van regenwater en het vergroenen van het terrein.", "De gemeente vergoedt een vast bedrag per vierkante meter groen dak, tot maximaal 15.000 euro per pand. U vraagt de subsidie aan via de gemeente Rotterdam en levert een plan met oppervlakte en kostenraming aan."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "Doorlopend open (zolang budget beschikbaar is)",
+		"maximaalBedrag": "15.000 euro",
+		"isOngelezen": true,
+		"budgetVergeven": 44
+	},
+	{
+		"id": "rotterdam-leerwerkplek",
+		"titel": "Subsidie Leerwerkplekken Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Rotterdamse ondernemers die een leerwerkplek of stageplek bieden aan een mbo-leerling of werkzoekende kunnen een tegemoetkoming in de begeleidingskosten krijgen.",
+		"inhoud": ["Met de Subsidie Leerwerkplekken stimuleert de gemeente Rotterdam werkgevers om leer- en stageplekken aan te bieden aan mbo-leerlingen en werkzoekenden uit de stad. De subsidie is een tegemoetkoming in de kosten van begeleiding op de werkvloer.", "De bijdrage bedraagt 2.000 euro per gerealiseerde leerwerkplek van minimaal zes maanden. U vraagt de subsidie aan via de gemeente Rotterdam, met een kopie van de leerwerk- of stageovereenkomst."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "Doorlopend open (zolang budget beschikbaar is)",
+		"maximaalBedrag": "2.000 euro per plek",
+		"isOngelezen": true,
+		"budgetVergeven": 29
+	},
+	{
+		"id": "rotterdam-evenementen-cultuur",
+		"titel": "Subsidie Evenementen en Cultuur Rotterdam",
+		"externUrl": "https://www.rotterdam.nl/subsidies",
+		"beschrijving": "Ondernemers in de culturele en creatieve sector kunnen subsidie aanvragen voor een evenement of activiteit die het culturele aanbod in Rotterdam versterkt.",
+		"inhoud": ["De Subsidie Evenementen en Cultuur ondersteunt ondernemers en organisaties die een publiek toegankelijk evenement of culturele activiteit in Rotterdam organiseren. Denk aan een tentoonstelling, festival, voorstelling of buurtevenement.", "De bijdrage is maximaal 20.000 euro en hangt af van de omvang en het publieksbereik. U vraagt de subsidie aan via de gemeente Rotterdam met een activiteitenplan en een begroting. Aanvragen worden minimaal acht weken voor het evenement ingediend."],
+		"verstrekker": "Gemeente Rotterdam",
+		"type": "Subsidie",
+		"aanvraagperiode": "Doorlopend open (minimaal 8 weken vooraf)",
+		"maximaalBedrag": "20.000 euro",
+		"isOngelezen": true,
+		"budgetVergeven": 57
 	}
 ]
