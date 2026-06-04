@@ -3,11 +3,11 @@ name: Release build
 on:
   push:
     tags:
-      - '*'
+      - "*"
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build and deploy'
+        description: "Tag to build and deploy"
         required: true
 
 env:
@@ -94,3 +94,4 @@ jobs:
           component: proef
           image: ${{ needs.build.outputs.image }}
           wait-for-ready: true
+          timeout: 1200
