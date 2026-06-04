@@ -13,243 +13,45 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 	</nav>
 
 	<h1>Lopende zaken</h1>
+	
+	<section class="card tabs">
+		{% include "lopende-zaken-tabs.njk" %}
 
-	<div class="feedback feedback-info">
-		{% include "icon-feedback-info.njk" %}
-		<div>
-			<p>Hier kunt u de voortgang volgen van uw lopende zaken, zoals aanvragen, vergunningen en meldingen.</p>
-		</div>
-		<button class="btn-close link-button" id="saved-close">
-			<i>Sluit notificatie</i>
-		</button>
-	</div>
-
-	<section class="card">
-		<h2>Omgevingsvergunning verbouwing bedrijfspand</h2>
-		<dl>
-			<dt>Organisatie</dt>
-			<dd>Gemeente Rotterdam</dd>
-			<dt>Zaaknummer</dt>
-			<dd>Z-2026-014872</dd>
-			<dt>Ingediend</dt>
-			<dd><time datetime="2026-05-14">14 mei 2026</time></dd>
-			<dt>Verwachte doorlooptijd</dt>
-			<dd>8 weken</dd>
-		</dl>
-		<h3>Voortgang</h3>
-		<ol class="status-track">
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Ingediend
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-05-14">14 mei 2026</time></p>
-						<p>Wij hebben uw omgevingsvergunning voor de verbouwing van uw bedrijfspand ontvangen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Huidige stap: </span>
-						In behandeling genomen
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-05-21">21 mei 2026</time></p>
-						<p>Uw verzoek is in behandeling genomen.</p>
-					</div>
-				</details>
-			</li>
-			<li aria-current="step">
-				<details>
-					<summary>
-						<span class="visually-hidden">Nog te nemen stap: </span>
-						Besluit verwacht
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-07-09">9 juli 2026</time></p>
-						<p>Wij verwachten op 9 juli een besluit genomen te hebben.</p>
-					</div>
-				</details>
-			</li>
-		</ol>
-	</section>
-	<section class="card">
-		<h2>Subsidie aangevraagd</h2>
-		<dl>
-			<dt>Organisatie</dt>
-			<dd>Rijksdienst voor Ondernemend Nederland</dd>
-			<dt>Zaaknummer</dt>
-			<dd>SUB-2026-008431</dd>
-			<dt>Ingediend</dt>
-			<dd><time datetime="2026-03-03">3 maart 2026</time></dd>
-			<dt>Verwachte doorlooptijd</dt>
-			<dd>13 weken</dd>
-		</dl>
-		<h3>Voortgang</h3>
-		<ol class="status-track">
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Ingediend
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-03-03">3 maart 2026</time></p>
-						<p>U heeft uw subsidieaanvraag ingediend. Wij hebben deze in goede orde ontvangen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Ontvangst bevestigd
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-03-05">5 maart 2026</time></p>
-						<p>U heeft een ontvangstbevestiging met het zaaknummer van uw aanvraag in uw Berichtenbox ontvangen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Volledigheid gecontroleerd
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-03-19">19 maart 2026</time></p>
-						<p>Wij hebben gecontroleerd of uw aanvraag compleet is. Alle benodigde gegevens en bijlagen zijn aanwezig.</p>
-					</div>
-				</details>
-			</li>
-			<li aria-current="step">
-				<details>
-					<summary>
-						<span class="visually-hidden">Huidige stap: </span>
-						Inhoudelijke beoordeling
-					</summary>
-					<div class="status-details">
-						<p class="status-date">sinds <time datetime="2026-03-19">19 maart 2026</time></p>
-						<p>Wij beoordelen of uw aanvraag voldoet aan de voorwaarden van de subsidieregeling. U hoeft nu niets te doen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Volgende stap: </span>
-						Besluit verwacht
-					</summary>
-					<div class="status-details">
-						<p class="status-date">verwacht voor <time datetime="2026-06-30">30 juni 2026</time></p>
-						<p>Na de beoordeling ontvangt u ons besluit over de subsidie in uw Berichtenbox.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Nog te nemen stap: </span>
-						Uitbetaling
-					</summary>
-					<div class="status-details">
-						<p>Bij toekenning betalen wij de subsidie of een voorschot uit op het rekeningnummer dat bij ons bekend is.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Nog te nemen stap: </span>
-						Vaststelling
-					</summary>
-					<div class="status-details">
-						<p>Na afloop stelt u de subsidie vast met een verantwoording. Op basis daarvan bepalen wij het definitieve subsidiebedrag.</p>
-					</div>
-				</details>
-			</li>
-		</ol>
-	</section>
-	<section class="card">
-		<h2>Melding openbare ruimte</h2>
-		<dl>
-			<dt>Organisatie</dt>
-			<dd>Gemeente Rotterdam</dd>
-			<dt>Zaaknummer</dt>
-			<dd>Z-2026-013094</dd>
-			<dt>Ingediend</dt>
-			<dd><time datetime="2026-04-28">28 april 2026</time></dd>
-			<dt>Verwachte doorlooptijd</dt>
-			<dd>4 weken</dd>
-		</dl>
-		<h3>Voortgang</h3>
-		<ol class="status-track">
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Ingediend
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-04-28">28 april 2026</time></p>
-						<p>We hebben uw melding ontvangen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						In behandeling
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-05-04">4 mei 2026</time></p>
-						<p>Uw melding is in behandeling genomen.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Voltooide stap: </span>
-						Extra informatie opgevraagd
-					</summary>
-					<div class="status-details">
-						<p class="status-date"><time datetime="2026-05-04">6 mei 2026</time></p>
-						<p>Voor de beoordeling van uw zaak hebben wij aanvullende gegevens nodig. U vindt in uw Berichtenbox welke documenten wij vragen. Lever deze aan via de link in dat bericht.</p>
-					</div>
-				</details>
-			</li>
-			<li aria-current="step">
-				<details>
-					<summary>
-						<span class="visually-hidden">Huidige stap: </span>
-						Extra informatie ontvangen
-					</summary>
-					<div class="feedback feedback-warning">
-						{% include "icon-feedback-warning.njk" %}
-						<div>
-							<p>Wij hebben de gevraagde aanvullende gegevens nog niet van u ontvangen.</p>
-						</div>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>
-						<span class="visually-hidden">Volgende stap: </span>
-						Besluit verwacht
-					</summary>
-					<div class="status-details">
-						<p>Nadat wij de gevraagde aanvullende gegevens hebben ontvangen kunnen wij een indicatie geven wanneer een besluit te verwachten is.</p>
-					</div>
-				</details>
-			</li>
-		</ol>
+		<section role="tabpanel" aria-labelledby="tab-lopende-zaken-overzicht">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Organisatie</th>
+						<th scope="col">Onderwerp</th>
+						<th scope="col">Datum laatste wijziging</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Gemeente Rotterdam</td>
+						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
+						<td><time datetime="2026-05-21">21 mei 2026</time></td>
+						<td>In behandeling genomen</td>
+					</tr>
+					<tr>
+						<td>Rijksdienst voor Ondernemend Nederland</td>
+						<td><a href="{{ '/moza/lopende-zaken/subsidie/' | url }}">Subsidie aangevraagd</a></td>
+						<td><time datetime="2026-03-19">19 maart 2026</time></td>
+						<td>Volledigheid gecontroleerd</td>
+					</tr>
+					<tr>
+						<td>Gemeente Rotterdam</td>
+						<td><a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a></td>
+						<td><time datetime="2026-05-06">6 mei 2026</time></td>
+						<td>
+							<div class="feedback feedback-warning"> {% include "icon-feedback-warning.njk" %}
+							<div>Extra informatie opgevraagd</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
 	</section>
 
 	<section class="card">

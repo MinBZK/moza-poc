@@ -16,7 +16,7 @@
 			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit">
 				<button class="account-switcher-toggle icon-label {% if '/moza/belang-' in page.url %}group-label-authorized{% else %}group-label-business{% endif %}" aria-expanded="false" aria-haspopup="true">
 					{% if '/moza/belang-' in page.url %}{% icon "/assets/icons/icon-belang.svg" %}{% else %}{% icon "/assets/icons/icon-werk.svg" %}{% endif %}
-					<span class="account-switcher-label"{% if '/moza/belang-' not in page.url %} data-profiel="initialen-bedrijf"{% endif %}>{% if '/moza/belang-vve/' in page.url %}Robin Vogel voor VvE Residentie Parkzicht{% elif '/moza/belang-tuin/' in page.url %}Robin Vogel voor Volkstuinvereniging De Groene Long{% elif '/moza/belang-winter/' in page.url %}Robin Vogel voor Familiebedrijf Winter{% else %}Robin Vogel van Bloom B.V.{% endif %}</span>
+					<span{% if '/moza/belang-' not in page.url %} data-profiel="initialen-bedrijf"{% endif %}>{% if '/moza/belang-vve/' in page.url %}Robin Vogel voor VvE Residentie Parkzicht{% elif '/moza/belang-tuin/' in page.url %}Robin Vogel voor Volkstuinvereniging De Groene Long{% elif '/moza/belang-winter/' in page.url %}Robin Vogel voor Familiebedrijf Winter{% else %}Robin Vogel van Bloom B.V.{% endif %}</span>
 				</button>
 				{% include "account-switcher-menu.njk" %}
 			</div>

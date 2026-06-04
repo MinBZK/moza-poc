@@ -22,7 +22,7 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 	<section class="card tabs">
 		{% include "berichtenbox-tabs.njk" %}
 
-		<section role="tabpanel" id="berichtenbox-inbox" class="berichtenbox-layout" aria-labelledby="tab-berichtenbox-inbox">
+		<section role="tabpanel" id="berichtenbox-inbox" aria-labelledby="tab-berichtenbox-inbox">
 			<section class="berichtenbox-content">
 				<div data-berichtenbox-toolbar>
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ berichtenboxData.berichten | length }}</b> berichten uit <b data-berichtenbox-sources>{{ berichtenboxData.aantalMagazijnen }}</b> bronnen, <b data-berichtenbox-counter-unread>{{ berichtenboxData.berichten | selectattr("isOngelezen") | length }}</b> ongelezen berichten.</p>
@@ -41,7 +41,7 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
-				<table class="data-overview" data-berichtenbox-list>
+				<table data-berichtenbox-list>
 					<thead>
 						<tr>
 							<th scope="col">Afzender</th>
