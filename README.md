@@ -112,50 +112,47 @@ Bij het gebruik van `npm run dev` worden design tokens automatisch opnieuw gebou
 
 ---
 
-## Digitale Assistent (backend)
+## Digitale Assistent
 
-De [Digitale Assistent](services/README.md) draait op een Python-host (FastAPI) die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI.
+De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assistent.html` + `assets/javascript/digitale-assistent.js`). De **backend** — een FastAPI-host die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI — leeft in een eigen repo en draait standalone:
 
-### Lokaal draaien geïntegreerd via `npm run dev`
+[![backend: moza-poc-digitale-assistent](https://img.shields.io/badge/backend-moza--poc--digitale--assistent-blue?logo=github)](https://github.com/MinBZK/moza-poc-digitale-assistent)
 
-`npm run dev` start drie processen tegelijk via `concurrently`:
+→ **<https://github.com/MinBZK/moza-poc-digitale-assistent>**
 
-- **eleventy**; `eleventy --watch`, herbouwt `_site/` bij elke wijziging
-- **tokens**; chokidar-watcher die Style Dictionary triggert bij `tokens/tokens.json`
-- **backend**; `python api.py` in `services/host/`, serveert de API én de gebouwde `_site/` op dezelfde poort
+### Verbinden met de backend
 
-Doordat de backend ook de statische site serveert is er één origin: geen CORS-gedoe, geen aparte `--serve` van Eleventy. De poort wordt gelezen uit `services/host/.env` (`VLAM_PORT`, standaard `8001` in deze setup omdat poort `8000` op macOS vaak door `pinniped` wordt gebruikt).
+In productie draait alles achter **één origin**: de nginx van de frontend **proxyt** de chat-endpoints (`/chat`, `/chat/stream`, `/health`, `/tools`) intern naar de backend. De browser praat dus alleen met de frontend-origin — **geen CORS nodig**, en de backend hoeft niet publiek te zijn. Twee instellingen:
 
-De Digitale Assistent is dan bereikbaar op [`localhost:8001/moza/digitale-assistent/`](http://localhost:8001/moza/digitale-assistent/).
+| Variabele | Waar | Betekenis |
+| --------- | ---- | --------- |
+| `MOZA_CHAT_API` | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg. |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
-> **Let op: geen hot-reload:** Eleventy draait in `--watch` (alleen rebuild, geen BrowserSync). Bij wijzigingen moet je de browser handmatig verversen. Doe eenmalig `npm run build` voordat je `npm run dev` start, zodat `_site/` bestaat als de backend mount.
+**Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
-### Lokaal draaien met `uv` (alleen backend)
+1. `npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
+2. Start de backend (FastAPI, poort `8000`) volgens de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent).
+3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080`.
 
-Als alternatief, alleen de host zonder Eleventy-watcher:
+> ⚠️ **Preview-deploys (`pr<nr>`):** het backend-component `dabackend` draait alleen in de gedeelde deployments (`poc`, gebruikersonderzoek), niet in per-PR previews. In een PR-preview is er dus geen backend en werkt de chat niet, tenzij `dabackend` aan die deployment wordt toegevoegd.
 
-``` bash
-cd services/host
-uv run --with-requirements requirements.txt \
-  uvicorn api:app --host 0.0.0.0 --port 8090
-```
+> Voor losse demo's van de CLI-tools (`kvk-cli`, `koop-cli`, …) gebruik je de backend-repo; die bevat de standalone bash-tools.
 
 ### API-sleutels
 
-API-sleutels kunnen op twee manieren worden gezet:
+Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd (de proxy laat die headers door). Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys.
 
-- via `services/host/.env` (zie `services/host/.env.example`)
-- via het feature-flags paneel rechtsonder in de site, deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header meegestuurd en overrulen de `.env`
-
-UI-keys werken alleen als `ALLOW_API_KEY_OVERRIDE=true` in `services/host/.env`. Lege UI-velden vallen automatisch terug op de `.env`-keys.
+> Let op: een **Claude**-sleutel uit de UI werkt zelfstandig. Voor **VLAM** vraagt de UI alleen de sleutel, maar VLAM heeft ook `VLAM_BASE_URL` + `VLAM_MODEL_ID` nodig — die moeten server-side op de backend staan. Het eenvoudigst is om de server-side keys op de backend-deployment te zetten, dan werkt de chat voor iedereen zonder iets in te vullen.
 
 ### Containerisatie
 
-De `container/Containerfile` bouwt een single-image deployment: een Node-builder genereert de Eleventy-site, een Python-release-image installeert de host-dependencies en serveert alles via `uvicorn` op poort 8080. Dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD).
+De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een **nginx**-image serveert die op poort 8080 én doet de **same-origin reverse proxy** naar de backend (zie [Verbinden met de backend](#verbinden-met-de-backend)). De proxy-config (`container/default.conf.template`) wordt bij container-start gerenderd met `envsubst`; `BACKEND_ORIGIN` (runtime env, default `http://dabackend:8000`) bepaalt de upstream, met runtime-DNS-resolutie zodat nginx ook start als de backend nog niet up is. Dezelfde image (non-root, poort 8080) wordt gebruikt voor preview- en productiedeploys (ZAD).
 
 ``` bash
 docker build -f container/Containerfile -t moza .
-docker run --rm -p 8080:8080 --env-file services/host/.env moza
+# wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
+docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
 
 ---
@@ -203,7 +200,7 @@ npm install
 
 | Script | Commando | Beschrijving |
 | ------ | -------- | ------------ |
-| `npm run dev` | Eleventy watch + token watcher + FastAPI-backend | Alle drie parallel. Backend serveert `_site/` én de chat-API op dezelfde poort (`VLAM_PORT` uit `services/host/.env`, default `8001`). Geen hot-reload, browser handmatig verversen. |
+| `npm run dev` | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
 | `npm run build` | Tokens + Eleventy | Volledige productie-build |
 | `npm run tokens` | Alleen Style Dictionary | Handmatig tokens bouwen |
 | `npm run storybook` | Storybook dev server | Componentenbibliotheek lokaal bekijken |
@@ -223,13 +220,9 @@ npm install
     📁 icons                iconen
     📁 images               afbeeldingen
     📁 javascript           interactielogica per pagina-type (personas, content-interactions, berichtenbox, etc.)
-📂 container                Containerfile voor de gebundelde deployment (site + host)
+📂 container                Containerfile + nginx-config voor de statische site-deployment
 📂 mobu                     prototype voor MijnOverheid Burger
 📂 moza                     prototype voor MijnOverheid Zakelijk, gebaseerd op deze omgeving
-📂 services                 Digitale Assistent: FastAPI-host, MCP-servers en CLI-tools
-    📁 host                 FastAPI-host die statische site én chat-API serveert
-    📁 mcp                  MCP-servers (kvk, koop, regelrecht, rvo)
-    📁 cli                  Bash-CLI's als alternatief transport
 📂 stories                  'stories' om componenten weer te geven in Storybook
 📂 style
     📄 _reset.css           cross-browser stijl normalisatie

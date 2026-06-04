@@ -1,3 +1,4 @@
+# 1) Bouw de statische Eleventy-site (inclusief Storybook)
 FROM node:20-alpine AS site_builder
 
 WORKDIR /app
@@ -5,36 +6,34 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN cd style-dictionary && npm ci && npm run build
+
+# Backend-URL voor de chat-frontend (instelbaar per omgeving):
+#   leeg ("")  = relatief / zelfde origin (reverse proxy)  -- default
+#   https://…  = expliciete backend-URL (cross-origin; vereist CORS in de backend)
+ARG MOZA_CHAT_API=""
+ENV MOZA_CHAT_API=$MOZA_CHAT_API
 RUN npx @11ty/eleventy && ls -d _site
 RUN npx storybook build -o _site/storybook
 
 
-FROM python:3.12-slim
+# 2) Serveer de statische site via nginx + same-origin reverse proxy
+#    (frontend-only, non-root, poort 8080)
+FROM nginxinc/nginx-unprivileged:alpine
 
-WORKDIR /app
+# /chat, /chat/stream, /health en /tools worden intern naar de backend geproxyd.
+# BACKEND_ORIGIN is een RUNTIME env-var: zet 'm op het ZAD-component `proef` via de
+# ZAD-UI (de zad-actions/deploy-action kan geen runtime-env zetten). Default = het
+# interne cluster-adres van de backend.
+#  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
+#    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
+#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot deze twee vars, zodat nginx-eigen
+#    variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven.
+# De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
+ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+    NGINX_ENVSUBST_FILTER='^(BACKEND_ORIGIN|NGINX_LOCAL_RESOLVERS)$'
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends bash jq curl \
-    && rm -rf /var/lib/apt/lists/*
+COPY container/default.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=site_builder /app/_site /usr/share/nginx/html
 
-COPY services/host/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-COPY services /app/services
-COPY --from=site_builder /app/_site /app/_site
-
-RUN adduser --disabled-password --gecos "" --uid 1001 app \
-    && chown -R app:app /app
-USER app
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/services/host \
-    STATIC_DIR=/app/_site \
-    VLAM_HOST=0.0.0.0 \
-    VLAM_PORT=8080 \
-    ALLOW_API_KEY_OVERRIDE=true
-
-WORKDIR /app/services/host
 EXPOSE 8080
-
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8080"]

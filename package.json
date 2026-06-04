@@ -3,7 +3,7 @@
 	"private": true,
 	"scripts": {
 		"build": "cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
-		"dev": "concurrently --names \"eleventy,tokens,backend\" -c \"cyan,magenta,yellow\" \"npx @11ty/eleventy --watch\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\" \"cd services/host && python api.py\"",
+		"dev": "concurrently --names \"eleventy,tokens\" -c \"cyan,magenta\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\"",
 		"tokens": "cd style-dictionary && npm run build",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build -o _site/storybook",
