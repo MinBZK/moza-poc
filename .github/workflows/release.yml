@@ -94,4 +94,3 @@ jobs:
           component: proef
           image: ${{ needs.build.outputs.image }}
           wait-for-ready: true
-          timeout: 1200
