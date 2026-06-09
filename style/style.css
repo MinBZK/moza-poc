@@ -365,6 +365,7 @@ button, [type="date"], [type="datetime-local"], [type="email"], [type="month"], 
 	border: var(--toepassing-border-width-md) solid var(--toepassing-color-interactive-default-border);
 	border-radius: var(--toepassing-border-radius-sm);
 	font: inherit;
+	line-height: unset;
 	min-block-size: var(--toepassing-pointer-target-min-size);
 	min-inline-size: var(--toepassing-pointer-target-min-size);
 	padding-block: var(--toepassing-space-padding-sm);
@@ -574,8 +575,12 @@ button, label, select, summary, [type="checkbox"], [type="checkbox"] {
 /* -- KNOPPEN -- */
 
 button, a.btn, a.btn-cta {
+	align-items: center; /* Verticaal centreren: <a> top-aligned anders tekst hoger dan in <button> */
 	background: var(--toepassing-color-interactive-default-background);
 	color: var(--toepassing-color-text-inverse);
+	display: inline-flex;
+	justify-content: center;
+	text-decoration: none;
 	transition: var(--toepassing-transition-default);
 	@container (max-inline-size: 280px) {
 		inline-size: 100%;
@@ -588,6 +593,7 @@ button, a.btn, a.btn-cta {
 		background: var(--toepassing-color-interactive-default-surface);
 		border-color: var(--toepassing-color-interactive-default-border);
 		color: var(--toepassing-color-interactive-default-text);
+		text-decoration: none;
 	}
 	&:hover, &:focus-visible {
 		background: var(--toepassing-color-interactive-hover-background);
@@ -612,10 +618,6 @@ button, a.btn, a.btn-cta {
 			border-color: var(--toepassing-color-interactive-active-border);
 		}
 	}
-}
-a.btn-cta {
-	display: inline-block;
-	text-decoration: none;
 }
 
 /* Actiegroep (kolom op mobiel, rij op desktop) */
@@ -1044,8 +1046,6 @@ caption {
 		font-size: var(--toepassing-text-size-title-xl);
 	}
 	a:not(.btn-cta) {
-		font: var(--toepassing-text-paragraph-default);
-		text-decoration: none;
 		&:hover {
 			h3, h4 {
 				color: var(--toepassing-color-interactive-hover-text);
@@ -1269,7 +1269,7 @@ dd .feedback {
 	a {
 		color: var(--toepassing-color-text-subtle-2);
 	}
-	[aria-selected="true"] {
+	[aria-current="page"] {
 		color: var(--toepassing-color-interactive-default-text);
 	}
 }
@@ -1653,7 +1653,7 @@ dd .feedback {
 }
 
 /* Tab interface */
-[role="tablist"] {
+.tablist {
 	border-block-end: var(--toepassing-border-tabs-tab-inactive);
 	flex-direction: row;
 	a {
@@ -1671,7 +1671,7 @@ dd .feedback {
 			vertical-align: text-top;
 		}
 	}
-	[aria-selected="true"] {
+	[aria-current="page"] {
 		background: var(--toepassing-color-interactive-alternate-selected-background);
 		border-block-end: var(--toepassing-border-tabs-tab-selected);
 	}

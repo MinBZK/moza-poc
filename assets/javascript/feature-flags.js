@@ -69,11 +69,11 @@ function applyFeatureFlags() {
 			el.hidden = !enabled;
 		}
 	});
-	// Wijs inloglinks naar Ondernemersplein als de Inlogflow-flag aan staat
+	// Wijs inloglinks naar de inlogpagina als de Inlogflow-flag aan staat
 	const inlogflowAan = isFeatureEnabled("Inlogflow");
 	document.querySelectorAll("[data-inlogflow-link]").forEach((el) => {
 		if (inlogflowAan) {
-			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/moza/ondernemersplein/";
+			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/inloggen/";
 		}
 	});
 }

@@ -51,7 +51,6 @@ module.exports = function (eleventyConfig) {
     // Statische bestanden kopiëren naar _site
     eleventyConfig.addPassthroughCopy("assets");
     eleventyConfig.addPassthroughCopy("style");
-    eleventyConfig.addPassthroughCopy("moza/ondernemersplein/*.png");
     eleventyConfig.addPassthroughCopy("mailbox/favicon");
     eleventyConfig.addPassthroughCopy("mailbox/styles.css");
 

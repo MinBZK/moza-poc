@@ -13,11 +13,11 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 	</nav>
 
 	<h1>Lopende zaken</h1>
-	
+
 	<section class="card tabs">
 		{% include "lopende-zaken-tabs.njk" %}
 
-		<section role="tabpanel" aria-labelledby="tab-lopende-zaken-overzicht">
+		<section aria-label="Lopende zaken">
 			<table>
 				<thead>
 					<tr>
@@ -45,8 +45,10 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 						<td><a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a></td>
 						<td><time datetime="2026-05-06">6 mei 2026</time></td>
 						<td>
-							<div class="feedback feedback-warning"> {% include "icon-feedback-warning.njk" %}
-							<div>Extra informatie opgevraagd</div>
+							<div class="feedback feedback-warning">
+								{% include "icon-feedback-warning.njk" %}
+								Extra informatie opgevraagd
+							</div>
 						</td>
 					</tr>
 				</tbody>
