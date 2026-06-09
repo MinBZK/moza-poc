@@ -2136,6 +2136,13 @@ h1, h2, h3, h4, h5, h6, a, button {
 				grid-column: 3;
 			}
 		}
+		a {
+			svg {
+				block-size: var(--toepassing-size-icon-md);
+				margin-inline-end: var(--toepassing-space-margin-3xs);
+				vertical-align: text-bottom;
+			}
+		}
 	}
 	.login-own-credentials {
 		margin-block: var(--toepassing-space-margin-md);
