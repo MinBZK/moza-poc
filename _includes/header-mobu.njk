@@ -12,7 +12,7 @@
 	<div class="page-head">
 		<span class="page-title">MijnOverheid</span>
 		<div class="user-menu">
-			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit">
+			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit" data-feature-default="off">
 				<button class="account-switcher-toggle icon-label {% if '/mobu/namens-' in page.url %}group-label-authorized{% else %}group-label-private{% endif %}" aria-expanded="false" aria-haspopup="true">
 					{% if '/mobu/namens-' in page.url %}{% icon "/assets/icons/icon-vertegenwoordiging.svg" %}{% else %}{% include "icon-persoon.njk" %}{% endif %}
 					<span>{% if '/mobu/namens-mantelzorg/' in page.url %}Robin Vogel voor Anne Vogel-de Groot{% elif '/mobu/namens-kind/' in page.url %}Robin Vogel voor Sofia René Vogel{% else %}Robin Vogel{% endif %}</span>

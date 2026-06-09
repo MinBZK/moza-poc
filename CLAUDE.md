@@ -48,8 +48,9 @@ MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy e
 ### Notatie
 
 - Datums: dag maandnaam jaar (12 februari 2018), volledige maandnaam
-- Gedachtestreep (—) voor scheiding: "19 februari 2026 — De Stationsweg is afgesloten."
-- Typografische aanhalingstekens in lopende tekst: "dubbel" en 'enkel', ook in samentrekkingen (MKB'er, ZZP'er, komma's)
+- Datum gevolgd door een beschrijving: scheid met een dubbele punt — "19 februari 2026: De Stationsweg is afgesloten."
+- Scheiding in lopende tekst: standaard de komma. Bevat de zin al komma’s waardoor die onoverzichtelijk wordt, gebruik dan een puntkomma (voor volledige, nauw samenhangende zinnen of komma-rijke opsommingen). De gedachtestreep (—) alleen als uiterste middel, voor extra nadruk op een ingevoegd of slot-zinsdeel
+- Typografische aanhalingstekens in lopende tekst: “dubbel” en ‘enkel’, ook in samentrekkingen (mkb’er, zzp’er, komma’s)
 - Rechte quotes alleen in code en HTML-attributen
 - Kopteksten als zelfstandige naamwoorden, geen punt aan het einde
 
