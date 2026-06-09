@@ -4,7 +4,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 
 {% include "side-nav-overheid.njk" %}
 
-<article>
+<article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
@@ -17,7 +17,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 	<section class="card chat-container">
 		<div class="feedback feedback-error" id="chat-offline" hidden>
 			{% icon "/assets/icons/icon-foutmelding.svg" %}
-			<div><p>Host niet bereikbaar: geen connectie met de bronnen.</p></div>
+			<div><p>De bronnen zijn nu niet bereikbaar. Probeer het later opnieuw.</p></div>
 		</div>
 		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
@@ -44,7 +44,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 		<form id="chat-form">
 			<label for="chat-input" class="visually-hidden">Uw vraag</label>
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
-			<button type="submit">Verstuur vraag</button>
+			<button type="submit">Vraag stellen</button>
 		</form>
 	</section>
 
@@ -72,7 +72,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 					<summary>
 						<h3>Worden mijn gegevens opgeslagen?</h3>
 					</summary>
-					<p>Uw gesprek wordt alleen voor de duur van uw sessie bewaard en daarna verwijderd. Er worden geen persoonsgegevens opgeslagen zonder uw toestemming.</p>
+					<p>Uw gesprek wordt alleen voor de duur van uw sessie bewaard en daarna gewist. Er worden geen persoonsgegevens opgeslagen zonder uw toestemming.</p>
 				</details>
 			</li>
 		</ul>

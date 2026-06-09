@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# MOZa rol-panel review — pre-commit hook (ADVISORY).
+#
+# Draait /moza-review (copywriter, toegankelijkheid, design-system, persona's)
+# op de staged wijzigingen via de Claude Code CLI en print de bevindingen.
+# Blokkeert de commit NOOIT — het is een meekijk-review, geen poortwachter.
+#
+# OPT-IN: draait alleen als MOZA_REVIEW=1 is gezet.
+#   Met review:   MOZA_REVIEW=1 git commit ...
+#   Zonder:       git commit ...        (hook doet niets)
+# Hook (de)activeren: git config core.hooksPath .githooks  /  git config --unset core.hooksPath
+#
+set -uo pipefail
+
+# 1. Opt-in: zonder MOZA_REVIEW=1 niets doen
+[ -n "${MOZA_REVIEW:-}" ] || exit 0
+
+# 2. Alleen draaien als er relevante MOZa-bestanden staged staan
+staged=$(git diff --cached --name-only --diff-filter=ACM -- \
+  moza/ mobu/ _includes/ style/ _data/ stories/ 2>/dev/null)
+[ -z "$staged" ] && exit 0
+
+# 3. Claude Code CLI nodig; ontbreekt die, sla over (commit gaat door)
+if ! command -v claude >/dev/null 2>&1; then
+  echo "moza-review: 'claude' CLI niet gevonden op PATH — review overgeslagen." >&2
+  exit 0
+fi
+
+echo "──────── MOZa rol-panel review (advisory) ────────"
+echo "Staged in scope:"
+echo "$staged" | sed 's/^/  • /'
+echo
+echo "Review draait (kan even duren)…"
+echo
+
+# 4. Headless review op de staged diff. Read-only; faalt het, dan advisory door.
+claude -p "/moza-review diff" 2>/dev/null \
+  || echo "moza-review: review kon niet voltooien (advisory — commit gaat door)."
+
+echo
+echo "──────── einde review — commit gaat door ────────"
+exit 0
