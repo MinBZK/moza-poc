@@ -21,23 +21,23 @@ layout: "base.njk"
 					<div>
 						<ul>
 							<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/prive/' | url }}">Inloggen <b>voor mezelf</b></a>
+								<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
 							</li>
 							<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/zakelijk/' | url }}">Inloggen <b>voor mijn onderneming</b></a>
+								<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
 							</li>
 							<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
-								<a href="#">Inloggen <b>met een machtiging</b></a>
+								<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
 							</li>
 							<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
 								<a href="#">
-									Inloggen <b>als wettelijke vertegenwoordiger</b>
+									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als wettelijke vertegenwoordiger</b>
 									<small>(bewindvoerder, curator of mentor)</small>
 								</a>
 							</li>
 							<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
 								<a href="#">
-									Inloggen <b>voor een kind onder de 12</b>
+									{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
 									<small>een kind onder 12 jaar heeft (meestal) geen eigen DigiD, de ouder/gezagsdrager regelt zaken namens het kind</small>
 								</a>
 							</li>
