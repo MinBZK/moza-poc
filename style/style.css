@@ -2169,6 +2169,9 @@ h1, h2, h3, h4, h5, h6, a, button {
 				margin-inline-start: auto;
 			}
 		}
+		a {
+			text-decoration: none;
+		}
 		img {
 			inline-size: var(--toepassing-size-icon-xl);
 			margin-inline-end: var(--toepassing-space-margin-2xs);
