@@ -1,0 +1,56 @@
+---
+title: "MijnOverheid: Persoonsgegevens — Paspoort en ID-kaart"
+permalink: "/mobu/persoonsgegevens/paspoort/"
+---
+
+{% include "side-nav-mobu.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/mobu/' | url }}">Home</a></li>
+			<li><a href="{{ '/mobu/identiteit/' | url }}">Identiteit</a></li>
+			<li><a href="{{ '/mobu/persoonsgegevens/' | url }}">Mijn Persoonsgegevens</a></li>
+			<li aria-current="page">Paspoort en ID-kaart</li>
+		</ol>
+	</nav>
+	<h1>Mijn Persoonsgegevens</h1>
+	<section class="card tabs">
+		{% include "persoonsgegevens-tabs.njk" %}
+
+		<section aria-label="Paspoort en ID-kaart">
+			<h2>Paspoort</h2>
+			<dl class="data-overview">
+				<div>
+					<dt>Documentnummer</dt>
+					<dd>NU1234567</dd>
+				</div>
+				<div>
+					<dt>Datum van afgifte</dt>
+					<dd>5 januari 2021</dd>
+				</div>
+				<div>
+					<dt>Geldig tot</dt>
+					<dd>5 januari 2031</dd>
+				</div>
+			</dl>
+
+			<h2>Identiteitskaart</h2>
+			<dl class="data-overview">
+				<div>
+					<dt>Documentnummer</dt>
+					<dd>IB9876543</dd>
+				</div>
+				<div>
+					<dt>Datum van afgifte</dt>
+					<dd>18 maart 2022</dd>
+				</div>
+				<div>
+					<dt>Geldig tot</dt>
+					<dd>18 maart 2032</dd>
+				</div>
+			</dl>
+			<p>Bron: <a href="https://www.rvig.nl/basisregister-reisdocumenten">Basisregister Reisdocumenten</a></p>
+		</section>
+	</section>
+</article>
