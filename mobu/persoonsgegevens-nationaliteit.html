@@ -10,23 +10,14 @@ permalink: "/mobu/persoonsgegevens/nationaliteit/"
 		<ol>
 			<li><a href="{{ '/mobu/' | url }}">Home</a></li>
 			<li><a href="{{ '/mobu/identiteit/' | url }}">Identiteit</a></li>
-			<li><a href="{{ '/mobu/persoonsgegevens/' | url }}">Mijn Persoonsgegevens</a></li>
-			<li aria-current="page">Nationaliteit</li>
+			<li aria-current="page">Mijn Persoonsgegevens</li>
 		</ol>
 	</nav>
 	<h1>Mijn Persoonsgegevens</h1>
+	{% set pgTab = "nationaliteit" %}
 	<section class="card tabs">
 		{% include "persoonsgegevens-tabs.njk" %}
-
-		<section aria-label="Nationaliteit">
-			<h2>Nationaliteit</h2>
-			<dl class="data-overview">
-				<div>
-					<dt>Nationaliteit</dt>
-					<dd>Nederlandse</dd>
-				</div>
-			</dl>
-			<p>Bron: <a href="https://www.rijksoverheid.nl/themas/overheid-en-democratie/privacy-en-persoonsgegevens/basisregistratie-personen-brp">Basisregistratie Personen (BRP)</a></p>
-		</section>
+		{% include "persoonsgegevens-content.njk" %}
 	</section>
+	{% include "persoonsgegevens-faq.njk" %}
 </article>

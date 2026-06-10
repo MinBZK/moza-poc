@@ -10,35 +10,14 @@ permalink: "/mobu/persoonsgegevens/familie/"
 		<ol>
 			<li><a href="{{ '/mobu/' | url }}">Home</a></li>
 			<li><a href="{{ '/mobu/identiteit/' | url }}">Identiteit</a></li>
-			<li><a href="{{ '/mobu/persoonsgegevens/' | url }}">Mijn Persoonsgegevens</a></li>
-			<li aria-current="page">Familie</li>
+			<li aria-current="page">Mijn Persoonsgegevens</li>
 		</ol>
 	</nav>
 	<h1>Mijn Persoonsgegevens</h1>
+	{% set pgTab = "familie" %}
 	<section class="card tabs">
 		{% include "persoonsgegevens-tabs.njk" %}
-
-		<section aria-label="Familie">
-			<h2>Familie</h2>
-			<dl class="data-overview">
-				<div>
-					<dt>Burgerlijke staat</dt>
-					<dd>Ongehuwd</dd>
-				</div>
-				<div>
-					<dt>Ouder 1</dt>
-					<dd>Maria Vogel</dd>
-				</div>
-				<div>
-					<dt>Ouder 2</dt>
-					<dd>Johan Vogel</dd>
-				</div>
-				<div>
-					<dt>Kinderen</dt>
-					<dd>Geen kinderen geregistreerd</dd>
-				</div>
-			</dl>
-			<p>Bron: <a href="https://www.rijksoverheid.nl/themas/overheid-en-democratie/privacy-en-persoonsgegevens/basisregistratie-personen-brp">Basisregistratie Personen (BRP)</a></p>
-		</section>
+		{% include "persoonsgegevens-content.njk" %}
 	</section>
+	{% include "persoonsgegevens-faq.njk" %}
 </article>

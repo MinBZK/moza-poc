@@ -10,47 +10,14 @@ permalink: "/mobu/persoonsgegevens/"
 		<ol>
 			<li><a href="{{ '/mobu/' | url }}">Home</a></li>
 			<li><a href="{{ '/mobu/identiteit/' | url }}">Identiteit</a></li>
-			<li><a href="{{ '/mobu/persoonsgegevens/' | url }}">Mijn Persoonsgegevens</a></li>
-			<li aria-current="page">Basisgegevens</li>
+			<li aria-current="page">Mijn Persoonsgegevens</li>
 		</ol>
 	</nav>
 	<h1>Mijn Persoonsgegevens</h1>
+	{% set pgTab = "basis" %}
 	<section class="card tabs">
 		{% include "persoonsgegevens-tabs.njk" %}
-
-		<section aria-label="Basisgegevens">
-			<h2>Basisgegevens</h2>
-			<dl class="data-overview">
-				<div>
-					<dt>Burgerservicenummer (BSN)</dt>
-					<dd>271049502</dd>
-				</div>
-				<div>
-					<dt>Voornamen</dt>
-					<dd>Robin</dd>
-				</div>
-				<div>
-					<dt>Achternaam</dt>
-					<dd>Vogel</dd>
-				</div>
-				<div>
-					<dt>Geboortedatum</dt>
-					<dd>14 maart 1984</dd>
-				</div>
-				<div>
-					<dt>Geboorteplaats</dt>
-					<dd>Rotterdam</dd>
-				</div>
-				<div>
-					<dt>Geboorteland</dt>
-					<dd>Nederland</dd>
-				</div>
-				<div>
-					<dt>Woonadres</dt>
-					<dd>Coolsingel 12, 3011 AG Rotterdam</dd>
-				</div>
-			</dl>
-			<p>Bron: <a href="https://www.rijksoverheid.nl/themas/overheid-en-democratie/privacy-en-persoonsgegevens/basisregistratie-personen-brp">Basisregistratie Personen (BRP)</a></p>
-		</section>
+		{% include "persoonsgegevens-content.njk" %}
 	</section>
+	{% include "persoonsgegevens-faq.njk" %}
 </article>
