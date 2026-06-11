@@ -383,4 +383,13 @@
 			submitting = false;
 		}
 	});
+
+	// Startvraag via URL-parameter (?vraag=…), bijvoorbeeld vanuit de
+	// notificatie op het dashboard. Vult het invoerveld en verstuurt direct,
+	// zodat het gesprek zonder extra klik begint.
+	var startvraag = new URLSearchParams(location.search).get("vraag");
+	if (startvraag && startvraag.trim()) {
+		input.value = startvraag.trim();
+		form.requestSubmit();
+	}
 })();

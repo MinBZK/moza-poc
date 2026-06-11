@@ -6,6 +6,30 @@ title: "MijnOverheid Zakelijk: Home"
 
 <article id="hoofd-inhoud">
 	<h1>Welkom <span data-profiel="voornaam">Robin</span> <span data-profiel="achternaam">Vogel</span></h1>
+
+	<section class="card" data-persona-toon="koffiezaak" hidden>
+		<h2>Informatieplicht energiebesparing</h2>
+		<div class="feedback feedback-info">
+			{% include "icon-feedback-info.njk" %}
+			<div>
+				<p>Binnenkort geldt de informatieplicht energiebesparing voor <span data-profiel="handelsnaam">Koffiezaak Noon</span>. Het meeste staat al voor u klaar.</p>
+			</div>
+		</div>
+		<p>Deze melding is gebaseerd op gegevens die de overheid al kent. U ziet precies welke bron is geraadpleegd:</p>
+		<dl class="data-overview">
+			<div>
+				<dt>Bedrijfsactiviteit</dt>
+				<dd>Cafés (SBI 56102) — geraadpleegd bij het KvK Handelsregister</dd>
+			</div>
+			<div>
+				<dt>Energieverbruik</dt>
+				<dd>Boven de drempel van 50.000 kWh elektriciteit per jaar — geraadpleegd bij uw netbeheerder</dd>
+			</div>
+		</dl>
+		<p>De digitale assistent zoekt de geldende maatregelen voor u op en helpt u de melding in één keer goed in te dienen. U hoeft niets zelf uit te zoeken en heeft geen adviseur nodig.</p>
+		<a class="btn-cta" href="{{ '/moza/digitale-assistent/' | url }}?vraag=Help%20mij%20met%20de%20informatieplicht%20energiebesparing%20voor%20mijn%20bedrijf">Start met de digitale assistent</a>
+	</section>
+
 	<h2>Actualiteiten</h2>
 	<div class="tiles">
 		<section class="card">

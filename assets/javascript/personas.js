@@ -39,6 +39,10 @@
  *
  * Bij een lege array wordt de container verborgen en, indien aanwezig, een
  * sibling <div data-profiel-leeg="sleutel" hidden> getoond als feedback-bericht.
+ *
+ * Elementen die alleen voor specifieke persona's bedoeld zijn, krijgen
+ * data-persona-toon="id" (meerdere id's gescheiden door spaties) plus het
+ * hidden-attribuut; dit script toont ze alleen bij de juiste actieve persona.
  */
 
 (function () {
@@ -251,6 +255,12 @@
 				leegMelding.hidden = items.length > 0;
 				container.hidden = items.length === 0;
 			}
+		});
+
+		// Toon elementen die alleen voor specifieke persona's bedoeld zijn.
+		document.querySelectorAll("[data-persona-toon]").forEach(function (el) {
+			var ids = el.getAttribute("data-persona-toon").split(/\s+/);
+			el.hidden = ids.indexOf(persona.id) === -1;
 		});
 
 		// Markeer de actieve persona (bv. in de accountwisselaar). Alleen in de

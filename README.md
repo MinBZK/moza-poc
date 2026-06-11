@@ -145,6 +145,14 @@ Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-fla
 
 > Let op: een **Claude**-sleutel uit de UI werkt zelfstandig. Voor **VLAM** vraagt de UI alleen de sleutel, maar VLAM heeft ook `VLAM_BASE_URL` + `VLAM_MODEL_ID` nodig — die moeten server-side op de backend staan. Het eenvoudigst is om de server-side keys op de backend-deployment te zetten, dan werkt de chat voor iedereen zonder iets in te vullen.
 
+### Demo: informatieplicht energiebesparing
+
+Voor de demo van de ideale flow van de informatieplicht energiebesparing (Dag van de Toekomst, 18 juni 2026) bevat het prototype de testpersona **Claudia van Dam**, eigenaar van **Koffiezaak Noon** in Rotterdam (KvK 85234567, eenmanszaak, SBI 56102 Cafés). Kies haar via het feature-flags-paneel rechtsonder (kopje "Persona's") of via `?persona=Horecaondernemer` in de URL.
+
+Bij Claudia toont het dashboard een notificatie over de informatieplicht energiebesparing (stap 0), met daarbij de basis van de melding: bedrijfsactiviteit (KvK Handelsregister) en energieverbruik boven de drempel (netbeheerder). De knop in de notificatie opent direct het assistent-gesprek met een startvraag (stap 1, via de URL-parameter `?vraag=…` op de assistent-pagina). De stappen daarna — verbruik raadplegen, toets, geldende maatregelen, indienen en bevestiging — doet de assistent in het gesprek zelf (backend).
+
+> ⚠️ **Backend herstarten bij persona-wissel.** De backend kent maar één actief KvK-nummer per draaiende instantie (beperking van de PoC, zie PDR-007 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). Voor de Claudia-flow moet de backend draaien met `DEMO_KVK_NUMMER=85234567` en daarna herstart zijn. Zonder die variabele antwoordt de assistent op basis van de bestaande persona Robin Vogel (Test BV Donald). Wissel je in de frontend van persona, herstart dan ook de backend met het bijpassende KvK-nummer.
+
 ### Containerisatie
 
 De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een **nginx**-image serveert die op poort 8080 én doet de **same-origin reverse proxy** naar de backend (zie [Verbinden met de backend](#verbinden-met-de-backend)). De proxy-config (`container/default.conf.template`) wordt bij container-start gerenderd met `envsubst`; `BACKEND_ORIGIN` (runtime env, default `http://dabackend:8000`) bepaalt de upstream, met runtime-DNS-resolutie zodat nginx ook start als de backend nog niet up is. Dezelfde image (non-root, poort 8080) wordt gebruikt voor preview- en productiedeploys (ZAD).
