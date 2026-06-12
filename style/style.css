@@ -351,6 +351,15 @@ li.option--confirmed {
 	}
 }
 
+/* Persona-wrappers zijn puur gedrag (personas.js): laat ze uit de layout
+   wegvallen zodat hun kinderen meedoen in de flex-gap van de omliggende kaart. */
+[data-persona-toon], [data-persona-verberg] {
+	display: contents;
+	&[hidden] {
+		display: none;
+	}
+}
+
 /* -- FORMULIEREN -- */
 
 fieldset {
@@ -645,8 +654,8 @@ a.btn-cta {
 	padding: 0;
 	&:hover, &:focus-visible, &:active {
 		background: inherit !important;
-		color: inherit !important;	
-	}	
+		color: inherit !important;
+	}
 }
 .icon-button {
 	display: flex;
@@ -1053,7 +1062,7 @@ caption {
 			}
 		}
 		/* Onzichtbare link die de hele card klikbaar maakt */
-		&:focus-visible .card-link {  
+		&:focus-visible .card-link {
 			outline: var(--toepassing-focus-outline);
 			outline-offset: var(--toepassing-focus-outline-offset-lg);
 		}
