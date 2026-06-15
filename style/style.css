@@ -1494,7 +1494,7 @@ dd .feedback {
 }
 
 /* Status-/takenoverzicht */
-.status-track {
+.status-track, .logging-track {
 	counter-reset: step;
 	gap: var(--toepassing-space-margin-sm);
 	list-style: none;
@@ -1631,6 +1631,7 @@ dd .feedback {
 		margin-block-start: var(--toepassing-space-margin-2xs);
 	}
 }
+
 
 /* Sub-stappen binnen een status-track */
 .status-track--sub {
