@@ -2163,14 +2163,8 @@ h1, h2, h3, h4, h5, h6, a, button {
 			font-size: var(--toepassing-text-size-body-lg);
 			font-weight: var(--toepassing-text-font-weight-bold);
 			margin: var(--toepassing-space-margin-xs);
-			&::after {
-				content: url("../assets/icons/icon-chevron.svg");
-				display: inline-block;
-				inline-size: var(--toepassing-size-icon-xs);
-				margin-inline-start: auto;
-			}
 		}
-		a {
+		a, a:hover h3 {
 			text-decoration: none;
 		}
 		img {
@@ -2180,6 +2174,21 @@ h1, h2, h3, h4, h5, h6, a, button {
 		&:hover {
 			border-color: var(--toepassing-color-interactive-hover-border);
 		}
+	}
+	.card-inloggen-digid {
+		h3::after {
+			content: url("../assets/icons/icon-chevron.svg");
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-start: auto;
+			transition: var(--toepassing-transition-transform);
+		}
+		&[open] h3::after {
+			transform: rotate(90deg);
+		}
+	}
+	.inloggen-eh-logo {
+		margin-inline-start: auto;
 	}
 	details {
 		border: 0;
