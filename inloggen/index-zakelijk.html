@@ -1,13 +1,13 @@
 ---
 title: "Inloggen bij MijnOverheid Zakelijk"
-permalink: "/inloggen/"
+permalink: "/inloggen/zakelijk/"
 footerType: "none"
 bodyClass: "page-login"
 layout: "base.njk"
 ---
 
 <article id="hoofd-inhoud">
-	<h1>Inloggen bij <b>MijnOverheid</b></h1>
+	<h1>Inloggen bij <b>MijnOverheid Zakelijk</b></h1>
 	<p>Kies een inlogmiddel. <a href="#">Hoe kies ik een inlogmiddel?</a></p>
 
 	<div class="login-selection">
@@ -21,24 +21,14 @@ layout: "base.njk"
 					<div>
 						<ul>
 							<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
-							</li>
-							<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
+								<a href="{{ '/inloggen/digid/zakelijk/' | url }}"><!--{% icon "/assets/icons/icon-persoon.svg" %}--> Inloggen voor mijn <b>eigen onderneming</b></a>
 							</li>
 							<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
-								<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
+								<a href="#"><!--{% icon "/assets/icons/icon-vertegenwoordiging.svg" %}--> Inloggen met een <b>machtiging voor een andere onderneming</b></a>
 							</li>
 							<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
 								<a href="#">
-									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als wettelijke vertegenwoordiger</b>
-									<small>(bewindvoerder, curator of mentor)</small>
-								</a>
-							</li>
-							<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
-								<a href="#">
-									{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
-									<small>een kind onder 12 jaar heeft (meestal) geen eigen DigiD, de ouder/gezagsdrager regelt zaken namens het kind</small>
+									<!--{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %}--> Inloggen <b>als bewindvoerder of curator</b>
 								</a>
 							</li>
 						</ul>
@@ -50,14 +40,14 @@ layout: "base.njk"
 						</div> -->
 					</div>
 				</details>
-				<div class="card">
+				<!-- <div class="card">
 					<a href="#">
 						<h3>
 							<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
 							eHerkenning
 						</h3>
 					</a>
-				</div>
+				</div> -->
 				<div class="card">
 					<a href="#">
 						<h3>
@@ -66,15 +56,11 @@ layout: "base.njk"
 						</h3>
 					</a>
 				</div>
-			</section>
-			<section class="login-wallet">
-				<h2>EDI-wallets</h2>
-				<small>Een app op uw telefoon waarmee u uw digitale identiteit bewaart en zelf kiest welke gegevens u deelt. <a href="https://www.digitaleoverheid.nl/overzicht-van-alle-onderwerpen/identiteit/id-wallet/">Meer informatie over EDI-wallets</a>.</small>
 				<div class="card">
 					<a href="#">
 						<h3>
-							<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
-							Digidentity
+							<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
+							Cleverbase
 						</h3>
 					</a>
 				</div>
@@ -89,8 +75,54 @@ layout: "base.njk"
 				<div class="card">
 					<a href="#">
 						<h3>
-							<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
-							Cleverbase
+							<img src="/assets/inloggen/images/logo-z-login.svg" alt="" />
+							Z login
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-quovadis.svg" alt="" />
+							QuoVadis
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-kpn.svg" alt="" />
+							KPN
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-we-id.svg" alt="" />
+							We-ID
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-reconi.png" alt="" />
+							Reconi
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
+							Digidentity
+							<img src="/assets/inloggen/images/logo-eh.svg" class="inloggen-eh-logo" alt="" />
 						</h3>
 					</a>
 				</div>
