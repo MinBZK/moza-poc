@@ -160,6 +160,12 @@
 		} catch (e) {
 			/* localStorage niet toegankelijk */
 		}
+		// Laat lopende-zaken.js de side-nav badge direct bijwerken.
+		try {
+			window.dispatchEvent(new Event("zaken-changed"));
+		} catch (e) {
+			/* Event niet ondersteund */
+		}
 		return zaak;
 	}
 

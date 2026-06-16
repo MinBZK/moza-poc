@@ -13,7 +13,7 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 	</nav>
 
 	<h1>Lopende zaken</h1>
-	
+
 	<section class="card tabs">
 		{% include "lopende-zaken-tabs.njk" %}
 
@@ -27,7 +27,7 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 						<th>Status</th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody id="zaken-overzicht">
 					<tr>
 						<td>Gemeente Rotterdam</td>
 						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
