@@ -1494,6 +1494,12 @@ dd .feedback {
 }
 
 /* Status-/takenoverzicht */
+[aria-label="Lopende zaken"] {
+	td img {
+		inline-size: var(--toepassing-size-icon-sm);
+		vertical-align: text-top;
+	}
+}
 .status-track {
 	counter-reset: step;
 	gap: var(--toepassing-space-margin-sm);
