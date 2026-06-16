@@ -232,6 +232,13 @@
 			.replace(/"/g, "&quot;");
 	}
 
+	// Decoratief stap-icoon uit de bestaande huisstijl-set, naast de kop van elke
+	// stap-kaart: delen (gegevensdeling), toetsen (wet), indienen (lopende-zaken).
+	var ASSET_PREFIX = typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "";
+	function stapIcoon(naam) {
+		return '<img class="stap-icoon" alt="" src="' + ASSET_PREFIX + "/assets/icons/icon-" + naam + '.svg">';
+	}
+
 	// Herkent het netbeheerder__verbruik tool-event met een Wallet-credential.
 	// Retourneert { data, provenance } of null als dit geen Wallet-verbruik-event is.
 	function walletPayload(payload) {
@@ -268,7 +275,7 @@
 		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		el.innerHTML = '<h3 tabindex="-1">Energieverbruik (uit je Wallet)</h3>' + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Wallet</p>';
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Wallet</p>';
 		return el;
 	}
 
@@ -280,7 +287,7 @@
 
 		var vraag = document.createElement("div");
 		vraag.className = "wallet-consent";
-		vraag.innerHTML = "<h3>Deelverzoek uit je Wallet</h3>" + "<p>De assistent wil je energieverbruik-attestatie uit je Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>" + '<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		vraag.innerHTML = "<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit je Wallet</h3>" + "<p>De assistent wil je energieverbruik-attestatie uit je Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>" + '<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
 		card.appendChild(vraag);
 
 		card.appendChild(buildWalletEnergie(data, provenance));

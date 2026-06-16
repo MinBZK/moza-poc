@@ -1553,6 +1553,13 @@ dd .feedback {
 	font: var(--toepassing-text-smalltext);
 	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
 }
+/* Decoratief stap-icoon naast de kop van een Wallet-kaart */
+.stap-icoon {
+	block-size: var(--toepassing-size-icon-md);
+	inline-size: var(--toepassing-size-icon-md);
+	margin-inline-end: var(--toepassing-space-padding-2xs);
+	vertical-align: text-bottom;
+}
 
 /* -- OVERIGE COMPONENTEN -- */
 
