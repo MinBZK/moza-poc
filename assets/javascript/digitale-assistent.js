@@ -30,12 +30,34 @@
 	var submitting = false;
 	var initialMessages = messages.innerHTML;
 
-	var SERVER_LABELS = {
-		kvk: "KvK Handelsregister",
-		koop: "KOOP Regelingenbank",
+	// Twee conceptueel gescheiden categorieën:
+	//  - capabilities (wat de assistent kan dóen) blijven inline bij de chat;
+	//  - databronnen (waar de data over u vandaan komt) staan in een eigen paneel
+	//    onder de chat.
+	var CAPABILITY_LABELS = {
 		regelrecht: "RegelRecht",
 		rvo: "RVO",
 	};
+
+	var DATA_SOURCE_LABELS = {
+		kvk: "KvK Handelsregister",
+		koop: "KOOP Regelingenbank",
+		netbeheerder: "Uw Wallet",
+	};
+
+	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
+	// gebruiker wordt getoond maar als leesbaar label.
+	var ALL_LABELS = Object.assign({}, DATA_SOURCE_LABELS, CAPABILITY_LABELS);
+
+	function friendlyTool(message) {
+		if (!message) return "";
+		if (message.indexOf("__") === -1) return message; // al leesbaar
+		var delen = message.split("__");
+		var server = delen.shift();
+		var rest = delen.join(" ").replace(/_/g, " ").trim();
+		var label = ALL_LABELS[server] || server;
+		return rest ? label + ": " + rest : label;
+	}
 
 	var ICON_FOUTMELDING = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">' + '<circle cx="12" cy="12" r="10.5" fill="currentColor"/>' + '<path class="icon-color-inverse" d="M15.12 7.71 12 10.48 8.88 7.71a.858.858 0 0 0-1.15.02c-.3.32-.31.81-.02 1.14L10.48 12l-2.77 3.12c-.29.33-.29.83.02 1.14.32.3.81.31 1.14.02L12 13.52l3.12 2.77c.33.29.83.28 1.14-.02.3-.32.31-.81.02-1.14L13.52 12l2.77-3.12c.29-.33.29-.83-.02-1.14a.848.848 0 0 0-1.15-.03M12 12.01l-.01-.01.01-.01.01-.01.01.01.01.01-.03.01z"/>' + "</svg>";
 
@@ -209,28 +231,45 @@
 		var transport = getTransport();
 		var sources = transport === "cli" ? serverStatus.cli : serverStatus.servers;
 		if (!sources) sources = {};
-		var keys = Object.keys(sources);
-		if (keys.length === 0) {
-			statusEl.innerHTML = '<p class="chat-status-warning">Geen bronnen verbonden; de assistent antwoordt op basis van eigen kennis.</p>';
-			return;
-		}
-		var items = keys.map(function (key) {
-			var connected = sources[key] === "verbonden";
-			var label = SERVER_LABELS[key] || key;
-			var dot = connected ? "connected" : "disconnected";
-			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
-			return '<li class="chat-status-' + dot + '">' + icon + label + "</li>";
+		// In de chat tonen we alleen de capabilities (wat de assistent kan doen).
+		var keys = Object.keys(sources).filter(function (key) {
+			return CAPABILITY_LABELS[key];
 		});
-		statusEl.innerHTML = '<p>Verbonden bronnen:</p><ul class="list-plain">' + items.join("") + "</ul>";
+		if (keys.length === 0) {
+			statusEl.innerHTML = '<p class="chat-status-warning">Geen mogelijkheden verbonden; de assistent antwoordt op basis van eigen kennis.</p>';
+		} else {
+			var items = keys.map(function (key) {
+				var connected = sources[key] === "verbonden";
+				var dot = connected ? "connected" : "disconnected";
+				var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
+				return '<li class="chat-status-' + dot + '">' + icon + CAPABILITY_LABELS[key] + "</li>";
+			});
+			statusEl.innerHTML = '<p>Wat de assistent voor u kan doen:</p><ul class="list-plain">' + items.join("") + "</ul>";
+		}
+		// Databronnen staan in een eigen paneel; status altijd uit servers (niet cli).
+		updateDataSources(serverStatus.servers);
+	}
+
+	// Werkt het paneel "Uw gegevensbronnen" (onder de chat) bij met de live status.
+	function updateDataSources(servers) {
+		document.querySelectorAll("[data-databron]").forEach(function (card) {
+			var key = card.getAttribute("data-databron");
+			var el = card.querySelector("[data-databron-status]");
+			if (!el) return;
+			var verbonden = !!(servers && servers[key] === "verbonden");
+			el.className = "databron-status " + (verbonden ? "connected" : "disconnected");
+			el.innerHTML = (verbonden ? ICON_SUCCES : ICON_FOUTMELDING) + (verbonden ? "Verbonden" : "Niet verbonden");
+		});
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
-		var items = Object.keys(SERVER_LABELS).map(function (key) {
-			return '<li class="chat-status-disconnected">' + ICON_FOUTMELDING + SERVER_LABELS[key] + "</li>";
+		var items = Object.keys(CAPABILITY_LABELS).map(function (key) {
+			return '<li class="chat-status-disconnected">' + ICON_FOUTMELDING + CAPABILITY_LABELS[key] + "</li>";
 		});
 		statusEl.innerHTML = '<ul class="list-plain">' + items.join("") + "</ul>";
+		updateDataSources(null);
 	}
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
@@ -369,9 +408,9 @@
 					var payload = JSON.parse(dataLine);
 
 					if (eventType === "status") {
-						showThinking(payload.message);
+						showThinking(friendlyTool(payload.message));
 					} else if (eventType === "tool") {
-						showThinking(payload.message + "...");
+						showThinking(friendlyTool(payload.message) + "...");
 					} else if (eventType === "case") {
 						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
 						addZaak(payload);

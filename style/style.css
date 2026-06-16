@@ -1355,6 +1355,29 @@ dd .feedback {
 	color: var(--toepassing-color-feedback-warning-border);
 	font-style: italic;
 }
+/* Paneel "Uw gegevensbronnen" onder de chat: databronnen, los van de capabilities */
+.gegevensbronnen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-xs);
+}
+.databron-status {
+	align-items: center;
+	color: var(--toepassing-color-text-subtle-1);
+	display: flex;
+	font: var(--toepassing-text-smalltext);
+	gap: var(--toepassing-space-padding-2xs);
+}
+.databron-status svg {
+	block-size: var(--toepassing-size-icon-sm);
+	inline-size: var(--toepassing-size-icon-sm);
+}
+.databron-status.connected svg {
+	color: var(--toepassing-color-feedback-success-icon);
+}
+.databron-status.disconnected svg {
+	color: var(--toepassing-color-feedback-error-icon);
+}
 .chat-messages {
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
