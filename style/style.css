@@ -1463,6 +1463,96 @@ dd .feedback {
 	min-block-size: 6rem;
 }
 
+/* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
+.wallet-card {
+	background: var(--toepassing-color-background-default);
+	border: var(--toepassing-border-default);
+	border-radius: var(--toepassing-border-radius-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-padding-sm);
+	padding: var(--toepassing-space-padding-md);
+}
+.wallet-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
+}
+.wallet-uitgever {
+	align-items: center;
+	color: var(--toepassing-color-text-subtle-1);
+	display: flex;
+	flex-wrap: wrap;
+	font: var(--toepassing-text-smalltext);
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-badge {
+	align-items: center;
+	background: var(--toepassing-color-feedback-success-subtle);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-feedback-success-border);
+	display: inline-flex;
+	gap: var(--toepassing-space-padding-2xs);
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
+}
+.wallet-badge svg {
+	block-size: var(--toepassing-size-icon-sm);
+	color: var(--toepassing-color-feedback-success-icon);
+	inline-size: var(--toepassing-size-icon-sm);
+}
+.wallet-cijfers {
+	display: grid;
+	gap: var(--toepassing-space-padding-md);
+	grid-template-columns: repeat(2, 1fr);
+}
+.wallet-cijfer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-cijfer dt {
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+}
+.wallet-waarde {
+	display: block;
+	font: var(--toepassing-text-heading-h3);
+}
+.wallet-grens {
+	align-items: center;
+	display: flex;
+	font: var(--toepassing-text-smalltext);
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-grens::before {
+	block-size: 0.5rem;
+	border-radius: 50%;
+	content: "";
+	display: inline-block;
+	flex: none;
+	inline-size: 0.5rem;
+}
+.wallet-grens-boven {
+	color: var(--toepassing-color-feedback-warning-border);
+}
+.wallet-grens-boven::before {
+	background: var(--toepassing-color-feedback-warning-icon);
+}
+.wallet-grens-onder {
+	color: var(--toepassing-color-text-subtle-1);
+}
+.wallet-grens-onder::before {
+	background: var(--toepassing-color-feedback-success-icon);
+}
+.wallet-bron {
+	align-self: flex-start;
+	background: var(--toepassing-color-background-subtle);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
+}
+
 /* -- OVERIGE COMPONENTEN -- */
 
 /* Accordion (uitklapblok (details/summary) o.a. voor FAQ-lijst met uitklapbare vragen) */

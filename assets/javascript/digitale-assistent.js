@@ -219,6 +219,83 @@
 		if (el) el.remove();
 	}
 
+	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
+
+	var KWH_GRENS = 50000;
+	var GAS_GRENS = 25000;
+
+	function escapeHTML(value) {
+		return String(value == null ? "" : value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;");
+	}
+
+	// Herkent het netbeheerder__verbruik tool-event met een Wallet-credential.
+	// Retourneert { data, provenance } of null als dit geen Wallet-verbruik-event is.
+	function walletPayload(payload) {
+		if (!payload) return null;
+		var naam = payload.tool || payload.name || payload.message || "";
+		if (!/netbeheerder__verbruik/.test(naam) && !(/netbeheerder/.test(naam) && /verbruik/.test(naam))) return null;
+		var data = payload.data || (payload.result && payload.result.data) || null;
+		if (!data || !data.verbruik) return null;
+		var provenance = payload.provenance || (payload.result && payload.result.provenance) || {};
+		return { data: data, provenance: provenance };
+	}
+
+	function walletCijfer(label, waarde, eenheid, boven, grens) {
+		var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
+		var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
+		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span></dd></div>";
+	}
+
+	// Gestructureerde energiekaart uit de Wallet-credential (verborgen tot "Delen").
+	function buildWalletEnergie(data, provenance) {
+		data = data || {};
+		var cred = data.credential || {};
+		var totaal = (data.verbruik && data.verbruik.totaal) || {};
+		var kwh = Number(totaal.jaarlijks_elektriciteitsverbruik_kwh || 0);
+		var m3 = Number(totaal.jaarlijks_gasverbruik_m3 || 0);
+		var uitgever = cred.uitgegeven_door || (provenance && provenance.issuer) || "je netbeheerder";
+		var peiljaar = cred.peiljaar;
+		var metToestemming = !!(data.toestemming && data.toestemming.met_toestemming_ondernemer);
+
+		var el = document.createElement("div");
+		el.className = "wallet-energie";
+		el.hidden = true;
+
+		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
+		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
+
+		el.innerHTML = '<h3 tabindex="-1">Energieverbruik (uit je Wallet)</h3>' + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Wallet</p>';
+		return el;
+	}
+
+	// Deelverzoek-kaart: één .wallet-card met de vraag + (verborgen) energiekaart + notitie.
+	// Alles staat direct in de DOM, zodat het de innerHTML-save/restore van handleSwitch overleeft.
+	function renderWalletConsent(data, provenance) {
+		var card = document.createElement("div");
+		card.className = "wallet-card";
+
+		var vraag = document.createElement("div");
+		vraag.className = "wallet-consent";
+		vraag.innerHTML = "<h3>Deelverzoek uit je Wallet</h3>" + "<p>De assistent wil je energieverbruik-attestatie uit je Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>" + '<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		card.appendChild(vraag);
+
+		card.appendChild(buildWalletEnergie(data, provenance));
+
+		var nietGedeeld = document.createElement("div");
+		nietGedeeld.className = "wallet-niet-gedeeld";
+		nietGedeeld.hidden = true;
+		nietGedeeld.innerHTML = "<p>Je hebt je energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met je Wallet-gegevens controleren.</p>";
+		card.appendChild(nietGedeeld);
+
+		messages.appendChild(card);
+		messages.scrollTop = messages.scrollHeight;
+		return card;
+	}
+
 	function renderStatus(data) {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = true;
@@ -311,6 +388,24 @@
 		input.value = chip.textContent.trim();
 		input.focus();
 		form.requestSubmit();
+	});
+
+	// Wallet-deelverzoek: Delen toont de energiekaart, Niet delen toont de notitie.
+	messages.addEventListener("click", function (e) {
+		var card = e.target.closest(".wallet-card");
+		if (!card) return;
+		if (e.target.closest(".wallet-delen")) {
+			card.querySelector(".wallet-consent").hidden = true;
+			var energie = card.querySelector(".wallet-energie");
+			energie.hidden = false;
+			messages.scrollTop = messages.scrollHeight;
+			var kop = energie.querySelector("h3");
+			if (kop) kop.focus();
+		} else if (e.target.closest(".wallet-niet-delen")) {
+			card.querySelector(".wallet-consent").hidden = true;
+			card.querySelector(".wallet-niet-gedeeld").hidden = false;
+			messages.scrollTop = messages.scrollHeight;
+		}
 	});
 
 	input.addEventListener("input", function () {
@@ -410,7 +505,13 @@
 					if (eventType === "status") {
 						showThinking(friendlyTool(payload.message));
 					} else if (eventType === "tool") {
-						showThinking(friendlyTool(payload.message) + "...");
+						var wallet = walletPayload(payload);
+						if (wallet) {
+							hideThinking();
+							renderWalletConsent(wallet.data, wallet.provenance);
+						} else {
+							showThinking(friendlyTool(payload.message) + "...");
+						}
 					} else if (eventType === "case") {
 						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
 						addZaak(payload);
@@ -460,6 +561,23 @@
 			submitting = false;
 		}
 	});
+
+	// Demo/test-hook: toon de Wallet-flow zonder backend met de voorbeeld-credential.
+	// Staat los van de live SSE-flow; handig om de kaart te demonstreren of te testen.
+	window.MozaWallet = {
+		toon: renderWalletConsent,
+		demo: function () {
+			return renderWalletConsent(
+				{
+					beschikbaar: true,
+					credential: { type: "EnergieverbruikAttestatie", uitgegeven_door: "Stedin (mock)", houder: { kvk_nummer: "85234567" }, peiljaar: 2025 },
+					toestemming: { gedeeld_via: "EU Business Wallet (mock)", met_toestemming_ondernemer: true },
+					verbruik: { totaal: { jaarlijks_elektriciteitsverbruik_kwh: 61250, jaarlijks_gasverbruik_m3: 9800 }, aansluitingen: [] },
+				},
+				{ source: "EU Business Wallet (mock)", issuer: "Netbeheerder (mock, uitgever)" }
+			);
+		},
+	};
 
 	// Startvraag via URL-parameter (?vraag=…), bijvoorbeeld vanuit de
 	// notificatie op het dashboard. Vult het invoerveld en verstuurt direct,
