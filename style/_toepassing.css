@@ -126,7 +126,7 @@
 	--toepassing-focus-outline-backing: 0 0 0 calc(var(--toepassing-focus-outline-offset-md) + var(--toepassing-border-width-lg)) var(--toepassing-color-interactive-focus-outline-backing); /** Witte ring achter de focus-dashes, leesbaar op elke achtergrond */
 	--toepassing-focus-outline-offset-lg: var(--rijkshuisstijl-space-4);
 	--toepassing-focus-outline-offset-md: var(--rijkshuisstijl-space-2);
-	--toepassing-focus-outline: var(--toepassing-border-width-lg) dotted var(--toepassing-color-interactive-focus-outline); /** Geblokte toetsenbordfocus: dashes met witte backing-ring (focus.outline-backing) */
+	--toepassing-focus-outline: var(--toepassing-border-width-lg) dashed var(--toepassing-color-interactive-focus-outline); /** Geblokte toetsenbordfocus: dashes met witte backing-ring (focus.outline-backing) */
 	--toepassing-motion-easing-default: ease;
 	--toepassing-motion-speed-fast: 0.2s;
 	--toepassing-motion-speed-slow: 0.8s;

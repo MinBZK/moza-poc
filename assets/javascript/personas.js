@@ -8,9 +8,8 @@
  * Elementen met data-profiel-* attributen worden door dit script gevuld:
  *   data-profiel="voornaam"          → persoon.voornaam
  *   data-profiel="achternaam"        → persoon.achternaam
- *   data-profiel="initialen"         → persoon.initialen
  *   data-profiel="naam"              → persoon.voornaam + " " + persoon.achternaam
- *   data-profiel="initialen-bedrijf" → persoon.initialen + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
+ *   data-profiel="voornaam-bedrijf"  → persoon.voornaam + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
  *   data-profiel="handelsnaam"       → bedrijf.handelsnaam
  *   data-profiel="kvkNummer"         → bedrijf.kvkNummer
  *   data-profiel="vestigingsnummer"  → bedrijf.vestigingsnummer
@@ -111,9 +110,8 @@
 		switch (sleutel) {
 			case "voornaam": return p.voornaam;
 			case "achternaam": return p.achternaam;
-			case "initialen": return p.initialen;
 			case "naam": return p.voornaam + " " + p.achternaam;
-			case "initialen-bedrijf": return p.initialen + " " + p.achternaam + " van " + b.handelsnaam;
+			case "voornaam-bedrijf": return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
 			case "handelsnaam": return b.handelsnaam;
 			case "kvkNummer": return b.kvkNummer;
 			case "vestigingsnummer": return b.vestigingsnummer;

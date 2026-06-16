@@ -17,7 +17,7 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 	<section class="card tabs">
 		{% include "lopende-zaken-tabs.njk" %}
 
-		<section role="tabpanel" aria-labelledby="tab-lopende-zaken-overzicht">
+		<section aria-label="Lopende zaken">
 			<table>
 				<thead>
 					<tr>
@@ -28,6 +28,21 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 					</tr>
 				</thead>
 				<tbody id="zaken-overzicht">
+					<tr>
+						<td>Rijksdienst voor Ondernemend Nederland</td>
+						<td><a href="{{ '/moza/lopende-zaken/informatieplicht-energiebesparing/' | url }}">Informatieplicht energiebesparing</a></td>
+						<td><time datetime="2026-06-12">12 juni 2026</time></td>
+						<td>
+							Ontvangst bevestigd
+							<img src="/assets/icons/icon-bijlage.svg" alt="Dit statusoverzicht bevat een bijlage">
+						</td>
+					</tr>
+					<tr>
+						<td>Rijksdienst voor Ondernemend Nederland</td>
+						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
+						<td><time datetime="2026-05-21">21 mei 2026</time></td>
+						<td>In behandeling genomen</td>
+					</tr>
 					<tr>
 						<td>Gemeente Rotterdam</td>
 						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
@@ -45,8 +60,10 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 						<td><a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a></td>
 						<td><time datetime="2026-05-06">6 mei 2026</time></td>
 						<td>
-							<div class="feedback feedback-warning"> {% include "icon-feedback-warning.njk" %}
-							<div>Extra informatie opgevraagd</div>
+							<div class="feedback feedback-warning">
+								{% include "icon-feedback-warning.njk" %}
+								Extra informatie opgevraagd
+							</div>
 						</td>
 					</tr>
 				</tbody>

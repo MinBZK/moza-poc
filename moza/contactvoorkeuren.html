@@ -30,7 +30,7 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 		</dl>
 
 		<hgroup>
-			<h3>Aangesloten organisaties</h3>
+			<h3 id="cv-orgs">Aangesloten organisaties</h3>
 			<p>De geselecteerde organisaties gebruiken deze gegevens om contact met u op te nemen. Selecteert u een extra organisatie, dan gebruikt ook deze uw centrale contactgegevens.</p>
 		</hgroup>
 
@@ -39,7 +39,7 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 				<li class="option--confirmed">Kamer van Koophandel (KVK)</li>
 				<li class="option--confirmed">Belastingdienst</li>
 			</ul>
-			<ul class="list-plain">
+			<ul class="list-plain" role="group" aria-labelledby="cv-orgs">
 				<li><input type="checkbox" id="moza-org-om" /><label for="moza-org-om">Openbaar Ministerie (OM)</label></li>
 				<li><input type="checkbox" id="moza-org-rvo" /><label for="moza-org-rvo">Rijksdienst voor Ondernemend Nederland (RVO)</label></li>
 				<li><input type="checkbox" id="moza-org-rdw" /><label for="moza-org-rdw">Rijksdienst voor het Wegverkeer (RDW)</label></li>
@@ -48,7 +48,7 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			</ul>
 			<div class="action-group">
 				<button type="submit">Opslaan</button>
-				<button type="reset">Annuleren</button>
+				<a class="btn secondary" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">Annuleren</a>
 			</div>
 		</form>
 	</section>

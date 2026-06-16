@@ -22,7 +22,7 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 	<section class="card tabs">
 		{% include "berichtenbox-tabs.njk" %}
 
-		<section role="tabpanel" id="berichtenbox-inbox" aria-labelledby="tab-berichtenbox-inbox">
+		<section id="berichtenbox-inbox" aria-label="Berichten">
 			<section class="berichtenbox-content">
 				<div data-berichtenbox-toolbar>
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ berichtenboxData.berichten | length }}</b> berichten uit <b data-berichtenbox-sources>{{ berichtenboxData.aantalMagazijnen }}</b> bronnen, <b data-berichtenbox-counter-unread>{{ berichtenboxData.berichten | selectattr("isOngelezen") | length }}</b> ongelezen berichten.</p>

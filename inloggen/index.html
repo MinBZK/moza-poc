@@ -12,77 +12,89 @@ layout: "base.njk"
 
 	<div class="login-selection">
 		<section>
-			<i>Laatst gekozen</i>
-			<details class="card" open>
-				<summary>
-					<h2><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h2>
-				</summary>
-				<div>
-					<ul>
-						<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
-							<a href="{{ '/inloggen/digid/prive/' | url }}">Inloggen <b>voor mezelf</b></a>
-						</li>
-						<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
-							<a href="{{ '/inloggen/digid/zakelijk/' | url }}">Inloggen <b>voor mijn onderneming</b></a>
-						</li>
-						<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
-							<a href="#">Inloggen <b>met een machtiging</b></a>
-						</li>
-						<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
-							<a href="#">Inloggen <b>als bewindvoerder, curator of mentor</b></a>
-						</li>
-						<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
-							<a href="#">Inloggen <b>voor een kind onder de 12</b></a>
-						</li>
-					</ul>
-					<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
-						{% include "icon-feedback-info.njk" %}
-						<div>
-							<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
-						</div>
+			<h2>Laatst gekozen inlogmethode</h2>
+			<section>
+				<details class="card card-inloggen-digid" open>
+					<summary>
+						<h3><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h3>
+					</summary>
+					<div>
+						<ul>
+							<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
+								<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
+							</li>
+							<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
+								<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
+							</li>
+							<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
+								<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
+							</li>
+							<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
+								<a href="#">
+									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als wettelijke vertegenwoordiger</b>
+									<small>(bewindvoerder, curator of mentor)</small>
+								</a>
+							</li>
+							<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+								<a href="#">
+									{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
+									<small>een kind onder 12 jaar heeft (meestal) geen eigen DigiD, de ouder/gezagsdrager regelt zaken namens het kind</small>
+								</a>
+							</li>
+						</ul>
+						<!-- <div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+							{% include "icon-feedback-info.njk" %}
+							<div>
+								<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
+							</div>
+						</div> -->
 					</div>
+				</details>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
+							eHerkenning
+						</h3>
+					</a>
 				</div>
-			</details>
-			<div class="card">
-				<a href="#">
-					<h2>
-						<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
-						eHerkenning
-					</h2>
-				</a>
-			</div>
-			<div class="card">
-				<a href="#">
-					<h2>
-						<img src="/assets/inloggen/images/logo-eidas.svg" alt="" />
-						European login
-					</h2>
-				</a>
-			</div>
-			<div class="card">
-				<a href="#">
-					<h2>
-						<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
-						Digidentity
-					</h2>
-				</a>
-			</div>
-			<div class="card">
-				<a href="#">
-					<h2>
-						<img src="/assets/inloggen/images/logo-itsme.svg" alt="" />
-						Itsme
-					</h2>
-				</a>
-			</div>
-			<div class="card">
-				<a href="#">
-					<h2>
-						<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
-						Cleverbase
-					</h2>
-				</a>
-			</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-eidas.svg" alt="" />
+							European login
+						</h3>
+					</a>
+				</div>
+			</section>
+			<section class="login-wallet">
+				<h2>EDI-wallets</h2>
+				<small>Een app op uw telefoon waarmee u uw digitale identiteit bewaart en zelf kiest welke gegevens u deelt. <a href="https://www.digitaleoverheid.nl/overzicht-van-alle-onderwerpen/identiteit/id-wallet/">Meer informatie over EDI-wallets</a>.</small>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
+							Digidentity
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-itsme.svg" alt="" />
+							Itsme
+						</h3>
+					</a>
+				</div>
+				<div class="card">
+					<a href="#">
+						<h3>
+							<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
+							Cleverbase
+						</h3>
+					</a>
+				</div>
+			</section>
 
 			<div class="login-faq">
 				<details>

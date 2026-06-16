@@ -51,9 +51,15 @@ module.exports = function (eleventyConfig) {
     // Statische bestanden kopiëren naar _site
     eleventyConfig.addPassthroughCopy("assets");
     eleventyConfig.addPassthroughCopy("style");
-    eleventyConfig.addPassthroughCopy("moza/ondernemersplein/*.png");
     eleventyConfig.addPassthroughCopy("mailbox/favicon");
     eleventyConfig.addPassthroughCopy("mailbox/styles.css");
+
+    // mox/ landingspagina: self-contained assets meekopiëren naar _site/mox/
+    eleventyConfig.addPassthroughCopy("mox/css");
+    eleventyConfig.addPassthroughCopy("mox/js");
+    eleventyConfig.addPassthroughCopy("mox/fonts");
+    eleventyConfig.addPassthroughCopy("mox/images");
+    eleventyConfig.addPassthroughCopy("mox/packages");
 
     return {
         pathPrefix: "/",

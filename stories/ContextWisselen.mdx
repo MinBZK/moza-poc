@@ -123,24 +123,28 @@ De accountwisselaar is een dropdown in de header die alle contexten toont waarin
 
 ```
 Robin Vogel van Bloom B.V. ▾
+├── Privé
+│   └── Robin Vogel
+├── Ik handel namens
+│   ├── Anne Vogel-de Groot                  Mantelzorg
+│   └── Sofia René Vogel                     Ouderlijk gezag
 ├── Mijn ondernemingen
-│   ├── Bloom B.V.                    Eigenaar    ✓
-│   ├── Vogel & Partners Consultancy  Eigenaar
-│   └── Kwartaal Vastgoed B.V.        Eigenaar
-├── Belangen
-│   ├── Stichting Groenrijk           Bestuurslid
-│   └── Coöperatie ZuidWest U.A.      Aandeelhouder
-└── Privé
-    └── Robin Vogel
+│   ├── Bloom B.V.                           Eigenaar    ✓
+│   ├── Vogel & Partners Consultancy         Eigenaar
+│   └── Kwartaal Vastgoed B.V.               Eigenaar
+└── Mijn belangen
+    ├── VvE Residentie Parkzicht             Bestuurslid
+    ├── Volkstuinvereniging De Groene Long   Penningmeester
+    └── Familiebedrijf Winter                Gemachtigde
 ```
 
 ### Ontwerpkeuzes
 
 - **Eén inlogmoment, meerdere contexten**; de gebruiker logt één keer in (met bijvoorbeeld DigiD, eHerkenning of eWallet) en kan daarna wisselen zonder opnieuw te authenticeren. De contexten worden opgehaald op basis van de identiteit (bijvoorbeeld BSN → KvK-koppelingen, machtigingen).
-- **Groepering op relatietype**; "Mijn ondernemingen" (eigenaar/vennoot), "Belangen" (bestuurslid, aandeelhouder, gemachtigde) en "Privé" zijn visueel gescheiden groepen. Dit maakt het overzichtelijk bij veel contexten.
+- **Groepering op relatietype**; "Privé", "Ik handel namens" (machtigingen voor personen), "Mijn ondernemingen" (eigenaar/vennoot) en "Mijn belangen" (bestuurslid, gemachtigde) zijn visueel gescheiden groepen. Dit maakt het overzichtelijk bij veel contexten.
 - **Rol zichtbaar per context**; naast de organisatienaam staat de rol (Eigenaar, Bestuurslid, Aandeelhouder, Boekhouder). Dit verduidelijkt de rechten en voorkomt verwarring bij organisaties waar de gebruiker meerdere rollen kan hebben.
-- **Actieve context visueel gemarkeerd**; de huidige context heeft een visuele indicator (`aria-current`), zodat de gebruiker altijd ziet namens wie er gehandeld wordt.
-- **Paginatitel past mee**; bij het wisselen van context past de titel in de header mee ("MijnOverheid Zakelijk" vs. "MijnOverheid").
+- **Actieve context visueel gemarkeerd**; de huidige context heeft een visuele indicator (`aria-current`), zodat de gebruiker altijd ziet namens wie er gehandeld wordt. Voor privé, machtigingen en belangen staat dit in de markup; voor de eigen ondernemingen wordt het door JavaScript (`personas.js`) gezet op basis van de actieve persona.
+- **Contextnaam in de wisselaar-knop**; de paginatitel zelf is vast per omgeving ("MijnOverheid Zakelijk" in de zakelijke omgeving, "MijnOverheid" in de burgeromgeving) en wisselt niet mee met de context. De actieve context staat in de knoptekst van de accountwisselaar (bijvoorbeeld "Robin Vogel van Bloom B.V." of "Robin Vogel voor VvE Residentie Parkzicht").
 
 ### Toegankelijkheid
 
@@ -148,20 +152,11 @@ Robin Vogel van Bloom B.V. ▾
 - Het menu sluit bij <kbd>Escape</kbd> en bij klikken buiten het menu.
 - Groepslabels zijn visueel aanwezig maar niet interactief, ze structureren het menu zonder de toetsenbordnavigatie te verstoren.
 
-### Privé-context: machtigingen
+### Machtigingen: "Ik handel namens"
 
-Binnen de privé-context zou het wisselpatroon zich kunnen herhalen voor machtigingen:
+De machtigingen om namens een persoon te handelen vormen geen aparte wisselaar, maar staan in hetzelfde menu onder de groep **Ik handel namens** (zie de boom hierboven): Anne Vogel-de Groot (mantelzorg) en Sofia René Vogel (ouderlijk gezag).
 
-```
-Robin Vogel ▾
-├── Mijn gegevens
-│   └── Robin Vogel
-├── Ik handel namens
-│   ├── Anne Vogel-de Groot          Mantelzorg
-│   └── Sofia René Vogel                   Ouderlijk gezag
-```
-
-Dit is hetzelfde interactiepatroon als de zakelijke wisselaar maar met andere groepslabels en rollen. De implementatie kan hetzelfde component hergebruiken.
+Beide omgevingen (burger en zakelijk) gebruiken hetzelfde component en hetzelfde menu (`_includes/account-switcher-menu.njk`); alleen de knoptekst en het icoon in de header verschillen per context.
 
 ## Visuele identiteit per context
 
@@ -190,7 +185,7 @@ Het visueel onderscheiden van contexten kan via een combinatie van onderstaande 
 		<tr>
 			<td>Tekstlabel in de header</td>
 			<td>Naast de paginatitel</td>
-			<td>"MijnOverheid" vs. "MijnOverheid Zakelijk" vs. "MijnOverheid Zakelijk namens Stichting Groenrijk"</td>
+			<td>"MijnOverheid" vs. "MijnOverheid Zakelijk" vs. "MijnOverheid Zakelijk namens VvE Residentie Parkzicht"</td>
 			<td>Ja</td>
 		</tr>
 		<tr>
@@ -202,7 +197,7 @@ Het visueel onderscheiden van contexten kan via een combinatie van onderstaande 
 		<tr>
 			<td>Contextbanner</td>
 			<td>Boven of onder de header</td>
-			<td>Een smalle balk met "U handelt namens: Stichting Groenrijk (bestuurslid)", zichtbaar zolang de context niet de eigen persoon of eigen onderneming is</td>
+			<td>Een smalle balk met "U handelt namens: VvE Residentie Parkzicht (bestuurslid)", zichtbaar zolang de context niet de eigen persoon of eigen onderneming is</td>
 			<td>Ja (tekst + positie)</td>
 		</tr>
 		<tr>
@@ -292,11 +287,11 @@ Dit onderwerp vraagt om gericht gebruikersonderzoek. Onderstaande vragen kunnen 
 
 **[eHerkenning — Machtigingsregister](https://www.eherkenning.nl/)**
 
-- Het zakelijke equivalent van DigiD Machtigen. Via eHerkenning-ketenmachtiging kan een boekhouder namens meerdere ondernemingen handelen. Dit is de bron voor de “Belangen”-groep in de wisselaar.
+- Het zakelijke equivalent van DigiD Machtigen. Via eHerkenning-ketenmachtiging kan een boekhouder namens meerdere ondernemingen handelen. Dit is de bron voor de “Mijn belangen”-groep in de wisselaar.
 
 **[Handelsregister (KvK)](https://www.kvk.nl/)**
 
-- De bron voor wie welke rol heeft bij welke onderneming: eigenaar, bestuurder, vennoot, gevolmachtigde. De accountwisselaar haalt hier de “Mijn ondernemingen” en “Belangen” uit.
+- De bron voor wie welke rol heeft bij welke onderneming: eigenaar, bestuurder, vennoot, gevolmachtigde. De accountwisselaar haalt hier de “Mijn ondernemingen” en “Mijn belangen” uit.
 
 ### Overheidsspecifiek
 
