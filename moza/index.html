@@ -31,26 +31,14 @@ title: "MijnOverheid Zakelijk: Home"
 		</section>
 		<section class="card">
 			<h3>Wetten en regelgeving</h3>
-			<div data-persona-verberg="koffiezaak">
-				<p data-singular-of="regelgeving-count" hidden>
-					Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.
-				</p>
-				<p data-plural-of="regelgeving-count">
-					Er zijn <a href="{{ '/moza/regelgeving/' | url }}"><span data-badge-id="regelgeving-count"></span> nieuwe wetten of regelgeving, of wijzigingen op bestaande wet- of regelgeving</a> die mogelijk op u van toepassing zijn.
-				</p>
-				<ul class="list-content-links" aria-busy="true"></ul>
-				<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a>
-			</div>
-			<div data-persona-toon="koffiezaak" hidden>
-				<div class="feedback feedback-info">
-					{% include "icon-feedback-info.njk" %}
-					<div>
-						<p>Binnenkort geldt de informatieplicht energiebesparing voor <span data-profiel="handelsnaam">Koffiezaak Noon</span>. De digitale assistent helpt u de melding in één keer goed in te dienen.</p>
-					</div>
-				</div>
-				<a class="btn-cta" href="{{ '/moza/digitale-assistent/' | url }}?vraag=Help%20mij%20met%20de%20informatieplicht%20energiebesparing%20voor%20mijn%20bedrijf">Start met de digitale assistent</a>
-				<p><a href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a></p>
-			</div>
+			<p data-singular-of="regelgeving-count" hidden>
+				Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.
+			</p>
+			<p data-plural-of="regelgeving-count">
+				Er zijn <a href="{{ '/moza/regelgeving/' | url }}"><span data-badge-id="regelgeving-count"></span> nieuwe wetten of regelgeving, of wijzigingen op bestaande wet- of regelgeving</a> die mogelijk op u van toepassing zijn.
+			</p>
+			<ul class="list-content-links" aria-busy="true"></ul>
+			<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a>
 		</section>
 		<section class="card">
 			<h3>Berichten over uw buurt</h3>
