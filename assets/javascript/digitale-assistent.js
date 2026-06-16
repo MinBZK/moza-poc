@@ -132,6 +132,37 @@
 		messages.scrollTop = messages.scrollHeight;
 	}
 
+	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
+	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
+	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
+	// hetzelfde case-event geen duplicaat oplevert.
+	function addZaak(payload) {
+		if (!payload || typeof payload !== "object") return null;
+		var KEY = "zaken";
+		var lijst;
+		try {
+			lijst = JSON.parse(localStorage.getItem(KEY)) || [];
+		} catch (e) {
+			lijst = [];
+		}
+		var sleutel = payload.id || payload.case_id || payload.zaaknummer || payload.type;
+		if (sleutel) {
+			var bestaat = lijst.some(function (z) {
+				return (z.id || z.case_id || z.zaaknummer || z.type) === sleutel;
+			});
+			if (bestaat) return null;
+		}
+		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
+		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
+		lijst.push(zaak);
+		try {
+			localStorage.setItem(KEY, JSON.stringify(lijst));
+		} catch (e) {
+			/* localStorage niet toegankelijk */
+		}
+		return zaak;
+	}
+
 	function setLoading(loading) {
 		var btn = form.querySelector("button");
 		if (loading) {
@@ -336,7 +367,8 @@
 					} else if (eventType === "tool") {
 						showThinking(payload.message + "...");
 					} else if (eventType === "case") {
-						// Backend stuurt zaak-data; UI wordt later toegevoegd door een collega.
+						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
+						addZaak(payload);
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
