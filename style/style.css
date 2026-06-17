@@ -1504,6 +1504,7 @@ dd .feedback {
 	counter-reset: step;
 	gap: var(--toepassing-space-margin-sm);
 	list-style: none;
+	margin-block-end: var(--toepassing-space-margin-2xs);
 	padding-inline-start: var(--toepassing-space-padding-2xs);
 	> li {
 		counter-increment: step;
