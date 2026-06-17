@@ -1356,27 +1356,34 @@ dd .feedback {
 	color: var(--toepassing-color-feedback-warning-border);
 	font-style: italic;
 }
-/* Paneel "Uw gegevensbronnen" onder de chat: databronnen, los van de capabilities */
-.gegevensbronnen {
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-margin-xs);
+/* Uitklap "Alle databronnen" onder de chat, met bron-tags in pill-stijl */
+.bronnen-uitklap {
+	margin-block-start: var(--toepassing-space-padding-sm);
 }
-.databron-status {
+.bron-tags {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-2xs);
+	margin-block-start: var(--toepassing-space-padding-sm);
+}
+.bron-tag {
 	align-items: center;
+	background: var(--toepassing-color-background-subtle);
+	border-radius: var(--toepassing-border-radius-round);
 	color: var(--toepassing-color-text-subtle-1);
-	display: flex;
+	display: inline-flex;
 	font: var(--toepassing-text-smalltext);
 	gap: var(--toepassing-space-padding-2xs);
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
 }
-.databron-status svg {
+.bron-tag svg {
 	block-size: var(--toepassing-size-icon-sm);
 	inline-size: var(--toepassing-size-icon-sm);
 }
-.databron-status.connected svg {
+.bron-tag.connected svg {
 	color: var(--toepassing-color-feedback-success-icon);
 }
-.databron-status.disconnected svg {
+.bron-tag.disconnected svg {
 	color: var(--toepassing-color-feedback-error-icon);
 }
 .chat-messages {
@@ -1924,6 +1931,10 @@ dd .feedback {
 	min-inline-size: var(--toepassing-size-icon-sm);
 	padding-inline: var(--toepassing-space-padding-2xs)
 
+}
+/* Verberg de badge bij 0 (of leeg): .badge display overschrijft anders het hidden-attribuut */
+.badge[hidden], .badge:empty {
+	display: none;
 }
 h1, h2, h3, h4, h5, h6, a, button {
 	.badge {

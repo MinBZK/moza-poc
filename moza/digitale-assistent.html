@@ -22,16 +22,16 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
 			<div class="chat-message chat-message-assistant">
-				<p>Welkom bij de Digitale Assistent van MijnOverheid Zakelijk die namens de overheid uw vragen beantwoordt. Hiervoor gebruik ik <a href="https://www.kvk.nl/over-het-handelsregister/" rel="external">het KvK Handelsregister</a>, <a href="https://drop.overheid.nl/Start/Login" rel="external">KOOP Regelingenbank</a>, <a href="https://regelrecht.rijks.app/" rel="external">RegelRecht</a> en <a href="https://www.rvo.nl/" rel="external">RVO</a>.</p>
+				<p>Welkom bij de Digitale Assistent van MijnOverheid Zakelijk die namens de overheid je vragen beantwoordt. Hiervoor gebruik ik <a href="https://www.kvk.nl/over-het-handelsregister/" rel="external">het KvK Handelsregister</a>, <a href="https://drop.overheid.nl/Start/Login" rel="external">KOOP Regelingenbank</a>, <a href="https://regelrecht.rijks.app/" rel="external">RegelRecht</a> en <a href="https://www.rvo.nl/" rel="external">RVO</a>.</p>
 				<p><strong>Dit is een ✨ AI-systeem</strong>; antwoorden kunnen fouten bevatten. Controleer belangrijke informatie altijd bij de officiële bron. Raadpleeg voor juridisch advies een adviseur of de betreffende overheidsinstantie.</p>
-				<p>Ik kan u helpen met:</p>
+				<p>Ik kan je helpen met:</p>
 				<ul class="list-indent">
 					<li>Bedrijfsgegevens opzoeken</li>
 					<li>Verplichtingen controleren</li>
 					<li>Regelgeving en subsidies vinden</li>
 					<li>Rapportages opzoeken en indienen</li>
 				</ul>
-				<p>Stel uw vraag, of probeer bijvoorbeeld:</p>
+				<p>Stel je vraag, of probeer bijvoorbeeld:</p>
 				<div class="chat-suggestions">
 					<button type="button" class="secondary chat-suggestion">Wat zijn mijn bedrijfsgegevens?</button>
 					<button type="button" class="secondary chat-suggestion">Geldt de energiebesparingsplicht voor mij?</button>
@@ -42,33 +42,19 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 		</div>
 
 		<form id="chat-form">
-			<label for="chat-input" class="visually-hidden">Uw vraag</label>
-			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
+			<label for="chat-input" class="visually-hidden">Je vraag</label>
+			<textarea id="chat-input" placeholder="Waarmee kan ik je helpen?" required></textarea>
 			<button type="submit">Vraag stellen</button>
 		</form>
 	</section>
 
-	<section class="gegevensbronnen">
-		<h2>Uw gegevensbronnen</h2>
-		<p>Hier ziet u uit welke bronnen de assistent met uw toestemming gegevens over uw bedrijf ophaalt.</p>
-		<div class="tiles">
-			<section class="card databron" data-databron="kvk">
-				<h3>KvK Handelsregister</h3>
-				<p class="databron-status" data-databron-status>Verbinding controleren…</p>
-				<p>Uw bedrijfsgegevens: naam, KVK-nummer, rechtsvorm en vestiging.</p>
-			</section>
-			<section class="card databron" data-databron="koop">
-				<h3>KOOP Regelingenbank</h3>
-				<p class="databron-status" data-databron-status>Verbinding controleren…</p>
-				<p>Officiële bekendmakingen en regelingen die op u van toepassing zijn.</p>
-			</section>
-			<section class="card databron" data-databron="netbeheerder">
-				<h3>Uw Wallet</h3>
-				<p class="databron-status" data-databron-status>Verbinding controleren…</p>
-				<p>Geverifieerde gegevens uit uw digitale wallet, zoals uw energieverbruik.</p>
-			</section>
-		</div>
-	</section>
+	<details class="bronnen-uitklap">
+		<summary>Alle databronnen</summary>
+		<ul class="bron-tags list-plain">
+			<li class="bron-tag" data-databron="kvk">KvK Handelsregister</li>
+			<li class="bron-tag" data-databron="koop">KOOP Regelingenbank</li>
+		</ul>
+	</details>
 
 	<section class="card">
 		<h2>Veelgestelde vragen</h2>
@@ -78,7 +64,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 					<summary>
 						<h3>Wat kan de digitale assistent voor mij doen?</h3>
 					</summary>
-					<p>De digitale assistent kan u helpen met vragen over regelgeving, subsidies, vergunningen en uw bedrijfsregistratie. De assistent raadpleegt actuele bronnen zoals het Handelsregister (KvK), de Regelingenbank (KOOP) en RVO.</p>
+					<p>De digitale assistent kan je helpen met vragen over regelgeving, subsidies, vergunningen en je bedrijfsregistratie. De assistent raadpleegt actuele bronnen zoals het Handelsregister (KvK), de Regelingenbank (KOOP) en RVO.</p>
 				</details>
 			</li>
 			<li>
@@ -94,7 +80,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 					<summary>
 						<h3>Worden mijn gegevens opgeslagen?</h3>
 					</summary>
-					<p>Uw gesprek wordt alleen voor de duur van uw sessie bewaard en daarna gewist. Er worden geen persoonsgegevens opgeslagen zonder uw toestemming.</p>
+					<p>Je gesprek wordt alleen voor de duur van je sessie bewaard en daarna gewist. Er worden geen persoonsgegevens opgeslagen zonder je toestemming.</p>
 				</details>
 			</li>
 		</ul>
