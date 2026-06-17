@@ -2120,7 +2120,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 		display: flex;
 		flex-direction: column;
 		gap: var(--toepassing-space-margin-md);
-		h2:not(.login-wallet *) {
+		h2 {
 			font: var(--toepassing-text-heading-h5);
 			font-style: italic;
 		}
@@ -2153,9 +2153,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 	}
 	.login-own-credentials {
 		margin-block: var(--toepassing-space-margin-md);
-	}
-	.login-wallet {
-		margin-block-start: var(--toepassing-space-margin-sm);
 	}
 	.card {
 		border: var(--toepassing-border-default);
@@ -2241,12 +2238,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 						background: var(--rijkshuisstijl-color-hemelblauw-600);
 						border-color: var(--rijkshuisstijl-color-hemelblauw-600);
 					}
-				}
-				small {
-					color: var(--toepassing-color-text-subtle-2);
-					display: block;
-					font: var(--toepassing-text-smalltext);
-					margin-block-start: var(--toepassing-space-margin-3xs);
 				}
 			}
 		}
