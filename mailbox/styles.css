@@ -360,6 +360,10 @@ button { cursor: pointer;
 .message {
 	border-block-end: 1px solid var(--border);
 	padding: 20px 32px;
+	a {
+		cursor: default;
+		text-decoration: none;
+	}
 }
 .message:last-child { border-block-end: 0; }
 .message-meta { align-items: start;
