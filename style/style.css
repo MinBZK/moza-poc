@@ -1356,36 +1356,6 @@ dd .feedback {
 	color: var(--toepassing-color-feedback-warning-border);
 	font-style: italic;
 }
-/* Uitklap "Alle databronnen" onder de chat, met bron-tags in pill-stijl */
-.bronnen-uitklap {
-	margin-block-start: var(--toepassing-space-padding-sm);
-}
-.bron-tags {
-	flex-direction: row;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-padding-2xs);
-	margin-block-start: var(--toepassing-space-padding-sm);
-}
-.bron-tag {
-	align-items: center;
-	background: var(--toepassing-color-background-subtle);
-	border-radius: var(--toepassing-border-radius-round);
-	color: var(--toepassing-color-text-subtle-1);
-	display: inline-flex;
-	font: var(--toepassing-text-smalltext);
-	gap: var(--toepassing-space-padding-2xs);
-	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
-}
-.bron-tag svg {
-	block-size: var(--toepassing-size-icon-sm);
-	inline-size: var(--toepassing-size-icon-sm);
-}
-.bron-tag.connected svg {
-	color: var(--toepassing-color-feedback-success-icon);
-}
-.bron-tag.disconnected svg {
-	color: var(--toepassing-color-feedback-error-icon);
-}
 .chat-messages {
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);

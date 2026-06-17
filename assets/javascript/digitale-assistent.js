@@ -45,17 +45,15 @@
 		netbeheerder: "Je Business Wallet",
 	};
 
-	// Wat de assistent gebruikt — in de chat getoond (capabilities + Wallet + Aanleveren).
-	// health=true: live status uit /health; health=false: altijd beschikbaar (lokaal kanaal).
+	// Wat de assistent gebruikt — in de chat getoond: capabilities + alle databronnen,
+	// op één plek. health=true: live status uit /health.
 	var STATUS_ITEMS = [
 		{ key: "regelrecht", label: "RegelRecht", health: true },
 		{ key: "rvo", label: "RVO", health: true },
 		{ key: "netbeheerder", label: "Business Wallet", health: true },
-		{ key: "aanleveren", label: "Aanleveren", health: false },
+		{ key: "kvk", label: "KvK Handelsregister", health: true },
+		{ key: "koop", label: "KOOP Regelingenbank", health: true },
 	];
-
-	// Gekoppelde (achterliggende) databronnen in de uitklap onder de chat.
-	var GEKOPPELDE_BRONNEN = ["kvk", "koop"];
 
 	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
 	// gebruiker wordt getoond maar als leesbaar label.
@@ -489,25 +487,12 @@
 		var transport = getTransport();
 		var sources = (transport === "cli" ? serverStatus.cli : serverStatus.servers) || {};
 		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
-		// Gekoppelde bronnen (uitklap onder de chat) altijd uit servers (niet cli).
-		updateGekoppeldeBronnen(serverStatus.servers);
-	}
-
-	// Werkt de uitklap "Alle databronnen" (onder de chat) bij met de live status.
-	function updateGekoppeldeBronnen(servers) {
-		document.querySelectorAll("[data-databron]").forEach(function (el) {
-			var key = el.getAttribute("data-databron");
-			var verbonden = !!(servers && servers[key] === "verbonden");
-			el.className = "bron-tag " + (verbonden ? "connected" : "disconnected");
-			el.innerHTML = (verbonden ? ICON_SUCCES : ICON_FOUTMELDING) + (DATA_SOURCE_LABELS[key] || key);
-		});
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
 		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
-		updateGekoppeldeBronnen(null);
 	}
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
