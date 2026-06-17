@@ -30,10 +30,7 @@
 	var submitting = false;
 	var initialMessages = messages.innerHTML;
 
-	// Twee conceptueel gescheiden categorieën:
-	//  - capabilities (wat de assistent kan dóen) blijven inline bij de chat;
-	//  - databronnen (waar de data over u vandaan komt) staan in een eigen paneel
-	//    onder de chat.
+	// Leesbare labels per backend-sleutel, gecombineerd in ALL_LABELS voor friendlyTool.
 	var CAPABILITY_LABELS = {
 		regelrecht: "RegelRecht",
 		rvo: "RVO",
@@ -42,17 +39,17 @@
 	var DATA_SOURCE_LABELS = {
 		kvk: "KvK Handelsregister",
 		koop: "KOOP Regelingenbank",
-		netbeheerder: "Je Business Wallet",
+		netbeheerder: "Business Wallet",
 	};
 
 	// Wat de assistent gebruikt — in de chat getoond: capabilities + alle databronnen,
-	// op één plek. health=true: live status uit /health.
+	// op één plek, met live verbindingsstatus uit /health.
 	var STATUS_ITEMS = [
-		{ key: "regelrecht", label: "RegelRecht", health: true },
-		{ key: "rvo", label: "RVO", health: true },
-		{ key: "netbeheerder", label: "Business Wallet", health: true },
-		{ key: "kvk", label: "KvK Handelsregister", health: true },
-		{ key: "koop", label: "KOOP Regelingenbank", health: true },
+		{ key: "regelrecht", label: "RegelRecht" },
+		{ key: "rvo", label: "RVO" },
+		{ key: "netbeheerder", label: "Business Wallet" },
+		{ key: "kvk", label: "KvK Handelsregister" },
+		{ key: "koop", label: "KOOP Regelingenbank" },
 	];
 
 	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
@@ -457,14 +454,6 @@
 		return card;
 	}
 
-	function nieuwGesprek() {
-		delete sessions[getComboKey()];
-		messages.innerHTML = initialMessages;
-		messages.scrollTop = messages.scrollHeight;
-		input.value = "";
-		input.focus();
-	}
-
 	function renderStatus(data) {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = true;
@@ -474,8 +463,7 @@
 
 	function statusLijst(sources) {
 		return STATUS_ITEMS.map(function (it) {
-			// Lokaal kanaal (Aanleveren) is altijd beschikbaar; rest uit /health.
-			var connected = it.health ? !!(sources && sources[it.key] === "verbonden") : true;
+			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
 			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
 			return '<li class="chat-status-' + dot + '">' + icon + it.label + "</li>";
@@ -554,17 +542,12 @@
 		}
 	});
 
-	// Vraag-formulier: de twee "iets anders"-knoppen.
+	// Vraag-formulier: "Leg mij dit uit" vraagt de assistent om uitleg en laat het
+	// formulier staan, zodat je daarna alsnog kunt antwoorden.
 	messages.addEventListener("click", function (e) {
-		if (e.target.closest(".vraag-nieuw")) {
-			nieuwGesprek();
-		} else if (e.target.closest(".vraag-uitleg")) {
-			// Vraag de assistent om uitleg; laat het formulier staan zodat je daarna
-			// alsnog kunt antwoorden.
-			if (submitting) return;
-			input.value = "Leg mij dit uit";
-			form.requestSubmit();
-		}
+		if (!e.target.closest(".vraag-uitleg") || submitting) return;
+		input.value = "Leg mij dit uit";
+		form.requestSubmit();
 	});
 
 	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug.
@@ -601,8 +584,13 @@
 			return;
 		}
 		var bericht = "Mijn antwoorden: " + delen.join("; ") + ".";
-		var card = f.closest(".wallet-card");
-		if (card) card.innerHTML = "<p>Je antwoord is verstuurd.</p>";
+		// Laat het ingevulde formulier staan: vergrendel de velden zodat de gekozen
+		// antwoorden zichtbaar blijven, en vervang de knoppen door een bevestiging.
+		f.querySelectorAll("input").forEach(function (el) {
+			el.disabled = true;
+		});
+		var acties = f.querySelector(".action-group");
+		if (acties) acties.outerHTML = '<p class="wallet-badge">' + ICON_SUCCES + "Antwoord verstuurd</p>";
 		input.value = bericht;
 		form.requestSubmit();
 	});
