@@ -527,5 +527,48 @@
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["verduurzaming-bedrijfspanden"],
 		"homepageRegelgeving": ["ai-verordening"]
+	},
+	{
+		"id": "koffiezaak",
+		"actief": false,
+		"label": "Horecaondernemer",
+		"persoon": {
+			"voornaam": "Claudia",
+			"achternaam": "van Dam",
+			"initialen": "C.M."
+		},
+		"bedrijf": {
+			"handelsnaam": "Koffiezaak Noon",
+			"kvkNummer": "85234567",
+			"rsinNummer": "85234567",
+			"btwNummer": "NL00085234567",
+			"omzetbelastingnummer": "085234567B01",
+			"startdatum": "14 maart 2021",
+			"rechtsvorm": "Eenmanszaak",
+			"branche": "Horeca",
+			"vestigingsadres": "Meent 88, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000085234567",
+			"iban": "NL58 INGB 0008 5234 56",
+			"loonheffingennummer": "085234567L01",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 3,
+			"sbi": [
+				{ "code": "56102", "omschrijving": "Cafés" }
+			],
+			"vestigingsadresVolledig": "Meent 88, 3011 JM Rotterdam",
+			"postadres": "Meent 88, 3011 JM Rotterdam",
+			"vestigingen": [{ "nummer": "000085234567", "type": "Hoofdvestiging", "adres": "Meent 88, 3011 JM Rotterdam" }],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["eia", "isde", "kia", "mkb-groen", "tek", "rotterdam-verduurzaming-bedrijfspand", "rotterdam-ondernemen-in-de-wijk"],
+		"regelgeving": ["warenwet", "arbowet", "minimumloon", "avg", "tabakswet", "dienstenwet"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["verduurzaming-bedrijfspanden"],
+		"homepageRegelgeving": ["milieubeheer"]
 	}
 ]

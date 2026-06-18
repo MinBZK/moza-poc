@@ -157,7 +157,7 @@ function buildTogglePanel() {
 		radio.type = "radio";
 		radio.name = "admin-llm";
 		radio.value = value;
-		radio.checked = getSettingValue("llm", "vlam") === value;
+		radio.checked = getSettingValue("llm", "claude") === value;
 		radio.addEventListener("change", () => setSettingValue("llm", value));
 		label.appendChild(radio);
 		label.appendChild(document.createElement("span")).textContent = value.toUpperCase();

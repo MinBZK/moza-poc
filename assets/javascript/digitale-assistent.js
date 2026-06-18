@@ -30,19 +30,48 @@
 	var submitting = false;
 	var initialMessages = messages.innerHTML;
 
-	var SERVER_LABELS = {
-		kvk: "KvK Handelsregister",
-		koop: "KOOP Regelingenbank",
+	// Leesbare labels per backend-sleutel, gecombineerd in ALL_LABELS voor friendlyTool.
+	var CAPABILITY_LABELS = {
 		regelrecht: "RegelRecht",
 		rvo: "RVO",
 	};
+
+	var DATA_SOURCE_LABELS = {
+		kvk: "KvK Handelsregister",
+		koop: "KOOP Regelingenbank",
+		netbeheerder: "Business Wallet",
+	};
+
+	// Wat de assistent gebruikt — in de chat getoond: capabilities + alle databronnen,
+	// op één plek, met live verbindingsstatus uit /health.
+	var STATUS_ITEMS = [
+		{ key: "regelrecht", label: "RegelRecht" },
+		{ key: "rvo", label: "RVO" },
+		{ key: "netbeheerder", label: "Business Wallet" },
+		{ key: "kvk", label: "KvK Handelsregister" },
+		{ key: "koop", label: "KOOP Regelingenbank" },
+	];
+
+	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
+	// gebruiker wordt getoond maar als leesbaar label.
+	var ALL_LABELS = Object.assign({}, DATA_SOURCE_LABELS, CAPABILITY_LABELS);
+
+	function friendlyTool(message) {
+		if (!message) return "";
+		if (message.indexOf("__") === -1) return message; // al leesbaar
+		var delen = message.split("__");
+		var server = delen.shift();
+		var rest = delen.join(" ").replace(/_/g, " ").trim();
+		var label = ALL_LABELS[server] || server;
+		return rest ? label + ": " + rest : label;
+	}
 
 	var ICON_FOUTMELDING = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">' + '<circle cx="12" cy="12" r="10.5" fill="currentColor"/>' + '<path class="icon-color-inverse" d="M15.12 7.71 12 10.48 8.88 7.71a.858.858 0 0 0-1.15.02c-.3.32-.31.81-.02 1.14L10.48 12l-2.77 3.12c-.29.33-.29.83.02 1.14.32.3.81.31 1.14.02L12 13.52l3.12 2.77c.33.29.83.28 1.14-.02.3-.32.31-.81.02-1.14L13.52 12l2.77-3.12c.29-.33.29-.83-.02-1.14a.848.848 0 0 0-1.15-.03M12 12.01l-.01-.01.01-.01.01-.01.01.01.01.01-.03.01z"/>' + "</svg>";
 
 	var ICON_SUCCES = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">' + '<path fill="currentColor" fill-rule="evenodd" d="M22.04 3.78c-.16-.95-.88-1.67-1.83-1.83-2.73-.45-7.3-.45-8.21-.45-.91 0-5.48 0-8.22.46-.95.15-1.67.87-1.82 1.82C1.5 6.52 1.5 11.09 1.5 12s0 5.48.46 8.22c.16.95.88 1.67 1.83 1.83 2.74.46 7.3.46 8.22.46.91 0 5.48 0 8.22-.46.95-.16 1.67-.88 1.83-1.83.46-2.74.46-7.3.46-8.22-.02-2.74-.02-5.48-.48-8.22z M16.5 7.35a.755.755 0 0 0-1.01.1l-4.4 4.95-2.65-2.3a.743.743 0 0 0-.97 0c-.28.24-.35.65-.16.97l3.2 5.38c.14.23.38.37.64.37s.51-.14.64-.36l4.89-8.09c.21-.35.13-.78-.18-1.02z"/>' + "</svg>";
 
 	function getLLM() {
-		return localStorage.getItem("setting:llm") || "vlam";
+		return localStorage.getItem("setting:llm") || "claude";
 	}
 
 	function getTransport() {
@@ -132,6 +161,43 @@
 		messages.scrollTop = messages.scrollHeight;
 	}
 
+	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
+	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
+	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
+	// hetzelfde case-event geen duplicaat oplevert.
+	function addZaak(payload) {
+		if (!payload || typeof payload !== "object") return null;
+		var KEY = "zaken";
+		var lijst;
+		try {
+			lijst = JSON.parse(localStorage.getItem(KEY)) || [];
+		} catch (e) {
+			lijst = [];
+		}
+		var sleutel = payload.id || payload.case_id || payload.zaaknummer || payload.type;
+		if (sleutel) {
+			var bestaat = lijst.some(function (z) {
+				return (z.id || z.case_id || z.zaaknummer || z.type) === sleutel;
+			});
+			if (bestaat) return null;
+		}
+		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
+		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
+		lijst.push(zaak);
+		try {
+			localStorage.setItem(KEY, JSON.stringify(lijst));
+		} catch (e) {
+			/* localStorage niet toegankelijk */
+		}
+		// Laat lopende-zaken.js de side-nav badge direct bijwerken.
+		try {
+			window.dispatchEvent(new Event("zaken-changed"));
+		} catch (e) {
+			/* Event niet ondersteund */
+		}
+		return zaak;
+	}
+
 	function setLoading(loading) {
 		var btn = form.querySelector("button");
 		if (loading) {
@@ -160,6 +226,234 @@
 		if (el) el.remove();
 	}
 
+	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
+
+	var KWH_GRENS = 50000;
+	var GAS_GRENS = 25000;
+
+	function escapeHTML(value) {
+		return String(value == null ? "" : value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;");
+	}
+
+	// Decoratief stap-icoon uit de bestaande huisstijl-set, naast de kop van elke
+	// stap-kaart: delen (gegevensdeling), toetsen (wet), indienen (lopende-zaken).
+	var ASSET_PREFIX = typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "";
+	function stapIcoon(naam) {
+		return '<img class="stap-icoon" alt="" src="' + ASSET_PREFIX + "/assets/icons/icon-" + naam + '.svg">';
+	}
+
+	// Herkent het netbeheerder__verbruik tool-event met een Wallet-credential.
+	// Retourneert { data, provenance } of null als dit geen Wallet-verbruik-event is.
+	function walletPayload(payload) {
+		if (!payload) return null;
+		var naam = payload.tool || payload.name || payload.message || "";
+		if (!/netbeheerder__verbruik/.test(naam) && !(/netbeheerder/.test(naam) && /verbruik/.test(naam))) return null;
+		var data = payload.data || (payload.result && payload.result.data) || null;
+		if (!data || !data.verbruik) return null;
+		var provenance = payload.provenance || (payload.result && payload.result.provenance) || {};
+		return { data: data, provenance: provenance };
+	}
+
+	function walletCijfer(label, waarde, eenheid, boven, grens) {
+		var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
+		var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
+		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span></dd></div>";
+	}
+
+	// Gestructureerde energiekaart uit de Wallet-credential (verborgen tot "Delen").
+	function buildWalletEnergie(data, provenance) {
+		data = data || {};
+		var cred = data.credential || {};
+		var totaal = (data.verbruik && data.verbruik.totaal) || {};
+		var kwh = Number(totaal.jaarlijks_elektriciteitsverbruik_kwh || 0);
+		var m3 = Number(totaal.jaarlijks_gasverbruik_m3 || 0);
+		var uitgever = cred.uitgegeven_door || (provenance && provenance.issuer) || "je netbeheerder";
+		var peiljaar = cred.peiljaar;
+		var metToestemming = !!(data.toestemming && data.toestemming.met_toestemming_ondernemer);
+
+		var el = document.createElement("div");
+		el.className = "wallet-energie";
+		el.hidden = true;
+
+		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
+		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
+
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
+		return el;
+	}
+
+	// Deelverzoek-kaart: één .wallet-card met de vraag + (verborgen) energiekaart + notitie.
+	// Alles staat direct in de DOM, zodat het de innerHTML-save/restore van handleSwitch overleeft.
+	function renderWalletConsent(data, provenance) {
+		var card = document.createElement("div");
+		card.className = "wallet-card";
+
+		var vraag = document.createElement("div");
+		vraag.className = "wallet-consent";
+		vraag.innerHTML = "<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit je Business Wallet</h3>" + "<p>De assistent wil je energieverbruik-attestatie uit je Business Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>" + '<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		card.appendChild(vraag);
+
+		card.appendChild(buildWalletEnergie(data, provenance));
+
+		var nietGedeeld = document.createElement("div");
+		nietGedeeld.className = "wallet-niet-gedeeld";
+		nietGedeeld.hidden = true;
+		nietGedeeld.innerHTML = "<p>Je hebt je energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met je Business Wallet-gegevens controleren.</p>";
+		card.appendChild(nietGedeeld);
+
+		messages.appendChild(card);
+		messages.scrollTop = messages.scrollHeight;
+		return card;
+	}
+
+	// --- Generiek vraag-formulier ---------------------------------------------
+	// Elke vraag van de assistent met een gestructureerde antwoord-spec wordt een
+	// formulier i.p.v. los typen. Contract (uit de backend):
+	//   payload.vraag = { titel?, intro?, tekst?, bron?, velden: [
+	//     { naam, label, type: "radio"|"tekst", opties?: [..] } ] }
+	// Shorthand: payload.maatregelen = [{ code, omschrijving }] → radiovelden
+	// (Uitgevoerd / Niet uitgevoerd). Velden/vraag mogen ook in payload.data staan.
+	function normVeld(v, i) {
+		var opties = v.opties || v.options || null;
+		return {
+			naam: v.naam || v.code || v.name || v.id || "veld" + (i + 1),
+			label: v.label || v.vraag || v.omschrijving || v.naam || "Veld " + (i + 1),
+			type: v.type || (opties ? "radio" : "tekst"),
+			opties: opties,
+		};
+	}
+
+	function vraagSpec(payload) {
+		if (!payload || typeof payload !== "object") return null;
+		var data = payload.data || {};
+		var vraag = payload.vraag || data.vraag || null;
+		var velden = (vraag && vraag.velden) || payload.velden || data.velden || null;
+		var maatregelen = payload.maatregelen || data.maatregelen;
+		var maatregelenBron = false;
+
+		if (!velden && Array.isArray(maatregelen) && maatregelen.length) {
+			maatregelenBron = true;
+			velden = maatregelen.map(function (m) {
+				var code = m.code || m.naam || m.id || "";
+				var oms = m.omschrijving || m.titel || m.beschrijving || "";
+				return { naam: code || oms, label: code && oms ? code + " – " + oms : code || oms, type: "radio", opties: ["Uitgevoerd", "Niet uitgevoerd"] };
+			});
+		}
+
+		// Geen gestructureerde velden? Val terug op het parsen van de platte tekst.
+		if (!Array.isArray(velden) || velden.length === 0) return parseVraag(payload.message);
+		vraag = vraag || {};
+		return {
+			titel: vraag.titel || (maatregelenBron ? "Erkende Maatregelenlijst (EML 2023)" : "Vragen van de assistent"),
+			intro: vraag.intro || "",
+			tekst: vraag.tekst || (maatregelenBron ? "Geef per maatregel aan of deze is uitgevoerd." : ""),
+			bron: vraag.bron || payload.bron || data.bron || (payload.provenance && payload.provenance.source) || "",
+			velden: velden.map(normVeld),
+		};
+	}
+
+	function cap(s) {
+		s = String(s).trim();
+		return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+	}
+
+	function maakVeld(label, opties, index) {
+		var codeM = label.match(/^([A-Z]{1,4}\d+)\b/);
+		return { naam: codeM ? codeM[1] : "v" + (index + 1), label: label, type: "radio", opties: opties };
+	}
+
+	// Eén genummerde regel → veld. "… - A / B?" wordt radio [A, B]; anders ja/nee.
+	function parseVeldRegel(content, index) {
+		content = content.replace(/\?+$/, "").trim();
+		var slash = content.lastIndexOf(" / ");
+		if (slash !== -1) {
+			var opt2 = content.slice(slash + 3).trim();
+			var voor = content.slice(0, slash);
+			var dash = voor.lastIndexOf(" - ");
+			if (dash !== -1) {
+				var opt1 = voor.slice(dash + 3).trim();
+				var label = voor.slice(0, dash).trim();
+				if (opt1 && opt2 && label) return maakVeld(label, [cap(opt1), cap(opt2)], index);
+			}
+		}
+		return maakVeld(content, ["Ja", "Nee"], index);
+	}
+
+	// Fallback-parser: zet de platte tekst van de assistent om in een vraag-spec.
+	// Herkent genummerde vraagregels ("N. … - A / B?" of "N. …?").
+	function parseVraag(message) {
+		if (!message || typeof message !== "string") return null;
+		var lines = message.split("\n");
+		var velden = [];
+		var introLines = [];
+		var bron = "";
+		var zagVraag = false;
+		for (var i = 0; i < lines.length; i++) {
+			var line = lines[i].trim();
+			if (!line) continue;
+			var bronM = line.match(/^bron\s*:\s*(.+)$/i);
+			if (bronM) {
+				bron = bronM[1].replace(/[.\s]+$/, "").trim();
+				continue;
+			}
+			var numM = line.match(/^(\d+)[.)]\s+(.+)$/);
+			if (numM) {
+				var raw = numM[2];
+				if (/\?\s*$/.test(raw) || / \/ /.test(raw)) {
+					velden.push(parseVeldRegel(raw, velden.length));
+					zagVraag = true;
+				}
+				continue;
+			}
+			if (!zagVraag && !/^[•·*-]/.test(line)) introLines.push(line);
+		}
+		if (velden.length === 0) return null;
+		var intro = introLines.join(" ").trim();
+		var isEml =
+			/erkende maatregelenlijst|eml/i.test(intro) ||
+			velden.some(function (v) {
+				return /^[A-Z]{1,4}\d+$/.test(v.naam);
+			});
+		return {
+			titel: isEml ? "Erkende Maatregelenlijst (EML 2023)" : "Vragen van de assistent",
+			intro: intro,
+			tekst: "",
+			bron: bron,
+			velden: velden,
+		};
+	}
+
+	function veldHTML(veld, index) {
+		var naam = "vraag-" + index + "-" + String(veld.naam).replace(/[^a-z0-9]/gi, "");
+		if (veld.type === "radio" && veld.opties && veld.opties.length) {
+			var opties = veld.opties
+				.map(function (optie, j) {
+					var id = naam + "-" + j;
+					return '<li><input type="radio" id="' + id + '" name="' + naam + '" value="' + escapeHTML(optie) + '"> <label for="' + id + '">' + escapeHTML(optie) + "</label></li>";
+				})
+				.join("");
+			return '<fieldset data-veld="' + escapeHTML(veld.naam) + '"><legend>' + escapeHTML(veld.label) + '</legend><ul class="list-plain">' + opties + "</ul></fieldset>";
+		}
+		return '<div data-veld="' + escapeHTML(veld.naam) + '"><label for="' + naam + '">' + escapeHTML(veld.label) + '</label><input type="text" id="' + naam + '" name="' + naam + '"></div>';
+	}
+
+	function renderAssistentVraag(spec) {
+		var card = document.createElement("div");
+		card.className = "wallet-card";
+		var velden = spec.velden.map(veldHTML).join("");
+		var bronRegel = spec.bron ? '<p class="wallet-bron">bron: ' + escapeHTML(spec.bron) + "</p>" : "";
+		card.innerHTML = '<h3 tabindex="-1">' + escapeHTML(spec.titel) + "</h3>" + (spec.intro ? "<p>" + escapeHTML(spec.intro) + "</p>" : "") + (spec.tekst ? "<p>" + escapeHTML(spec.tekst) + "</p>" : "") + '<form class="vraag-form">' + velden + '<div class="action-group"><button type="submit">Antwoord versturen</button><button type="button" class="secondary vraag-uitleg">Leg mij dit uit</button></div>' + "</form>" + bronRegel;
+		messages.appendChild(card);
+		messages.scrollTop = messages.scrollHeight;
+		var kop = card.querySelector("h3");
+		if (kop) kop.focus();
+		return card;
+	}
+
 	function renderStatus(data) {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = true;
@@ -167,33 +461,26 @@
 		updateStatusDisplay();
 	}
 
+	function statusLijst(sources) {
+		return STATUS_ITEMS.map(function (it) {
+			var connected = !!(sources && sources[it.key] === "verbonden");
+			var dot = connected ? "connected" : "disconnected";
+			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
+			return '<li class="chat-status-' + dot + '">' + icon + it.label + "</li>";
+		}).join("");
+	}
+
 	function updateStatusDisplay() {
 		if (!serverStatus) return;
 		var transport = getTransport();
-		var sources = transport === "cli" ? serverStatus.cli : serverStatus.servers;
-		if (!sources) sources = {};
-		var keys = Object.keys(sources);
-		if (keys.length === 0) {
-			statusEl.innerHTML = '<p class="chat-status-warning">Geen bronnen verbonden; de assistent antwoordt op basis van eigen kennis.</p>';
-			return;
-		}
-		var items = keys.map(function (key) {
-			var connected = sources[key] === "verbonden";
-			var label = SERVER_LABELS[key] || key;
-			var dot = connected ? "connected" : "disconnected";
-			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
-			return '<li class="chat-status-' + dot + '">' + icon + label + "</li>";
-		});
-		statusEl.innerHTML = '<p>Verbonden bronnen:</p><ul class="list-plain">' + items.join("") + "</ul>";
+		var sources = (transport === "cli" ? serverStatus.cli : serverStatus.servers) || {};
+		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
-		var items = Object.keys(SERVER_LABELS).map(function (key) {
-			return '<li class="chat-status-disconnected">' + ICON_FOUTMELDING + SERVER_LABELS[key] + "</li>";
-		});
-		statusEl.innerHTML = '<ul class="list-plain">' + items.join("") + "</ul>";
+		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
 	}
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
@@ -234,6 +521,77 @@
 		if (!chip || submitting) return;
 		input.value = chip.textContent.trim();
 		input.focus();
+		form.requestSubmit();
+	});
+
+	// Wallet-deelverzoek: Delen toont de energiekaart, Niet delen toont de notitie.
+	messages.addEventListener("click", function (e) {
+		var card = e.target.closest(".wallet-card");
+		if (!card) return;
+		if (e.target.closest(".wallet-delen")) {
+			card.querySelector(".wallet-consent").hidden = true;
+			var energie = card.querySelector(".wallet-energie");
+			energie.hidden = false;
+			messages.scrollTop = messages.scrollHeight;
+			var kop = energie.querySelector("h3");
+			if (kop) kop.focus();
+		} else if (e.target.closest(".wallet-niet-delen")) {
+			card.querySelector(".wallet-consent").hidden = true;
+			card.querySelector(".wallet-niet-gedeeld").hidden = false;
+			messages.scrollTop = messages.scrollHeight;
+		}
+	});
+
+	// Vraag-formulier: "Leg mij dit uit" vraagt de assistent om uitleg en laat het
+	// formulier staan, zodat je daarna alsnog kunt antwoorden.
+	messages.addEventListener("click", function (e) {
+		if (!e.target.closest(".vraag-uitleg") || submitting) return;
+		input.value = "Leg mij dit uit";
+		form.requestSubmit();
+	});
+
+	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug.
+	messages.addEventListener("submit", function (e) {
+		var f = e.target;
+		if (!f.classList || !f.classList.contains("vraag-form")) return;
+		e.preventDefault();
+		if (submitting) return;
+		var delen = [];
+		var ontbreekt = false;
+		f.querySelectorAll("[data-veld]").forEach(function (veld) {
+			var labelEl = veld.querySelector("legend") || veld.querySelector("label");
+			var labelTekst = labelEl ? labelEl.textContent.trim() : veld.getAttribute("data-veld");
+			var codeM = labelTekst.match(/^([A-Z]{1,4}\d+)/);
+			var key = codeM ? codeM[1] : labelTekst;
+			var radio = veld.querySelector("input[type=radio]:checked");
+			var tekst = veld.querySelector("input[type=text]");
+			if (radio) {
+				delen.push(key + ": " + radio.value);
+			} else if (tekst && tekst.value.trim()) {
+				delen.push(key + ": " + tekst.value.trim());
+			} else {
+				ontbreekt = true;
+			}
+		});
+		if (ontbreekt) {
+			var melding = f.querySelector(".vraag-melding");
+			if (!melding) {
+				melding = document.createElement("p");
+				melding.className = "vraag-melding form-field-error";
+				f.querySelector(".action-group").insertAdjacentElement("beforebegin", melding);
+			}
+			melding.textContent = "Beantwoord elke vraag voordat je verstuurt.";
+			return;
+		}
+		var bericht = "Mijn antwoorden: " + delen.join("; ") + ".";
+		// Laat het ingevulde formulier staan: vergrendel de velden zodat de gekozen
+		// antwoorden zichtbaar blijven, en vervang de knoppen door een bevestiging.
+		f.querySelectorAll("input").forEach(function (el) {
+			el.disabled = true;
+		});
+		var acties = f.querySelector(".action-group");
+		if (acties) acties.outerHTML = '<p class="wallet-badge">' + ICON_SUCCES + "Antwoord verstuurd</p>";
+		input.value = bericht;
 		form.requestSubmit();
 	});
 
@@ -332,26 +690,39 @@
 					var payload = JSON.parse(dataLine);
 
 					if (eventType === "status") {
-						showThinking(payload.message);
+						showThinking(friendlyTool(payload.message));
 					} else if (eventType === "tool") {
-						showThinking(payload.message + "...");
+						var wallet = walletPayload(payload);
+						if (wallet) {
+							hideThinking();
+							renderWalletConsent(wallet.data, wallet.provenance);
+						} else {
+							showThinking(friendlyTool(payload.message) + "...");
+						}
 					} else if (eventType === "case") {
-						// Backend stuurt zaak-data; UI wordt later toegevoegd door een collega.
+						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
+						addZaak(payload);
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
 						if (payload.session_id) sessions[comboKey] = payload.session_id;
-						var role = eventType === "error" ? "error" : "assistant";
-						// Toon alleen als gebruiker nog in dezelfde combinatie zit
-						if (getComboKey() === comboKey) {
-							addMessage(payload.message, role);
+						// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
+						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
+						if (spec) {
+							renderAssistentVraag(spec);
 						} else {
-							// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
-							var temp = messages.innerHTML;
-							messages.innerHTML = chatHistory[comboKey] || "";
-							addMessage(payload.message, role);
-							chatHistory[comboKey] = messages.innerHTML;
-							messages.innerHTML = temp;
+							var role = eventType === "error" ? "error" : "assistant";
+							// Toon alleen als gebruiker nog in dezelfde combinatie zit
+							if (getComboKey() === comboKey) {
+								addMessage(payload.message, role);
+							} else {
+								// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
+								var temp = messages.innerHTML;
+								messages.innerHTML = chatHistory[comboKey] || "";
+								addMessage(payload.message, role);
+								chatHistory[comboKey] = messages.innerHTML;
+								messages.innerHTML = temp;
+							}
 						}
 					} else if (eventType === "done") {
 						hideThinking();
@@ -367,13 +738,13 @@
 				if (err && err.name === "AbortError") {
 					reason = "De assistent reageerde te lang niet. Probeer het opnieuw.";
 				} else if (err && err.status === 401) {
-					reason = "Uw API-sleutel ontbreekt of is onjuist. Controleer de sleutel in het instellingenpaneel.";
+					reason = "Je API-sleutel ontbreekt of is onjuist. Controleer de sleutel in het instellingenpaneel.";
 				} else if (err && err.status === 403) {
-					reason = "Uw API-sleutel heeft geen toegang tot deze backend.";
+					reason = "Je API-sleutel heeft geen toegang tot deze backend.";
 				} else if (err && err.status >= 500) {
 					reason = "De assistent heeft een technisch probleem. Probeer het later opnieuw.";
 				} else {
-					reason = "De assistent is niet bereikbaar. Controleer uw internetverbinding en probeer het opnieuw.";
+					reason = "De assistent is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.";
 				}
 				addMessage(reason, "error");
 			}
@@ -383,4 +754,58 @@
 			submitting = false;
 		}
 	});
+
+	// Demo/test-hook: toon de Wallet-flow zonder backend met de voorbeeld-credential.
+	// Staat los van de live SSE-flow; handig om de kaart te demonstreren of te testen.
+	window.MozaWallet = {
+		toon: renderWalletConsent,
+		demo: function () {
+			return renderWalletConsent(
+				{
+					beschikbaar: true,
+					credential: { type: "EnergieverbruikAttestatie", uitgegeven_door: "Stedin (mock)", houder: { kvk_nummer: "85234567" }, peiljaar: 2025 },
+					toestemming: { gedeeld_via: "EU Business Wallet (mock)", met_toestemming_ondernemer: true },
+					verbruik: { totaal: { jaarlijks_elektriciteitsverbruik_kwh: 61250, jaarlijks_gasverbruik_m3: 9800 }, aansluitingen: [] },
+				},
+				{ source: "EU Business Wallet (mock)", issuer: "Netbeheerder (mock, uitgever)" }
+			);
+		},
+	};
+
+	// Demo/test-hook: toon het generieke vraag-formulier zonder backend.
+	window.MozaVraag = {
+		toon: renderAssistentVraag,
+		eml: function () {
+			return renderAssistentVraag(
+				vraagSpec({
+					maatregelen: [
+						{ code: "GC1", omschrijving: "Pas een klokregeling toe en regel deze in (ruimteverwarming)" },
+						{ code: "GC3", omschrijving: "Pas een weersafhankelijke regeling toe" },
+						{ code: "GF4", omschrijving: "Vervang gloei-, halogeen- en spaarlampen door LED-lampen" },
+						{ code: "FD3", omschrijving: "Pas nachtafdekking toe bij semi-verticale koelmeubels" },
+						{ code: "FD7", omschrijving: "Isoleer de wanden van koelcellen om warmte buiten te houden" },
+					],
+					provenance: { source: "RegelRecht" },
+					data: { vraag: { intro: "Op basis van de Erkende Maatregelenlijst (EML 2023) gelden voor Koffiezaak Noon 5 maatregelen.", tekst: "Geef per maatregel aan of deze is uitgevoerd." } },
+				})
+			);
+		},
+		jaNee: function () {
+			return renderAssistentVraag({
+				titel: "Vraag van de assistent",
+				tekst: "Heeft je bedrijf een koelinstallatie?",
+				bron: "RegelRecht",
+				velden: [{ naam: "koelinstallatie", label: "Heeft je bedrijf een koelinstallatie?", type: "radio", opties: ["Ja", "Nee"] }],
+			});
+		},
+	};
+
+	// Startvraag via URL-parameter (?vraag=…), bijvoorbeeld vanuit de
+	// notificatie op het dashboard. Vult het invoerveld en verstuurt direct,
+	// zodat het gesprek zonder extra klik begint.
+	var startvraag = new URLSearchParams(location.search).get("vraag");
+	if (startvraag && startvraag.trim()) {
+		input.value = startvraag.trim();
+		form.requestSubmit();
+	}
 })();

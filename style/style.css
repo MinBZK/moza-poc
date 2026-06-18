@@ -351,6 +351,15 @@ li.option--confirmed {
 	}
 }
 
+/* Persona-wrappers zijn puur gedrag (personas.js): laat ze uit de layout
+   wegvallen zodat hun kinderen meedoen in de flex-gap van de omliggende kaart. */
+[data-persona-toon], [data-persona-verberg] {
+	display: contents;
+	&[hidden] {
+		display: none;
+	}
+}
+
 /* -- FORMULIEREN -- */
 
 fieldset {
@@ -647,8 +656,8 @@ button, a.btn, a.btn-cta {
 	padding: 0;
 	&:hover, &:focus-visible, &:active {
 		background: inherit !important;
-		color: inherit !important;	
-	}	
+		color: inherit !important;
+	}
 }
 .icon-button {
 	display: flex;
@@ -1054,7 +1063,7 @@ caption {
 			}
 		}
 		/* Onzichtbare link die de hele card klikbaar maakt */
-		&:focus-visible .card-link {  
+		&:focus-visible .card-link {
 			outline: var(--toepassing-focus-outline);
 			outline-offset: var(--toepassing-focus-outline-offset-lg);
 		}
@@ -1432,6 +1441,103 @@ dd .feedback {
 	min-block-size: 6rem;
 }
 
+/* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
+.wallet-card {
+	background: var(--toepassing-color-background-default);
+	border: var(--toepassing-border-default);
+	border-radius: var(--toepassing-border-radius-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-padding-sm);
+	padding: var(--toepassing-space-padding-md);
+}
+.wallet-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
+}
+.wallet-uitgever {
+	align-items: center;
+	color: var(--toepassing-color-text-subtle-1);
+	display: flex;
+	flex-wrap: wrap;
+	font: var(--toepassing-text-smalltext);
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-badge {
+	align-items: center;
+	background: var(--toepassing-color-feedback-success-subtle);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-feedback-success-border);
+	display: inline-flex;
+	gap: var(--toepassing-space-padding-2xs);
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
+}
+.wallet-badge svg {
+	block-size: var(--toepassing-size-icon-sm);
+	color: var(--toepassing-color-feedback-success-icon);
+	inline-size: var(--toepassing-size-icon-sm);
+}
+.wallet-cijfers {
+	display: grid;
+	gap: var(--toepassing-space-padding-md);
+	grid-template-columns: repeat(2, 1fr);
+}
+.wallet-cijfer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-cijfer dt {
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+}
+.wallet-waarde {
+	display: block;
+	font: var(--toepassing-text-heading-h3);
+}
+.wallet-grens {
+	align-items: center;
+	display: flex;
+	font: var(--toepassing-text-smalltext);
+	gap: var(--toepassing-space-padding-2xs);
+}
+.wallet-grens::before {
+	block-size: 0.5rem;
+	border-radius: 50%;
+	content: "";
+	display: inline-block;
+	flex: none;
+	inline-size: 0.5rem;
+}
+.wallet-grens-boven {
+	color: var(--toepassing-color-feedback-warning-border);
+}
+.wallet-grens-boven::before {
+	background: var(--toepassing-color-feedback-warning-icon);
+}
+.wallet-grens-onder {
+	color: var(--toepassing-color-text-subtle-1);
+}
+.wallet-grens-onder::before {
+	background: var(--toepassing-color-feedback-success-icon);
+}
+.wallet-bron {
+	align-self: flex-start;
+	background: var(--toepassing-color-background-subtle);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
+}
+/* Decoratief stap-icoon naast de kop van een Wallet-kaart */
+.stap-icoon {
+	block-size: var(--toepassing-size-icon-md);
+	inline-size: var(--toepassing-size-icon-md);
+	margin-inline-end: var(--toepassing-space-padding-2xs);
+	vertical-align: text-bottom;
+}
+
 /* -- OVERIGE COMPONENTEN -- */
 
 /* Accordion (uitklapblok (details/summary) o.a. voor FAQ-lijst met uitklapbare vragen) */
@@ -1796,6 +1902,10 @@ dd .feedback {
 	min-inline-size: var(--toepassing-size-icon-sm);
 	padding-inline: var(--toepassing-space-padding-2xs)
 
+}
+/* Verberg de badge bij 0 (of leeg): .badge display overschrijft anders het hidden-attribuut */
+.badge[hidden], .badge:empty {
+	display: none;
 }
 h1, h2, h3, h4, h5, h6, a, button {
 	.badge {
