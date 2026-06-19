@@ -49,6 +49,12 @@ server {
         proxy_set_header Host $host;
     }
 
+    # RegelRecht-definities/drempels voor de pre-chat CTA-gating en de Wallet-kaart.
+    location /regelrecht/ {
+        proxy_pass $backend_origin$request_uri;
+        proxy_set_header Host $host;
+    }
+
     # --- Statische Eleventy-site ---
     # Eleventy genereert mappen met een index.html. Val voor extensieloze URLs
     # terug op <pad>.html en geef anders een nette 404.

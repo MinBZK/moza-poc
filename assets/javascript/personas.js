@@ -41,10 +41,13 @@
  *
  * Elementen die alleen relevant zijn boven een wettelijke energiedrempel
  * (zoals de digitale-assistent-CTA bij de informatieplicht energiebesparing)
- * krijgen data-persona-energiedrempel plus het hidden-attribuut. De drempels
- * staan als data-attribuut op het element (data-drempel-kwh / data-drempel-gas,
- * uit de regelgeving); het verbruik komt uit de persona-data (bedrijf.energie).
- * Zo bepaalt een business rule de zichtbaarheid, niet een vaste persona-id.
+ * krijgen data-persona-energiedrempel, data-regelrecht-law="<wet>" en het
+ * hidden-attribuut. De drempel komt live uit RegelRecht via de backend
+ * (GET /regelrecht/definities?law=<wet>); het verbruik uit de persona-data
+ * (bedrijf.energie). Komt het verbruik boven de drempel, dan wordt het element
+ * getoond. Faalt de aanroep (wet niet op de allowlist, of geen backend), dan
+ * blijft het verborgen. Zo bepaalt een business rule de zichtbaarheid, niet een
+ * vaste persona-id.
  */
 
 (function () {
@@ -162,6 +165,49 @@
 		return li;
 	}
 
+	// Toon [data-persona-energiedrempel]-elementen als het verbruik van de persona
+	// boven de RegelRecht-drempel uitkomt. De drempel komt van de backend
+	// (GET /regelrecht/definities?law=…, same-origin via de proxy; lokaal direct via
+	// window.MOZA_CHAT_API). Per wet één aanroep; faalt die (404 / geen backend),
+	// dan blijft het element verborgen.
+	function pasEnergiedrempelToe(persona) {
+		var elementen = document.querySelectorAll("[data-persona-energiedrempel]");
+		if (!elementen.length) return;
+		var energie = (persona.bedrijf && persona.bedrijf.energie) || {};
+		var kwh = Number(energie.elektriciteitKwh || 0);
+		var gas = Number(energie.gasM3 || 0);
+		var apiBase = typeof window.MOZA_CHAT_API === "string" ? window.MOZA_CHAT_API : "";
+		var drempelCache = {};
+
+		function haalDrempel(law) {
+			if (!drempelCache[law]) {
+				drempelCache[law] = fetch(apiBase + "/regelrecht/definities?law=" + encodeURIComponent(law), { signal: AbortSignal.timeout(4000) })
+					.then(function (r) {
+						return r.ok ? r.json() : null;
+					})
+					.then(function (d) {
+						return (d && d.definities) || null;
+					})
+					.catch(function () {
+						return null;
+					});
+			}
+			return drempelCache[law];
+		}
+
+		elementen.forEach(function (el) {
+			var law = el.getAttribute("data-regelrecht-law");
+			if (!law) return;
+			haalDrempel(law).then(function (def) {
+				if (!def) return; // 404 of onbereikbaar: niets tonen
+				var kwhDrempel = Number(def.DREMPEL_ELEKTRICITEIT_KWH);
+				var gasDrempel = Number(def.DREMPEL_GAS_M3);
+				var boven = (kwhDrempel && kwh > kwhDrempel) || (gasDrempel && gas > gasDrempel);
+				if (boven) el.hidden = false;
+			});
+		});
+	}
+
 	function pasToe(persona) {
 		// Vul alle data-profiel elementen.
 		document.querySelectorAll("[data-profiel]").forEach(function (el) {
@@ -259,16 +305,11 @@
 		});
 
 		// Toon elementen die alleen boven een wettelijke energiedrempel relevant
-		// zijn (bv. de assistent-CTA bij de informatieplicht energiebesparing).
-		// De drempels staan op het element, het verbruik in de persona-data.
-		document.querySelectorAll("[data-persona-energiedrempel]").forEach(function (el) {
-			var energie = (persona.bedrijf && persona.bedrijf.energie) || {};
-			var kwhDrempel = parseFloat(el.getAttribute("data-drempel-kwh"));
-			var gasDrempel = parseFloat(el.getAttribute("data-drempel-gas"));
-			var bovenKwh = !isNaN(kwhDrempel) && Number(energie.elektriciteitKwh || 0) > kwhDrempel;
-			var bovenGas = !isNaN(gasDrempel) && Number(energie.gasM3 || 0) > gasDrempel;
-			el.hidden = !(bovenKwh || bovenGas);
-		});
+		// zijn (bv. de assistent-CTA bij de informatieplicht energiebesparing). De
+		// drempel komt live uit RegelRecht via de backend; het verbruik uit de
+		// persona-data. Bij een mislukte aanroep (404 / geen backend) blijft het
+		// element verborgen.
+		pasEnergiedrempelToe(persona);
 
 		// Markeer de actieve persona (bv. in de accountwisselaar). Alleen in de
 		// eigenaar-context van /moza/: in belang- of /mobu/-contexten is geen

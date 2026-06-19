@@ -24,19 +24,10 @@
 	// zodat de demo meeloopt zonder de ~45 vaste datums met de hand bij te werken.
 	var DEMO_NU = new Date(2026, 5, 18); // 18 juni 2026
 
-	// Bekende zaak-typen → frontend-route + weergave-standaarden. De routing naar
-	// een detailpagina is en blijft een frontend-zaak. organisatie en onderwerp
-	// horen eigenlijk in het case-event van de backend thuis (de zaak weet zelf wie
-	// die behandelt en hoe die heet); zolang de backend die niet meelevert, vult de
-	// frontend ze hier in als fallback.
-	var ZAAK_TYPEN = [
-		{
-			test: /energiebespar|informatieplicht/i,
-			url: "/moza/lopende-zaken/informatieplicht-energiebesparing/",
-			onderwerp: "Informatieplicht energiebesparing",
-			organisatie: "Rijksdienst voor Ondernemend Nederland",
-		},
-	];
+	// Bekende zaak-typen → detailpagina-route. Alleen routing: de routing naar een
+	// detailpagina is en blijft een frontend-zaak (de backend stuurt geen
+	// frontend-URL mee). organisatie, onderwerp en status komen uit het case-event.
+	var ZAAK_ROUTES = [{ test: /energiebespar|informatieplicht/i, url: "/moza/lopende-zaken/informatieplicht-energiebesparing/" }];
 
 	var PREFIX = typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "";
 
@@ -54,7 +45,16 @@
 
 	function leesZaken() {
 		try {
-			return JSON.parse(localStorage.getItem(LS_KEY)) || [];
+			var lijst = JSON.parse(localStorage.getItem(LS_KEY)) || [];
+			// Tolerant: oudere entries zijn als wrapper { type:"case", data:{…} }
+			// bewaard (van vóór de addZaak-unwrap); pak dan de zaak uit data en
+			// behoud aangemaaktOp, zodat de rij toch uit de juiste velden rendert.
+			return lijst.map(function (z) {
+				if (z && z.type === "case" && z.data && typeof z.data === "object") {
+					return Object.assign({ aangemaaktOp: z.aangemaaktOp }, z.data);
+				}
+				return z;
+			});
 		} catch (e) {
 			return [];
 		}
@@ -128,13 +128,13 @@
 		});
 	}
 
-	// Match een zaak op een bekend type voor route + weergave-fallbacks.
-	function vindZaakType(zaak) {
-		var sleutel = [veld(zaak, ["onderwerp", "titel", "title", "subject", "naam"], ""), veld(zaak, ["zaak_type", "type"], ""), veld(zaak, ["regeling"], ""), veld(zaak, ["referentienummer", "id", "zaaknummer"], "")].join(" ");
-		for (var i = 0; i < ZAAK_TYPEN.length; i++) {
-			if (ZAAK_TYPEN[i].test.test(sleutel)) return ZAAK_TYPEN[i];
+	// Match een zaak op een bekende detailpagina-route (frontend-routing).
+	function zaakRoute(zaak) {
+		var sleutel = [veld(zaak, ["onderwerp", "titel"], ""), veld(zaak, ["zaak_type"], ""), veld(zaak, ["regeling"], ""), veld(zaak, ["referentienummer"], "")].join(" ");
+		for (var i = 0; i < ZAAK_ROUTES.length; i++) {
+			if (ZAAK_ROUTES[i].test.test(sleutel)) return ZAAK_ROUTES[i].url;
 		}
-		return null;
+		return "";
 	}
 
 	function datumCel(zaak) {
@@ -153,11 +153,13 @@
 
 		var frag = document.createDocumentFragment();
 		zaken.forEach(function (zaak) {
-			var typeInfo = vindZaakType(zaak);
-			var organisatie = veld(zaak, ["organisatie", "organization", "org"], typeInfo ? typeInfo.organisatie : "");
-			var onderwerp = veld(zaak, ["onderwerp", "titel", "title", "subject", "naam"], typeInfo ? typeInfo.onderwerp : veld(zaak, ["zaak_type"], "Zaak"));
-			var status = veld(zaak, ["status", "statusLabel"], "Ingediend");
-			var url = veld(zaak, ["detailUrl", "url", "link"], typeInfo ? typeInfo.url : "");
+			// Velden komen rechtstreeks uit het case-event (lopende_zaak van de
+			// backend); de frontend verzint ze niet. Alleen de detailpagina-route
+			// wordt frontend-side bepaald.
+			var organisatie = veld(zaak, ["organisatie", "organization", "org"], "");
+			var onderwerp = veld(zaak, ["onderwerp", "titel"], veld(zaak, ["zaak_type"], "Zaak"));
+			var status = veld(zaak, ["status", "statusLabel"], "");
+			var url = zaakRoute(zaak);
 			var onderwerpHTML = url ? '<a href="' + escapeHTML(pad(url)) + '">' + escapeHTML(onderwerp) + "</a>" : escapeHTML(onderwerp);
 
 			var tr = document.createElement("tr");

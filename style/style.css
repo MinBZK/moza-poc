@@ -351,9 +351,11 @@ li.option--confirmed {
 	}
 }
 
-/* Persona-wrappers zijn puur gedrag (personas.js): laat ze uit de layout
-   wegvallen zodat hun kinderen meedoen in de flex-gap van de omliggende kaart. */
-[data-persona-energiedrempel] {
+/* Persona-CTA-wrapper in een kaart is puur gedrag (personas.js): laat die uit
+   de layout wegvallen zodat de kinderen meedoen in de flex-gap van de kaart.
+   Alleen binnen een kaart; losse gated elementen (zoals de dashboard-melding)
+   houden hun eigen box en worden simpelweg met [hidden] verborgen. */
+.card > [data-persona-energiedrempel] {
 	display: contents;
 	&[hidden] {
 		display: none;
