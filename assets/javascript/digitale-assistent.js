@@ -162,9 +162,9 @@
 	}
 
 	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
-	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
-	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
-	// hetzelfde case-event geen duplicaat oplevert.
+	// gegevens (de lopende_zaak van de backend) komen al uitgepakt binnen; we
+	// voegen alleen een tijdstip en, als die ontbreekt, een id toe. Idempotent op
+	// het referentienummer, zodat hetzelfde case-event geen duplicaat oplevert.
 	function addZaak(payload) {
 		if (!payload || typeof payload !== "object") return null;
 		var KEY = "zaken";
@@ -174,10 +174,10 @@
 		} catch (e) {
 			lijst = [];
 		}
-		var sleutel = payload.id || payload.case_id || payload.zaaknummer || payload.type;
+		var sleutel = payload.referentienummer || payload.id || payload.case_id || payload.zaaknummer;
 		if (sleutel) {
 			var bestaat = lijst.some(function (z) {
-				return (z.id || z.case_id || z.zaaknummer || z.type) === sleutel;
+				return (z.referentienummer || z.id || z.case_id || z.zaaknummer) === sleutel;
 			});
 			if (bestaat) return null;
 		}
@@ -700,8 +700,9 @@
 							showThinking(friendlyTool(payload.message) + "...");
 						}
 					} else if (eventType === "case") {
-						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
-						addZaak(payload);
+						// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
+						// zaak zelf (payload.data) in localStorage.
+						addZaak(payload.data || payload);
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();

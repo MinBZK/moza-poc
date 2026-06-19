@@ -41,7 +41,9 @@ subNavActive: "/moza/regelgeving/"
 		{% endfor %}
 
 		{% if regeling.assistentVraag %}
-		<div data-persona-toon="koffiezaak" hidden>
+		{# Drempel komt uit RegelRecht (zie _data/regelrecht.json), niet uit de regelgeving-inhoud. #}
+		{% set regelrechtRegel = regelrecht.regels[regeling.regelrechtRegel] %}
+		<div data-persona-energiedrempel{% if regelrechtRegel %} data-drempel-kwh="{{ regelrechtRegel.definitions.DREMPEL_ELEKTRICITEIT_KWH }}" data-drempel-gas="{{ regelrechtRegel.definitions.DREMPEL_GAS_M3 }}"{% endif %} hidden>
 			<p>De digitale assistent helpt je de melding in één keer goed in te dienen.</p>
 			<a class="btn-cta" href="{{ '/moza/digitale-assistent/' | url }}?vraag={{ regeling.assistentVraag | urlencode }}">Start met de digitale assistent</a>
 		</div>

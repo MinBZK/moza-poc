@@ -353,7 +353,7 @@ li.option--confirmed {
 
 /* Persona-wrappers zijn puur gedrag (personas.js): laat ze uit de layout
    wegvallen zodat hun kinderen meedoen in de flex-gap van de omliggende kaart. */
-[data-persona-toon], [data-persona-verberg] {
+[data-persona-energiedrempel] {
 	display: contents;
 	&[hidden] {
 		display: none;

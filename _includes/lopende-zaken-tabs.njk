@@ -3,7 +3,7 @@
 {# Overzicht is current voor alle lopende-zaken-pagina's die niet 'afgehandeld' zijn. #}
 {% set isOverzicht = '/moza/lopende-zaken' in path and not isAfgehandeld %}
 
-<nav aria-label="Lopende zaken">
+<nav aria-label="Lopende zaken" class="lopende-zaken-tabs">
 	<ul class="tablist">
 		<li>
 			<a href="{{ '/moza/lopende-zaken/' | url }}#hoofd-inhoud"{% if isOverzicht %} aria-current="page"{% endif %}>

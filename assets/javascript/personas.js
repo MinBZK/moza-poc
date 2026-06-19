@@ -39,11 +39,12 @@
  * Bij een lege array wordt de container verborgen en, indien aanwezig, een
  * sibling <div data-profiel-leeg="sleutel" hidden> getoond als feedback-bericht.
  *
- * Elementen die alleen voor specifieke persona's bedoeld zijn, krijgen
- * data-persona-toon="id" (meerdere id's gescheiden door spaties) plus het
- * hidden-attribuut; dit script toont ze alleen bij de juiste actieve persona.
- * Het spiegelbeeld data-persona-verberg="id" (zonder hidden-attribuut)
- * verbergt een element juist bij die persona's.
+ * Elementen die alleen relevant zijn boven een wettelijke energiedrempel
+ * (zoals de digitale-assistent-CTA bij de informatieplicht energiebesparing)
+ * krijgen data-persona-energiedrempel plus het hidden-attribuut. De drempels
+ * staan als data-attribuut op het element (data-drempel-kwh / data-drempel-gas,
+ * uit de regelgeving); het verbruik komt uit de persona-data (bedrijf.energie).
+ * Zo bepaalt een business rule de zichtbaarheid, niet een vaste persona-id.
  */
 
 (function () {
@@ -257,16 +258,16 @@
 			}
 		});
 
-		// Toon elementen die alleen voor specifieke persona's bedoeld zijn.
-		document.querySelectorAll("[data-persona-toon]").forEach(function (el) {
-			var ids = el.getAttribute("data-persona-toon").split(/\s+/);
-			el.hidden = ids.indexOf(persona.id) === -1;
-		});
-
-		// Spiegelbeeld: verberg elementen juist bij specifieke persona's.
-		document.querySelectorAll("[data-persona-verberg]").forEach(function (el) {
-			var ids = el.getAttribute("data-persona-verberg").split(/\s+/);
-			el.hidden = ids.indexOf(persona.id) !== -1;
+		// Toon elementen die alleen boven een wettelijke energiedrempel relevant
+		// zijn (bv. de assistent-CTA bij de informatieplicht energiebesparing).
+		// De drempels staan op het element, het verbruik in de persona-data.
+		document.querySelectorAll("[data-persona-energiedrempel]").forEach(function (el) {
+			var energie = (persona.bedrijf && persona.bedrijf.energie) || {};
+			var kwhDrempel = parseFloat(el.getAttribute("data-drempel-kwh"));
+			var gasDrempel = parseFloat(el.getAttribute("data-drempel-gas"));
+			var bovenKwh = !isNaN(kwhDrempel) && Number(energie.elektriciteitKwh || 0) > kwhDrempel;
+			var bovenGas = !isNaN(gasDrempel) && Number(energie.gasM3 || 0) > gasDrempel;
+			el.hidden = !(bovenKwh || bovenGas);
 		});
 
 		// Markeer de actieve persona (bv. in de accountwisselaar). Alleen in de
