@@ -61,6 +61,9 @@ module.exports = function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy("mox/images");
     eleventyConfig.addPassthroughCopy("mox/packages");
 
+    // mijn-belastingdienst/ snapshot: self-contained assets meekopiëren
+    eleventyConfig.addPassthroughCopy("mijn-belastingdienst/assets");
+
     return {
         pathPrefix: "/",
         dir: {
