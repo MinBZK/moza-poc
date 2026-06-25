@@ -1,21 +1,37 @@
 ---
-title: "MijnOverheid Zakelijk: Berichtenbox"
-permalink: "/moza/berichtenbox/"
+title: "Mijn Belastingdienst Zakelijk: Berichtenbox"
+permalink: "/mijn-belastingdienst/berichtenbox/"
+layout: "base.njk"
+bodyClass: "moza mijn-belastingdienst"
+headerType: "belastingdienst"
+footerType: "belastingdienst"
+extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-belastingdienst.css">'
 ---
 
-{% include "berichtenbox-data.njk" %} {% include "side-nav-overheid.njk" %}
+{% include "side-nav-overheid.njk" %}
 
-<article id="hoofd-inhoud" class="berichtenbox">
+<article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/mijn-belastingdienst/' | url }}">Home</a><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M10.557 7.633a.67.67 0 0 1-.085.839l-4 4a.667.667 0 0 1-.944-.944L9.057 8 5.528 4.472a.667.667 0 0 1 .944-.944l4 4z"></path></svg>
+			</li>
 			<li aria-current="page">Berichtenbox</li>
 		</ol>
 	</nav>
 
 	<h1>Berichtenbox</h1>
 
-	<section class="card tabs">
+	<div class="feedback feedback-info">
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Hier ziet u de zakelijke berichten afkomstig van de Belastingdienst. Wilt u de berichten zien van alle overheidsorganisaties, <a href="/moza/berichtenbox/">ga dan naar de Berichtenbox van MijnOverheid Zakelijk</a>.</p>
+		</div>
+	</div>
+
+	{% set berichtenboxData = belastingdienstUitMoza %} {% include "berichtenbox-data.njk" %}
+
+	<section class="card tabs berichtenbox">
 		{% include "berichtenbox-tabs.njk" %}
 
 		<section id="berichtenbox-inbox" aria-label="Berichten">
@@ -45,7 +61,6 @@ permalink: "/moza/berichtenbox/"
 							<th scope="col">Onderwerp</th>
 							<th scope="col">Datum</th>
 							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
-							<!-- <th scope="col">Map</th> -->
 						</tr>
 					</thead>
 					<tbody>
@@ -57,4 +72,6 @@ permalink: "/moza/berichtenbox/"
 			</section>
 		</section>
 	</section>
+
+	<small>Uw vorige bezoek was op 29 april 2026 om 19:42 uur.</small>
 </article>

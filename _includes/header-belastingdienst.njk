@@ -1,0 +1,83 @@
+<header class="header-belastingdienst">
+	<a class="skip-link btn-cta" href="#hoofd-inhoud">Ga naar hoofdinhoud</a>
+
+	<div class="logo">
+		<figure>
+			<a href="{{ '/mijn-belastingdienst/' | url }}">
+				<img src="{{ '/mijn-belastingdienst/assets/bld_logo.svg' | url }}" alt="Naar de homepage van Mijn Belastingdienst Zakelijk">
+			</a>
+		</figure>
+		<a href="#" class="language-switch">English</a>
+	</div>
+
+	<div class="page-head">
+		<div class="bd-menu-wrapper">
+			<button class="bd-menu" type="button" aria-expanded="false" aria-controls="bd-hoofdmenu" aria-haspopup="true">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M13.333 2.667H2.667v2h9.666zM2.667 8.667h9.666l1-2H2.667zM2.667 12.667h9.666l1-2H2.667z"></path></svg>
+				Menu
+			</button>
+			<nav class="bd-menu-list" id="bd-hoofdmenu" aria-label="Hoofdmenu">
+				<ul>
+					<li><a href="{{ '/mijn-belastingdienst/' | url }}">Home</a></li>
+					<li><a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">Berichtenbox</a></li>
+					<li class="bd-has-submenu">
+						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Btw</button>
+						<ul class="bd-submenu">
+							<li><a href="#">Btw-aangifte</a></li>
+							<li><a href="#">Correctie btw-aangifte</a></li>
+							<li><a href="#">Opgaaf intracommunautaire prestaties (ICP)</a></li>
+							<li><a href="#">E-commerce</a></li>
+							<li><a href="#">Kleineondernemersregeling in Nederland</a></li>
+							<li><a href="#">Kleineondernemersregeling in een ander EU-land</a></li>
+							<li><a href="#">Btw-identificatienummer</a></li>
+						</ul>
+					</li>
+					<li class="bd-has-submenu">
+						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Loonheffingen</button>
+						<ul class="bd-submenu">
+							<li><a href="#">Aangifte loonheffingen</a></li>
+							<li><a href="#">Verklaring uitsluitend zakelijk gebruik bestelauto</a></li>
+							<li><a href="#">Opgaaf eerstedagsmelding</a></li>
+						</ul>
+					</li>
+					<li class="bd-has-submenu">
+						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Dividendbelasting</button>
+						<ul class="bd-submenu">
+							<li><a href="#">Aangifte en opgaaf dividendbelasting</a></li>
+							<li><a href="#">Teruggaaf dividendbelasting</a></li>
+							<li><a href="#">Kwalificatiebeschikking dividendbelasting</a></li>
+						</ul>
+					</li>
+					<li><a href="#">Vennootschapsbelasting</a></li>
+					<li class="bd-has-submenu">
+						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Overige belastingen</button>
+						<ul class="bd-submenu">
+							<li><a href="#">Minimumbelasting</a></li>
+							<li><a href="#">Verhuurderheffing</a></li>
+							<li><a href="#">Bankenbelasting</a></li>
+							<li><a href="#">Vliegbelasting</a></li>
+						</ul>
+					</li>
+					<li class="bd-has-submenu">
+						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Mijn gegevens</button>
+						<ul class="bd-submenu">
+							<li><a href="#">Rekeningnummer voor teruggaven</a></li>
+							<li><a href="#">Meldingen via e-mail</a></li>
+						</ul>
+					</li>
+				</ul>
+			</nav>
+			<span class="page-title">Mijn Belastingdienst Zakelijk</span>
+		</div>
+		<div class="user-menu">
+			<a class="icon-label">
+				{% include "icon-persoon.njk" %}
+				<span>Robin Vogel</span>
+			</a>
+		</div>
+	</div>
+
+	<!-- Proof of concept banner -->
+	<a class="temp-moza-poc-banner" href="https://www.mijnoverheidzakelijk.nl/">Proof of Concept</a>
+
+</header>

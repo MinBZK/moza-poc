@@ -150,6 +150,29 @@ for (let i = 0; i < AANTAL_BERICHTEN; i++) {
 	});
 }
 
+// Vier vaste Belastingdienst-berichten. Zichtbaar in de MOZa-berichtenbox én
+// (na filtering op magazijnId) in de Mijn Belastingdienst-berichtenbox, zodat
+// daar genoeg berichten zijn om paginering te tonen.
+const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
+[
+	{ onderwerp: "Aangifte vennootschapsbelasting 2025 beschikbaar", datum: "2026-04-22", isOngelezen: true, map: "belastingen-2025", heeftBijlage: true },
+	{ onderwerp: "Naheffingsaanslag omzetbelasting eerste kwartaal 2026", datum: "2026-04-18", isOngelezen: true, map: null, heeftBijlage: true },
+	{ onderwerp: "Beschikking uitstel van betaling", datum: "2026-04-12", isOngelezen: false, map: "belastingen-2025", heeftBijlage: false },
+	{ onderwerp: "Herinnering aangifte loonheffingen", datum: "2026-04-05", isOngelezen: false, map: null, heeftBijlage: true },
+].forEach((b, i) => {
+	berichten.push({
+		id: "msg-" + String(AANTAL_BERICHTEN + i + 1).padStart(4, "0"),
+		magazijnId: "belastingdienst",
+		afzender: belastingdienstMag.naam,
+		onderwerp: b.onderwerp,
+		inhoud: inhoudVoor(belastingdienstMag, b.onderwerp),
+		datum: b.datum,
+		isOngelezen: b.isOngelezen,
+		map: b.map,
+		heeftBijlage: b.heeftBijlage,
+	});
+});
+
 // Sorteer op datum, nieuwste eerst.
 berichten.sort((a, b) => (a.datum < b.datum ? 1 : -1));
 

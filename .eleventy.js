@@ -64,6 +64,14 @@ module.exports = function (eleventyConfig) {
     // mijn-belastingdienst/ snapshot: self-contained assets meekopiëren
     eleventyConfig.addPassthroughCopy("mijn-belastingdienst/assets");
 
+    // Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
+    // pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
+    eleventyConfig.setServerOptions({
+        headers: {
+            "Cache-Control": "no-store",
+        },
+    });
+
     return {
         pathPrefix: "/",
         dir: {
