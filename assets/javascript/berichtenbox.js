@@ -202,10 +202,201 @@
 			}).length;
 			el.textContent = n;
 		});
+
+		werkMeervoudBij();
+	}
+
+	// Zet enkelvoud/meervoud van de bijbehorende telwoorden: een [data-meervoud]-span
+	// verwijst naar de teller (data-attribuut) waaruit het getal komt en draagt het
+	// enkelvoud (data-ev) en meervoud (data-mv). Bij 1 -> enkelvoud, anders meervoud.
+	function werkMeervoudBij() {
+		document.querySelectorAll('[data-meervoud]').forEach((span) => {
+			const tellerAttr = span.getAttribute('data-meervoud');
+			const teller = document.querySelector('[' + tellerAttr + ']');
+			if (!teller) return;
+			const n = parseInt(teller.textContent, 10);
+			if (!Number.isFinite(n)) return;
+			span.textContent = n === 1 ? span.getAttribute('data-ev') : span.getAttribute('data-mv');
+		});
 	}
 
 	function opslaan() {
 		writeState(state);
+	}
+
+	// ---- Client-side paginering ----
+	// Eleventy rendert alle berichten in één lijst; JS toont per pagina een venster
+	// zodat een dynamisch toegevoegd bericht echt naar de volgende pagina reflowt.
+	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan geen
+	// paginering (alles op één pagina).
+	const PAGINA_GROOTTE = (function () {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const n = parseInt(lijst && lijst.dataset.pageSize, 10);
+		return Number.isFinite(n) && n > 0 ? n : Infinity;
+	})();
+
+	function huidigePaginaUitUrl() {
+		const p = parseInt(new URLSearchParams(location.search).get('pagina'), 10);
+		return Number.isFinite(p) && p > 0 ? p : 1;
+	}
+	let huidigePagina = huidigePaginaUitUrl();
+
+	// Hook die de huidige weergave opnieuw filtert/pagineert; gezet door de
+	// actieve view (inbox-filter of archief/prullenbak/map-render).
+	let herpagineerHuidigeView = function () {};
+
+	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
+	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
+	let resizeTimer = null;
+	window.addEventListener('resize', () => {
+		clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(() => { herpagineerHuidigeView(); }, 150);
+	});
+
+	// Toon alleen het venster van de huidige pagina uit `rijen` (al gefilterde,
+	// in volgorde staande rijen die zichtbaar horen te zijn) en bouw de paginanav.
+	function paginer(rijen) {
+		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
+		if (!Number.isFinite(PAGINA_GROOTTE)) {
+			if (pagnav) { pagnav.hidden = true; }
+			return;
+		}
+		const totaalPaginas = Math.max(1, Math.ceil(rijen.length / PAGINA_GROOTTE));
+		if (huidigePagina > totaalPaginas) huidigePagina = totaalPaginas;
+		if (huidigePagina < 1) huidigePagina = 1;
+		const start = (huidigePagina - 1) * PAGINA_GROOTTE;
+		const eind = start + PAGINA_GROOTTE;
+		rijen.forEach((rij, i) => {
+			rij.hidden = i < start || i >= eind;
+		});
+		bouwPaginaNav(totaalPaginas, pagnav);
+	}
+
+	function gaNaarPagina(nr) {
+		huidigePagina = nr;
+		const params = new URLSearchParams(location.search);
+		if (nr <= 1) params.delete('pagina'); else params.set('pagina', String(nr));
+		const query = params.toString();
+		history.replaceState(null, '', location.pathname + (query ? '?' + query : ''));
+		herpagineerHuidigeView();
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (lijst && typeof lijst.scrollIntoView === 'function') {
+			lijst.scrollIntoView({ block: 'start' });
+		}
+	}
+
+	function bouwPaginaNav(totaal, pagnav) {
+		if (!pagnav) return;
+		if (totaal <= 1) {
+			while (pagnav.firstChild) pagnav.removeChild(pagnav.firstChild);
+			pagnav.hidden = true;
+			return;
+		}
+		pagnav.hidden = false;
+
+		// Bouwt de nav met ten hoogste maxItems cijfercellen. Retourneert de <ol>.
+		function renderMet(maxItems) {
+			while (pagnav.firstChild) pagnav.removeChild(pagnav.firstChild);
+			const ol = document.createElement('ol');
+
+			function maakItem(label, paginaNr, opties) {
+				opties = opties || {};
+				const li = document.createElement('li');
+				if (opties.huidig) {
+					const span = document.createElement('span');
+					span.setAttribute('aria-current', 'page');
+					span.textContent = label;
+					li.appendChild(span);
+				} else {
+					const a = document.createElement('a');
+					a.href = '#';
+					if (opties.rel) a.setAttribute('rel', opties.rel);
+					a.textContent = label;
+					a.addEventListener('click', (e) => {
+						e.preventDefault();
+						gaNaarPagina(paginaNr);
+					});
+					li.appendChild(a);
+				}
+				ol.appendChild(li);
+			}
+
+			function maakEllipsis() {
+				const li = document.createElement('li');
+				li.className = 'pagination-ellipsis';
+				const span = document.createElement('span');
+				span.setAttribute('aria-hidden', 'true');
+				span.textContent = '…';
+				li.appendChild(span);
+				ol.appendChild(li);
+			}
+
+			const teTonen = paginaNummers(totaal, huidigePagina, maxItems);
+			if (huidigePagina > 1) maakItem('Vorige', huidigePagina - 1, { rel: 'prev' });
+			let vorige = 0;
+			teTonen.forEach((n) => {
+				if (n - vorige > 1) maakEllipsis();
+				maakItem(String(n), n, { huidig: n === huidigePagina });
+				vorige = n;
+			});
+			if (huidigePagina < totaal) maakItem('Volgende', huidigePagina + 1, { rel: 'next' });
+			pagnav.appendChild(ol);
+			return ol;
+		}
+
+		// Wrapt de nav over meer dan één regel? Vergelijk de bovenkant van het
+		// laatste item met die van het eerste (offsetTop forceert een reflow).
+		function wrapt(ol) {
+			const items = ol.children;
+			if (items.length < 2) return false;
+			return items[items.length - 1].offsetTop > items[0].offsetTop + 1;
+		}
+
+		// Start met een breedte-schatting en krimp tot het op één regel past.
+		let maxItems = schatMaxItems(pagnav);
+		let ol = renderMet(maxItems);
+		let guard = 0;
+		while (Number.isFinite(maxItems) && maxItems > 5 && wrapt(ol) && guard < 50) {
+			maxItems -= 1;
+			ol = renderMet(maxItems);
+			guard += 1;
+		}
+	}
+
+	// Schat hoeveel cijfercellen er naast Vorige/Volgende passen, op basis van de
+	// breedte van de container waarin lijst + pager zitten (#berichtenbox-inbox).
+	function schatMaxItems(pagnav) {
+		const container = (pagnav && (
+			pagnav.closest('#berichtenbox-inbox')
+			|| pagnav.closest('.berichtenbox-content')
+			|| pagnav.parentElement
+		)) || pagnav;
+		const breedte = (container && container.clientWidth) || (pagnav && pagnav.clientWidth) || 0;
+		const ITEM = 46;
+		const PREV_NEXT = 150;
+		return breedte ? Math.max(5, Math.floor((breedte - PREV_NEXT) / ITEM)) : Infinity;
+	}
+
+	// Welke paginanummers tonen, gegeven het maximaal aantal cijfercellen. Past
+	// alles? Toon elke pagina. Anders: eerste + laatste (ankerpunten) en een
+	// aaneengesloten venster rond de huidige dat de breedte vult.
+	function paginaNummers(totaal, huidig, maxItems) {
+		if (totaal <= maxItems) {
+			const alle = [];
+			for (let n = 1; n <= totaal; n++) alle.push(n);
+			return alle;
+		}
+		let venster = maxItems - 4; // reserveer 2 ankers + 2 ellipsis
+		if (venster < 1) venster = 1;
+		const half = Math.floor(venster / 2);
+		let start = huidig - half;
+		let eind = huidig + (venster - 1 - half);
+		if (start < 2) { eind += 2 - start; start = 2; }
+		if (eind > totaal - 1) { start -= eind - (totaal - 1); eind = totaal - 1; }
+		if (start < 2) start = 2;
+		const set = new Set([1, totaal]);
+		for (let n = start; n <= eind; n++) set.add(n);
+		return [...set].sort((a, b) => a - b);
 	}
 
 	// Inline-paneel i.p.v. <dialog>, omdat het contextueel bij de geklikte knop hoort.
@@ -443,9 +634,16 @@
 		if (view === 'archief' || view === 'prullenbak') {
 			const tbody = lijst.querySelector('tbody') || lijst;
 			while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-			items.forEach((b) => tbody.appendChild(createRij(b)));
+			const rijen = items.map((b) => {
+				const rij = createRij(b);
+				tbody.appendChild(rij);
+				return rij;
+			});
 			lijst.hidden = items.length === 0;
 			if (leeg) leeg.hidden = items.length > 0;
+			// Deze views worden volledig uit data herbouwd; paginering werkt op die rijen.
+			herpagineerHuidigeView = function () { renderLijstVoorView(view); };
+			paginer(rijen);
 		}
 	}
 
@@ -480,22 +678,8 @@
 			return params.get('map');
 		}
 
-		// Bij actief map-filter: herbouw de lijst volledig uit data (berichten uit die
-		// map kunnen op elke pagineringspagina staan, niet per se op de huidige). Voor
-		// zoek/afzender filteren we de statisch gerenderde rijen op deze pagina.
-		const mapFilterAanvankelijk = mapUitUrl();
-		const paginering = document.querySelector('.berichtenbox-content .pagination');
-		if (mapFilterAanvankelijk) {
-			const berichtenInMap = data.berichten.filter((b) => {
-				if (statusVan(b.id) !== 'inbox') return false;
-				const effMap = (b.id in state.mapOverride) ? state.mapOverride[b.id] : b.map;
-				return effMap === mapFilterAanvankelijk;
-			});
-			const tbody = lijst.querySelector('tbody') || lijst;
-			while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-			berichtenInMap.forEach((b) => tbody.appendChild(createRij(b)));
-			if (paginering) paginering.hidden = true;
-		}
+		// Alle berichten staan in de DOM; het map-filter in pasFilterToe verbergt de
+		// niet-passende rijen en de paginering toont het juiste venster.
 
 		function pasFilterToe() {
 			const zoek = (zoekInput ? zoekInput.value : '').trim().toLowerCase();
@@ -503,7 +687,7 @@
 				[...document.querySelectorAll('[data-afzender-check]:checked')].map((c) => c.value)
 			);
 			const mapFilter = mapUitUrl();
-			let zichtbaar = 0;
+			const zichtbareRijen = [];
 			document.querySelectorAll('.berichtenbox-row').forEach((rij) => {
 				if (statusVan(rij.dataset.berichtId) !== 'inbox') {
 					rij.hidden = true;
@@ -526,14 +710,21 @@
 					if (effectieveMap !== mapFilter) match = false;
 				}
 				rij.hidden = !match;
-				if (match) zichtbaar++;
+				if (match) zichtbareRijen.push(rij);
 			});
 			const leeg = document.querySelector('[data-berichtenbox-empty]');
-			if (leeg) leeg.hidden = zichtbaar > 0;
+			if (leeg) leeg.hidden = zichtbareRijen.length > 0;
+			// Toon alleen het venster van de huidige pagina van de gematchte rijen.
+			paginer(zichtbareRijen);
 		}
 
-		if (zoekInput) zoekInput.addEventListener('input', pasFilterToe);
-		if (afzenderPaneel) afzenderPaneel.addEventListener('change', pasFilterToe);
+		// Bij inbox stuurt het filter de paginering aan.
+		herpagineerHuidigeView = pasFilterToe;
+
+		// Een nieuw filter zet de weergave terug naar pagina 1.
+		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
+		if (zoekInput) zoekInput.addEventListener('input', filterVanafEerstePagina);
+		if (afzenderPaneel) afzenderPaneel.addEventListener('change', filterVanafEerstePagina);
 
 		const mapFilter = mapUitUrl();
 		if (mapFilter) {
@@ -773,6 +964,7 @@
 			const berichtenBinnen = aantalVoor(berichtTijden, t);
 			if (bronEl) bronEl.textContent = bronnenBinnen;
 			if (gevondenEl) gevondenEl.textContent = berichtenBinnen;
+			werkMeervoudBij();
 			if (balk) balk.style.inlineSize = ((bronnenBinnen / totaalBronnen) * 100) + '%';
 			if (t < 1) {
 				requestAnimationFrame(stap);
@@ -827,11 +1019,9 @@
 			tr.classList.add('is-new');
 			tbody.prepend(tr);
 
-			// Houd paginagrootte aan: verwijder de onderste rij als er meer dan 25 zichtbaar zijn.
-			const zichtbaar = Array.from(tbody.querySelectorAll('.berichtenbox-row:not([hidden])'));
-			if (zichtbaar.length > 25) {
-				zichtbaar[zichtbaar.length - 1].remove();
-			}
+			// Her-filter en -pagineer: het nieuwe bericht komt bovenaan pagina 1 en het
+			// onderste bericht schuift door naar de volgende pagina (echte reflow).
+			herpagineerHuidigeView();
 		}
 		render('inbox');
 

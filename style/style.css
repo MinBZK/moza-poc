@@ -840,16 +840,19 @@ button.side-nav-toggle {
 .pagination {
 	ol {
 		flex-direction: row;
+		flex-wrap: wrap;
 	}
 	a, [aria-current="page"] {
 		align-items: center;
+		background: var(--toepassing-color-background-default);
 		border: var(--toepassing-border-width-xs) solid var(--toepassing-color-border-subtle);
-		border-radius: var(--toepassing-border-radius-sm);
+		border-radius: var(--toepassing-border-radius-md);
 		display: inline-flex;
 		justify-content: center;
 		min-block-size: var(--toepassing-pointer-target-min-size);
 		min-inline-size: var(--toepassing-pointer-target-min-size);
 		padding-inline: var(--toepassing-space-padding-sm);
+		text-decoration: none;
 	}
 	a {
 		&:hover {
@@ -860,6 +863,14 @@ button.side-nav-toggle {
 		background: var(--toepassing-color-interactive-selected-background);
 		border-color: var(--toepassing-color-interactive-selected-border);
 		color: var(--toepassing-color-text-inverse);
+	}
+	.pagination-ellipsis span {
+		align-items: center;
+		color: var(--toepassing-color-text-subtle);
+		display: inline-flex;
+		justify-content: center;
+		min-block-size: var(--toepassing-pointer-target-min-size);
+		min-inline-size: var(--toepassing-pointer-target-min-size);
 	}
 }
 
