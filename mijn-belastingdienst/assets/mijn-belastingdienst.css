@@ -34,6 +34,9 @@
 			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
 		}
 	}
+	ul, ol {
+		gap: 0;
+	}
 	.bd-menu-wrapper {
 		position: relative;
 	}
@@ -68,6 +71,7 @@
 		position: absolute;
 		z-index: 10;
 		ul {
+			gap: 0;
 			list-style: none;
 			margin: 0;
 			padding: 0;
@@ -118,6 +122,9 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		li {
+			margin-block-start: 0;
+		}
 		a {
 			color: #01689b;
 			display: block;
@@ -130,6 +137,20 @@
 	}
 	.bd-submenu-toggle[aria-expanded="true"] + .bd-submenu {
 		display: block;
+	}
+	.bd-has-submenu button {
+		display: flex !important;
+		justify-content: space-between;
+		&::after {
+			background-color: currentcolor;
+			block-size: var(--toepassing-size-icon-xs);
+			content: "";
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-end: 6px;
+			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+			rotate: 90deg;
+		}
 	}
 	.user-menu {
 		align-items: center;
@@ -198,6 +219,9 @@
 	}
 	.link-card {
 		text-decoration: none !important;
+		.card:hover {
+			border-color: #01689b !important;
+		}
 	}
 	.card {
 		border: 1px solid #cbd5e1;
@@ -205,6 +229,7 @@
 		box-shadow: none;
 		gap: 8px;
 		padding: 1.5rem;
+		transition: var(--toepassing-transition-default);
 		h2 {
 			color: #01689b;
 			display: flex;

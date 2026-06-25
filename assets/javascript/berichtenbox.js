@@ -40,6 +40,13 @@
 		if (PATH_PREFIX === '/') return absPath;
 		return PATH_PREFIX.replace(/\/$/, '') + absPath;
 	}
+	// Basis-URL van de berichtenbox waarin we ons bevinden, zodat berichten en
+	// acties binnen het juiste portaal (MOZa of Mijn Belastingdienst) blijven.
+	function berichtenboxBasis() {
+		return location.pathname.indexOf('/mijn-belastingdienst/') !== -1
+			? '/mijn-belastingdienst/berichtenbox/'
+			: '/moza/berichtenbox/';
+	}
 	const POLL_MIN_SEC = 5;
 	const NIEUWE_BERICHTEN_LIMIET = 5;
 
@@ -534,7 +541,7 @@
 		const li = document.createElement('li');
 		li.dataset.mapSlug = map.slug;
 		const a = document.createElement('a');
-		a.href = url('/moza/berichtenbox/?map=' + map.slug);
+		a.href = url(berichtenboxBasis() + '?map=' + map.slug);
 		a.textContent = map.naam + ' ';
 		const teller = document.createElement('span');
 		teller.className = 'berichtenbox-nav-count';
@@ -571,12 +578,12 @@
 		tdOnd.className = 'berichtenbox-row-subject';
 		if (dynamisch) {
 			const a = document.createElement('a');
-			a.href = url('/moza/berichtenbox/bericht-demo/?id=' + encodeURIComponent(bericht.id));
+			a.href = url(berichtenboxBasis() + 'bericht-demo/?id=' + encodeURIComponent(bericht.id));
 			a.textContent = bericht.onderwerp;
 			tdOnd.appendChild(a);
 		} else {
 			const a = document.createElement('a');
-			a.href = url('/moza/berichtenbox/bericht/' + bericht.id + '/');
+			a.href = url(berichtenboxBasis() + 'bericht/' + bericht.id + '/');
 			a.textContent = bericht.onderwerp;
 			tdOnd.appendChild(a);
 		}
@@ -769,23 +776,23 @@
 					state.gearchiveerd[berichtId] = true;
 					delete state.verwijderd[berichtId];
 					opslaan();
-					location.href = url('/moza/berichtenbox/');
+					location.href = url(berichtenboxBasis());
 				} else if (actie === 'verwijderen') {
 					state.verwijderd[berichtId] = true;
 					delete state.gearchiveerd[berichtId];
 					opslaan();
-					location.href = url('/moza/berichtenbox/');
+					location.href = url(berichtenboxBasis());
 				} else if (actie === 'markeer-ongelezen') {
 					state.ongelezenToegevoegd[berichtId] = true;
 					delete state.gelezen[berichtId];
 					opslaan();
-					location.href = url('/moza/berichtenbox/');
+					location.href = url(berichtenboxBasis());
 				} else if (actie === 'verplaatsen') {
 					toonVerplaatsPaneel(berichtId, btn);
 				} else if (actie === 'naar-inbox') {
 					state.mapOverride[berichtId] = null;
 					opslaan();
-					location.href = url('/moza/berichtenbox/');
+					location.href = url(berichtenboxBasis());
 				}
 			});
 		});
@@ -1075,7 +1082,7 @@
 			} catch (err) {
 				console.error('[Berichtenbox] Kon state niet wissen.', err);
 			}
-			location.href = url('/moza/berichtenbox/');
+			location.href = url(berichtenboxBasis());
 		});
 	});
 

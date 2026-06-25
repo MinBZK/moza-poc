@@ -1,0 +1,63 @@
+---
+title: "Mijn Belastingdienst Zakelijk: Bericht"
+permalink: "/mijn-belastingdienst/berichtenbox/bericht-demo/"
+layout: "base.njk"
+bodyClass: "moza mijn-belastingdienst"
+headerType: "belastingdienst"
+footerType: "belastingdienst"
+extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-belastingdienst.css">'
+subNav:
+  - label: "Home"
+    url: "/mijn-belastingdienst/"
+    icon: "/assets/icons/icon-home.svg"
+  - label: "Berichtenbox"
+    url: "/mijn-belastingdienst/berichtenbox/"
+    icon: "/assets/icons/icon-berichtenbox.svg"
+    class: "side-nav-group--start"
+---
+
+{% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/mijn-belastingdienst/' | url }}">Home</a><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M10.557 7.633a.67.67 0 0 1-.085.839l-4 4a.667.667 0 0 1-.944-.944L9.057 8 5.528 4.472a.667.667 0 0 1 .944-.944l4 4z"></path></svg>
+			</li>
+			<li>
+				<a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">Berichtenbox</a><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M10.557 7.633a.67.67 0 0 1-.085.839l-4 4a.667.667 0 0 1-.944-.944L9.057 8 5.528 4.472a.667.667 0 0 1 .944-.944l4 4z"></path></svg>
+			</li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+	<section class="card">
+		{% include "berichtenbox-tabs.njk" %}
+
+		<section class="berichtenbox-content" data-demo-detail>
+			<h1 data-demo-onderwerp class="h3"></h1>
+
+			<p class="metadata" data-demo-meta></p>
+
+			<div class="action-group">
+				<button class="icon-button" data-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %} Archiveren</button>
+				<button class="icon-button" data-actie="verplaatsen">{% icon "/assets/icons/icon-archief.svg" %}Verplaats naar map</button>
+				<button class="icon-button" data-actie="markeer-ongelezen">{% include "icon-ongelezen.njk" %}Markeer als ongelezen</button>
+				<button class="icon-button" data-actie="naar-inbox" hidden>Verplaats naar inbox</button>
+				<button class="icon-button" data-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %} Verwijder bericht</button>
+			</div>
+
+			<div class="berichtenbox-detail-body" data-demo-body></div>
+
+			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
+				<h2>Bijlagen</h2>
+				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
+			</section>
+		</section>
+
+		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
+			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
+			<p><a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}" class="btn-cta">Terug naar Berichtenbox</a></p>
+		</div>
+	</section>
+</article>

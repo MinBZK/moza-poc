@@ -29,7 +29,7 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 		</div>
 	</div>
 
-	{% set berichtenboxData = belastingdienstUitMoza %} {% include "berichtenbox-data.njk" %}
+	{% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
 
 	<section class="card tabs berichtenbox">
 		{% include "berichtenbox-tabs.njk" %}

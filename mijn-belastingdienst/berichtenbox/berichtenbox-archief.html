@@ -1,0 +1,56 @@
+---
+title: "Mijn Belastingdienst Zakelijk: Berichtenbox — Archief"
+permalink: "/mijn-belastingdienst/berichtenbox/berichtenbox-archief/"
+layout: "base.njk"
+bodyClass: "moza mijn-belastingdienst"
+headerType: "belastingdienst"
+footerType: "belastingdienst"
+extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-belastingdienst.css">'
+subNav:
+  - label: "Home"
+    url: "/mijn-belastingdienst/"
+    icon: "/assets/icons/icon-home.svg"
+  - label: "Berichtenbox"
+    url: "/mijn-belastingdienst/berichtenbox/"
+    icon: "/assets/icons/icon-berichtenbox.svg"
+    class: "side-nav-group--start"
+---
+
+{% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/mijn-belastingdienst/' | url }}">Home</a></li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<section class="card tabs">
+		{% include "berichtenbox-tabs.njk" %}
+
+		<section role="tabpanel" id="berichtenbox-archief" aria-labelledby="tab-berichtenbox-archief">
+			<section class="berichtenbox-content">
+				<p class="metadata"><span data-berichtenbox-counter-total>0</span> gearchiveerde berichten</p>
+				<table class="berichtenbox-list" data-berichtenbox-list data-berichtenbox-view="archief">
+					<thead>
+						<tr>
+							<th scope="col">Afzender</th>
+							<th scope="col">Onderwerp</th>
+							<th scope="col">Datum</th>
+							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						{# Wordt gevuld door JS op basis van localStorage #}
+					</tbody>
+				</table>
+				<div class="feedback" data-berichtenbox-empty>U heeft nog geen berichten gearchiveerd.</div>
+			</section>
+		</section>
+	</section>
+</article>
