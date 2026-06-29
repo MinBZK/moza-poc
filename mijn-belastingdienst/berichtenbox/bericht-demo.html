@@ -6,14 +6,6 @@ bodyClass: "moza mijn-belastingdienst"
 headerType: "belastingdienst"
 footerType: "belastingdienst"
 extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-belastingdienst.css">'
-subNav:
-  - label: "Home"
-    url: "/mijn-belastingdienst/"
-    icon: "/assets/icons/icon-home.svg"
-  - label: "Berichtenbox"
-    url: "/mijn-belastingdienst/berichtenbox/"
-    icon: "/assets/icons/icon-berichtenbox.svg"
-    class: "side-nav-group--start"
 ---
 
 {% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
@@ -27,7 +19,7 @@ subNav:
 			<li>
 				<a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">Berichtenbox</a><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M10.557 7.633a.67.67 0 0 1-.085.839l-4 4a.667.667 0 0 1-.944-.944L9.057 8 5.528 4.472a.667.667 0 0 1 .944-.944l4 4z"></path></svg>
 			</li>
-			<li aria-current="page">Berichtenbox</li>
+			<li aria-current="page" data-demo-breadcrumb>Bericht</li>
 		</ol>
 	</nav>
 	<section class="card">

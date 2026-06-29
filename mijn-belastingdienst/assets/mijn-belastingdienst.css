@@ -34,9 +34,6 @@
 			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
 		}
 	}
-	ul, ol {
-		gap: 0;
-	}
 	.bd-menu-wrapper {
 		position: relative;
 	}
@@ -179,6 +176,9 @@
 		}
 	}
 	.breadcrumb {
+		ol {
+			gap: 0;
+		}
 		li {
 			display: flex;
 			svg {
