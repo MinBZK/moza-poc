@@ -1,6 +1,6 @@
 ---
 pagination:
-  data: belastingdienstUitMoza.berichten
+  data: belastingdienstBerichtenboxAB.berichten
   size: 1
   alias: bericht
 permalink: "/mijn-belastingdienst/berichtenbox/bericht/{{ bericht.id }}/"
@@ -13,7 +13,7 @@ eleventyComputed:
   title: "Mijn Belastingdienst Zakelijk: {{ bericht.onderwerp }}"
 ---
 
-{% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
+{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
 
 <article id="hoofd-inhoud" class="berichtenbox">
 	<nav class="breadcrumb">

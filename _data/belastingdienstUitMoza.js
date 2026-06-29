@@ -10,10 +10,13 @@ const MAGAZIJN_ID = "belastingdienst";
 
 const berichten = data.berichten.filter((b) => b.magazijnId === MAGAZIJN_ID);
 
+// Mappen die niet relevant zijn voor de Belastingdienst-berichtenbox verbergen.
+const VERBORGEN_MAPPEN = ["subsidies"];
+
 module.exports = {
 	magazijnen: data.magazijnen.filter((m) => m.id === MAGAZIJN_ID),
 	berichten,
-	mappen: data.mappen,
+	mappen: data.mappen.filter((m) => !VERBORGEN_MAPPEN.includes(m.slug)),
 	aantalMagazijnen: 1,
 	aantalOngelezen: berichten.filter((b) => b.isOngelezen).length,
 };
