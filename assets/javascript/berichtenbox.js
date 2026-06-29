@@ -62,6 +62,8 @@
 		eigenMappen: [],
 		// Via polling binnengekomen berichten; bewaard zodat ze na reload zichtbaar blijven.
 		nieuweBerichten: [],
+		// A/B-test Belastingdienst-berichtenbox: ook berichten van andere organisaties tonen.
+		toonAndereOrganisaties: false,
 	};
 
 	function readState() {
@@ -121,6 +123,19 @@
 		return origineleMap;
 	}
 
+	// A/B-test: het org-filter is alleen actief op een berichtenbox met de toggle
+	// (de Belastingdienst-berichtenbox). Standaard tonen we alleen 'belastingdienst';
+	// staat de toggle aan, dan ook de berichten van andere organisaties.
+	const ORG_EIGEN = 'belastingdienst';
+	function orgFilterActief() {
+		return !!document.querySelector('[data-berichtenbox-org-toggle]');
+	}
+	function magazijnToegestaan(magazijnId) {
+		if (!orgFilterActief()) return true;
+		if (state.toonAndereOrganisaties) return true;
+		return magazijnId === ORG_EIGEN;
+	}
+
 	function huidigeView() {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const attr = lijst ? lijst.dataset.berichtenboxView : null;
@@ -165,7 +180,7 @@
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
 		if (view === 'inbox') {
-			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox').length;
+			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId)).length;
 		} else if (view === 'archief') {
 			getoond = Object.keys(state.gearchiveerd).length;
 		} else if (view === 'prullenbak') {
@@ -173,10 +188,21 @@
 		}
 		if (tellerTotaal) tellerTotaal.textContent = getoond;
 
+		// Aantal bronnen: aantal verschillende organisaties van de zichtbare inbox-berichten.
+		const tellerBronnen = document.querySelector('[data-berichtenbox-sources]');
+		if (tellerBronnen) {
+			const bronnen = new Set(
+				data.berichten
+					.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId))
+					.map((b) => b.magazijnId)
+			);
+			tellerBronnen.textContent = bronnen.size;
+		}
+
 		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
 		if (tellerOngelezen) {
 			const n = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && isOngelezen(b.id, b.isOngelezen)
+				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
 			).length;
 			tellerOngelezen.textContent = n;
 		}
@@ -184,11 +210,11 @@
 		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
 		if (navInbox) {
 			navInbox.textContent = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && isOngelezen(b.id, b.isOngelezen)
+				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
 			).length;
 		}
 		const ongelezenAantal = data.berichten.filter((b) =>
-			statusVan(b.id) === 'inbox' && isOngelezen(b.id, b.isOngelezen)
+			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
 		).length;
 		const navOngelezen = document.querySelector('[data-berichtenbox-count="ongelezen"]');
 		if (navOngelezen) navOngelezen.textContent = ongelezenAantal;
@@ -700,6 +726,10 @@
 					rij.hidden = true;
 					return;
 				}
+				if (!magazijnToegestaan(rij.dataset.afzenderId)) {
+					rij.hidden = true;
+					return;
+				}
 				let match = true;
 				if (zoek) {
 					const afzEl = rij.querySelector('.berichtenbox-row-sender');
@@ -732,6 +762,19 @@
 		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
 		if (zoekInput) zoekInput.addEventListener('input', filterVanafEerstePagina);
 		if (afzenderPaneel) afzenderPaneel.addEventListener('change', filterVanafEerstePagina);
+
+		// A/B-test: schakelaar om ook berichten van andere organisaties te tonen.
+		const orgToggle = document.querySelector('[data-berichtenbox-org-toggle]');
+		if (orgToggle) {
+			orgToggle.checked = !!state.toonAndereOrganisaties;
+			orgToggle.addEventListener('change', () => {
+				state.toonAndereOrganisaties = orgToggle.checked;
+				opslaan();
+				huidigePagina = 1;
+				pasFilterToe();
+				render('inbox');
+			});
+		}
 
 		const mapFilter = mapUitUrl();
 		if (mapFilter) {

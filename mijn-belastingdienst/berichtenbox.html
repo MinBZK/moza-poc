@@ -29,7 +29,7 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 		</div>
 	</div>
 
-	{% set berichtenboxData = belastingdienstUitMoza %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
+	{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
 
 	<section class="card tabs berichtenbox">
 		{% include "berichtenbox-tabs.njk" %}
@@ -37,12 +37,19 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 		<section id="berichtenbox-inbox" aria-label="Berichten">
 			<section class="berichtenbox-content">
 				<div data-berichtenbox-toolbar>
-					{% set nTotaal = berichtenboxData.berichten | length %}{% set nBronnen = berichtenboxData.aantalMagazijnen %}{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
+					{% set bdBerichten = berichtenboxData.berichten | selectattr("magazijnId", "equalto", "belastingdienst") | list %}{% set nTotaal = bdBerichten | length %}{% set nBronnen = 1 %}{% set nOngelezen = bdBerichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
 
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
 						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op afzender of onderwerp" />
+					</div>
+
+					<div class="berichtenbox-org-toggle" data-feature="Berichten van andere organisaties" data-feature-type="functionaliteit" data-feature-default="off">
+						<label>
+							<input type="checkbox" data-berichtenbox-org-toggle />
+							Toon ook berichten van andere overheidsorganisaties
+						</label>
 					</div>
 				</div>
 
