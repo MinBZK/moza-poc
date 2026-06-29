@@ -29,6 +29,7 @@
 			"url": "/moza/lopende-zaken/",
 			"icon": "/assets/icons/icon-lopende-zaken.svg",
 			"feature": "Lopende zaken",
+			"badgeId": "zaken-count",
 			"disabled": true
 		},
 		{

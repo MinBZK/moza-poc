@@ -76,6 +76,9 @@ function applyFeatureFlags() {
 			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/inloggen/";
 		}
 	});
+	// Laat andere scripts (bv. berichtenbox.js) reageren op een flag-wijziging
+	// zonder herladen. hidden-attributen staan op dit punt al goed.
+	document.dispatchEvent(new CustomEvent("feature-flags-applied"));
 }
 
 const TYPE_LABELS = {
@@ -157,7 +160,7 @@ function buildTogglePanel() {
 		radio.type = "radio";
 		radio.name = "admin-llm";
 		radio.value = value;
-		radio.checked = getSettingValue("llm", "vlam") === value;
+		radio.checked = getSettingValue("llm", "claude") === value;
 		radio.addEventListener("change", () => setSettingValue("llm", value));
 		label.appendChild(radio);
 		label.appendChild(document.createElement("span")).textContent = value.toUpperCase();

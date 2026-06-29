@@ -1,7 +1,7 @@
 {# Verwacht: bericht (object uit berichtenboxData.berichten) #}
 <tr class="berichtenbox-row{% if bericht.isOngelezen %} is-unread{% endif %}" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}"{% if bericht.map %} data-map="{{ bericht.map }}"{% endif %}>
 	<td class="berichtenbox-row-sender">{% if bericht.isOngelezen %}<span class="visually-hidden">Ongelezen. </span>{% endif %}{{ bericht.afzender }}</td>
-	<td class="berichtenbox-row-subject"><a href="{{ '/moza/berichtenbox/bericht/' | url }}{{ bericht.id }}/">{{ bericht.onderwerp }}</a></td>
+	<td class="berichtenbox-row-subject"><a href="{{ (berichtenboxBasis or '/moza/berichtenbox/') | url }}bericht/{{ bericht.id }}/">{{ bericht.onderwerp }}</a></td>
 	<td class="berichtenbox-row-date">{{ bericht.datum | datumNL }}</td>
 	<td class="berichtenbox-row-attachment">{% if bericht.heeftBijlage %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 482.14 482.14" class="icon-sm">
 	<path d="M142.024 310.194c0-8.007-5.556-12.782-15.359-12.782-4.003 0-6.714.395-8.132.773v25.69c1.679.378 3.743.504 6.588.504 10.449 0 16.903-5.279 16.903-14.185zm60.685-12.513c-4.39 0-7.227.379-8.905.772v56.896c1.679.394 4.39.394 6.841.394 17.809.126 29.424-9.677 29.424-30.449.126-18.063-10.458-27.613-27.36-27.613z" />

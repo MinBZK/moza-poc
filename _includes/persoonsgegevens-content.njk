@@ -1,0 +1,26 @@
+{% set tabData = persoonsgegevens[pgTab] %}
+{% for section in tabData.sections %}
+	<h2>{{ section.heading }}</h2>
+	<ul class="accordion">
+		{% for item in section.items %}
+			<li>
+				<details name="pg-{{ pgTab }}-{{ loop.parent.loop.index }}"{% if loop.first %} open{% endif %}>
+					<summary>
+						<h3>{{ item.title }}{% if item.subtitle %} — {{ item.subtitle }}{% endif %}</h3>
+					</summary>
+					<dl class="data-overview">
+						{% for f in item.fields %}
+							<div>
+								<dt>{{ f.key }}</dt>
+								<dd>
+									{{ f.value }}
+									{% if f.description %}<p class="metadata">{{ f.description }}</p>{% endif %}
+								</dd>
+							</div>
+						{% endfor %}
+					</dl>
+				</details>
+			</li>
+		{% endfor %}
+	</ul>
+{% endfor %}

@@ -18,7 +18,7 @@ document.querySelectorAll(".action-group .visually-hidden").forEach((span) => {
 
 function getCategory(li) {
 	const section = li.closest("section");
-	const heading = section?.querySelector(":scope > h2, :scope > h3");
+	const heading = section?.querySelector(":scope > hgroup > h2, :scope > hgroup > h3, :scope > h2, :scope > h3");
 	return heading?.textContent.trim() || "";
 }
 

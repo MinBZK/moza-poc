@@ -40,6 +40,13 @@ subNavActive: "/moza/regelgeving/"
 		<p>{{ alinea }}</p>
 		{% endfor %}
 
+		{% if regeling.assistentVraag %}
+		<div data-persona-toon="koffiezaak" hidden>
+			<p>De digitale assistent helpt je de melding in één keer goed in te dienen.</p>
+			<a class="btn-cta" href="{{ '/moza/digitale-assistent/' | url }}?vraag={{ regeling.assistentVraag | urlencode }}">Start met de digitale assistent</a>
+		</div>
+		{% endif %}
+
 		{% include "action-group.njk" %}
 
 		<div class="action-group">

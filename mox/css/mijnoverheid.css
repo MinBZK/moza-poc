@@ -15340,3 +15340,12 @@ body {
 	position: absolute;
 	transform: translateY(-50%);
 }
+
+#button-003 {
+	background: #154273;
+	padding: 16px 32px;
+}
+#button-004 {
+	color: #fff;
+	font-size: 18px;
+}

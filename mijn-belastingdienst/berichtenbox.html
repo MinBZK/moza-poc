@@ -1,0 +1,82 @@
+---
+title: "Mijn Belastingdienst Zakelijk: Berichtenbox"
+permalink: "/mijn-belastingdienst/berichtenbox/"
+layout: "base.njk"
+bodyClass: "moza mijn-belastingdienst"
+headerType: "belastingdienst"
+footerType: "belastingdienst"
+extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-belastingdienst.css">'
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/mijn-belastingdienst/' | url }}">Home</a><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M10.557 7.633a.67.67 0 0 1-.085.839l-4 4a.667.667 0 0 1-.944-.944L9.057 8 5.528 4.472a.667.667 0 0 1 .944-.944l4 4z"></path></svg>
+			</li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<div class="feedback feedback-info">
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Hier ziet u de zakelijke berichten afkomstig van de Belastingdienst. Wilt u de berichten zien van alle overheidsorganisaties, <a href="/moza/berichtenbox/">ga dan naar de Berichtenbox van MijnOverheid Zakelijk</a>.</p>
+		</div>
+	</div>
+
+	{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
+
+	<section class="card tabs berichtenbox">
+		{% include "berichtenbox-tabs.njk" %}
+
+		<section id="berichtenbox-inbox" aria-label="Berichten">
+			<section class="berichtenbox-content">
+				<div data-berichtenbox-toolbar>
+					{% set bdBerichten = berichtenboxData.berichten | selectattr("magazijnId", "equalto", "belastingdienst") | list %}{% set nTotaal = bdBerichten | length %}{% set nBronnen = 1 %}{% set nOngelezen = bdBerichten | selectattr("isOngelezen") | length %}
+					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
+
+					<div class="berichtenbox-search">
+						<label for="search-berichtenbox">Filter berichten</label>
+						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op onderwerp" />
+					</div>
+				</div>
+
+				<div class="switch" data-feature="Berichten van andere organisaties" data-feature-type="functionaliteit" data-feature-default="off">
+					<input type="checkbox" role="switch" id="switch" checked="false" data-berichtenbox-org-toggle />
+					<label for="switch">Toon zakelijke berichten van alle overheidsorganisaties</label>
+				</div>
+
+				<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">
+					<p>Berichten worden opgehaald bij de bron…</p>
+					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total>{{ berichtenboxData.aantalMagazijnen }}</b> <span data-meervoud="data-berichtenbox-progress-total" data-ev="bron" data-mv="bronnen">{{ "bron" if berichtenboxData.aantalMagazijnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-progress-found>0</b> <span data-meervoud="data-berichtenbox-progress-found" data-ev="bericht" data-mv="berichten">berichten</span> gevonden</p>
+					<div class="progress-bar"><div class="progress-bar-fill" data-berichtenbox-progress-bar></div></div>
+				</div>
+
+				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
+
+				<table data-berichtenbox-list data-page-size="10">
+					<thead>
+						<tr>
+							<th scope="col">Afzender</th>
+							<th scope="col">Onderwerp</th>
+							<th scope="col">Datum</th>
+							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
+					</tbody>
+				</table>
+
+				<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>
+			</section>
+		</section>
+	</section>
+
+	<small>Uw vorige bezoek was op 29 april 2026 om 19:42 uur.</small>
+</article>

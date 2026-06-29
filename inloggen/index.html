@@ -14,7 +14,7 @@ layout: "base.njk"
 		<section>
 			<h2>Laatst gekozen inlogmethode</h2>
 			<section>
-				<details class="card" open>
+				<details class="card card-inloggen-digid" open>
 					<summary>
 						<h3><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h3>
 					</summary>
@@ -31,23 +31,21 @@ layout: "base.njk"
 							</li>
 							<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
 								<a href="#">
-									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als wettelijke vertegenwoordiger</b>
-									<small>(bewindvoerder, curator of mentor)</small>
+									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als bewindvoerder, curator of mentor</b>
 								</a>
 							</li>
 							<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
 								<a href="#">
 									{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
-									<small>een kind onder 12 jaar heeft (meestal) geen eigen DigiD, de ouder/gezagsdrager regelt zaken namens het kind</small>
 								</a>
 							</li>
 						</ul>
-						<!-- <div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+						<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
 							{% include "icon-feedback-info.njk" %}
 							<div>
 								<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
 							</div>
-						</div> -->
+						</div>
 					</div>
 				</details>
 				<div class="card">
@@ -68,8 +66,6 @@ layout: "base.njk"
 				</div>
 			</section>
 			<section class="login-wallet">
-				<h2>EDI-wallets</h2>
-				<small>Een app op uw telefoon waarmee u uw digitale identiteit bewaart en zelf kiest welke gegevens u deelt. <a href="https://www.digitaleoverheid.nl/overzicht-van-alle-onderwerpen/identiteit/id-wallet/">Meer informatie over EDI-wallets</a>.</small>
 				<div class="card">
 					<a href="#">
 						<h3>

@@ -1,10 +1,6 @@
 ---
 title: "MijnOverheid Zakelijk: Berichtenbox"
-pagination:
-  data: berichtenboxData.berichten
-  size: 25
-  alias: berichtenPagina
-permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagination.pageNumber + 1 }}/{% endif %}"
+permalink: "/moza/berichtenbox/"
 ---
 
 {% include "berichtenbox-data.njk" %} {% include "side-nav-overheid.njk" %}
@@ -25,7 +21,8 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 		<section id="berichtenbox-inbox" aria-label="Berichten">
 			<section class="berichtenbox-content">
 				<div data-berichtenbox-toolbar>
-					<p class="metadata"><b data-berichtenbox-counter-total>{{ berichtenboxData.berichten | length }}</b> berichten uit <b data-berichtenbox-sources>{{ berichtenboxData.aantalMagazijnen }}</b> bronnen, <b data-berichtenbox-counter-unread>{{ berichtenboxData.berichten | selectattr("isOngelezen") | length }}</b> ongelezen berichten.</p>
+					{% set nTotaal = berichtenboxData.berichten | length %}{% set nBronnen = berichtenboxData.aantalMagazijnen %}{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
+					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
 
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
@@ -35,13 +32,13 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 
 				<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">
 					<p>Berichten worden opgehaald bij de bron…</p>
-					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total>{{ berichtenboxData.aantalMagazijnen }}</b> bronnen, <b data-berichtenbox-progress-found>0</b> berichten gevonden</p>
+					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total>{{ berichtenboxData.aantalMagazijnen }}</b> <span data-meervoud="data-berichtenbox-progress-total" data-ev="bron" data-mv="bronnen">{{ "bron" if berichtenboxData.aantalMagazijnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-progress-found>0</b> <span data-meervoud="data-berichtenbox-progress-found" data-ev="bericht" data-mv="berichten">berichten</span> gevonden</p>
 					<div class="progress-bar"><div class="progress-bar-fill" data-berichtenbox-progress-bar></div></div>
 				</div>
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
-				<table data-berichtenbox-list>
+				<table data-berichtenbox-list data-page-size="10">
 					<thead>
 						<tr>
 							<th scope="col">Afzender</th>
@@ -52,33 +49,11 @@ permalink: "/moza/berichtenbox/{% if pagination.pageNumber > 0 %}pagina-{{ pagin
 						</tr>
 					</thead>
 					<tbody>
-						{% for bericht in berichtenPagina %} {% include "berichtenbox-row.njk" %} {% endfor %}
+						{% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
 					</tbody>
 				</table>
 
-				{% if pagination.pages.length > 1 %}
-				<nav class="pagination" aria-label="Paginering">
-					<ol>
-						{% if pagination.previousPageHref %}
-						<li>
-							<a href="{{ pagination.previousPageHref | url }}" rel="prev">Vorige<span class="visually-hidden"> pagina</span></a>
-						</li>
-						{% endif %} {% for href in pagination.hrefs %}
-						<li>
-							{% if loop.index0 == pagination.pageNumber %}
-							<span aria-current="page">{{ loop.index }}</span>
-							{% else %}
-							<a href="{{ href | url }}">{{ loop.index }}</a>
-							{% endif %}
-						</li>
-						{% endfor %} {% if pagination.nextPageHref %}
-						<li>
-							<a href="{{ pagination.nextPageHref | url }}" rel="next">Volgende<span class="visually-hidden"> pagina</span></a>
-						</li>
-						{% endif %}
-					</ol>
-				</nav>
-				{% endif %}
+				<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>
 			</section>
 		</section>
 	</section>

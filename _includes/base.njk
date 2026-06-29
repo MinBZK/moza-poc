@@ -3,6 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Self-healing opruimen van een verouderde service worker + caches die
+        // soms de oude (Belastingdienst-snapshot) pagina serveerden. Dit
+        // prototype gebruikt zelf geen service worker, dus alles veilig weg.
+        // Geen handmatig cache legen meer nodig.
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (r) { r.unregister(); });
+            });
+        }
+        if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+                keys.forEach(function (k) { caches.delete(k); });
+            });
+        }
+    </script>
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ '/style/style.css' | url }}">
     <meta name="description" content="{{ description | default('MijnOverheid Zakelijk') }}">
@@ -25,6 +41,8 @@
         {% include "header-mobu.njk" %}
     {% elif headerType == "mobu-uitgelogd" %}
         {% include "header-mobu-uitgelogd.njk" %}
+    {% elif headerType == "belastingdienst" %}
+        {% include "header-belastingdienst.njk" %}
     {% elif headerType != "none" %}
         {% include "header-rijksoverheid.njk" %}
     {% endif %}
@@ -37,6 +55,8 @@
         {% include "footer-overheid.njk" %}
     {% elif footerType == "mobu" %}
         {% include "footer-mobu.njk" %}
+    {% elif footerType == "belastingdienst" %}
+        {% include "footer-belastingdienst.njk" %}
     {% elif footerType != "none" %}
     <footer></footer>
     {% endif %}
@@ -58,6 +78,7 @@
     <script src="{{ '/assets/javascript/tab-interface.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/external-links.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/berichtenbox.js' | url }}" defer></script>
+    <script src="{{ '/assets/javascript/lopende-zaken.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/digitale-assistent.js' | url }}" defer></script>
 
 </body>
