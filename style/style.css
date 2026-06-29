@@ -1610,14 +1610,13 @@ dd .feedback {
 }
 
 /* Status-/takenoverzicht */
-.status-track, .logging-track {
 [aria-label="Lopende zaken"] {
 	td img {
 		inline-size: var(--toepassing-size-icon-sm);
 		vertical-align: text-top;
 	}
 }
-.status-track {
+.status-track, .logging-track {
 	counter-reset: step;
 	gap: var(--toepassing-space-margin-sm);
 	list-style: none;

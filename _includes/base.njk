@@ -30,6 +30,7 @@
             <link rel="stylesheet" href="{{ s }}">
         {% endfor %}
     {% endif %}
+    {% if extraStyles %}{{ extraStyles | safe }}{% endif %}
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 
