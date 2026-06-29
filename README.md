@@ -17,7 +17,7 @@ Clone deze repository lokaal.
 
 [Eleventy](https://www.11ty.dev/) wordt gebruikt om herhalende componenten zoals headers en footers als includes te beheren. Installeer Eleventy in de root van het project:
 
-``` bash
+```bash
 npm install @11ty/eleventy
 ```
 
@@ -25,7 +25,7 @@ npm install @11ty/eleventy
 
 Om de HTML pagina's te bouwen voer je dit commando uit vanuit de root van het project:
 
-``` bash
+```bash
 npx @11ty/eleventy
 ```
 
@@ -35,7 +35,7 @@ De gebouwde pagina's worden in de map `_site` geplaatst.
 
 Start een lokale server met live reload:
 
-``` bash
+```bash
 npx @11ty/eleventy --serve
 ```
 
@@ -45,18 +45,18 @@ De site is vervolgens te bekijken op [`localhost:8080`](http://localhost:8080).
 
 Herhalende componenten staan in de `_includes` map:
 
-| Bestand | Beschrijving |
-| ------- | ------------ |
-| `base.njk` | Basis layout |
-| `header-rijksoverheid.njk` | Rijksoverheid header met logo en navigatie |
-| `header-overheid.njk` | Overheid header header met logo |
-| `footer-overheid.njk` | Overheid footer |
-| `side-nav-overheid.njk` | Overheid hoofdnavigatie |
-| `action-group.njk` | Actiegroep onder een topic (Bewaar, Deel, Niet relevant) |
+| Bestand                    | Beschrijving                                             |
+| -------------------------- | -------------------------------------------------------- |
+| `base.njk`                 | Basis layout                                             |
+| `header-rijksoverheid.njk` | Rijksoverheid header met logo en navigatie               |
+| `header-overheid.njk`      | Overheid header header met logo                          |
+| `footer-overheid.njk`      | Overheid footer                                          |
+| `side-nav-overheid.njk`    | Overheid hoofdnavigatie                                  |
+| `action-group.njk`         | Actiegroep onder een topic (Bewaar, Deel, Niet relevant) |
 
 Elke pagina selecteert diens layout en opties bovenaan het bestand:
 
-``` yaml
+```yaml
 ---
 layout: base.njk
 title: "Pagina titel"
@@ -71,7 +71,7 @@ footerType: overheid
 
 Design tokens zijn ontwerp-waarden — zoals kleuren, typografie, maatvoering — opgeslagen in een platformonafhankelijk formaat (JSON). Ze vormen een gedeelde taal tussen ontwerp en ontwikkeling: in plaats van bijvoorbeeld losse hex-codes of pixelwaarden door te geven, verwijzen beide disciplines naar dezelfde bron. Hierdoor blijven ontwerp en code altijd synchroon en is een wijziging op één plek (bijvoorbeeld een merkkleur) direct overal doorgevoerd.
 
-Het bestand `tokens/tokens.json` is de *single source of truth* voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
+Het bestand `tokens/tokens.json` is de _single source of truth_ voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
 
 - **Figma**; via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
 - **IDE**; ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
@@ -87,14 +87,14 @@ De pipeline ziet er zo uit:
 
 Figma met Tokens Studio óf IDE → tokens/tokens.json → Style Dictionary + SD-Transforms → CSS variabelen → Stylesheet (style.css)
 
-Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom properties. Omdat Tokens Studio een eigen tokenformaat hanteert dat afwijkt van het [standaard Design Token Community Group (DTCG) formaat](https://www.designtokens.org/tr/2025.10/format/), wordt [SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms) als aanvulling gebruikt. Dit zorgt onder andere voor het correct oplossen van tokenreferenties, het omrekenen van `px` naar `rem` waarden en het omzetten van namen naar ‘*kebab-case*’.
+Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom properties. Omdat Tokens Studio een eigen tokenformaat hanteert dat afwijkt van het [standaard Design Token Community Group (DTCG) formaat](https://www.designtokens.org/tr/2025.10/format/), wordt [SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms) als aanvulling gebruikt. Dit zorgt onder andere voor het correct oplossen van tokenreferenties, het omrekenen van `px` naar `rem` waarden en het omzetten van namen naar ‘_kebab-case_’.
 
 Het resultaat wordt opgesplitst in twee automatisch gegenereerde CSS-bestanden:
 
-- **`_rijkshuisstijl.css`**; bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
-- **`_toepassing.css`**; bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
+- **`_rijkshuisstijl.css`**; bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare _opties_.
+- **`_toepassing.css`**; bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de _toepassingen_ van de opties.
 
-Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden, de toepassingslaag vangt de verandering op.
+Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen _hoe_ die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden, de toepassingslaag vangt de verandering op.
 
 Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt worden. Alle wijzigingen aan ontwerp-waarden horen thuis in `tokens/tokens.json`.
 
@@ -102,7 +102,7 @@ Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt w
 
 Gebruik dit commando om design tokens handmatig naar CSS variabelen om te zetten:
 
-``` bash
+```bash
 npm run tokens
 ```
 
@@ -124,10 +124,10 @@ De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assist
 
 In productie draait alles achter **één origin**: de nginx van de frontend **proxyt** de chat-endpoints (`/chat`, `/chat/stream`, `/health`, `/tools`) intern naar de backend. De browser praat dus alleen met de frontend-origin — **geen CORS nodig**, en de backend hoeft niet publiek te zijn. Twee instellingen:
 
-| Variabele | Waar | Betekenis |
-| --------- | ---- | --------- |
-| `MOZA_CHAT_API` | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg. |
-| `BACKEND_ORIGIN` | runtime env op de nginx-container | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
+| Variabele        | Waar                                                                  | Betekenis                                                                                                                                                                     |
+| ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
 **Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
@@ -157,7 +157,7 @@ Bij Claudia toont de tegel "Wetten en regelgeving" op het dashboard een korte me
 
 De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een **nginx**-image serveert die op poort 8080 én doet de **same-origin reverse proxy** naar de backend (zie [Verbinden met de backend](#verbinden-met-de-backend)). De proxy-config (`container/default.conf.template`) wordt bij container-start gerenderd met `envsubst`; `BACKEND_ORIGIN` (runtime env, default `http://dabackend:8000`) bepaalt de upstream, met runtime-DNS-resolutie zodat nginx ook start als de backend nog niet up is. Dezelfde image (non-root, poort 8080) wordt gebruikt voor preview- en productiedeploys (ZAD).
 
-``` bash
+```bash
 docker build -f container/Containerfile -t moza .
 # wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
 docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
@@ -171,7 +171,7 @@ docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 
 
 ### Lokaal opstarten
 
-``` bash
+```bash
 npm run storybook
 ```
 
@@ -185,16 +185,16 @@ Bij het gebruik van `npm run dev` wordt Storybook automatisch opnieuw gebouwd na
 
 De stories staan in de `stories/` map. Elk bestand beschrijft één component en toont varianten, bijvoorbeeld:
 
-| Bestand | Beschrijving |
-| ------- | ------------ |
-| `Knop.stories.js` | Knopvarianten (primair, secundair, negatief) |
-| `Link.stories.js` | Linkvarianten |
-| `Tekstinvoer.stories.js` | Tekstinvoervelden |
-| `Selectie.stories.js` | Selectievakjes en keuzerondjes |
-| `Feedback.stories.js` | Notificaties en foutmeldingen |
-| `Navigatie.stories.js` | Navigatiecomponenten |
-| `Typografie.stories.js` | Koppen en tekststijlen |
-| `Tabel.stories.js` | Tabelopmaak |
+| Bestand                  | Beschrijving                                 |
+| ------------------------ | -------------------------------------------- |
+| `Knop.stories.js`        | Knopvarianten (primair, secundair, negatief) |
+| `Link.stories.js`        | Linkvarianten                                |
+| `Tekstinvoer.stories.js` | Tekstinvoervelden                            |
+| `Selectie.stories.js`    | Selectievakjes en keuzerondjes               |
+| `Feedback.stories.js`    | Notificaties en foutmeldingen                |
+| `Navigatie.stories.js`   | Navigatiecomponenten                         |
+| `Typografie.stories.js`  | Koppen en tekststijlen                       |
+| `Tabel.stories.js`       | Tabelopmaak                                  |
 
 ---
 
@@ -202,24 +202,24 @@ De stories staan in de `stories/` map. Elk bestand beschrijft één component en
 
 Installeer dependencies in de root van het project:
 
-``` bash
+```bash
 npm install
 ```
 
-| Script | Commando | Beschrijving |
-| ------ | -------- | ------------ |
-| `npm run dev` | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
-| `npm run build` | Tokens + Eleventy | Volledige productie-build |
-| `npm run tokens` | Alleen Style Dictionary | Handmatig tokens bouwen |
-| `npm run storybook` | Storybook dev server | Componentenbibliotheek lokaal bekijken |
-| `npm run build-storybook` | Storybook productie-build | Statische Storybook-site bouwen |
+| Script                    | Commando                       | Beschrijving                                                                                                                                                                                        |
+| ------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`             | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
+| `npm run build`           | Tokens + Eleventy              | Volledige productie-build                                                                                                                                                                           |
+| `npm run tokens`          | Alleen Style Dictionary        | Handmatig tokens bouwen                                                                                                                                                                             |
+| `npm run storybook`       | Storybook dev server           | Componentenbibliotheek lokaal bekijken                                                                                                                                                              |
+| `npm run build-storybook` | Storybook productie-build      | Statische Storybook-site bouwen                                                                                                                                                                     |
 
 ---
 
 ## Structuur
 
-``` text
-📂 _data                    Eleventy-data: persona's, subsidies, regelgeving, berichtenbox
+```text
+📂 _data                    Eleventy-data: persona's, subsidies, regelgeving, berichtenbox, activiteitenlog-entries
 📂 _includes                herhalende consistente elementen die in meerdere pagina's toegegepast worden
 📂 _site                    statische site gegenereerd door Eleventy.js
 📂 assets
@@ -264,7 +264,7 @@ Deze omgeving maakt gebruik van moderne CSS-features:
 
 Gegenereerde variabelen volgen ‘kebab-case’ met een semantische hiërarchie:
 
-``` text
+```text
 --prefix-categorie-optionelesubcategorie-attribuut--optionelestaat
 ```
 
@@ -279,17 +279,17 @@ In de stylesheets worden [CSS ‘logical’ properties](https://developer.mozill
 
 Voorbeelden van physical properties en hun logical equivalenten:
 
-| Physical | Logical |
-| ------ | ------- |
-| `width` | `inline-size` |
-| `height` | `block-size` |
-| `max-width` | `max-inline-size` |
-| `min-height` | `min-block-size` |
-| `margin-top` / `margin-bottom` | `margin-block-start` / `margin-block-end` |
-| `margin-left` / `margin-right` | `margin-inline-start` / `margin-inline-end` |
-| `padding-top` / `padding-bottom` | `padding-block-start` / `padding-block-end` |
+| Physical                         | Logical                                       |
+| -------------------------------- | --------------------------------------------- |
+| `width`                          | `inline-size`                                 |
+| `height`                         | `block-size`                                  |
+| `max-width`                      | `max-inline-size`                             |
+| `min-height`                     | `min-block-size`                              |
+| `margin-top` / `margin-bottom`   | `margin-block-start` / `margin-block-end`     |
+| `margin-left` / `margin-right`   | `margin-inline-start` / `margin-inline-end`   |
+| `padding-top` / `padding-bottom` | `padding-block-start` / `padding-block-end`   |
 | `padding-left` / `padding-right` | `padding-inline-start` / `padding-inline-end` |
-| `border-top` / `border-bottom` | `border-block-start` / `border-block-end` |
+| `border-top` / `border-bottom`   | `border-block-start` / `border-block-end`     |
 
 ---
 

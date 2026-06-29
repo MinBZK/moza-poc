@@ -25,7 +25,11 @@
     <link rel="shortcut icon" href="{{ '/assets/favicon/favicon.ico' | url }}" type="image/x-icon">
     <link rel="icon" sizes="192x192" href="{{ '/assets/favicon/touch-icon.png' | url }}">
     <link rel="apple-touch-icon" href="{{ '/assets/favicon/apple-touch-icon.png' | url }}">
-    {% if extraStyles %}{{ extraStyles | safe }}{% endif %}
+    {% if styles %}
+        {% for s in styles %}
+            <link rel="stylesheet" href="{{ s }}">
+        {% endfor %}
+    {% endif %}
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 
@@ -68,6 +72,7 @@
     <script>window.personasData = {{ personas | dump | safe }};</script>
     <script>window.subsidiesData = {{ subsidiesData | dump | safe }};</script>
     <script>window.regelgevingData = {{ regelgevingData | dump | safe }};</script>
+    <script>window.activiteitenLogData = {{ activiteitenLogData | dump | safe }};</script>
     <script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/homepage-profiel.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/tab-interface.js' | url }}" defer></script>

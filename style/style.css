@@ -1610,6 +1610,7 @@ dd .feedback {
 }
 
 /* Status-/takenoverzicht */
+.status-track, .logging-track {
 [aria-label="Lopende zaken"] {
 	td img {
 		inline-size: var(--toepassing-size-icon-sm);
@@ -1754,6 +1755,7 @@ dd .feedback {
 		margin-block-start: var(--toepassing-space-margin-2xs);
 	}
 }
+
 
 /* Sub-stappen binnen een status-track */
 .status-track--sub {
