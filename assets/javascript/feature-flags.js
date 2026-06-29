@@ -76,6 +76,9 @@ function applyFeatureFlags() {
 			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/inloggen/";
 		}
 	});
+	// Laat andere scripts (bv. berichtenbox.js) reageren op een flag-wijziging
+	// zonder herladen. hidden-attributen staan op dit punt al goed.
+	document.dispatchEvent(new CustomEvent("feature-flags-applied"));
 }
 
 const TYPE_LABELS = {

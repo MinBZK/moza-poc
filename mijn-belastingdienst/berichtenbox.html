@@ -42,15 +42,13 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
-						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op afzender of onderwerp" />
+						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op onderwerp" />
 					</div>
+				</div>
 
-					<div class="berichtenbox-org-toggle" data-feature="Berichten van andere organisaties" data-feature-type="functionaliteit" data-feature-default="off">
-						<label>
-							<input type="checkbox" data-berichtenbox-org-toggle />
-							Toon ook berichten van andere overheidsorganisaties
-						</label>
-					</div>
+				<div class="switch" data-feature="Berichten van andere organisaties" data-feature-type="functionaliteit" data-feature-default="off">
+					<input type="checkbox" role="switch" id="switch" checked="false" data-berichtenbox-org-toggle />
+					<label for="switch">Toon zakelijke berichten van alle overheidsorganisaties</label>
 				</div>
 
 				<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">

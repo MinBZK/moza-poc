@@ -839,8 +839,7 @@ button.side-nav-toggle {
 /* Navigatie: paginering */
 .pagination {
 	ol {
-		flex-direction: row;
-		flex-wrap: wrap;
+		flex-flow: row wrap;
 	}
 	a, [aria-current="page"] {
 		align-items: center;
@@ -2062,6 +2061,70 @@ h1, h2, h3, h4, h5, h6, a, button {
 	min-inline-size: fit-content;
 	white-space: nowrap;
 }
+
+/* Schakelaar */
+.switch {
+	margin-block-start: var(--toepassing-space-margin-xs);
+	[role="switch"] {
+		appearance: none;
+		background-image: radial-gradient(circle closest-side, var(--toepassing-color-text-subtle-2) 100%, transparent);
+		background-position: var(--toepassing-size-5xs) center;
+		background-repeat: no-repeat;
+		background-size: var(--toepassing-size-icon-sm);
+		block-size: var(--toepassing-size-icon-md);
+		border-radius: var(--toepassing-border-radius-round);
+		inline-size: var(--toepassing-size-icon-xl);
+		transition: background-color var(--toepassing-motion-speed-fast) var(--toepassing-motion-easing-default),
+			background-position var(--toepassing-motion-speed-fast) var(--toepassing-motion-easing-default),
+			border-color var(--toepassing-motion-speed-fast) var(--toepassing-motion-easing-default);
+		&::before {
+			content: none;
+		}
+		&:checked {
+			background-color: var(--toepassing-color-interactive-active-background);
+			background-image: radial-gradient(circle closest-side, var(--toepassing-color-text-inverse) 100%, transparent);
+			background-position: calc(100% - var(--toepassing-size-5xs)) center;
+			/* border-color: var(--toepassing-color-feedback-success-border); */
+			&:hover {
+				background-repeat: no-repeat;
+				background-size: var(--toepassing-size-icon-sm);
+			}
+		}
+	}
+}
+
+.switch-multiple {
+	display: flex;
+	gap: 0;
+	div {
+		border: var(--toepassing-border-width-xs) solid var(--toepassing-color-interactive-default-border);
+		border-radius: var(--toepassing-border-radius-md);
+	}
+	input[type="radio"] {
+		block-size: 1px;
+		inline-size: 1px;
+		opacity: 0;
+		position: absolute;
+		&:checked + label {
+			background: var(--toepassing-color-interactive-default-background);
+			color: var(--toepassing-color-text-inverse);
+			transition: var(--toepassing-transition-default);
+		}
+		&:focus-visible + label {
+			outline: var(--toepassing-focus-outline);
+			outline-offset: var(--toepassing-focus-outline-offset-md);
+		}
+	}
+	label {
+		cursor: pointer;
+		display: inline-block;
+		font-weight: var(--toepassing-text-font-weight-semi-bold);
+		margin-block-end: 0;
+		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-md);
+	}
+}
+  
+  
 
 /* -- ANIMATIES -- */
 

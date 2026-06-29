@@ -127,13 +127,49 @@
 	// (de Belastingdienst-berichtenbox). Standaard tonen we alleen 'belastingdienst';
 	// staat de toggle aan, dan ook de berichten van andere organisaties.
 	const ORG_EIGEN = 'belastingdienst';
+	const ORG_FEATURE = 'Berichten van andere organisaties';
+	// Alleen het Belastingdienst-portaal filtert op organisatie; MOZa toont altijd
+	// alles. Portaalbepaling via de basis-URL zodat het ook geldt op pagina's
+	// zonder de org-switch (archief, prullenbak, detail).
 	function orgFilterActief() {
-		return !!document.querySelector('[data-berichtenbox-org-toggle]');
+		return berichtenboxBasis().indexOf('/mijn-belastingdienst/') !== -1;
+	}
+	// Staat de feature-flag aan? Lees rechtstreeks uit localStorage (zelfde sleutel
+	// als feature-flags.js, default-off). Werkt ook op pagina's waar de switch zelf
+	// niet in de DOM staat. Flag uit ⇒ versie A (alleen Belastingdienst), ook al
+	// stond de switch eerder aan.
+	function andereOrgenFeatureAan() {
+		try {
+			return localStorage.getItem('feature:' + ORG_FEATURE) === 'true';
+		} catch (e) {
+			return false;
+		}
 	}
 	function magazijnToegestaan(magazijnId) {
 		if (!orgFilterActief()) return true;
-		if (state.toonAndereOrganisaties) return true;
+		if (andereOrgenFeatureAan() && state.toonAndereOrganisaties) return true;
 		return magazijnId === ORG_EIGEN;
+	}
+	// Eigen mappen (.berichtenbox-folder-user) horen bij de berichten van andere
+	// organisaties. Toon ze alleen als die zichtbaar zijn; bij alleen-
+	// Belastingdienst verbergen we ze plus de "Mappen:"-scheiding. Op pagina's
+	// buiten het Belastingdienst-portaal (MOZa) blijven de mappen altijd staan.
+	function werkMappenZichtbaarheidBij() {
+		if (!orgFilterActief()) return;
+		const toon = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
+		document.querySelectorAll('.berichtenbox-folder-user').forEach((li) => { li.hidden = !toon; });
+		const sep = document.querySelector('.tablist .list-separation');
+		if (sep) sep.hidden = !toon;
+	}
+	// Bij alleen Belastingdienst-berichten is de afzender altijd hetzelfde, dus
+	// filteren op afzender heeft geen zin: toon dan alleen 'Filter op onderwerp'.
+	function werkZoekPlaceholderBij() {
+		if (!orgFilterActief()) return;
+		const input = document.querySelector('[data-berichtenbox-search-input]');
+		if (!input) return;
+		input.placeholder = state.toonAndereOrganisaties
+			? 'Filter op afzender of onderwerp'
+			: 'Filter op onderwerp';
 	}
 
 	function huidigeView() {
@@ -766,10 +802,31 @@
 		// A/B-test: schakelaar om ook berichten van andere organisaties te tonen.
 		const orgToggle = document.querySelector('[data-berichtenbox-org-toggle]');
 		if (orgToggle) {
-			orgToggle.checked = !!state.toonAndereOrganisaties;
+			orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
+			werkZoekPlaceholderBij();
 			orgToggle.addEventListener('change', () => {
 				state.toonAndereOrganisaties = orgToggle.checked;
 				opslaan();
+				werkZoekPlaceholderBij();
+				huidigePagina = 1;
+				if (orgToggle.checked) {
+					// Simuleer het ophalen van berichten bij de andere organisaties; de
+					// eigen mappen verschijnen pas als die berichten binnen zijn.
+					voortgangsAnimatie(() => { werkMappenZichtbaarheidBij(); pasFilterToe(); render('inbox'); });
+				} else {
+					werkMappenZichtbaarheidBij();
+					pasFilterToe();
+					render('inbox');
+				}
+			});
+
+			// Wordt de feature-flag in het paneel uit-/aangezet, dan herfilteren
+			// zonder herladen. Bij flag-uit valt magazijnToegestaan terug op
+			// alleen-Belastingdienst, ook al stond de switch eerder aan.
+			document.addEventListener('feature-flags-applied', () => {
+				orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
+				werkZoekPlaceholderBij();
+				werkMappenZichtbaarheidBij();
 				huidigePagina = 1;
 				pasFilterToe();
 				render('inbox');
@@ -961,16 +1018,17 @@
 		const wrap = document.querySelector('[data-berichtenbox-progress]');
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const pagnav = document.querySelector('.berichtenbox-content .pagination');
-		const toolbar = document.querySelector('[data-berichtenbox-toolbar]');
 		if (!wrap || !lijst) { opKlaar(); return; }
 
 		lijst.hidden = true;
 		if (pagnav) pagnav.hidden = true;
-		if (toolbar) toolbar.hidden = true;
 		wrap.hidden = false;
 
-		const totaalBronnen = data.aantalMagazijnen;
-		const totaalBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox').length;
+		// Respecteer het org-filter: bij alleen Belastingdienst is er 1 bron en het
+		// juiste aantal Belastingdienst-berichten; met andere organisaties alle bronnen.
+		const inboxBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId));
+		const totaalBerichten = inboxBerichten.length;
+		const totaalBronnen = new Set(inboxBerichten.map((b) => b.magazijnId)).size || 1;
 
 		const bronEl = document.querySelector('[data-berichtenbox-progress-source]');
 		const totaalEl = document.querySelector('[data-berichtenbox-progress-total]');
@@ -995,7 +1053,8 @@
 		}
 		berichtTijden.sort((a, b) => a - b);
 
-		const duur = 4000;
+		// Bij één bron is er weinig op te halen: korte animatie. Meer bronnen = langer.
+		const duur = totaalBronnen <= 1 ? 1200 : 4000;
 		const start = performance.now();
 
 		function aantalVoor(tijden, t) {
@@ -1022,7 +1081,6 @@
 				wrap.hidden = true;
 				lijst.hidden = false;
 				if (pagnav) pagnav.hidden = false;
-				if (toolbar) toolbar.hidden = false;
 				opKlaar();
 			}
 		}
@@ -1130,6 +1188,7 @@
 	});
 
 	pasStateToeOpRijen();
+	werkMappenZichtbaarheidBij();
 	renderLijstVoorView(huidigeView());
 	render(huidigeView());
 	vulDemoDetailPagina();

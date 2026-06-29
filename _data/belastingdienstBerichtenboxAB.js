@@ -7,13 +7,13 @@
 const bron = require("./berichtenboxData.js");
 const data = typeof bron === "function" ? bron() : bron;
 
-// Mappen die niet relevant zijn voor de Belastingdienst-berichtenbox verbergen.
-const VERBORGEN_MAPPEN = ["subsidies"];
-
+// Alle MOZa-mappen blijven in de data. Bij alleen-Belastingdienst (switch uit)
+// verbergt berichtenbox.js de eigen mappen client-side; staat de switch aan, dan
+// verschijnen alle MOZa-mappen (incl. Subsidies) — volledige pariteit met MOZa.
 module.exports = {
 	magazijnen: data.magazijnen,
 	berichten: data.berichten,
-	mappen: data.mappen.filter((m) => !VERBORGEN_MAPPEN.includes(m.slug)),
+	mappen: data.mappen,
 	aantalMagazijnen: data.aantalMagazijnen,
 	aantalOngelezen: data.berichten.filter((b) => b.isOngelezen).length,
 };

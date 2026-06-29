@@ -1,5 +1,11 @@
 .mijn-belastingdienst {
 	background-color: #f1f5f9;
+	/* B-testvariant: staat de feature (en dus de switch) aan, dan verbergen we de
+	   info-banner bovenaan. feature-flags.js zet hidden op de switch bij flag-uit,
+	   dus :not([hidden]) = flag aan. */
+	&:has(.switch[data-feature]:not([hidden])) .feedback-info {
+		display: none;
+	}
 	header {
 		border-block-end-color: #8fcae7;
 		border-width: 2px;
