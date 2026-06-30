@@ -1036,21 +1036,32 @@
 			const aantal = 1 + Math.floor(Math.random() * 3);
 			const gekozen = namen.slice(0, aantal);
 
+			// Voorbeeld-PDF voor zowel de bijlage-links als de preview (prototype).
+			const pdfHref = url('/assets/documents/voorbeeld-bijlage.pdf');
+
 			while (lijst.firstChild) lijst.removeChild(lijst.firstChild);
 
 			// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
 			gekozen.forEach((n) => {
 				const li = document.createElement('li');
 				const a = document.createElement('a');
-				a.href = '#.pdf';
+				a.href = pdfHref;
+				a.target = '_blank';
+				a.rel = 'noopener';
 				a.textContent = n;
-				a.addEventListener('click', (e) => e.preventDefault());
 				li.appendChild(a);
 				lijst.appendChild(li);
 			});
 
 			laden.hidden = true;
 			lijst.hidden = false;
+
+			// Preview van de bijlage in een ingesloten PDF-viewer.
+			const preview = bijlSec.querySelector('[data-berichtenbox-attachments-preview]');
+			if (preview) {
+				preview.src = pdfHref;
+				preview.hidden = false;
+			}
 		}, 1500);
 	}
 
