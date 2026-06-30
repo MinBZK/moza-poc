@@ -1316,12 +1316,8 @@ button.is-marked {
 .mark-toggle:not(.is-marked) svg {
 	opacity: 0;
 }
-/* Onthul de vlag bij hover op de rij (niet alleen op de knop). */
 .berichtenbox-row:hover .mark-toggle:not(.is-marked) svg {
 	opacity: 1;
-}
-[data-actie="markeren"] {
-
 }
 
 /* Berichtenbox ongelezen status */
