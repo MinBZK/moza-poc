@@ -1356,6 +1356,14 @@ button.is-marked {
 	color: var(--toepassing-color-text-subtle-1);
 	font-style: italic;
 }
+.berichtenbox-attachment-preview {
+	background: var(--toepassing-color-background-raised);
+	block-size: 32rem;
+	border: var(--toepassing-border-subtle);
+	border-radius: var(--toepassing-border-radius-sm);
+	inline-size: 100%;
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
 
 /* Berichtenbox: verplaats bericht naar map paneel */
 .berichtenbox-move-panel {
