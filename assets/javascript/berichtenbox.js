@@ -129,6 +129,22 @@
 		return !!origineelGemarkeerd;
 	}
 
+	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
+	// doorgestreept oog (ongelezen) = "maak ongelezen". Icoon volgt het label/actie.
+	const SVG_OOG_PAD = 'M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45';
+	const SVG_TONEN = '<path fill="currentColor" d="' + SVG_OOG_PAD + '" />';
+	const SVG_ONGELEZEN = '<mask id="gap"><rect width="64" height="64" fill="white" /><line x1="12" y1="52" x2="52" y2="12" stroke="black" stroke-width="12" stroke-linecap="round" /></mask><path mask="url(#gap)" fill="currentColor" d="' + SVG_OOG_PAD + '" /><path fill="currentColor" d="M10.59 53.41a2 2 0 0 1 0-2.82L50.59 10.59a2 2 0 1 1 2.82 2.82L13.41 53.41a2 2 0 0 1-2.82 0z" />';
+
+	// Wissel label én icoon van de "Markeer als ongelezen"-knop.
+	function werkOngelezenKnopBij(btn, ongelezen) {
+		const labelNode = [...btn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
+		const tekst = ongelezen ? 'Markeer als gelezen' : 'Markeer als ongelezen';
+		if (labelNode) labelNode.textContent = tekst;
+		else btn.append(tekst);
+		const svg = btn.querySelector('svg');
+		if (svg) svg.innerHTML = ongelezen ? SVG_TONEN : SVG_ONGELEZEN;
+	}
+
 	// Werk de Markeren-actieknop op de detailpagina bij (label + aria-pressed + class).
 	function werkMarkeerKnopBij(btn, gemarkeerd) {
 		btn.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
@@ -924,12 +940,44 @@
 			werkMarkeerKnopBij(markeerBtn, isGemarkeerd(berichtId, berichtData ? berichtData.isGemarkeerd : false));
 		}
 
+		// Zet de actieve tab op basis van de status van dit bericht. De detail-URL
+		// matcht server-side altijd 'Inbox'; voor een geopend archief-/prullenbak-
+		// bericht corrigeren we dat hier.
+		const tablist = document.querySelector('.tablist');
+		if (tablist) {
+			const status = statusVan(berichtId);
+			const inboxBadge = tablist.querySelector('[data-berichtenbox-count="inbox"]');
+			const inboxLink = inboxBadge ? inboxBadge.closest('a') : null;
+			const archiefLink = tablist.querySelector('a[href*="berichtenbox-archief/"]');
+			const prullenbakLink = tablist.querySelector('a[href*="berichtenbox-prullenbak/"]');
+			[inboxLink, archiefLink, prullenbakLink].forEach((a) => {
+				if (a) { a.removeAttribute('aria-current'); a.removeAttribute('aria-selected'); }
+			});
+			const actiefLink = status === 'archief' ? archiefLink : status === 'prullenbak' ? prullenbakLink : inboxLink;
+			if (actiefLink) actiefLink.setAttribute('aria-current', 'page');
+		}
+
+		// Zit het bericht al in Archief, dan wordt "Archiveren" "Terugplaatsen in inbox".
+		if (statusVan(berichtId) === 'archief') {
+			const archiveerBtn = content.querySelector('[data-actie="archiveren"]');
+			if (archiveerBtn) {
+				const labelNode = [...archiveerBtn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
+				if (labelNode) labelNode.textContent = 'Terugplaatsen in inbox';
+				else archiveerBtn.append('Terugplaatsen in inbox');
+			}
+		}
+
 		content.querySelectorAll('[data-actie]').forEach((btn) => {
 			btn.addEventListener('click', () => {
 				const actie = btn.dataset.actie;
 				if (actie === 'archiveren') {
-					state.gearchiveerd[berichtId] = true;
-					delete state.verwijderd[berichtId];
+					if (statusVan(berichtId) === 'archief') {
+						// Zit al in Archief: terugplaatsen in inbox.
+						delete state.gearchiveerd[berichtId];
+					} else {
+						state.gearchiveerd[berichtId] = true;
+						delete state.verwijderd[berichtId];
+					}
 					opslaan();
 					location.href = url(berichtenboxBasis());
 				} else if (actie === 'verwijderen') {
@@ -938,10 +986,17 @@
 					opslaan();
 					location.href = url(berichtenboxBasis());
 				} else if (actie === 'markeer-ongelezen') {
-					state.ongelezenToegevoegd[berichtId] = true;
-					delete state.gelezen[berichtId];
+					// Toggle gelezen/ongelezen; geen navigatie, blijf op het bericht.
+					const wordtOngelezen = !isOngelezen(berichtId, false);
+					if (wordtOngelezen) {
+						state.ongelezenToegevoegd[berichtId] = true;
+						delete state.gelezen[berichtId];
+					} else {
+						state.gelezen[berichtId] = true;
+						delete state.ongelezenToegevoegd[berichtId];
+					}
 					opslaan();
-					location.href = url(berichtenboxBasis());
+					werkOngelezenKnopBij(btn, wordtOngelezen);
 				} else if (actie === 'markeren') {
 					// Toggle markering; geen navigatie, blijf op het bericht.
 					const nu = !isGemarkeerd(berichtId, false);
