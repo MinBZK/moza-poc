@@ -1,5 +1,6 @@
 {# Verwacht: bericht (object uit berichtenboxData.berichten) #}
 <tr class="berichtenbox-row{% if bericht.isOngelezen %} is-unread{% endif %}" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}"{% if bericht.map %} data-map="{{ bericht.map }}"{% endif %}>
+	<td class="berichtenbox-row-mark"><button type="button" class="mark-toggle{% if bericht.isGemarkeerd %} is-marked{% endif %}" data-mark-toggle aria-pressed="{{ 'true' if bericht.isGemarkeerd else 'false' }}"><span class="visually-hidden">Markeren</span>{% icon "/assets/icons/icon-markeren.svg" %}</button></td>
 	<td class="berichtenbox-row-sender">{% if bericht.isOngelezen %}<span class="visually-hidden">Ongelezen. </span>{% endif %}{{ bericht.afzender }}</td>
 	<td class="berichtenbox-row-subject"><a href="{{ (berichtenboxBasis or '/moza/berichtenbox/') | url }}bericht/{{ bericht.id }}/">{{ bericht.onderwerp }}</a></td>
 	<td class="berichtenbox-row-date">{{ bericht.datum | datumNL }}</td>

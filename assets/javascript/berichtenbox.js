@@ -58,6 +58,7 @@
 		ongelezenToegevoegd: {},
 		gearchiveerd: {},
 		verwijderd: {},
+		gemarkeerd: {},
 		mapOverride: {},
 		eigenMappen: [],
 		// Via polling binnengekomen berichten; bewaard zodat ze na reload zichtbaar blijven.
@@ -82,7 +83,7 @@
 				.filter((b) => bekendeMagazijnen.has(b.magazijnId))
 				.slice(-NIEUWE_BERICHTEN_LIMIET);
 			if (!Array.isArray(merged.eigenMappen)) merged.eigenMappen = [];
-			['gelezen','ongelezenToegevoegd','gearchiveerd','verwijderd','mapOverride'].forEach((k) => {
+			['gelezen','ongelezenToegevoegd','gearchiveerd','verwijderd','gemarkeerd','mapOverride'].forEach((k) => {
 				if (!merged[k] || typeof merged[k] !== 'object' || Array.isArray(merged[k])) merged[k] = {};
 			});
 			return merged;
@@ -121,6 +122,19 @@
 	function mapVan(berichtId, origineleMap) {
 		if (berichtId in state.mapOverride) return state.mapOverride[berichtId];
 		return origineleMap;
+	}
+
+	function isGemarkeerd(berichtId, origineelGemarkeerd) {
+		if (berichtId in state.gemarkeerd) return !!state.gemarkeerd[berichtId];
+		return !!origineelGemarkeerd;
+	}
+
+	// Werk de Markeren-actieknop op de detailpagina bij (label + aria-pressed + class).
+	function werkMarkeerKnopBij(btn, gemarkeerd) {
+		btn.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
+		btn.classList.toggle('is-marked', gemarkeerd);
+		const label = btn.querySelector('[data-markeer-label]');
+		if (label) label.textContent = gemarkeerd ? 'Markering verwijderen' : 'Markeren';
 	}
 
 	// A/B-test: het org-filter is alleen actief op een berichtenbox met de toggle
@@ -201,6 +215,13 @@
 		rijen.forEach((rij) => {
 			const id = rij.dataset.berichtId;
 			const status = statusVan(id);
+			// Markeer-staat uit localStorage spiegelen naar de knop in de statische rij.
+			const markKnop = rij.querySelector('[data-mark-toggle]');
+			const gemarkeerd = isGemarkeerd(id, markKnop ? markKnop.classList.contains('is-marked') : false);
+			if (markKnop) {
+				markKnop.classList.toggle('is-marked', gemarkeerd);
+				markKnop.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
+			}
 			if (view === 'inbox') {
 				rij.hidden = status !== 'inbox';
 				const origineel = rij.classList.contains('is-unread');
@@ -614,8 +635,31 @@
 		lijst.appendChild(li);
 	}
 
+	// Vlag-knop voor de Gemarkeerd-kolom; spiegelt de markup uit berichtenbox-row.njk.
+	function maakMarkKnop(gemarkeerd) {
+		const knop = document.createElement('button');
+		knop.type = 'button';
+		knop.className = 'mark-toggle' + (gemarkeerd ? ' is-marked' : '');
+		knop.dataset.markToggle = '';
+		knop.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
+		const vh = document.createElement('span');
+		vh.className = 'visually-hidden';
+		vh.textContent = 'Markeren';
+		knop.appendChild(vh);
+		const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		icon.setAttribute('viewBox', '0 0 64 64');
+		icon.setAttribute('aria-hidden', 'true');
+		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		path.setAttribute('fill', 'currentColor');
+		path.setAttribute('d', 'M58.89 20.86 10 6.14V3.87C10 3 8.66 2 7 2S4 3 4 3.87V61h6V27.03c.09-.03.33-.06.42.49.08.47 2.58 17.49 2.58 17.49l46.09-21.35c1.24-.58 1.12-2.39-.2-2.79');
+		icon.appendChild(path);
+		knop.appendChild(icon);
+		return knop;
+	}
+
 	function createRij(bericht) {
 		const ongelezen = isOngelezen(bericht.id, bericht.isOngelezen);
+		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
 		const effMap = mapVan(bericht.id, bericht.map);
 		const dynamisch = bericht.id.startsWith('msg-live-');
 
@@ -624,6 +668,11 @@
 		tr.dataset.berichtId = bericht.id;
 		tr.dataset.afzenderId = bericht.magazijnId;
 		if (effMap) tr.dataset.map = effMap;
+
+		const tdMark = document.createElement('td');
+		tdMark.className = 'berichtenbox-row-mark';
+		tdMark.appendChild(maakMarkKnop(gemarkeerd));
+		tr.appendChild(tdMark);
 
 		const tdAfz = document.createElement('td');
 		tdAfz.className = 'berichtenbox-row-sender';
@@ -869,6 +918,12 @@
 		const naarInboxBtn = content.querySelector('[data-actie="naar-inbox"]');
 		if (naarInboxBtn && effMap) naarInboxBtn.hidden = false;
 
+		// Markeren-knop: begintoestand uit localStorage.
+		const markeerBtn = content.querySelector('[data-actie="markeren"]');
+		if (markeerBtn) {
+			werkMarkeerKnopBij(markeerBtn, isGemarkeerd(berichtId, berichtData ? berichtData.isGemarkeerd : false));
+		}
+
 		content.querySelectorAll('[data-actie]').forEach((btn) => {
 			btn.addEventListener('click', () => {
 				const actie = btn.dataset.actie;
@@ -887,6 +942,12 @@
 					delete state.gelezen[berichtId];
 					opslaan();
 					location.href = url(berichtenboxBasis());
+				} else if (actie === 'markeren') {
+					// Toggle markering; geen navigatie, blijf op het bericht.
+					const nu = !isGemarkeerd(berichtId, false);
+					state.gemarkeerd[berichtId] = nu;
+					opslaan();
+					werkMarkeerKnopBij(btn, nu);
 				} else if (actie === 'verplaatsen') {
 					toonVerplaatsPaneel(berichtId, btn);
 				} else if (actie === 'naar-inbox') {
@@ -1185,6 +1246,21 @@
 			}
 			location.href = url(berichtenboxBasis());
 		});
+	});
+
+	// Gemarkeerd-kolom: klik op de vlag-knop wisselt de markering. Gedelegeerd zodat
+	// het ook werkt voor dynamisch (via createRij) toegevoegde rijen.
+	document.addEventListener('click', (e) => {
+		const knop = e.target.closest('[data-mark-toggle]');
+		if (!knop) return;
+		const rij = knop.closest('.berichtenbox-row');
+		if (!rij) return;
+		const id = rij.dataset.berichtId;
+		const nu = !isGemarkeerd(id, knop.classList.contains('is-marked'));
+		state.gemarkeerd[id] = nu;
+		opslaan();
+		knop.classList.toggle('is-marked', nu);
+		knop.setAttribute('aria-pressed', nu ? 'true' : 'false');
 	});
 
 	pasStateToeOpRijen();
