@@ -329,30 +329,6 @@ li.option--confirmed {
 	}
 }
 
-/* Ongelezen staat */
-.is-unread {
-	h3, .berichtenbox-row-sender {
-		font-weight: var(--toepassing-text-font-weight-bold);
-		position: relative;
-	}
-	.berichtenbox-row-sender {
-		&::before {
-			margin-inline-start: calc(-1 * var(--toepassing-space-margin-sm));
-		}
-	}
-}
-
-.dynamic-list {
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-margin-md);
-	&:empty { /* Dynamisch gevulde container: verberg uit de layout zolang er nog geen content in zit */
-		display: none;
-	}
-}
-
-/* Persona-wrappers zijn puur gedrag (personas.js): laat ze uit de layout
-   wegvallen zodat hun kinderen meedoen in de flex-gap van de omliggende kaart. */
 [data-persona-toon], [data-persona-verberg] {
 	display: contents;
 	&[hidden] {
@@ -987,6 +963,9 @@ table {
 th {
 	color: var(--toepassing-color-text-subtle-1);
 	font-weight: var(--toepassing-text-font-weight-semi-bold);
+	svg {
+		color: var(--toepassing-color-text-subtle-2);
+	}
 }
 tr {
 	background: var(--toepassing-color-background-default);
@@ -1271,6 +1250,79 @@ dd .feedback {
 	display: none; /* Tijdelijke de Map kolom verbergen */
 }
 
+/* Gemarkeerd-kolom */
+.berichtenbox-row-mark {
+	block-size: 1px;
+	inline-size: var(--toepassing-size-icon-md);
+	padding-block: 0;
+	position: relative;
+	text-align: center;
+	z-index: 1;
+}
+button.mark-toggle {
+	align-items: center;
+	background: none;
+	block-size: 100%;
+	border: 0;
+	color: var(--toepassing-color-feedback-attention);
+	cursor: pointer;
+	display: flex;
+	inline-size: 100%;
+	justify-content: center;
+	min-block-size: unset;
+	min-inline-size: unset;
+	padding: 0;
+	transform: scale(1);
+}
+button.mark-toggle, [data-actie="markeren"] {
+	svg {
+		block-size: var(--toepassing-size-icon-sm);
+		inline-size: var(--toepassing-size-icon-sm);
+		transition: opacity var(--toepassing-motion-speed-fast) var(--toepassing-motion-easing-default);
+	}
+	svg path {
+		fill: transparent;
+		stroke: var(--toepassing-color-feedback-attention);
+		stroke-width: 4;
+	}
+	&:hover, &:focus-visible, &:active {
+		background: none;
+		transform: scale(1.0125);
+		svg path {
+			fill: var(--toepassing-color-feedback-attention);
+			transition: var(--toepassing-transition-default);
+			transition-property: fill;
+		}
+	}
+	&:active {
+		animation: var(--toepassing-animation-icon-pop);
+	}
+	&:focus-visible {
+		box-shadow: var(--toepassing-focus-outline-backing);
+		outline: var(--toepassing-focus-outline);
+		outline-offset: var(--toepassing-focus-outline-offset-md);
+	}
+}
+button.is-marked {
+	svg {
+		color: var(--toepassing-color-feedback-attention);
+		path {
+			fill: currentcolor;
+			opacity: 1;
+			stroke: none;
+		}
+	}
+}
+.mark-toggle:not(.is-marked) svg {
+	opacity: 0;
+}
+/* Onthul de vlag bij hover op de rij (niet alleen op de knop). */
+.berichtenbox-row:hover .mark-toggle:not(.is-marked) svg {
+	opacity: 1;
+}
+[data-actie="markeren"] {
+
+}
 
 /* Berichtenbox ongelezen status */
 .berichtenbox-row.is-unread .berichtenbox-row-sender, .berichtenbox-row.is-unread .berichtenbox-row-subject {
@@ -1324,6 +1376,28 @@ dd .feedback {
 	}
 	.action-group {
 		margin-block-start: var(--toepassing-space-margin-xs);
+	}
+}
+
+/* Ongelezen en gemarkeerde staat */
+.is-unread {
+	h3, .berichtenbox-row-sender {
+		font-weight: var(--toepassing-text-font-weight-bold);
+		position: relative;
+	}
+	.berichtenbox-row-sender {
+		&::before {
+			margin-inline-start: calc(-1 * var(--toepassing-space-margin-sm));
+		}
+	}
+}
+
+.dynamic-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-md);
+	&:empty { /* Dynamisch gevulde container: verberg uit de layout zolang er nog geen content in zit */
+		display: none;
 	}
 }
 

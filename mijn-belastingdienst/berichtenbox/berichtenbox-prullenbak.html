@@ -16,9 +16,7 @@ subNav:
     class: "side-nav-group--start"
 ---
 
-{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
-
-{% include "side-nav-overheid.njk" %}
+{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %} {% include "side-nav-overheid.njk" %}
 
 <article id="hoofd-inhoud" class="berichtenbox">
 	<nav class="breadcrumb">
@@ -39,6 +37,7 @@ subNav:
 				<table class="berichtenbox-list" data-berichtenbox-list data-berichtenbox-view="prullenbak">
 					<thead>
 						<tr>
+							<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
 							<th scope="col">Afzender</th>
 							<th scope="col">Onderwerp</th>
 							<th scope="col">Datum</th>
