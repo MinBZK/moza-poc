@@ -1301,6 +1301,9 @@ button.mark-toggle, [data-actie="markeren"] {
 		box-shadow: var(--toepassing-focus-outline-backing);
 		outline: var(--toepassing-focus-outline);
 		outline-offset: var(--toepassing-focus-outline-offset-md);
+		svg {
+			opacity: 1;
+		}
 	}
 }
 button.is-marked {
