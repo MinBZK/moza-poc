@@ -1383,8 +1383,7 @@ html[data-berichtenbox-variant="b"] .berichtenbox-attachment-preview-wrap {
 	display: none;
 }
 html[data-berichtenbox-variant="c"] .variant-c-only {
-	display: flex;
-	flex-direction: column;
+	display: block;
 }
 /* In variant C wordt de standaardtekst vervangen door uitgebreide uitleg */
 html[data-berichtenbox-variant="c"] .variant-ab-only {
@@ -1398,6 +1397,11 @@ html[data-berichtenbox-variant="c"] .variant-ab-only {
 	border-radius: var(--toepassing-border-radius-md);
 	margin-block: var(--toepassing-space-md);
 	padding: var(--toepassing-space-md);
+}
+html[data-berichtenbox-variant="c"] .berichtenbox-detail-acties-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-sm);
 }
 .berichtenbox-detail-acties {
 	display: flex;
