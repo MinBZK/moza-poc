@@ -70,7 +70,7 @@ eleventyComputed:
 			</div>
 
 			{% if bericht.acties %}
-			<section class="variant-c-only berichtenbox-detail-acties-panel">
+			<div class="variant-c-only berichtenbox-detail-acties-panel">
 				<h2 class="h4">Wat kunt u doen?</h2>
 				{% if bericht.actiesUitleg %}<p>{{ bericht.actiesUitleg }}</p>{% endif %}
 				<div class="berichtenbox-detail-acties">
@@ -79,7 +79,7 @@ eleventyComputed:
 					<button type="button" class="{{ actieClass }}"{% if actie.extern %} rel="external"{% endif %}>{{ actie.label }}</button>
 					{% endfor %}
 				</div>
-			</section>
+			</div>
 			{% endif %}
 
 			{% if bericht.heeftBijlage %}
