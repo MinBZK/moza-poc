@@ -155,10 +155,53 @@ for (let i = 0; i < AANTAL_BERICHTEN; i++) {
 // daar genoeg berichten zijn om paginering te tonen.
 const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
 [
-	{ onderwerp: "Aangifte vennootschapsbelasting 2025 beschikbaar", datum: "2026-04-22", isOngelezen: true, map: "belastingen-2025", heeftBijlage: true },
-	{ onderwerp: "Naheffingsaanslag omzetbelasting eerste kwartaal 2026", datum: "2026-04-18", isOngelezen: true, map: null, heeftBijlage: true },
-	{ onderwerp: "Beschikking uitstel van betaling", datum: "2026-04-12", isOngelezen: false, map: "belastingen-2025", heeftBijlage: false },
-	{ onderwerp: "Herinnering aangifte loonheffingen", datum: "2026-04-05", isOngelezen: false, map: null, heeftBijlage: true },
+	{
+		onderwerp: "Aangifte vennootschapsbelasting 2025 beschikbaar", datum: "2026-04-22", isOngelezen: true, map: "belastingen-2025", heeftBijlage: true,
+		variantCInhoud: [
+			"U kunt nu aangifte vennootschapsbelasting over 2025 doen. In deze aangifte geeft u de winst van uw onderneming over het afgelopen jaar op.",
+			"Doe de aangifte vóór 1 juni 2026. Hebt u meer tijd nodig? Dan kunt u uitstel aanvragen.",
+		].join("\n\n"),
+		actiesUitleg: "Doe de aangifte online. U hebt hiervoor de jaarcijfers van uw onderneming nodig.",
+		acties: [
+			{ label: "Aangifte doen", primair: true, extern: true },
+			{ label: "Uitstel aanvragen", extern: true },
+		],
+	},
+	{
+		onderwerp: "Naheffingsaanslag omzetbelasting eerste kwartaal 2026", datum: "2026-04-18", isOngelezen: true, map: null, heeftBijlage: true,
+		variantCInhoud: [
+			"U hebt over het eerste kwartaal van 2026 te weinig btw betaald. Daarom legt de Belastingdienst een naheffingsaanslag op van € 1.284,00.",
+			"Betaal dit bedrag vóór 15 mei 2026. Betaalt u niet op tijd, dan komt er rente bij en kunt u een boete krijgen.",
+			"Bent u het niet eens met deze aanslag? Dan kunt u binnen 6 weken na de datum van dit bericht bezwaar maken.",
+		].join("\n\n"),
+		actiesUitleg: "Betaal de aanslag op tijd. Kunt u niet in één keer betalen? Vraag dan uitstel van betaling aan.",
+		acties: [
+			{ label: "Betalen", primair: true, extern: true },
+			{ label: "Bezwaar maken", extern: true },
+			{ label: "Uitstel van betaling aanvragen", extern: true },
+		],
+	},
+	{
+		onderwerp: "Beschikking uitstel van betaling", datum: "2026-04-12", isOngelezen: false, map: "belastingen-2025", heeftBijlage: false,
+		variantCInhoud: [
+			"Uw verzoek om uitstel van betaling is toegekend. U krijgt langer de tijd om uw openstaande aanslag te betalen.",
+			"U betaalt volgens de betalingsregeling die voor u is vastgesteld. Bekijk de regeling om te zien welke bedragen u wanneer betaalt.",
+		].join("\n\n"),
+		actiesUitleg: "U hoeft nu niets te doen. Bekijk uw betalingsregeling voor de bedragen en betaaldata.",
+		acties: [{ label: "Betalingsregeling bekijken", extern: true }],
+	},
+	{
+		onderwerp: "Herinnering aangifte loonheffingen", datum: "2026-04-05", isOngelezen: false, map: null, heeftBijlage: true,
+		variantCInhoud: [
+			"U hebt de aangifte loonheffingen over de laatste periode nog niet gedaan. Doe deze aangifte alsnog zo snel mogelijk.",
+			"Doe de aangifte vóór 30 april 2026. Doet u dit niet op tijd, dan kunt u een boete krijgen.",
+		].join("\n\n"),
+		actiesUitleg: "Doe de aangifte alsnog. Lukt dit niet op tijd? Vraag dan uitstel aan.",
+		acties: [
+			{ label: "Aangifte doen", primair: true, extern: true },
+			{ label: "Uitstel aanvragen", extern: true },
+		],
+	},
 ].forEach((b, i) => {
 	berichten.push({
 		id: "msg-" + String(AANTAL_BERICHTEN + i + 1).padStart(4, "0"),
@@ -170,6 +213,11 @@ const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
 		isOngelezen: b.isOngelezen,
 		map: b.map,
 		heeftBijlage: b.heeftBijlage,
+		// Variant C (A/B/C-test): uitgebreide uitleg + directe acties.
+		// variantCInhoud vervangt de standaardtekst; eerste actie is primair (btn-cta).
+		variantCInhoud: b.variantCInhoud || null,
+		actiesUitleg: b.actiesUitleg || null,
+		acties: b.acties || null,
 	});
 });
 

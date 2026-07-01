@@ -22,6 +22,26 @@ function setSettingValue(name, value) {
 	window.dispatchEvent(new CustomEvent("setting-changed", { detail: { key: name } }));
 }
 
+// Berichtenbox A/B/C-test: één actieve variant. a = huidige, b = PDF-preview,
+// c = directe acties. Bron: ?variant= (wint en wordt onthouden) > setting > 'a'.
+const BX_VARIANTEN = ["a", "b", "c"];
+function pasBerichtenboxVariantToe() {
+	const param = (new URLSearchParams(location.search).get("variant") || "").toLowerCase();
+	let variant;
+	if (BX_VARIANTEN.includes(param)) {
+		variant = param;
+		localStorage.setItem(SETTING_PREFIX + "berichtenbox-variant", variant);
+	} else {
+		variant = getSettingValue("berichtenbox-variant", "a");
+		if (!BX_VARIANTEN.includes(variant)) variant = "a";
+	}
+	document.documentElement.dataset.berichtenboxVariant = variant;
+}
+pasBerichtenboxVariantToe();
+window.addEventListener("setting-changed", (e) => {
+	if (e.detail && e.detail.key === "berichtenbox-variant") pasBerichtenboxVariantToe();
+});
+
 function getFeaturesByType() {
 	const groups = {};
 	document.querySelectorAll("[data-feature]").forEach((el) => {
@@ -140,6 +160,36 @@ function buildTogglePanel() {
 		});
 		panel.appendChild(list);
 	});
+
+	// --- Berichtenbox A/B/C-test ---
+	const variantHeading = document.createElement("p");
+	variantHeading.className = "feature-flags-group-heading";
+	variantHeading.textContent = "Berichtenbox A/B/C-test";
+	panel.appendChild(variantHeading);
+
+	const variantFieldset = document.createElement("fieldset");
+	variantFieldset.className = "settings-radio-group";
+	const variantLegend = document.createElement("legend");
+	variantLegend.textContent = "Variant";
+	variantFieldset.appendChild(variantLegend);
+	[
+		["a", "Ⓐ Huidige berichtenbox"],
+		["b", "Ⓑ Bericht met PDF-preview"],
+		["c", "Ⓒ Bericht met directe acties"],
+	].forEach(([value, labelText]) => {
+		const label = document.createElement("label");
+		label.className = "mode-option";
+		const radio = document.createElement("input");
+		radio.type = "radio";
+		radio.name = "berichtenbox-variant";
+		radio.value = value;
+		radio.checked = getSettingValue("berichtenbox-variant", "a") === value;
+		radio.addEventListener("change", () => setSettingValue("berichtenbox-variant", value));
+		label.appendChild(radio);
+		label.appendChild(document.createElement("span")).textContent = labelText;
+		variantFieldset.appendChild(label);
+	});
+	panel.appendChild(variantFieldset);
 
 	// --- Digitale Assistent instellingen ---
 	const settingsHeading = document.createElement("p");
