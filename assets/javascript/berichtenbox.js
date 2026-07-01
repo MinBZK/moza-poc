@@ -582,8 +582,6 @@
 				sluitVerplaatsPaneel();
 				render(huidigeView());
 				updateMapLabelDetail(m.slug);
-				const naarInbox = document.querySelector('[data-actie="naar-inbox"]');
-				if (naarInbox) naarInbox.hidden = false;
 			});
 			li.appendChild(btn);
 			ul.appendChild(li);
@@ -928,11 +926,7 @@
 		state.gelezen[berichtId] = true;
 		opslaan();
 
-		// Toon "Verplaats naar inbox" alleen als het bericht in een map zit.
 		const berichtData = data.berichten.find((b) => b.id === berichtId);
-		const effMap = mapVan(berichtId, berichtData ? berichtData.map : null);
-		const naarInboxBtn = content.querySelector('[data-actie="naar-inbox"]');
-		if (naarInboxBtn && effMap) naarInboxBtn.hidden = false;
 
 		// Markeren-knop: begintoestand uit localStorage.
 		const markeerBtn = content.querySelector('[data-actie="markeren"]');
@@ -1005,10 +999,6 @@
 					werkMarkeerKnopBij(btn, nu);
 				} else if (actie === 'verplaatsen') {
 					toonVerplaatsPaneel(berichtId, btn);
-				} else if (actie === 'naar-inbox') {
-					state.mapOverride[berichtId] = null;
-					opslaan();
-					location.href = url(berichtenboxBasis());
 				}
 			});
 		});

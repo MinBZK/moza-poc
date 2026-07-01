@@ -36,10 +36,6 @@ eleventyComputed:
 			</p>
 
 			<div class="action-group">
-				<button class="icon-button" data-actie="naar-inbox" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" />
-					<path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" />
-				</svg>Verplaats naar inbox</button>
 				<button class="icon-button" data-actie="markeren" aria-pressed="false">
 					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
 				</button>
@@ -58,17 +54,45 @@ eleventyComputed:
 			</div>
 
 			<div class="berichtenbox-detail-body">
+				{% if bericht.variantCInhoud %}
+				<div class="variant-c-only">
+					{% for alinea in bericht.variantCInhoud.split('\n\n') %}
+					<p>{{ alinea }}</p>
+					{% endfor %}
+				</div>
+				<div class="variant-ab-only">
+					{% for alinea in bericht.inhoud.split('\n\n') %}
+					<p>{{ alinea }}</p>
+					{% endfor %}
+				</div>
+				{% else %}
 				{% for alinea in bericht.inhoud.split('\n\n') %}
 				<p>{{ alinea }}</p>
 				{% endfor %}
+				{% endif %}
 			</div>
+
+			{% if bericht.acties %}
+			<section class="variant-c-only berichtenbox-detail-acties-panel">
+				<h2 class="h4">Wat kunt u doen?</h2>
+				{% if bericht.actiesUitleg %}<p>{{ bericht.actiesUitleg }}</p>{% endif %}
+				<div class="berichtenbox-detail-acties">
+					{% for actie in bericht.acties %}
+					{% set actieClass = "btn-cta" if actie.primair else "secondary" %}
+					<button type="button" class="{{ actieClass }}"{% if actie.extern %} rel="external"{% endif %}>{{ actie.label }}</button>
+					{% endfor %}
+				</div>
+			</section>
+			{% endif %}
 
 			{% if bericht.heeftBijlage %}
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments>
 				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading>Bijlagen ophalen bij {{ bericht.afzender }}…</p>
 				<ul class="berichtenbox-attachments-list list-indent" data-berichtenbox-attachments-list hidden></ul>
-				<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
+				<div class="berichtenbox-attachment-preview-wrap">
+					<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
+				</div>
 			</section>
 			{% endif %}
 		</section>

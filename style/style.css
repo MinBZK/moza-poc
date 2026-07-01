@@ -559,7 +559,7 @@ button, label, select, summary, [type="checkbox"], [type="checkbox"] {
 
 /* -- KNOPPEN -- */
 
-button, a.btn, a.btn-cta {
+button, a.btn, a.btn-cta, button.btn-cta {
 	align-items: center; /* Verticaal centreren: <a> top-aligned anders tekst hoger dan in <button> */
 	background: var(--toepassing-color-interactive-default-background);
 	color: var(--toepassing-color-text-inverse);
@@ -1345,6 +1345,11 @@ button.is-marked {
 }
 
 /* Berichtenbox: bericht-pagina */
+.berichtenbox-detail-body {
+	p {
+		margin-block-end: var(--toepassing-space-margin-2xs);
+	}
+}
 .berichtenbox-detail-actions {
 	align-items: center;
 	display: flex;
@@ -1363,6 +1368,41 @@ button.is-marked {
 	border-radius: var(--toepassing-border-radius-sm);
 	inline-size: 100%;
 	margin-block-start: var(--toepassing-space-margin-sm);
+}
+
+/* Berichtenbox A/B/C-test varianten */
+/* B: PDF-preview */
+.berichtenbox-attachment-preview-wrap {
+	display: none;
+}
+html[data-berichtenbox-variant="b"] .berichtenbox-attachment-preview-wrap {
+	display: block;
+}
+/* C: elementen die alleen in variant C zichtbaar zijn */
+.variant-c-only {
+	display: none;
+}
+html[data-berichtenbox-variant="c"] .variant-c-only {
+	display: flex;
+	flex-direction: column;
+}
+/* In variant C wordt de standaardtekst vervangen door uitgebreide uitleg */
+html[data-berichtenbox-variant="c"] .variant-ab-only {
+	display: none;
+}
+/* Variant C: paneel met uitleg en directe acties */
+.berichtenbox-detail-acties-panel {
+	background: var(--toepassing-color-feedback-neutral-subtle);
+	border: var(--toepassing-border-default);
+	border-color: var(--toepassing-color-feedback-neutral-border);
+	border-radius: var(--toepassing-border-radius-md);
+	margin-block: var(--toepassing-space-md);
+	padding: var(--toepassing-space-md);
+}
+.berichtenbox-detail-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-layout-xs);
 }
 
 /* Berichtenbox: verplaats bericht naar map paneel */

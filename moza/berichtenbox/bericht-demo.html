@@ -26,7 +26,6 @@ title: "MijnOverheid Zakelijk: Bericht"
 				<button class="icon-button" data-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %} Archiveren</button>
 				<button class="icon-button" data-actie="verplaatsen">{% icon "/assets/icons/icon-archief.svg" %}Verplaats naar map</button>
 				<button class="icon-button" data-actie="markeer-ongelezen">{% include "icon-ongelezen.njk" %}Markeer als ongelezen</button>
-				<button class="icon-button" data-actie="naar-inbox" hidden>Verplaats naar inbox</button>
 				<button class="icon-button" data-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %} Verwijder bericht</button>
 			</div>
 
@@ -36,7 +35,9 @@ title: "MijnOverheid Zakelijk: Bericht"
 				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
-				<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
+				<div class="berichtenbox-attachment-preview-wrap">
+					<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
+				</div>
 			</section>
 		</section>
 
