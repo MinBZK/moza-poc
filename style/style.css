@@ -187,7 +187,7 @@ em, i {
 	font-style: italic;
 }
 
-a {
+a, [aria-sort] {
 	color: var(--toepassing-color-interactive-default-text);
 	text-decoration: var(--toepassing-text-decoration-hyperlink);
 	text-decoration-color: currentcolor;
@@ -1342,6 +1342,41 @@ button.is-marked {
 	[aria-current="page"] {
 		color: var(--toepassing-color-interactive-default-text);
 	}
+}
+
+/* Sorteerbare kolomkoppen */
+.berichtenbox-sort {
+	align-items: center;
+	background: none;
+	border: none;
+	color: inherit;
+	gap: var(--toepassing-space-margin-3xs);
+	min-block-size: unset;
+	min-inline-size: unset;
+	padding: 0;
+	&:hover, &:focus-visible, &:active {
+		background: none !important;
+		color: inherit !important;
+		text-decoration: underline;
+	}
+	&::after {
+		background-color: currentcolor;
+		block-size: var(--toepassing-size-icon-xs);
+		content: "";
+		display: inline-block;
+		inline-size: var(--toepassing-size-icon-xs);
+		mask: url("../assets/icons/icon-chevron.svg") no-repeat center / contain;
+		opacity: var(--toepassing-opacity-interactive-disabled);
+		transform: rotate(90deg);
+	}
+}
+th[aria-sort="ascending"] .berichtenbox-sort::after {
+	opacity: 1;
+	transform: rotate(-90deg);
+}
+th[aria-sort="descending"] .berichtenbox-sort::after {
+	opacity: 1;
+	transform: rotate(90deg);
 }
 
 /* Berichtenbox: bericht-pagina */

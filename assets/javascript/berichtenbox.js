@@ -779,6 +779,37 @@
 		}
 	}
 
+	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
+	// databron (zodat herbouwde views mee-sorteren) en herordent de DOM-rijen op
+	// berichtId. Daarna herpagineert de actieve view (inbox behoudt DOM-volgorde,
+	// archief/prullenbak herbouwen uit de gesorteerde data).
+	function bindSortering() {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (!lijst || !lijst.tHead) return;
+		lijst.tHead.addEventListener('click', (e) => {
+			const btn = e.target.closest('button[data-sort]');
+			if (!btn) return;
+			const key = btn.dataset.sort;
+			const th = btn.closest('th');
+			const oplopend = th.getAttribute('aria-sort') !== 'ascending';
+			lijst.tHead.querySelectorAll('th[aria-sort]').forEach((t) => t.setAttribute('aria-sort', 'none'));
+			th.setAttribute('aria-sort', oplopend ? 'ascending' : 'descending');
+			const richting = oplopend ? 1 : -1;
+			data.berichten.sort((a, b) =>
+				richting * String(a[key] || '').localeCompare(String(b[key] || ''), 'nl', { numeric: true })
+			);
+			const volgorde = new Map(data.berichten.map((b, i) => [b.id, i]));
+			const tbody = lijst.tBodies[0];
+			if (tbody) {
+				Array.from(tbody.rows)
+					.sort((a, b) => (volgorde.get(a.dataset.berichtId) ?? 0) - (volgorde.get(b.dataset.berichtId) ?? 0))
+					.forEach((r) => tbody.appendChild(r));
+			}
+			huidigePagina = 1;
+			herpagineerHuidigeView();
+		});
+	}
+
 	function bindInboxFilters() {
 		if (huidigeView() !== 'inbox') return;
 		const lijst = document.querySelector('[data-berichtenbox-list]');
@@ -1326,6 +1357,7 @@
 	render(huidigeView());
 	vulDemoDetailPagina();
 	bindDetailPaginaActies();
+	bindSortering();
 
 	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
 
