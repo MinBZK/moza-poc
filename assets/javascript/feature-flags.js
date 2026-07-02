@@ -173,9 +173,9 @@ function buildTogglePanel() {
 	variantLegend.textContent = "Variant";
 	variantFieldset.appendChild(variantLegend);
 	[
-		["a", "Ⓐ Huidige berichtenbox"],
-		["b", "Ⓑ Bericht met PDF-preview"],
-		["c", "Ⓒ Bericht met directe acties"],
+		["a", "A: Huidige berichtenbox"],
+		["b", "B: Bericht met PDF-preview"],
+		["c", "C: Bericht met directe acties"],
 	].forEach(([value, labelText]) => {
 		const label = document.createElement("label");
 		label.className = "mode-option";
