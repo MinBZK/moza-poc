@@ -11,13 +11,14 @@
 (function() {
 	"use strict";
 
-	// Werk de side-nav badge bij op alle pagina's vanuit localStorage.
+	// Werk de badges voor ongelezen berichten bij op alle pagina's vanuit
+	// localStorage (side-nav én hoofdnavigatie kunnen allebei een badge tonen).
 	try {
-		const navBadge = document.querySelector('[data-berichtenbox-count="ongelezen"]');
-		if (navBadge) {
+		const navBadges = document.querySelectorAll('[data-berichtenbox-count="ongelezen"]');
+		if (navBadges.length) {
 			const opgeslagen = JSON.parse(localStorage.getItem('berichtenbox') || '{}');
 			if (typeof opgeslagen.aantalOngelezen === 'number') {
-				navBadge.textContent = opgeslagen.aantalOngelezen;
+				navBadges.forEach((badge) => { badge.textContent = opgeslagen.aantalOngelezen > 0 ? opgeslagen.aantalOngelezen : ''; });
 			}
 		}
 	} catch (e) { /* localStorage niet toegankelijk */ }
@@ -289,8 +290,9 @@
 		const ongelezenAantal = data.berichten.filter((b) =>
 			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
 		).length;
-		const navOngelezen = document.querySelector('[data-berichtenbox-count="ongelezen"]');
-		if (navOngelezen) navOngelezen.textContent = ongelezenAantal;
+		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
+			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : '';
+		});
 		state.aantalOngelezen = ongelezenAantal;
 		const navArchief = document.querySelector('[data-berichtenbox-count="archief"]');
 		if (navArchief) navArchief.textContent = Object.keys(state.gearchiveerd).length;
@@ -955,6 +957,9 @@
 
 		delete state.ongelezenToegevoegd[berichtId];
 		state.gelezen[berichtId] = true;
+		// Herbereken de ongelezen-teller (met dit bericht als gelezen) zodat de
+		// badges direct kloppen, en sla de bijgewerkte telling op.
+		render(huidigeView());
 		opslaan();
 
 		const berichtData = data.berichten.find((b) => b.id === berichtId);
@@ -1020,6 +1025,7 @@
 						state.gelezen[berichtId] = true;
 						delete state.ongelezenToegevoegd[berichtId];
 					}
+					render(huidigeView());
 					opslaan();
 					werkOngelezenKnopBij(btn, wordtOngelezen);
 				} else if (actie === 'markeren') {

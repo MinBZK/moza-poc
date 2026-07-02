@@ -19,7 +19,7 @@
 			<nav class="bd-menu-list" id="bd-hoofdmenu" aria-label="Hoofdmenu">
 				<ul>
 					<li><a href="{{ '/mijn-belastingdienst/' | url }}">Home</a></li>
-					<li><a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">Berichtenbox</a></li>
+					<li><a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">Berichtenbox<span class="badge" data-berichtenbox-count="ongelezen">{% if belastingdienstBerichtenboxAB.aantalOngelezen %}{{ belastingdienstBerichtenboxAB.aantalOngelezen }}{% endif %}</span></a></li>
 					<li class="bd-has-submenu">
 						<button class="bd-submenu-toggle" type="button" aria-expanded="false">Btw</button>
 						<ul class="bd-submenu">
