@@ -22,11 +22,24 @@ title: "MijnOverheid Zakelijk: Bericht"
 			<p class="metadata" data-demo-meta></p>
 
 			<div class="action-group">
-				<button class="icon-button" data-actie="markeren" aria-pressed="false">{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span></button>
-				<button class="icon-button" data-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %} Archiveren</button>
-				<button class="icon-button" data-actie="verplaatsen">{% icon "/assets/icons/icon-gegevens.svg" %}Verplaats naar map</button>
-				<button class="icon-button" data-actie="markeer-ongelezen">{% include "icon-ongelezen.njk" %}Markeer als ongelezen</button>
-				<button class="icon-button" data-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %} Verwijder bericht</button>
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<button class="icon-button" data-actie="markeer-ongelezen">
+					{% include "icon-ongelezen.njk" %}Markeren als ongelezen
+				</button>
+				<button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Doorsturen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
 			</div>
 
 			<div class="berichtenbox-detail-body" data-demo-body></div>
