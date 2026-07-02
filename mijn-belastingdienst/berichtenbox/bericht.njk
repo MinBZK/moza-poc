@@ -86,13 +86,14 @@ eleventyComputed:
 			{% endif %}
 
 			{% if bericht.heeftBijlage %}
+			<div class="berichtenbox-detail-pdf">
+				<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
+				<p><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></p>
+			</div>
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments>
 				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading>Bijlagen ophalen bij {{ bericht.afzender }}…</p>
 				<ul class="berichtenbox-attachments-list list-indent" data-berichtenbox-attachments-list hidden></ul>
-				<div class="berichtenbox-attachment-preview-wrap">
-					<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
-				</div>
 			</section>
 			{% endif %}
 		</section>
