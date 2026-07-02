@@ -1083,12 +1083,19 @@
 			laden.hidden = true;
 			lijst.hidden = false;
 
-			// Preview van de bijlage in een ingesloten PDF-viewer. Verberg de
-			// thumbnail-zijbalk (navpanes=0) en toon de PDF op volle breedte (FitH).
-			const preview = bijlSec.querySelector('[data-berichtenbox-attachments-preview]');
+			// Preview van de bijlage in een ingesloten PDF-viewer. Staat buiten de
+			// bijlage-sectie (variant B: PDF vervangt de berichttekst), dus document-
+			// breed opzoeken. Verberg de thumbnail-zijbalk en toon op volle breedte.
+			const preview = document.querySelector('[data-berichtenbox-attachments-preview]');
 			if (preview) {
 				preview.src = pdfHref + '#navpanes=0&view=FitH';
 				preview.hidden = false;
+			}
+			// Download PDF-link onder de preview.
+			const download = document.querySelector('[data-berichtenbox-pdf-download]');
+			if (download) {
+				download.href = pdfHref;
+				download.hidden = false;
 			}
 		}, 1500);
 	}

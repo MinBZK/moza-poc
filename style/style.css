@@ -1406,16 +1406,25 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 
 /* Berichtenbox A/B/C-test varianten */
-/* B: PDF-preview */
-.berichtenbox-attachment-preview-wrap {
-	block-size: 1154px;
+/* B: PDF-preview vervangt de berichttekst; bijlage-sectie verborgen */
+.berichtenbox-detail-pdf {
 	display: none;
-	iframe {
-		block-size: 1132px;
+	.berichtenbox-attachment-preview {
+		block-size: 80vh;
+		margin-block-start: 0;
+	}
+	p {
+		margin-block-start: var(--toepassing-space-margin-sm);
 	}
 }
-html[data-berichtenbox-variant="b"] .berichtenbox-attachment-preview-wrap {
+html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
 	display: block;
+}
+html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-detail-body {
+	display: none;
+}
+html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-attachments {
+	display: none;
 }
 /* C: elementen die alleen in variant C zichtbaar zijn */
 .variant-c-only {
@@ -1430,12 +1439,14 @@ html[data-berichtenbox-variant="c"] .variant-ab-only {
 }
 /* Variant C: paneel met uitleg en directe acties */
 .berichtenbox-detail-acties-panel {
-	background: var(--toepassing-color-feedback-neutral-subtle);
-	border: var(--toepassing-border-default);
-	border-color: var(--toepassing-color-feedback-neutral-border);
+	background: var(--toepassing-color-background-subtle);
+	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
 	margin-block: var(--toepassing-space-md);
 	padding: var(--toepassing-space-md);
+	h2 {
+		font-size: var(--rijkshuisstijl-text-font-size-xl);
+	}
 }
 html[data-berichtenbox-variant="c"] .berichtenbox-detail-acties-panel {
 	display: flex;
