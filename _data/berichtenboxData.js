@@ -224,6 +224,33 @@ const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
 // Sorteer op datum, nieuwste eerst.
 berichten.sort((a, b) => (a.datum < b.datum ? 1 : -1));
 
+// Spreid de berichten over de afzenders. Zonder spreiding staan de nieuwste
+// (Belastingdienst-)berichten allemaal bovenaan, waardoor de eerste pagina door
+// één organisatie wordt gedomineerd en gebruikers kunnen denken dat ze bij die
+// organisatie zijn. Round-robin: neem beurtelings het nieuwste resterende
+// bericht per afzender. De buckets staan al op datum (nieuwste eerst) en hun
+// onderlinge volgorde volgt het eerste (= nieuwste) voorkomen, dus recente
+// berichten blijven vooraan terwijl de afzenders elkaar afwisselen.
+const perAfzender = new Map();
+for (const b of berichten) {
+	if (!perAfzender.has(b.magazijnId)) perAfzender.set(b.magazijnId, []);
+	perAfzender.get(b.magazijnId).push(b);
+}
+const buckets = [...perAfzender.values()];
+const gevarieerd = [];
+let toegevoegd = true;
+while (toegevoegd) {
+	toegevoegd = false;
+	for (const bucket of buckets) {
+		if (bucket.length) {
+			gevarieerd.push(bucket.shift());
+			toegevoegd = true;
+		}
+	}
+}
+berichten.length = 0;
+berichten.push(...gevarieerd);
+
 module.exports = {
 	magazijnen,
 	berichten,
