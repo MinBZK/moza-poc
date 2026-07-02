@@ -1046,10 +1046,11 @@
 			laden.hidden = true;
 			lijst.hidden = false;
 
-			// Preview van de bijlage in een ingesloten PDF-viewer.
+			// Preview van de bijlage in een ingesloten PDF-viewer. Verberg de
+			// thumbnail-zijbalk (navpanes=0) en toon de PDF op volle breedte (FitH).
 			const preview = bijlSec.querySelector('[data-berichtenbox-attachments-preview]');
 			if (preview) {
-				preview.src = pdfHref;
+				preview.src = pdfHref + '#navpanes=0&view=FitH';
 				preview.hidden = false;
 			}
 		}, 1500);

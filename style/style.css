@@ -1373,7 +1373,11 @@ button.is-marked {
 /* Berichtenbox A/B/C-test varianten */
 /* B: PDF-preview */
 .berichtenbox-attachment-preview-wrap {
+	block-size: 1154px;
 	display: none;
+	iframe {
+		block-size: 1132px;
+	}
 }
 html[data-berichtenbox-variant="b"] .berichtenbox-attachment-preview-wrap {
 	display: block;
