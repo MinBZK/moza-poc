@@ -24,9 +24,9 @@ title: "MijnOverheid Zakelijk: Berichtenbox — Archief"
 					<thead>
 						<tr>
 							<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
-							<th scope="col">Afzender</th>
-							<th scope="col">Onderwerp</th>
-							<th scope="col">Datum</th>
+							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="afzender">Afzender</button></th>
+							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="onderwerp">Onderwerp</button></th>
+							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="datum">Datum</button></th>
 							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
 							<!-- <th scope="col">Map</th> -->
 						</tr>
