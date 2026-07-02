@@ -17,10 +17,27 @@ title: "MijnOverheid Zakelijk: Home"
 			<i>Sluit notificatie</i>
 		</button>
 	</div>
-	<h2>Actualiteiten</h2>
+	<section class="card">
+		<h2>Recente berichten</h2>
+		<table>
+			<tbody>
+				{% for bericht in berichtenboxData.berichten %}
+				{% if loop.index <= 5 %}
+				<tr class="berichtenbox-row{% if bericht.isOngelezen %} is-unread{% endif %}">
+					<td class="berichtenbox-row-sender">{% if bericht.isOngelezen %}<span class="visually-hidden">Ongelezen. </span>{% endif %}{{ bericht.afzender }}</td>
+					<td class="berichtenbox-row-subject"><a href="{{ '/moza/berichtenbox/bericht/' | url }}{{ bericht.id }}/">{{ bericht.onderwerp }}</a></td>
+					<td class="berichtenbox-row-date">{{ bericht.datum | datumNL }}</td>
+					<td class="berichtenbox-row-attachment">{% if bericht.heeftBijlage %}{% icon "/assets/icons/icon-bijlage.svg" %}<span class="visually-hidden">Heeft bijlage</span>{% endif %}</td>
+				</tr>
+				{% endif %}
+				{% endfor %}
+			</tbody>
+		</table>
+		<a class="btn-cta" href="{{ '/moza/berichtenbox/' | url }}">Ga naar uw zakelijke berichtenbox</a>
+	</section>
 	<div class="tiles">
 		<section class="card">
-			<h3>Subsidies en financiering</h3>
+			<h2>Subsidies en financiering</h2>
 			<p data-singular-of="subsidies-count" hidden>
 				Er is <a href="{{ '/moza/subsidies/' | url }}">1 nieuwe subsidie en/of financieringsmogelijkheid</a> sinds uw laatste bezoek die mogelijk interessant voor u kan zijn.
 			</p>
@@ -30,7 +47,7 @@ title: "MijnOverheid Zakelijk: Home"
 			<a class="btn-cta" href="{{ '/moza/subsidies/' | url }}">Ga naar Subsidies en financiering</a>
 		</section>
 		<section class="card">
-			<h3>Wetten en regelgeving</h3>
+			<h2>Wetten en regelgeving</h2>
 			<p data-singular-of="regelgeving-count" hidden>
 				Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.
 			</p>

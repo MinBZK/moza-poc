@@ -1245,6 +1245,7 @@ dd .feedback {
 }
 .berichtenbox-row-attachment svg {
 	fill: var(--toepassing-color-interactive-default-background);
+	inline-size: var(--toepassing-size-icon-sm);
 }
 .berichtenbox-row-folder-label {
 	display: none; /* Tijdelijke de Map kolom verbergen */
