@@ -24,7 +24,36 @@
 	} catch (e) { /* localStorage niet toegankelijk */ }
 
 	const wrapper = document.querySelector('.berichtenbox');
-	if (!wrapper) return;
+	if (!wrapper) {
+		// Geen volledige berichtenbox op deze pagina (bijv. de homepage-preview).
+		// De rest van de IIFE stopt hieronder; markeren regelen we hier apart en
+		// delen alleen de localStorage-state (key "berichtenbox", veld gemarkeerd).
+		document.querySelectorAll('.berichtenbox-row[data-bericht-id] [data-mark-toggle]').forEach((knop) => {
+			const id = knop.closest('.berichtenbox-row').dataset.berichtId;
+			const vh = knop.querySelector('.visually-hidden');
+			function leesState() {
+				try { return JSON.parse(localStorage.getItem('berichtenbox') || '{}'); }
+				catch (e) { return {}; }
+			}
+			function toonMarkering(aan) {
+				knop.classList.toggle('is-marked', aan);
+				knop.setAttribute('aria-pressed', aan ? 'true' : 'false');
+				if (vh) vh.textContent = aan ? 'Markering verwijderen' : 'Markeren';
+			}
+			const opgeslagen = leesState().gemarkeerd || {};
+			if (id in opgeslagen) toonMarkering(!!opgeslagen[id]);
+			knop.addEventListener('click', () => {
+				const aan = !knop.classList.contains('is-marked');
+				toonMarkering(aan);
+				const s = leesState();
+				if (!s.gemarkeerd) s.gemarkeerd = {};
+				s.gemarkeerd[id] = aan;
+				try { localStorage.setItem('berichtenbox', JSON.stringify(s)); }
+				catch (e) { console.error('[Berichtenbox] Kon markering niet bewaren.', e); }
+			});
+		});
+		return;
+	}
 
 	const data = window.berichtenboxData;
 	if (!data || !Array.isArray(data.berichten) || !Array.isArray(data.mappen) || !Array.isArray(data.magazijnen)) {

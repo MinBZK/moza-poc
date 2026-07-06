@@ -198,9 +198,9 @@
 	--toepassing-text-heading-h6: var(--toepassing-text-font-weight-semi-bold) var(--toepassing-text-size-title-sm)/var(--rijkshuisstijl-text-line-height-lg) var(--toepassing-text-font-family-body);
 	--toepassing-text-input-digits: var(--toepassing-text-font-weight-semi-bold) var(--rijkshuisstijl-text-font-size-sm) var(--rijkshuisstijl-text-font-family-monospace);
 	--toepassing-text-label: var(--rijkshuisstijl-text-weight-semibold) var(--toepassing-text-size-body-md)/var(--rijkshuisstijl-text-line-height-sm) var(--toepassing-text-font-family-body);
-	--toepassing-text-nav-footer: var(--toepassing-text-font-weight-regular) var(--toepassing-text-size-body-sm)/var(--rijkshuisstijl-text-line-height-md) var(--rijkshuisstijl-text-font-family-default);
+	--toepassing-text-nav-footer: var(--toepassing-text-font-weight-regular) var(--toepassing-text-size-body-sm)/var(--rijkshuisstijl-text-line-height-sm) var(--rijkshuisstijl-text-font-family-default);
 	--toepassing-text-nav-main-nav: var(--toepassing-text-font-weight-semi-bold) var(--toepassing-text-size-title-xl) var(--rijkshuisstijl-text-font-family-default);
-	--toepassing-text-nav-side-nav: var(--toepassing-text-font-weight-regular) var(--toepassing-text-size-body-md) var(--rijkshuisstijl-text-font-family-default);
+	--toepassing-text-nav-side-nav: var(--toepassing-text-font-weight-regular) var(--toepassing-text-size-body-md)/var(--rijkshuisstijl-text-line-height-md) var(--rijkshuisstijl-text-font-family-default);
 	--toepassing-text-paragraph-default: var(--rijkshuisstijl-text-weight-default) var(--toepassing-text-size-body-md)/var(--rijkshuisstijl-text-line-height-sm) var(--toepassing-text-font-family-body);
 	--toepassing-text-paragraph-intro: var(--rijkshuisstijl-text-weight-default) var(--toepassing-text-size-body-lg)/var(--rijkshuisstijl-text-line-height-sm) var(--toepassing-text-font-family-body);
 	--toepassing-text-size-body-2xs: var(--rijkshuisstijl-text-font-size-2xs);
