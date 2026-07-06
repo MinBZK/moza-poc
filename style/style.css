@@ -1337,6 +1337,7 @@ button.is-marked {
 }
 
 .berichtenbox-folder-user {
+	display: none; /* Tijdelijk verbergen */
 	a {
 		color: var(--toepassing-color-text-subtle-2);
 	}
