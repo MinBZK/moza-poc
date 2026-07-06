@@ -347,7 +347,7 @@ git commit -m "➕ Lokale zijbalk voor Berichtenbox"
 {# Verwacht: bericht (object uit berichtenboxData.berichten) #}
 <li class="berichtenbox-rij{% if bericht.isOngelezen %} is-ongelezen{% endif %}" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}"{% if bericht.map %} data-map="{{ bericht.map }}"{% endif %}>
 	<a href="{{ '/moza/berichtenbox/bericht/' | url }}{{ bericht.id }}/">
-		{% if bericht.isOngelezen %}<span class="visually-hidden">Ongelezen. </span>{% endif %}
+		{% if bericht.isOngelezen %}<span><i class="visually-hidden">Ongelezen.</i></span> {% endif %}
 		<span class="berichtenbox-rij-afzender">{{ bericht.afzender }}</span>
 		<span class="berichtenbox-rij-onderwerp">{{ bericht.onderwerp }}</span>
 		<span class="berichtenbox-rij-datum">{{ bericht.datum | datumNL }}</span>
@@ -1350,7 +1350,7 @@ Voeg vóór de init-blok toe in `berichtenbox.js`:
 		})();
 		return `<li class="berichtenbox-rij${ongelezen ? ' is-ongelezen' : ''}" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}"${map ? ` data-map="${map}"` : ''}>
 			<a href="/moza/berichtenbox/bericht/${bericht.id}/">
-				${ongelezen ? '<span class="visually-hidden">Ongelezen. </span>' : ''}
+				${ongelezen ? '<span><i class="visually-hidden">Ongelezen.</i></span> ' : ''}
 				<span class="berichtenbox-rij-afzender">${bericht.afzender}</span>
 				<span class="berichtenbox-rij-onderwerp">${bericht.onderwerp}</span>
 				<span class="berichtenbox-rij-datum">${NL}</span>
@@ -1768,7 +1768,7 @@ Aan de bericht-rij voor dynamisch toegevoegde berichten: in `rijHTML`, voeg een 
 		const innerAttr = dynamisch ? '' : ` href="/moza/berichtenbox/bericht/${bericht.id}/"`;
 		return `<li class="berichtenbox-rij${ongelezen ? ' is-ongelezen' : ''}${dynamisch ? ' is-dynamisch' : ''}" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}"${map ? ` data-map="${map}"` : ''}>
 			<${innerTag}${innerAttr}>
-				${ongelezen ? '<span class="visually-hidden">Ongelezen. </span>' : ''}
+				${ongelezen ? '<span><i class="visually-hidden">Ongelezen.</i></span> ' : ''}
 				<span class="berichtenbox-rij-afzender">${bericht.afzender}</span>
 				<span class="berichtenbox-rij-onderwerp">${bericht.onderwerp}${dynamisch ? : ''}</span>
 				<span class="berichtenbox-rij-datum">${NL}</span>
