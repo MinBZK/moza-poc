@@ -1,36 +1,38 @@
 {
-	"name": "mox",
-	"private": true,
-	"scripts": {
-		"build": "cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
-		"dev": "concurrently --names \"eleventy,tokens\" -c \"cyan,magenta\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\"",
-		"tokens": "cd style-dictionary && npm run build",
-		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build -o _site/storybook",
-		"lint:css": "stylelint 'style/**/*.css'",
-		"lint:css:fix": "stylelint 'style/**/*.css' --fix"
-	},
-	"devDependencies": {
-		"@11ty/eleventy": "^3.1.2",
-		"@markuplint/nunjucks-parser": "^4.6.21",
-		"@storybook/addon-a11y": "^10.3.5",
-		"@storybook/addon-docs": "^10.3.5",
-		"@storybook/html-vite": "^10.3.5",
-		"@stylistic/stylelint-plugin": "^5.1.0",
-		"chokidar-cli": "^3.0.0",
-		"chromatic": "^15.2.0",
-		"concurrently": "^9.1.2",
-		"markuplint": "^4.18.3",
-		"react": "^19.2.4",
-		"react-dom": "^19.2.4",
-		"storybook": "^10.3.5",
-		"stylelint": "^17.4.0",
-		"stylelint-config-standard": "^40.0.0",
-		"stylelint-order": "^8.1.1",
-		"stylelint-use-logical": "^2.1.3",
-		"vite": "^6.0.0"
-	},
-	"overrides": {
-		"uuid": "^14.0.0"
-	}
+  "name": "mox",
+  "private": true,
+  "scripts": {
+    "build": "vite build && cd style-dictionary && npm run build && cd .. && npx @11ty/eleventy",
+    "dev": "concurrently --names \"eleventy,tokens,vite\" -c \"cyan,magenta,green\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"chokidar 'tokens/tokens.json' -c 'cd style-dictionary && npm run build'\" \"vite build --watch\"",
+    "tokens": "cd style-dictionary && npm run build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o _site/storybook",
+    "lint:css": "stylelint 'style/**/*.css'",
+    "lint:css:fix": "stylelint 'style/**/*.css' --fix",
+    "vite:build": "vite build"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@markuplint/nunjucks-parser": "^4.6.21",
+    "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/html-vite": "^10.3.5",
+    "@stylistic/stylelint-plugin": "^5.1.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "chokidar-cli": "^3.0.0",
+    "chromatic": "^15.2.0",
+    "concurrently": "^9.1.2",
+    "markuplint": "^4.18.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "storybook": "^10.3.5",
+    "stylelint": "^17.4.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.1.1",
+    "stylelint-use-logical": "^2.1.3",
+    "vite": "^8.1.3"
+  },
+  "overrides": {
+    "uuid": "^14.0.0"
+  }
 }

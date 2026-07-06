@@ -21,6 +21,12 @@ module.exports = function (eleventyConfig) {
 		return fs.readFileSync(filePath, "utf8");
 	});
 
+	// React Island shortcode: {% island "component-name", { prop1: "value" } %}
+	eleventyConfig.addShortcode("island", function (componentName, props = {}) {
+		const propsJson = JSON.stringify(props).replace(/"/g, "&quot;");
+		return `<div data-island="${componentName}" data-props="${propsJson}"></div>`;
+	});
+
 	// Nederlandse datum-notatie: "19 februari 2026".
 	// Parse "YYYY-MM-DD" direct om timezone-drift te vermijden (new Date() interpreteert UTC).
 	eleventyConfig.addFilter("datumNL", function (datum) {
@@ -74,6 +80,9 @@ module.exports = function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy("style");
 	eleventyConfig.addPassthroughCopy("mailbox/favicon");
 	eleventyConfig.addPassthroughCopy("mailbox/styles.css");
+
+	// React islands build output
+	eleventyConfig.addPassthroughCopy("_site/js");
 
 	// mox/ landingspagina: self-contained assets meekopiëren naar _site/mox/
 	eleventyConfig.addPassthroughCopy("mox/css");
