@@ -31,7 +31,7 @@
 
 	function maakActionGroup(titel) {
 		var div = document.createElement("div");
-		div.className = "action-group topic-options";
+		div.className = "action-group action-options";
 		div.innerHTML = '<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">' + titel + '</span></label>'
 			+ '<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">' + ' Deel</button>'
 			+ '<button class="link-button hide-topic">Niet relevant voor mij</button>';
