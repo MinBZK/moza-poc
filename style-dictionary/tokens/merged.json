@@ -1686,7 +1686,8 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.size.body.md}"
+          "fontSize": "{text.size.body.md}",
+          "lineHeight": "{text.line-height.md}"
         }
       },
       "footer": {
@@ -1695,7 +1696,7 @@
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.size.body.sm}",
-          "lineHeight": "{text.line-height.md}"
+          "lineHeight": "{text.line-height.sm}"
         }
       }
     },
