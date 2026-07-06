@@ -665,6 +665,37 @@ button, a.btn, a.btn-cta, button.btn-cta {
 	}
 }
 
+/* "Overige acties"-menu binnen een action-group */
+.actions-menu {
+	position: relative;
+}
+.actions-menu-list {
+	background: var(--toepassing-color-background-default);
+	border: var(--toepassing-border-subtle);
+	border-radius: var(--toepassing-border-radius-md);
+	box-shadow: var(--toepassing-box-shadow-default);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-2xs);
+	inset-block-start: 100%;
+	inset-inline-start: 0;
+	min-inline-size: 16rem;
+	padding: var(--toepassing-space-padding-sm);
+	position: absolute;
+	z-index: 1;
+	&[hidden] {
+		display: none;
+	}
+	.icon-button {
+		border-radius: var(--toepassing-border-radius-md);
+		inline-size: 100%;
+		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
+		&:hover, &:focus-visible {
+			background: var(--toepassing-color-interactive-alternate-hover-background) !important;
+		}
+	}
+}
+
 /* -- MEDIA -- */
 
 p svg {
@@ -1404,6 +1435,11 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	border-radius: var(--toepassing-border-radius-sm);
 	inline-size: 100%;
 	margin-block-start: var(--toepassing-space-margin-sm);
+}
+.berichtenbox-attachments-list {
+	li::marker {
+		
+	}
 }
 
 /* Berichtenbox A/B/C-test varianten */

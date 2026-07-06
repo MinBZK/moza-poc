@@ -22,9 +22,10 @@
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ '/style/style.css' | url }}">
     <meta name="description" content="{{ description | default('MijnOverheid Zakelijk') }}">
-    <link rel="shortcut icon" href="{{ '/assets/favicon/favicon.ico' | url }}" type="image/x-icon">
-    <link rel="icon" sizes="192x192" href="{{ '/assets/favicon/touch-icon.png' | url }}">
-    <link rel="apple-touch-icon" href="{{ '/assets/favicon/apple-touch-icon.png' | url }}">
+    {% set faviconPad = "/mijn-belastingdienst/assets" if headerType == "belastingdienst" else "/assets/favicon" %}
+    <link rel="shortcut icon" href="{{ (faviconPad + '/favicon.ico') | url }}" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="{{ (faviconPad + '/touch-icon.png') | url }}">
+    <link rel="apple-touch-icon" href="{{ (faviconPad + '/apple-touch-icon.png') | url }}">
     {% if styles %}
         {% for s in styles %}
             <link rel="stylesheet" href="{{ s }}">
@@ -68,6 +69,7 @@
     <script src="{{ '/assets/javascript/aria-disabled.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/indeterminate.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/account-switcher.js' | url }}" defer></script>
+    <script src="{{ '/assets/javascript/actions-menu.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/content-interactions.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/feature-flags.js' | url }}" defer></script>
     <script>window.personasData = {{ personas | dump | safe }};</script>
