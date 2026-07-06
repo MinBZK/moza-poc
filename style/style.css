@@ -1233,9 +1233,14 @@ dd .feedback {
 }
 .berichtenbox-row-sender {
 	inline-size: 25%;
+	position: relative;
 }
-.berichtenbox-row-subject {
+.berichtenbox-row .berichtenbox-row-subject {
 	inline-size: 50%;
+	a {
+		color: var(--toepassing-color-text-default);
+		text-decoration: none;
+	}
 }
 .berichtenbox-row-date {
 	color: var(--toepassing-color-text-subtle-2);
@@ -1261,7 +1266,7 @@ dd .feedback {
 	z-index: 1;
 }
 button.mark-toggle {
-	align-items: center;
+	align-items: flex-start;
 	background: none;
 	block-size: 100%;
 	border: 0;
@@ -1272,7 +1277,7 @@ button.mark-toggle {
 	justify-content: center;
 	min-block-size: unset;
 	min-inline-size: unset;
-	padding: 0;
+	padding: var(--toepassing-space-padding-xs) 0 0;
 	transform: scale(1);
 }
 button.mark-toggle, [data-actie="markeren"] {
@@ -1325,9 +1330,27 @@ button.is-marked {
 }
 
 /* Berichtenbox ongelezen status */
-.berichtenbox-row.is-unread .berichtenbox-row-sender, .berichtenbox-row.is-unread .berichtenbox-row-subject {
-	font-weight: var(--toepassing-text-font-weight-semi-bold);
+.berichtenbox-row.is-unread {
+	.berichtenbox-row-sender {
+		font-weight: var(--toepassing-text-font-weight-bold);
+		padding-inline-start: var(--toepassing-space-padding-2xl);
+		position: relative;
+		&::before {
+			background: var(--toepassing-color-feedback-attention);
+			block-size: var(--toepassing-size-3xs);
+			border-radius: var(--toepassing-border-radius-round);
+			content: "";
+			display: block;
+			inline-size: var(--toepassing-size-3xs);
+			inset-block-start: .8rem;
+			position: absolute;
+		}
+	}
+	.berichtenbox-row-subject a {
+		color: var(--toepassing-color-interactive-default-text);
+	}
 }
+
 
 /* Berichtenbox animatie bij nieuw bericht */
 @media (prefers-reduced-motion: no-preference) {
@@ -1400,7 +1423,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 .berichtenbox-attachment-preview {
 	background: var(--toepassing-color-background-raised);
-	block-size: 32rem;
+	block-size: 72rem;
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-sm);
 	inline-size: 100%;
@@ -1415,7 +1438,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 .berichtenbox-detail-pdf {
 	display: none;
 	.berichtenbox-attachment-preview {
-		block-size: 80vh;
 		margin-block-start: 0;
 	}
 	p {
@@ -1489,7 +1511,6 @@ html[data-berichtenbox-variant="c"] .berichtenbox-detail-acties-panel {
 .is-unread {
 	h3, .berichtenbox-row-sender {
 		font-weight: var(--toepassing-text-font-weight-bold);
-		position: relative;
 	}
 	.berichtenbox-row-sender {
 		&::before {
