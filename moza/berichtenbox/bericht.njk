@@ -22,7 +22,6 @@ eleventyComputed:
 	</nav>
 
 	<section class="card">
-		{% include "berichtenbox-tabs.njk" %}
 
 		<section class="berichtenbox-content" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}" data-afzender-naam="{{ bericht.afzender }}"{% if bericht.heeftBijlage %} data-heeft-bijlage="true"{% endif %}>
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
@@ -31,34 +30,6 @@ eleventyComputed:
 				{{ bericht.afzender }} · {{ bericht.datum | datumNL }}
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}
 			</p>
-
-			<div class="action-group">
-				<button class="icon-button" data-actie="markeren" aria-pressed="false">
-					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
-				</button>
-				<button class="icon-button" data-actie="verplaatsen">
-					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
-				</button>
-				<button class="icon-button" data-actie="verwijderen">
-					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
-				</button>
-				<div class="actions-menu">
-					<button class="icon-button actions-menu-toggle" type="button" aria-haspopup="true" aria-expanded="false">
-						{% icon "/assets/icons/icon-meer.svg" %}Overige acties
-					</button>
-					<div class="actions-menu-list" role="menu" hidden>
-						<button class="icon-button" role="menuitem" data-actie="markeer-ongelezen">
-							{% include "icon-ongelezen.njk" %}Markeren als ongelezen
-						</button>
-						<button class="icon-button" role="menuitem" data-actie="verwijderen">
-							{% icon "/assets/icons/icon-doorsturen.svg" %}Doorsturen
-						</button>
-						<button class="icon-button" role="menuitem" data-actie="archiveren">
-							{% icon "/assets/icons/icon-archief.svg" %}Archiveren
-						</button>
-					</div>
-				</div>
-			</div>
 
 			<div class="berichtenbox-detail-body">
 				{% if bericht.variantCInhoud %}
@@ -103,6 +74,24 @@ eleventyComputed:
 				<ul class="berichtenbox-attachments-list list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
 			{% endif %}
+
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<!-- <button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button> -->
+				<button class="icon-button" data-actie="doorsturen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Doorsturen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+			</div>
 		</section>
 	</section>
 
