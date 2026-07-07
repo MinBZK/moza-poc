@@ -49,6 +49,12 @@
         {% include "header-rijksoverheid.njk" %}
     {% endif %}
 
+    {# Feature flag beschikbaar op alle moza-pagina's; verborgen marker zodat het
+       flags-paneel de optie toont, ook op pagina's zonder eigen unhappy-content. #}
+    {% if page.url.startsWith('/moza/') %}
+    <span hidden data-feature="Berichtenbox unhappy flow" data-feature-type="functionaliteit" data-feature-default="off"></span>
+    {% endif %}
+
     <main>
         {{ content | safe }}
     </main>

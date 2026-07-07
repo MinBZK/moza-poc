@@ -205,10 +205,74 @@
 			return false;
 		}
 	}
-	function magazijnToegestaan(magazijnId) {
+	// Unhappy-flow (feature flag "Berichtenbox unhappy flow"): één bron (RDW) is
+	// onbereikbaar. Zolang de flag aan staat en de gebruiker niet handmatig heeft
+	// hersteld, tellen RDW-berichten niet mee in de lijst en de tellers.
+	const ONBEREIKBARE_BRON = "rdw";
+	let bronHandmatigHersteld = false;
+	// De flag wordt persistent bewaard in een cookie (overleeft localStorage-wissen),
+	// zie PERSISTENT_FEATURES in feature-flags.js.
+	function unhappyFlowAan() {
+		const rij = document.cookie.split("; ").find((r) => r.startsWith("unhappy-flow="));
+		return !!rij && rij.split("=").slice(1).join("=") === "true";
+	}
+	// Met de flag aan wordt per page-load willekeurig één scenario gekozen:
+	//  - "een":   alleen RDW is bij het laden onbereikbaar.
+	//  - "geen":  geen enkele bron is bij het laden bereikbaar.
+	//  - "later": alle bronnen laden succesvol, waarna op een willekeurig moment
+	//             één bron uitvalt (zie plannBronUitval / sessionStorage).
+	// De keuze wordt gecachet zodat die stabiel is binnen één weergave; bij het
+	// uit-/aanzetten van de flag (feature-flags-applied) wordt opnieuw gekozen.
+	const UNHAPPY_SCENARIOS = ["een", "geen", "later"];
+	let scenarioGekozen = false;
+	let unhappyScenario = "een";
+	function huidigUnhappyScenario() {
+		if (!scenarioGekozen) {
+			unhappyScenario = UNHAPPY_SCENARIOS[Math.floor(Math.random() * UNHAPPY_SCENARIOS.length)];
+			scenarioGekozen = true;
+		}
+		return unhappyScenario;
+	}
+	function bronOnbereikbaar() {
+		if (bronHandmatigHersteld) return false;
+		return unhappyFlowAan();
+	}
+	function magazijnGeblokkeerd(magazijnId) {
+		if (!bronOnbereikbaar()) return false;
+		const sc = huidigUnhappyScenario();
+		if (sc === "geen") return true;
+		if (sc === "een") return magazijnId === ONBEREIKBARE_BRON;
+		return false; // "later": bij het laden is nog niets geblokkeerd
+	}
+
+	// "later"-scenario: welke bron ná een succesvolle load is uitgevallen, gedeeld
+	// tussen de inbox en de bericht-detailpagina via sessionStorage (blijft binnen
+	// het tabblad staan bij navigatie, verdwijnt bij het sluiten van het tabblad).
+	const UITVAL_KEY = "berichtenbox-bron-uitval";
+	function leesBronUitval() {
+		try {
+			const raw = sessionStorage.getItem(UITVAL_KEY);
+			return raw ? JSON.parse(raw) : null;
+		} catch (e) { return null; }
+	}
+	function schrijfBronUitval(bron) {
+		try {
+			if (bron) sessionStorage.setItem(UITVAL_KEY, JSON.stringify(bron));
+			else sessionStorage.removeItem(UITVAL_KEY);
+		} catch (e) { /* sessionStorage niet beschikbaar */ }
+	}
+
+	// Alleen het org-filter (Belastingdienst-portaal), zonder de unhappy-flow-
+	// uitsluiting. Gebruikt om te bepalen welke bronnen worden bevraagd, ook als
+	// er eentje onbereikbaar is.
+	function magazijnDoorOrgFilter(magazijnId) {
 		if (!orgFilterActief()) return true;
 		if (andereOrgenFeatureAan() && state.toonAndereOrganisaties) return true;
 		return magazijnId === ORG_EIGEN;
+	}
+	function magazijnToegestaan(magazijnId) {
+		if (magazijnGeblokkeerd(magazijnId)) return false;
+		return magazijnDoorOrgFilter(magazijnId);
 	}
 	// Eigen mappen (.berichtenbox-folder-user) horen bij de berichten van andere
 	// organisaties. Toon ze alleen als die zichtbaar zijn; bij alleen-
@@ -839,6 +903,129 @@
 		});
 	}
 
+	// Unhappy-flow (feature flag): onbereikbare bron. De waarschuwing wordt door
+	// feature-flags.js getoond/verborgen op basis van de flag. De retry-knop
+	// simuleert een geslaagde herverbinding; toggelen van de flag zet de bron
+	// weer op onbereikbaar. Bij elke wijziging worden lijst en tellers herrenderd.
+	function herrenderInbox() {
+		if (huidigeView() !== 'inbox') return;
+		huidigePagina = 1;
+		if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
+		render('inbox');
+	}
+	// Toon de waarschuwing alleen als de bron onbereikbaar is. De waarschuwing
+	// heeft géén data-feature (anders zou feature-flags.js die al tijdens de
+	// progress-animatie tonen); berichtenbox.js stuurt de zichtbaarheid zelf,
+	// zodat de melding pas ná het ophalen bij de bronnen verschijnt.
+	function werkBronWaarschuwingBij() {
+		const een = document.querySelector('[data-bron-onbereikbaar]');
+		const geen = document.querySelector('[data-geen-bronnen]');
+		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
+		if (een) een.hidden = sc !== 'een';
+		if (geen) geen.hidden = sc !== 'geen';
+	}
+	// "later"-scenario: toon de uitval-melding op de inbox zodra een bron is
+	// uitgevallen (geregistreerd in sessionStorage) en vul de naam in.
+	function werkBronUitvalBij() {
+		const melding = document.querySelector('[data-bron-uitval]');
+		if (!melding) return;
+		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === 'later';
+		const uitval = actief ? leesBronUitval() : null;
+		melding.hidden = !uitval;
+		if (uitval) {
+			const naamEl = melding.querySelector('[data-bron-uitval-naam]');
+			if (naamEl) naamEl.textContent = uitval.naam;
+		}
+	}
+	// Plan de uitval van één willekeurige bron op een willekeurig moment ná een
+	// succesvolle load. Is het al gebeurd (sessionStorage), dan alleen tonen.
+	let uitvalGepland = false;
+	function plannBronUitval() {
+		if (huidigeView() !== 'inbox') return;
+		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later') return;
+		if (leesBronUitval()) { werkBronUitvalBij(); return; }
+		if (uitvalGepland) return;
+		uitvalGepland = true;
+		const bronnen = [...new Set(
+			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId)).map((b) => b.magazijnId)
+		)];
+		if (!bronnen.length) return;
+		const vertraging = 4000 + Math.floor(Math.random() * 8000); // 4–12 s
+		setTimeout(() => {
+			if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later' || leesBronUitval()) return;
+			const id = bronnen[Math.floor(Math.random() * bronnen.length)];
+			const voorbeeld = data.berichten.find((b) => b.magazijnId === id);
+			schrijfBronUitval({ id: id, naam: voorbeeld ? voorbeeld.afzender : id });
+			werkBronUitvalBij();
+		}, vertraging);
+	}
+	function bindBronOnbereikbaar() {
+		const waarschuwingen = document.querySelectorAll('[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]');
+		if (!waarschuwingen.length) return;
+		waarschuwingen.forEach((w) => {
+			const retry = w.querySelector('[data-bron-retry]');
+			if (retry) {
+				retry.addEventListener('click', () => {
+					bronHandmatigHersteld = true;
+					schrijfBronUitval(null);
+					uitvalGepland = false;
+					werkBronWaarschuwingBij();
+					werkBronUitvalBij();
+					// Toon de progress-animatie opnieuw (bronnen worden opnieuw
+					// bevraagd) voordat de volledige lijst verschijnt.
+					voortgangsAnimatie(() => herrenderInbox());
+				});
+			}
+		});
+		// Flag-wijziging in het paneel: bij uitzetten zijn de bronnen weer beschikbaar
+		// en wordt bij een volgende keer opnieuw een scenario gekozen. Na de eerste
+		// progress-animatie mag de melding meteen mee-togglen.
+		document.addEventListener('feature-flags-applied', () => {
+			if (!unhappyFlowAan()) {
+				bronHandmatigHersteld = false;
+				scenarioGekozen = false;
+				uitvalGepland = false;
+				schrijfBronUitval(null);
+			}
+			werkBronWaarschuwingBij();
+			werkBronUitvalBij();
+			herrenderInbox();
+		});
+	}
+
+	// Bericht-detailpagina: als de bron van dit bericht is uitgevallen ("later"-
+	// scenario, gedeeld via sessionStorage), toon dan een melding en verberg de
+	// berichtinhoud. De retry-knop herstelt de bron en toont het bericht weer.
+	function werkBerichtBeschikbaarheidBij() {
+		const melding = document.querySelector('[data-bericht-onbeschikbaar]');
+		const content = document.querySelector('.berichtenbox-content[data-afzender-id]');
+		if (!melding || !content) return;
+		const uitval = leesBronUitval();
+		const onbeschikbaar = !!uitval && uitval.id === content.dataset.afzenderId;
+		melding.hidden = !onbeschikbaar;
+		if (onbeschikbaar) {
+			const naamEl = melding.querySelector('[data-bron-uitval-naam]');
+			if (naamEl) naamEl.textContent = uitval.naam;
+		}
+		[
+			content.querySelector('.berichtenbox-detail-body'),
+			content.querySelector('[data-berichtenbox-attachments]'),
+			content.querySelector('.berichtenbox-detail-pdf'),
+		].forEach((el) => { if (el) el.hidden = onbeschikbaar; });
+	}
+	function bindBerichtBeschikbaarheid() {
+		const melding = document.querySelector('[data-bericht-onbeschikbaar]');
+		if (!melding) return;
+		werkBerichtBeschikbaarheidBij();
+		const retry = melding.querySelector('[data-bericht-retry]');
+		if (retry) {
+			retry.addEventListener('click', () => {
+				schrijfBronUitval(null);
+				werkBerichtBeschikbaarheidBij();
+			});
+		}
+	}
+
 	function bindInboxFilters() {
 		if (huidigeView() !== 'inbox') return;
 		const lijst = document.querySelector('[data-berichtenbox-list]');
@@ -1095,15 +1282,56 @@
 
 			while (lijst.firstChild) lijst.removeChild(lijst.firstChild);
 
-			// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
-			gekozen.forEach((n) => {
-				const li = document.createElement('li');
+			// Unhappy-flow (feature flag): laat willekeurig 1 of meer bijlagen falen.
+			// Elke gefaalde bijlage krijgt een foutmelding met een eigen retry-knop.
+			const faalIndexen = new Set();
+			if (unhappyFlowAan()) {
+				const aantalFout = 1 + Math.floor(Math.random() * gekozen.length);
+				while (faalIndexen.size < aantalFout) {
+					faalIndexen.add(Math.floor(Math.random() * gekozen.length));
+				}
+			}
+
+			// Werkende bijlage-link.
+			function bijlageLink(naam) {
 				const a = document.createElement('a');
 				a.href = pdfHref;
 				a.target = '_blank';
 				a.rel = 'noopener';
-				a.textContent = n;
-				li.appendChild(a);
+				a.textContent = naam;
+				return a;
+			}
+			// Gefaalde bijlage: feedback-warning met retry die de bijlage alsnog "ophaalt".
+			const WARNING_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
+			function bijlageFout(naam) {
+				const feedback = document.createElement('div');
+				feedback.className = 'feedback feedback-warning';
+				feedback.setAttribute('role', 'status');
+				const icoon = document.createElement('template');
+				icoon.innerHTML = WARNING_ICON;
+				feedback.appendChild(icoon.content.firstChild);
+
+				const inner = document.createElement('div');
+				const tekst = document.createElement('p');
+				tekst.textContent = 'Bijlage kon niet worden opgehaald.';
+				const actie = document.createElement('p');
+				const retry = document.createElement('button');
+				retry.type = 'button';
+				retry.className = 'link-button';
+				retry.textContent = 'Opnieuw proberen';
+				retry.addEventListener('click', () => {
+					feedback.replaceWith(bijlageLink(naam));
+				});
+				actie.appendChild(retry);
+				inner.append(tekst, actie);
+				feedback.appendChild(inner);
+				return feedback;
+			}
+
+			// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
+			gekozen.forEach((n, i) => {
+				const li = document.createElement('li');
+				li.appendChild(faalIndexen.has(i) ? bijlageFout(n) : bijlageLink(n));
 				lijst.appendChild(li);
 			});
 
@@ -1215,9 +1443,19 @@
 
 		// Respecteer het org-filter: bij alleen Belastingdienst is er 1 bron en het
 		// juiste aantal Belastingdienst-berichten; met andere organisaties alle bronnen.
-		const inboxBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId));
-		const totaalBerichten = inboxBerichten.length;
-		const totaalBronnen = new Set(inboxBerichten.map((b) => b.magazijnId)).size || 1;
+		// We bevragen álle bronnen die het org-filter toelaat (totaalBronnen), ook een
+		// onbereikbare. Alleen de bereikbare bronnen leveren berichten en "arriveren"
+		// in de animatie; de onbereikbare blijft hangen, dus de teller stopt bij 11/12.
+		const gezochteBronnen = new Set(
+			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnDoorOrgFilter(b.magazijnId)).map((b) => b.magazijnId)
+		);
+		const bereikteBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId));
+		const bereikteBronnen = new Set(bereikteBerichten.map((b) => b.magazijnId));
+		const totaalBronnen = gezochteBronnen.size || 1;
+		// Aantal bronnen dat daadwerkelijk antwoordt. Bij het "geen"-scenario is dit 0
+		// (niets arriveert); bij "een" is het totaal - 1; normaal gelijk aan totaal.
+		const aankomendeBronnen = bereikteBronnen.size;
+		const totaalBerichten = bereikteBerichten.length;
 
 		const bronEl = document.querySelector('[data-berichtenbox-progress-source]');
 		const totaalEl = document.querySelector('[data-berichtenbox-progress-total]');
@@ -1225,11 +1463,12 @@
 		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
 		if (totaalEl) totaalEl.textContent = totaalBronnen;
 
-		// Simuleer SSE-gedrag: elke bron arriveert op eigen moment. Trekken uit een
-		// zware-staart-verdeling (x^4) zodat de meeste bronnen snel antwoorden maar
-		// de trage magazijnen tot laat in de rit nog binnendruppelen.
+		// Simuleer SSE-gedrag: elke bereikbare bron arriveert op eigen moment. Trekken
+		// uit een zware-staart-verdeling (x^4) zodat de meeste bronnen snel antwoorden
+		// maar de trage magazijnen tot laat in de rit nog binnendruppelen. Alleen de
+		// bereikbare bronnen krijgen een aankomsttijd; de onbereikbare arriveert nooit.
 		const bronTijden = [];
-		for (let i = 0; i < totaalBronnen; i++) {
+		for (let i = 0; i < aankomendeBronnen; i++) {
 			const r = Math.random();
 			bronTijden.push(Math.pow(r, 4));
 		}
@@ -1398,6 +1637,8 @@
 	vulDemoDetailPagina();
 	bindDetailPaginaActies();
 	bindSortering();
+	bindBronOnbereikbaar();
+	bindBerichtBeschikbaarheid();
 
 	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
 
@@ -1408,11 +1649,15 @@
 			toonMappenZijbalk();
 			bindInboxFilters();
 			startPolling();
+			werkBronWaarschuwingBij();
+			plannBronUitval();
 		});
 	} else {
 		toonMappenZijbalk();
 		bindInboxFilters();
 		startPolling();
+		werkBronWaarschuwingBij();
+		plannBronUitval();
 	}
 
 	// Debug-handle; niet bedoeld voor productiegebruik.

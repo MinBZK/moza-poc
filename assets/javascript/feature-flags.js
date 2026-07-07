@@ -13,6 +13,23 @@
 const FEATURE_PREFIX = "feature:";
 const SETTING_PREFIX = "setting:";
 
+// Persistente feature flags: bewaard in een cookie i.p.v. localStorage, zodat de
+// keuze het wissen van localStorage (bv. de "localStorage wissen"-knop) overleeft.
+// Map: feature-naam -> cookienaam.
+const PERSISTENT_FEATURES = {
+	"Berichtenbox unhappy flow": "unhappy-flow",
+};
+
+function getCookie(naam) {
+	const rij = document.cookie.split("; ").find((r) => r.startsWith(naam + "="));
+	return rij ? decodeURIComponent(rij.split("=").slice(1).join("=")) : null;
+}
+
+function setCookie(naam, waarde) {
+	// 1 jaar houdbaar; path=/ zodat de flag op alle pagina's geldt.
+	document.cookie = naam + "=" + encodeURIComponent(waarde) + "; path=/; max-age=" + 60 * 60 * 24 * 365 + "; samesite=lax";
+}
+
 function getSettingValue(name, defaultValue) {
 	return localStorage.getItem(SETTING_PREFIX + name) || defaultValue;
 }
@@ -63,6 +80,9 @@ document.querySelectorAll('[data-feature-default="off"]').forEach((el) => {
 });
 
 function isFeatureEnabled(name) {
+	if (PERSISTENT_FEATURES[name]) {
+		return getCookie(PERSISTENT_FEATURES[name]) === "true";
+	}
 	const stored = localStorage.getItem(FEATURE_PREFIX + name);
 	if (defaultOffFeatures.has(name)) {
 		return stored === "true";
@@ -138,7 +158,9 @@ function buildTogglePanel() {
 			checkbox.type = "checkbox";
 			checkbox.checked = isFeatureEnabled(name);
 			checkbox.addEventListener("change", () => {
-				if (checkbox.checked) {
+				if (PERSISTENT_FEATURES[name]) {
+					setCookie(PERSISTENT_FEATURES[name], checkbox.checked ? "true" : "false");
+				} else if (checkbox.checked) {
 					if (defaultOffFeatures.has(name)) {
 						localStorage.setItem(FEATURE_PREFIX + name, "true");
 					} else {
