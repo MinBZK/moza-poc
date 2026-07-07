@@ -31,6 +31,14 @@ eleventyComputed:
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}
 			</p>
 
+			<div class="feedback feedback-warning" hidden data-bericht-onbeschikbaar role="status">
+				{% include "icon-feedback-warning.njk" %}
+				<div>
+					<p>Dit bericht is momenteel niet beschikbaar omdat <b data-bron-uitval-naam></b> onbereikbaar is geworden. Probeer het later opnieuw.</p>
+					<p><button type="button" class="link-button" data-bericht-retry>Opnieuw proberen</button></p>
+				</div>
+			</div>
+
 			<div class="berichtenbox-detail-body">
 				{% if bericht.variantCInhoud %}
 				<div class="variant-c-only">

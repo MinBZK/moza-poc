@@ -24,6 +24,30 @@ permalink: "/moza/berichtenbox/"
 					{% set nTotaal = berichtenboxData.berichten | length %}{% set nBronnen = berichtenboxData.aantalMagazijnen %}{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
 
+					<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
+						{% include "icon-feedback-warning.njk" %}
+						<div>
+							<p>De <b>RDW</b> is momenteel niet bereikbaar. Berichten van overige overheidsorganisaties staan hieronder.</p>
+							<p><button type="button" class="link-button" data-bron-retry>RDW opnieuw proberen</button></p>
+						</div>
+					</div>
+
+					<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
+						{% include "icon-feedback-error.njk" %}
+						<div>
+							<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
+							<p><button type="button" class="link-button" data-bron-retry>Opnieuw proberen</button></p>
+						</div>
+					</div>
+
+					<div class="feedback feedback-warning" hidden data-bron-uitval role="status">
+						{% include "icon-feedback-warning.njk" %}
+						<div>
+							<p><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden. Berichten van deze organisatie zijn nu mogelijk niet beschikbaar.</p>
+							<p><button type="button" class="link-button" data-bron-retry>Opnieuw proberen</button></p>
+						</div>
+					</div>
+
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
 						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op afzender of onderwerp" />
