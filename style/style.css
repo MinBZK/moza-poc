@@ -2527,7 +2527,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 		section {
 			display: flex;
 			flex-direction: column;
-			gap: var(--toepassing-space-margin-xs);
 			inline-size: 32rem;
 			max-inline-size: 100%;
 		}
@@ -2548,6 +2547,34 @@ h1, h2, h3, h4, h5, h6, a, button {
 				block-size: var(--toepassing-size-icon-md);
 				margin-inline-end: var(--toepassing-space-margin-3xs);
 				vertical-align: text-bottom;
+			}
+		}
+		[role="tabpanel"] {
+			border: var(--toepassing-border-default);
+			border-radius: 0 var(--toepassing-border-radius-lg) var(--toepassing-border-radius-lg);
+			margin-block-start: -2px;
+			padding: var(--toepassing-space-padding-lg) var(--toepassing-space-padding-lg) var(--toepassing-space-padding-xl);
+			section {
+				gap: var(--toepassing-space-margin-xs);
+			}
+		}
+		[role="tablist"] {
+			z-index: 1;
+			button {
+				background: var(--toepassing-color-background-subtle);
+				border: var(--toepassing-border-default);
+				border-block-end: 0;
+				border-radius: var(--toepassing-border-radius-lg) var(--toepassing-border-radius-lg) 0 0;
+				color: var(--toepassing-color-interactive-default-text);
+				font: var(--toepassing-text-heading-h5);
+				padding: var(--toepassing-space-padding-lg) var(--toepassing-space-padding-xl);
+				&[aria-selected="false"] {
+					background-color: var(--toepassing-color-interactive-disabled-background);
+					border-block-end: var(--toepassing-border-default);
+					&:hover {
+						background: var(--toepassing-color-interactive-alternate-active-background);
+					}
+				}
 			}
 		}
 	}
