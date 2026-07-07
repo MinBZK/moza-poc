@@ -85,6 +85,9 @@ module.exports = function (eleventyConfig) {
 	// mijn-belastingdienst/ snapshot: self-contained assets meekopiëren
 	eleventyConfig.addPassthroughCopy("mijn-belastingdienst/assets");
 
+	// Pagina-specifieke CSS voor de ux-onderzoeken-pagina's
+	eleventyConfig.addPassthroughCopy("ux-onderzoeken/style.css");
+
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({
