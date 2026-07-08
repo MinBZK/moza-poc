@@ -1420,6 +1420,10 @@ button.is-marked {
 	}
 }
 
+.berichtenbox-content .feedback {
+	margin-block-end: var(--toepassing-space-margin-sm);
+}
+
 /* Sorteerbare kolomkoppen */
 .berichtenbox-sort {
 	align-items: center;
