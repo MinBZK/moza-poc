@@ -2567,7 +2567,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 				border-radius: var(--toepassing-border-radius-lg) var(--toepassing-border-radius-lg) 0 0;
 				color: var(--toepassing-color-interactive-default-text);
 				font: var(--toepassing-text-heading-h5);
-				padding: var(--toepassing-space-padding-lg) var(--toepassing-space-padding-xl);
+				padding: var(--toepassing-space-padding-lg) var(--toepassing-space-padding-2xl);
 				&[aria-selected="false"] {
 					background-color: var(--toepassing-color-interactive-disabled-background);
 					border-block-end: var(--toepassing-border-default);
