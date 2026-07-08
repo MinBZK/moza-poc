@@ -35,29 +35,29 @@ title: "MijnOverheid Zakelijk: Bericht"
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
+
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<!-- <button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button> -->
+				<button class="icon-button" data-actie="doorsturen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Doorsturen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+			</div>
 		</section>
 
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
 			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
 			<p><a href="{{ '/moza/berichtenbox/' | url }}" class="btn-cta">Terug naar Berichtenbox</a></p>
-		</div>
-
-		<div class="action-group action-options">
-			<button class="icon-button" data-actie="markeren" aria-pressed="false">
-				{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
-			</button>
-			<!-- <button class="icon-button" data-actie="verplaatsen">
-				{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
-			</button> -->
-			<button class="icon-button" data-actie="doorsturen">
-				{% icon "/assets/icons/icon-doorsturen.svg" %}Doorsturen
-			</button>
-			<button class="icon-button" data-actie="archiveren">
-				{% icon "/assets/icons/icon-archief.svg" %}Archiveren
-			</button>
-			<button class="icon-button" data-actie="verwijderen">
-				{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
-			</button>
 		</div>
 
 		<!-- <p class="berichtenbox-detail-organisatie" data-demo-organisatie hidden>
