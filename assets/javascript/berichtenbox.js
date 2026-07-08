@@ -1408,6 +1408,12 @@
 				download.href = pdfHref;
 				download.hidden = false;
 			}
+			// Optionele tekst-versie-link naast de download (indien aanwezig).
+			const tekstVersie = document.querySelector('[data-berichtenbox-tekst-download]');
+			if (tekstVersie) {
+				tekstVersie.href = url('/assets/documents/voorbeeld-bijlage.txt');
+				tekstVersie.hidden = false;
+			}
 		}, 1500);
 	}
 

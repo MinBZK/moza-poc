@@ -397,6 +397,11 @@ a[rel~="external"]:not(.btn-cta, .content-link)::after {
 	vertical-align: baseline;
 }
 
+/* Icoon voor link-tekst */
+.content-link svg {
+	margin-inline-end: var(--toepassing-space-margin-2xs);
+}
+
 /* Formulieren: labels */
 legend, label, dt {
 	color: var(--toepassing-color-text-subtle-1);
@@ -857,15 +862,20 @@ button.side-nav-toggle {
 }
 
 /* Navigatie: Links */
-a[href$=".pdf"]::after {
-	background-color: currentcolor;
-	block-size: var(--toepassing-size-icon-sm);
-	content: "";
-	display: inline-block;
-	inline-size: var(--toepassing-size-icon-sm);
-	margin-inline-start: var(--toepassing-space-layout-3xs);
-	mask: url("../assets/icons/icon-document-pdf.svg") no-repeat center / contain;
-	vertical-align: middle;
+a[href$=".pdf"], a[href$=".txt"] {
+	&::before {
+		background-color: currentcolor;
+		block-size: var(--toepassing-size-icon-md);
+		content: "";
+		display: inline-block;
+		inline-size: var(--toepassing-size-icon-md);
+		margin-inline-end: var(--toepassing-space-layout-3xs);
+		mask: url("../assets/icons/icon-document-pdf.svg") no-repeat center / contain;
+		vertical-align: middle;
+	}
+}
+a[href$=".txt"]::before {
+	mask: url("../assets/icons/icon-document-tekst.svg") no-repeat center / contain;
 }
 
 /* Navigatie: Link terug */
@@ -1496,6 +1506,16 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	}
 	p {
 		margin-block-start: var(--toepassing-space-margin-sm);
+	}
+	ul {
+		list-style: none;
+		margin-block: var(--toepassing-space-margin-sm) var(--toepassing-space-margin-xs);
+	}
+	a {
+		text-decoration-color: transparent;
+		&:hover {
+			text-decoration-color: inherit;
+		}
 	}
 }
 html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
