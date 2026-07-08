@@ -1001,9 +1001,9 @@ th, td {
 		text-align: end;
 	}
 }
-.action-group {
+/* .action-group {
 	font-size: var(--toepassing-text-size-body-sm);
-}
+} */
 caption {
 	caption-side: bottom; /* Logical property wordt nog niet ondersteund */
 	padding-block-start: var(--toepassing-space-padding-sm);
@@ -1106,7 +1106,15 @@ caption {
 	background: var(--toepassing-color-background-subtle);
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
-	padding: var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
+	padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
+	.icon-button {
+		border-radius: var(--toepassing-border-radius-md);
+		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
+		white-space: nowrap;
+		&:hover, &:focus-visible {
+			background: var(--toepassing-color-interactive-alternate-hover-background) !important;
+		}
+	}
 }
 /* Onzichtbare overlay-link voor klikbare cards */
 .card-link {
@@ -1266,6 +1274,30 @@ li, th, td {
 }
 .berichtenbox-row-folder-label {
 	display: none; /* Tijdelijke de Map kolom verbergen */
+}
+
+/* Acties-kolom */
+.berichtenbox-row-actions {
+	inline-size: var(--toepassing-pointer-target-min-size);
+	text-align: end;
+}
+.row-actions {
+	position: relative;
+}
+.row-actions-toggle svg {
+	inline-size: var(--toepassing-size-icon-sm);
+}
+.row-actions-menu {
+	border-radius: var(--toepassing-border-radius-md);
+	box-shadow: var(--toepassing-box-shadow-default);
+	display: flex;
+	inset-block-start: var(--toepassing-size-sm);
+	inset-inline-end: 0;
+	position: absolute;
+	z-index: 2;
+	&[hidden] {
+		display: none;
+	}
 }
 
 /* Gemarkeerd-kolom */

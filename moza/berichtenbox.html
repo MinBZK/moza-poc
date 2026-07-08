@@ -71,9 +71,11 @@ permalink: "/moza/berichtenbox/"
 							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="datum">Datum</button></th>
 							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
 							<!-- <th scope="col">Map</th> -->
+							<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
 						</tr>
 					</thead>
 					<tbody>
+						{% set rijActies = true %}
 						{% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
 					</tbody>
 				</table>
