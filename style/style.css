@@ -603,6 +603,13 @@ button, a.btn, a.btn-cta, button.btn-cta {
 			border-color: var(--toepassing-color-interactive-active-border);
 		}
 	}
+	svg {
+		margin-inline-end: var(--toepassing-space-margin-2xs);
+	}
+}
+.btn-small {
+	min-block-size: unset;
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-xs);
 }
 
 /* Actiegroep (kolom op mobiel, rij op desktop) */

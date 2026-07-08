@@ -1439,6 +1439,18 @@
 		detail.dataset.afzenderNaam = bericht.afzender;
 		if (bericht.heeftBijlage) detail.dataset.heeftBijlage = 'true';
 
+		// Link naar de Berichtenbox van de afzender-organisatie. Alleen de
+		// Belastingdienst heeft in dit prototype een eigen berichtenbox; de rest is
+		// placeholder (#).
+		const orgWrap = document.querySelector('[data-demo-organisatie]');
+		if (orgWrap) {
+			const naamEl = orgWrap.querySelector('[data-demo-organisatie-naam]');
+			const orgLink = orgWrap.querySelector('[data-demo-organisatie-link]');
+			if (naamEl) naamEl.textContent = bericht.afzender;
+			if (orgLink) orgLink.setAttribute('href', bericht.magazijnId === 'belastingdienst' ? url('/mijn-belastingdienst/berichtenbox/') : '#');
+			orgWrap.hidden = false;
+		}
+
 		const onderwerpEl = detail.querySelector('[data-demo-onderwerp]');
 		if (onderwerpEl) onderwerpEl.textContent = bericht.onderwerp;
 
