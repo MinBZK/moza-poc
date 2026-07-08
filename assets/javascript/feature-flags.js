@@ -40,12 +40,13 @@ function setSettingValue(name, value) {
 }
 
 // Berichtenbox A/B/C-test: één actieve variant. a = huidige, b = PDF-preview,
-// c = directe acties. Bron: ?variant= (wint en wordt onthouden) > setting > 'a'.
+// c = directe acties. Bron: ?variant= seedt alleen de eerste keer; een keuze in
+// het flags-paneel wint daarna (en verwijdert de URL-param) > setting > 'a'.
 const BX_VARIANTEN = ["a", "b", "c"];
-function pasBerichtenboxVariantToe() {
+function pasBerichtenboxVariantToe(gebruikUrlParam) {
 	const param = (new URLSearchParams(location.search).get("variant") || "").toLowerCase();
 	let variant;
-	if (BX_VARIANTEN.includes(param)) {
+	if (gebruikUrlParam && BX_VARIANTEN.includes(param)) {
 		variant = param;
 		localStorage.setItem(SETTING_PREFIX + "berichtenbox-variant", variant);
 	} else {
@@ -54,9 +55,18 @@ function pasBerichtenboxVariantToe() {
 	}
 	document.documentElement.dataset.berichtenboxVariant = variant;
 }
-pasBerichtenboxVariantToe();
+pasBerichtenboxVariantToe(true);
 window.addEventListener("setting-changed", (e) => {
-	if (e.detail && e.detail.key === "berichtenbox-variant") pasBerichtenboxVariantToe();
+	if (e.detail && e.detail.key === "berichtenbox-variant") {
+		// Paneelkeuze wint: verwijder een eventuele ?variant= uit de URL zodat die
+		// bij een reload de keuze niet opnieuw overschrijft.
+		const url = new URL(location.href);
+		if (url.searchParams.has("variant")) {
+			url.searchParams.delete("variant");
+			history.replaceState(null, "", url);
+		}
+		pasBerichtenboxVariantToe(false);
+	}
 });
 
 function getFeaturesByType() {

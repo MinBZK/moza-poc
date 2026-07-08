@@ -147,6 +147,19 @@ for (let i = 0; i < AANTAL_BERICHTEN; i++) {
 		isOngelezen,
 		map,
 		heeftBijlage: rnd() < 0.4,
+		// Variant C (A/B/C-test): uitgebreide uitleg + directe acties. Generiek,
+		// afgeleid van het onderwerp, zodat elk bericht in variant C een acties-
+		// paneel toont. De vaste Belastingdienst-berichten hieronder hebben eigen,
+		// specifieke variant C-teksten.
+		variantCInhoud: [
+			`Dit bericht van ${mag.naam} gaat over “${onderwerp}”. Hieronder leest u wat dit voor uw onderneming betekent en wat u nu kunt doen.`,
+			"Bekijk de details en onderneem waar nodig actie. Hebt u vragen over de inhoud? Neem dan contact op met de afzender.",
+		].join("\n\n"),
+		actiesUitleg: "U kunt dit bericht bekijken en indien nodig direct reageren.",
+		acties: [
+			{ label: "Bericht bekijken", primair: true },
+			{ label: "Reageren" },
+		],
 	});
 }
 

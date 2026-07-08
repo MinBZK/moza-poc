@@ -35,6 +35,9 @@
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 
+    {# TIJDELIJK: onderzoekslink links-boven. Verwijder deze regel om weg te halen. #}
+    {% include "temp-onderzoek-link.njk" %}
+
     {% if headerType == "overheid" %}
         {% include "header-overheid.njk" %}
     {% elif headerType == "overheid-uitgelogd" %}

@@ -27,7 +27,7 @@ eleventyComputed:
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
 
 			<p class="berichtenbox-detail-meta">
-				{{ bericht.afzender }} · {{ bericht.datum | datumNL }}
+				<a class="content-link" href="{% if bericht.magazijnId == 'belastingdienst' %}{{ '/mijn-belastingdienst/berichtenbox/' | url }}{% else %}#{% endif %}">{{ bericht.afzender }}</a> · {{ bericht.datum | datumNL }}
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}
 			</p>
 
@@ -74,7 +74,10 @@ eleventyComputed:
 			{% if bericht.heeftBijlage %}
 			<div class="berichtenbox-detail-pdf">
 				<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
-				<p><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></p>
+				<ul class="list-indent">
+					<li><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></li>
+					<li><a href="#" class="content-link" data-berichtenbox-tekst-download target="_blank" rel="noopener" download hidden>Lees tekst-versie</a></li>
+				</ul>
 			</div>
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments>
 				<h2>Bijlage(n)</h2>
@@ -100,6 +103,10 @@ eleventyComputed:
 					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
 				</button>
 			</div>
+
+			<!-- <p class="berichtenbox-detail-organisatie">
+				<a class="content-link" href="{% if bericht.magazijnId == 'belastingdienst' %}{{ '/mijn-belastingdienst/berichtenbox/' | url }}{% else %}#{% endif %}" rel="external">{% icon "/assets/icons/icon-berichtenbox.svg" %}Ga naar de Berichtenbox van {{ bericht.afzender }}</a>
+			</p> -->
 		</section>
 	</section>
 

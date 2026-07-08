@@ -397,6 +397,11 @@ a[rel~="external"]:not(.btn-cta, .content-link)::after {
 	vertical-align: baseline;
 }
 
+/* Icoon voor link-tekst */
+.content-link svg {
+	margin-inline-end: var(--toepassing-space-margin-2xs);
+}
+
 /* Formulieren: labels */
 legend, label, dt {
 	color: var(--toepassing-color-text-subtle-1);
@@ -603,6 +608,13 @@ button, a.btn, a.btn-cta, button.btn-cta {
 			border-color: var(--toepassing-color-interactive-active-border);
 		}
 	}
+	svg {
+		margin-inline-end: var(--toepassing-space-margin-2xs);
+	}
+}
+.btn-small {
+	min-block-size: unset;
+	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-xs);
 }
 
 /* Actiegroep (kolom op mobiel, rij op desktop) */
@@ -850,15 +862,20 @@ button.side-nav-toggle {
 }
 
 /* Navigatie: Links */
-a[href$=".pdf"]::after {
-	background-color: currentcolor;
-	block-size: var(--toepassing-size-icon-sm);
-	content: "";
-	display: inline-block;
-	inline-size: var(--toepassing-size-icon-sm);
-	margin-inline-start: var(--toepassing-space-layout-3xs);
-	mask: url("../assets/icons/icon-document-pdf.svg") no-repeat center / contain;
-	vertical-align: middle;
+a[href$=".pdf"], a[href$=".txt"] {
+	&::before {
+		background-color: currentcolor;
+		block-size: var(--toepassing-size-icon-md);
+		content: "";
+		display: inline-block;
+		inline-size: var(--toepassing-size-icon-md);
+		margin-inline-end: var(--toepassing-space-layout-3xs);
+		mask: url("../assets/icons/icon-document-pdf.svg") no-repeat center / contain;
+		vertical-align: middle;
+	}
+}
+a[href$=".txt"]::before {
+	mask: url("../assets/icons/icon-document-tekst.svg") no-repeat center / contain;
 }
 
 /* Navigatie: Link terug */
@@ -1001,9 +1018,9 @@ th, td {
 		text-align: end;
 	}
 }
-.action-group {
+/* .action-group {
 	font-size: var(--toepassing-text-size-body-sm);
-}
+} */
 caption {
 	caption-side: bottom; /* Logical property wordt nog niet ondersteund */
 	padding-block-start: var(--toepassing-space-padding-sm);
@@ -1106,7 +1123,15 @@ caption {
 	background: var(--toepassing-color-background-subtle);
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
-	padding: var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
+	padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
+	.icon-button {
+		border-radius: var(--toepassing-border-radius-md);
+		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
+		white-space: nowrap;
+		&:hover, &:focus-visible {
+			background: var(--toepassing-color-interactive-alternate-hover-background) !important;
+		}
+	}
 }
 /* Onzichtbare overlay-link voor klikbare cards */
 .card-link {
@@ -1268,6 +1293,30 @@ li, th, td {
 	display: none; /* Tijdelijke de Map kolom verbergen */
 }
 
+/* Acties-kolom */
+.berichtenbox-row-actions {
+	inline-size: var(--toepassing-pointer-target-min-size);
+	text-align: end;
+}
+.row-actions {
+	position: relative;
+}
+.row-actions-toggle svg {
+	inline-size: var(--toepassing-size-icon-sm);
+}
+.row-actions-menu {
+	border-radius: var(--toepassing-border-radius-md);
+	box-shadow: var(--toepassing-box-shadow-default);
+	display: flex;
+	inset-block-start: var(--toepassing-size-sm);
+	inset-inline-end: 0;
+	position: absolute;
+	z-index: 2;
+	&[hidden] {
+		display: none;
+	}
+}
+
 /* Gemarkeerd-kolom */
 .berichtenbox-row-mark {
 	block-size: 1px;
@@ -1363,7 +1412,6 @@ button.is-marked {
 	}
 }
 
-
 /* Berichtenbox animatie bij nieuw bericht */
 @media (prefers-reduced-motion: no-preference) {
 	.berichtenbox-row.is-new {
@@ -1379,6 +1427,10 @@ button.is-marked {
 	[aria-current="page"] {
 		color: var(--toepassing-color-interactive-default-text);
 	}
+}
+
+.berichtenbox-content .feedback {
+	margin-block-end: var(--toepassing-space-margin-sm);
 }
 
 /* Sorteerbare kolomkoppen */
@@ -1454,6 +1506,16 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	}
 	p {
 		margin-block-start: var(--toepassing-space-margin-sm);
+	}
+	ul {
+		list-style: none;
+		margin-block: var(--toepassing-space-margin-sm) var(--toepassing-space-margin-xs);
+	}
+	a {
+		text-decoration-color: transparent;
+		&:hover {
+			text-decoration-color: inherit;
+		}
 	}
 }
 html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {

@@ -22,13 +22,6 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 
 	<h1>Berichtenbox</h1>
 
-	<div class="feedback feedback-info">
-		{% include "icon-feedback-info.njk" %}
-		<div>
-			<p>Hier ziet u de zakelijke berichten afkomstig van de Belastingdienst. Wilt u de berichten zien van alle overheidsorganisaties, <a href="/moza/berichtenbox/">ga dan naar de Berichtenbox van MijnOverheid Zakelijk</a>.</p>
-		</div>
-	</div>
-
 	{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
 
 	<section class="card tabs berichtenbox">
@@ -39,6 +32,16 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 				<div data-berichtenbox-toolbar>
 					{% set bdBerichten = berichtenboxData.berichten | selectattr("magazijnId", "equalto", "belastingdienst") | list %}{% set nTotaal = bdBerichten | length %}{% set nBronnen = 1 %}{% set nOngelezen = bdBerichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
+
+					<div class="feedback feedback-info">
+						{% include "icon-feedback-info.njk" %}
+						<div>
+							<p>Hier ziet u de zakelijke berichten afkomstig van de Belastingdienst. Wilt u de berichten zien van alle overheidsorganisaties, <a href="/moza/berichtenbox/">ga dan naar de Berichtenbox van MijnOverheid Zakelijk</a>.</p>
+						</div>
+						<button class="btn-close link-button">
+							<i>Sluit notificatie</i>
+						</button>
+					</div>
 
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
@@ -67,10 +70,11 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="onderwerp">Onderwerp</button></th>
 							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="datum">Datum</button></th>
 							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+							<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
 						</tr>
 					</thead>
 					<tbody>
-						{% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
+						{% set rijActies = true %} {% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
 					</tbody>
 				</table>
 
