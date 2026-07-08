@@ -1402,7 +1402,6 @@ button.is-marked {
 	}
 }
 
-
 /* Berichtenbox animatie bij nieuw bericht */
 @media (prefers-reduced-motion: no-preference) {
 	.berichtenbox-row.is-new {
