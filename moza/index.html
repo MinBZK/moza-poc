@@ -20,6 +20,15 @@ title: "MijnOverheid Zakelijk: Home"
 	<section class="card">
 		<h2>Recente berichten</h2>
 		<table>
+			<thead>
+				<tr>
+					<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+					<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+				</tr>
+			</thead>
 			<tbody>
 				{% for bericht in berichtenboxData.berichten %}
 				{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
