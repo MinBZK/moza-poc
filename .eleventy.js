@@ -81,8 +81,9 @@ module.exports = function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy("mailbox/favicon");
 	eleventyConfig.addPassthroughCopy("mailbox/styles.css");
 
-	// React islands build output
-	eleventyConfig.addPassthroughCopy("_site/js");
+	// React islands build output (Vite bouwt naar dist/js, buiten Eleventy's
+	// cleanOutput-zone; hier gekopieerd naar _site/js).
+	eleventyConfig.addPassthroughCopy({ "dist/js": "js" });
 
 	// mox/ landingspagina: self-contained assets meekopiëren naar _site/mox/
 	eleventyConfig.addPassthroughCopy("mox/css");

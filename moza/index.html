@@ -6,7 +6,7 @@ title: "MijnOverheid Zakelijk: Home"
 
 <article id="hoofd-inhoud">
 	<h1>Welkom <span data-profiel="voornaam">Robin</span> <span data-profiel="achternaam">Vogel</span></h1>
-	
+
 	<div class="feedback feedback-info">
 		{% include "icon-feedback-info.njk" %}
 		<div>
@@ -23,14 +23,7 @@ title: "MijnOverheid Zakelijk: Home"
 		<table>
 			<tbody>
 				{% for bericht in berichtenboxData.berichten %}
-				{% if loop.index <= 5 %}
-				<tr class="berichtenbox-row{% if bericht.isOngelezen %} is-unread{% endif %}">
-					<td class="berichtenbox-row-sender">{% if bericht.isOngelezen %}<span class="visually-hidden">Ongelezen. </span>{% endif %}{{ bericht.afzender }}</td>
-					<td class="berichtenbox-row-subject"><a href="{{ '/moza/berichtenbox/bericht/' | url }}{{ bericht.id }}/">{{ bericht.onderwerp }}</a></td>
-					<td class="berichtenbox-row-date">{{ bericht.datum | datumNL }}</td>
-					<td class="berichtenbox-row-attachment">{% if bericht.heeftBijlage %}{% icon "/assets/icons/icon-bijlage.svg" %}<span class="visually-hidden">Heeft bijlage</span>{% endif %}</td>
-				</tr>
-				{% endif %}
+				{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
 				{% endfor %}
 			</tbody>
 		</table>

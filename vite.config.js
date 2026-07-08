@@ -5,8 +5,8 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '_site/js',
-    emptyOutDir: false,
+    outDir: 'dist/js',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         islands: 'src/islands/index.jsx',
