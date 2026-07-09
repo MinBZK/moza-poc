@@ -135,12 +135,6 @@ aside {
 	}
 }
 
-footer {
-	background: var(--toepassing-color-footer-background);
-	color: var(--toepassing-color-text-inverse);
-	padding: var(--toepassing-space-padding-xl) var(--toepassing-space-padding-md);
-}
-
 article, hgroup, form, ul, ol {
 	display: flex;
 	flex-direction: column;
@@ -895,7 +889,11 @@ a[href$=".txt"]::before {
 }
 
 /* Navigatie: footer */
+
 footer {
+	background: var(--toepassing-color-footer-background);
+	color: var(--toepassing-color-text-inverse);
+	padding: var(--toepassing-space-padding-xl) var(--toepassing-space-padding-md);
 	a {
 		color: inherit !important;
 		display: inline-block;
