@@ -29,6 +29,7 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 
 		<section id="berichtenbox-inbox" aria-label="Berichten">
 			<section class="berichtenbox-content">
+				<span hidden data-feature="Dynamische berichten" data-feature-type="functionaliteit" data-feature-default="off"></span>
 				<div data-berichtenbox-toolbar>
 					{% set bdBerichten = berichtenboxData.berichten | selectattr("magazijnId", "equalto", "belastingdienst") | list %}{% set nTotaal = bdBerichten | length %}{% set nBronnen = 1 %}{% set nOngelezen = bdBerichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>

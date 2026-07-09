@@ -1671,7 +1671,17 @@
 		if (live) live.textContent = 'Nieuw bericht van ' + bericht.afzender + ': ' + bericht.onderwerp;
 	}
 
+	// Feature flag "Dynamische berichten": staat standaard uit (default-off). Alleen
+	// als de flag expliciet aan staat, druppelen er willekeurig nieuwe berichten binnen.
+	function dynamischeBerichtenAan() {
+		try {
+			return localStorage.getItem('feature:Dynamische berichten') === 'true';
+		} catch (e) {
+			return false;
+		}
+	}
 	function startPolling() {
+		if (!dynamischeBerichtenAan()) return;
 		if (huidigeView() !== 'inbox') return;
 		// Alleen op pagina 1 — nieuwe berichten landen bovenaan, op pagina 2+ zouden ze onzichtbaar zijn.
 		if (/\/pagina-\d+\/$/.test(location.pathname)) return;
