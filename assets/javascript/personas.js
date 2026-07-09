@@ -347,7 +347,7 @@
 			details.className = "feature-flags-persona-archief";
 			if (actiefIsGearchiveerd) details.open = true;
 			var summary = document.createElement("summary");
-			summary.textContent = "Archief (" + aantalArchief + ")";
+			summary.textContent = "Persona archief (" + aantalArchief + ")";
 			details.appendChild(summary);
 			details.appendChild(archiefList);
 			panel.insertBefore(details, clearBtn);

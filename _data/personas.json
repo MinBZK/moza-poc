@@ -1,7 +1,7 @@
 [
 	{
 		"id": "bloom",
-		"actief": true,
+		"actief": false,
 		"label": "Adviseur",
 		"persoon": {
 			"voornaam": "Robin",
@@ -25,34 +25,80 @@
 			"werkzamePersonenFulltime": 3,
 			"werkzamePersonenParttime": 0,
 			"sbi": [
-				{ "code": "70221", "omschrijving": "Organisatieadviesbureaus" },
-				{ "code": "70102", "omschrijving": "Financiële holdings" }
+				{
+					"code": "70221",
+					"omschrijving": "Organisatieadviesbureaus"
+				},
+				{
+					"code": "70102",
+					"omschrijving": "Financiële holdings"
+				}
 			],
 			"vestigingsadresVolledig": "Coolsingel 12, 3011 AG Rotterdam",
 			"postadres": "Coolsingel 12, 3011 AG Rotterdam",
-			"vestigingen": [{ "nummer": "000012345678", "type": "Hoofdvestiging", "adres": "Coolsingel 12, 3011 AG Rotterdam" }],
-			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
+			"vestigingen": [
+				{
+					"nummer": "000012345678",
+					"type": "Hoofdvestiging",
+					"adres": "Coolsingel 12, 3011 AG Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "12 juni 2025" },
-				{ "jaar": "2023", "gedeponeerd": "8 juli 2024" },
-				{ "jaar": "2022", "gedeponeerd": "15 mei 2023" },
-				{ "jaar": "2021", "gedeponeerd": "22 juni 2022" },
-				{ "jaar": "2020", "gedeponeerd": "14 juli 2021" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "12 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "8 juli 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "15 mei 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "22 juni 2022"
+				},
+				{
+					"jaar": "2020",
+					"gedeponeerd": "14 juli 2021"
+				}
 			]
 		},
 		"andereBedrijven": [
-			{ "naam": "Vogel & Partners Consultancy", "rol": "Eigenaar" },
-			{ "naam": "Kwartaal Vastgoed B.V.", "rol": "Eigenaar" }
+			{
+				"naam": "Vogel & Partners Consultancy",
+				"rol": "Eigenaar"
+			},
+			{
+				"naam": "Kwartaal Vastgoed B.V.",
+				"rol": "Eigenaar"
+			}
 		],
 		"belangen": [
-			{ "naam": "Stichting Groenrijk", "rol": "Bestuurslid" },
-			{ "naam": "Coöperatie ZuidWest U.A.", "rol": "Aandeelhouder" }
+			{
+				"naam": "Stichting Groenrijk",
+				"rol": "Bestuurslid"
+			},
+			{
+				"naam": "Coöperatie ZuidWest U.A.",
+				"rol": "Aandeelhouder"
+			}
 		],
 		"subsidies": ["wbso", "bmkb", "kia", "mit", "eia", "rotterdam-verduurzaming-bedrijfspand", "rotterdam-ondernemen-in-de-wijk"],
 		"regelgeving": ["avg", "minimumloon", "arbowet", "wwft", "loonbelasting"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher"],
-		"homepageRegelgeving": ["ai-verordening"]
+		"homepageRegelgeving": ["ai-verordening"],
+		"archief": true
 	},
 	{
 		"id": "dierenwinkel",
@@ -80,12 +126,24 @@
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 2,
 			"sbi": [
-				{ "code": "47762", "omschrijving": "Winkels in dieren, dierbenodigdheden en hengelsportartikelen" },
-				{ "code": "47918", "omschrijving": "Detailhandel via internet in overige non-food" }
+				{
+					"code": "47762",
+					"omschrijving": "Winkels in dieren, dierbenodigdheden en hengelsportartikelen"
+				},
+				{
+					"code": "47918",
+					"omschrijving": "Detailhandel via internet in overige non-food"
+				}
 			],
 			"vestigingsadresVolledig": "Nieuwe Binnenweg 45, 3014 GC Rotterdam",
 			"postadres": "Nieuwe Binnenweg 45, 3014 GC Rotterdam",
-			"vestigingen": [{ "nummer": "000023456789", "type": "Hoofdvestiging", "adres": "Nieuwe Binnenweg 45, 3014 GC Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000023456789",
+					"type": "Hoofdvestiging",
+					"adres": "Nieuwe Binnenweg 45, 3014 GC Rotterdam"
+				}
+			],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -95,7 +153,8 @@
 		"regelgeving": ["warenwet", "minimumloon", "arbowet", "avg", "handelsregisterwet", "gelijke-behandeling-leeftijd"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["circulaire-retail", "mkb-cyberweerbaarheid-voucher"],
-		"homepageRegelgeving": ["uitgebreide-producentenverantwoordelijkheid"]
+		"homepageRegelgeving": ["uitgebreide-producentenverantwoordelijkheid"],
+		"archief": true
 	},
 	{
 		"id": "makelaar",
@@ -123,28 +182,67 @@
 			"werkzamePersonenFulltime": 2,
 			"werkzamePersonenParttime": 1,
 			"sbi": [
-				{ "code": "6831", "omschrijving": "Bemiddeling bij handel, huur of verhuur van onroerend goed" },
-				{ "code": "68312", "omschrijving": "Taxatie van en advisering over onroerend goed" }
+				{
+					"code": "6831",
+					"omschrijving": "Bemiddeling bij handel, huur of verhuur van onroerend goed"
+				},
+				{
+					"code": "68312",
+					"omschrijving": "Taxatie van en advisering over onroerend goed"
+				}
 			],
 			"vestigingsadresVolledig": "Mathenesserlaan 200, 3021 HM Rotterdam",
 			"postadres": "Mathenesserlaan 200, 3021 HM Rotterdam",
-			"vestigingen": [{ "nummer": "000034567890", "type": "Hoofdvestiging", "adres": "Mathenesserlaan 200, 3021 HM Rotterdam" }],
-			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
+			"vestigingen": [
+				{
+					"nummer": "000034567890",
+					"type": "Hoofdvestiging",
+					"adres": "Mathenesserlaan 200, 3021 HM Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "20 mei 2025" },
-				{ "jaar": "2023", "gedeponeerd": "11 juni 2024" },
-				{ "jaar": "2022", "gedeponeerd": "5 juli 2023" },
-				{ "jaar": "2021", "gedeponeerd": "18 juni 2022" },
-				{ "jaar": "2020", "gedeponeerd": "9 mei 2021" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "20 mei 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "11 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "5 juli 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "18 juni 2022"
+				},
+				{
+					"jaar": "2020",
+					"gedeponeerd": "9 mei 2021"
+				}
 			]
 		},
 		"andereBedrijven": [],
-		"belangen": [{ "naam": "NVM", "rol": "Lid" }],
+		"belangen": [
+			{
+				"naam": "NVM",
+				"rol": "Lid"
+			}
+		],
 		"subsidies": ["bmkb", "kia", "mkb-groen", "isde", "sib", "seba", "rotterdam-gevelverbetering", "rotterdam-groene-daken"],
 		"regelgeving": ["wft", "wwft", "minimumloon", "avg", "omgevingswet", "mededingingswet"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["energielabel-c-subsidie", "verduurzaming-bedrijfspanden"],
-		"homepageRegelgeving": ["wwft-verscherpt-clientenonderzoek"]
+		"homepageRegelgeving": ["wwft-verscherpt-clientenonderzoek"],
+		"archief": true
 	},
 	{
 		"id": "projectontwikkelaar",
@@ -172,32 +270,76 @@
 			"werkzamePersonenFulltime": 8,
 			"werkzamePersonenParttime": 2,
 			"sbi": [
-				{ "code": "4110", "omschrijving": "Projectontwikkeling" },
-				{ "code": "6420", "omschrijving": "Financiële holdings" },
-				{ "code": "41202", "omschrijving": "Algemene burgerlijke en utiliteitsbouw" }
+				{
+					"code": "4110",
+					"omschrijving": "Projectontwikkeling"
+				},
+				{
+					"code": "6420",
+					"omschrijving": "Financiële holdings"
+				},
+				{
+					"code": "41202",
+					"omschrijving": "Algemene burgerlijke en utiliteitsbouw"
+				}
 			],
 			"vestigingsadresVolledig": "Weena 50, 3012 CM Rotterdam",
 			"postadres": "Postbus 12345, 3001 AB Rotterdam",
 			"vestigingen": [
-				{ "nummer": "000045678901", "type": "Hoofdvestiging", "adres": "Weena 50, 3012 CM Rotterdam" },
-				{ "nummer": "000045678902", "type": "Nevenvestiging", "adres": "Schiehavenweg 8, 3024 EC Rotterdam" }
+				{
+					"nummer": "000045678901",
+					"type": "Hoofdvestiging",
+					"adres": "Weena 50, 3012 CM Rotterdam"
+				},
+				{
+					"nummer": "000045678902",
+					"type": "Nevenvestiging",
+					"adres": "Schiehavenweg 8, 3024 EC Rotterdam"
+				}
 			],
-			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "15 juni 2025" },
-				{ "jaar": "2023", "gedeponeerd": "12 juni 2024" },
-				{ "jaar": "2022", "gedeponeerd": "30 juni 2023" },
-				{ "jaar": "2021", "gedeponeerd": "21 juni 2022" },
-				{ "jaar": "2020", "gedeponeerd": "8 juli 2021" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "15 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "12 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "30 juni 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "21 juni 2022"
+				},
+				{
+					"jaar": "2020",
+					"gedeponeerd": "8 juli 2021"
+				}
 			]
 		},
 		"andereBedrijven": [],
-		"belangen": [{ "naam": "NEPROM", "rol": "Lid" }],
+		"belangen": [
+			{
+				"naam": "NEPROM",
+				"rol": "Lid"
+			}
+		],
 		"subsidies": ["sde", "kia", "bmkb", "eia", "mia-vamil", "isde", "dei", "mkb-groen", "rotterdam-groene-daken", "rotterdam-verduurzaming-bedrijfspand"],
 		"regelgeving": ["omgevingswet", "milieubeheer", "csrd", "wwft", "arbowet", "was", "minimumloon"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["natuurinclusief-bouwen"],
-		"homepageRegelgeving": ["omgevingswet-stikstofnorm"]
+		"homepageRegelgeving": ["omgevingswet-stikstofnorm"],
+		"archief": true
 	},
 	{
 		"id": "haarstylist",
@@ -225,12 +367,24 @@
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 0,
 			"sbi": [
-				{ "code": "96021", "omschrijving": "Haarverzorging" },
-				{ "code": "47750", "omschrijving": "Winkels in parfums en cosmetica" }
+				{
+					"code": "96021",
+					"omschrijving": "Haarverzorging"
+				},
+				{
+					"code": "47750",
+					"omschrijving": "Winkels in parfums en cosmetica"
+				}
 			],
 			"vestigingsadresVolledig": "Witte de Withstraat 18, 3012 BP Rotterdam",
 			"postadres": "Witte de Withstraat 18, 3012 BP Rotterdam",
-			"vestigingen": [{ "nummer": "000056789012", "type": "Hoofdvestiging", "adres": "Witte de Withstraat 18, 3012 BP Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000056789012",
+					"type": "Hoofdvestiging",
+					"adres": "Witte de Withstraat 18, 3012 BP Rotterdam"
+				}
+			],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -240,7 +394,8 @@
 		"regelgeving": ["arbowet", "avg", "warenwet", "transparante-arbeidsvoorwaarden", "gelijke-kansen", "gelijke-behandeling-leeftijd"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["mkb-cyberweerbaarheid-voucher"],
-		"homepageRegelgeving": ["arbowet-gevaarlijke-stoffen"]
+		"homepageRegelgeving": ["arbowet-gevaarlijke-stoffen"],
+		"archief": true
 	},
 	{
 		"id": "schilder",
@@ -268,25 +423,51 @@
 			"werkzamePersonenFulltime": 4,
 			"werkzamePersonenParttime": 1,
 			"sbi": [
-				{ "code": "43341", "omschrijving": "Schilderen" },
-				{ "code": "43342", "omschrijving": "Glaszetten" }
+				{
+					"code": "43341",
+					"omschrijving": "Schilderen"
+				},
+				{
+					"code": "43342",
+					"omschrijving": "Glaszetten"
+				}
 			],
 			"vestigingsadresVolledig": "Spaanseweg 7, 3028 HW Rotterdam",
 			"postadres": "Postbus 567, 3000 AN Rotterdam",
-			"vestigingen": [{ "nummer": "000067890123", "type": "Hoofdvestiging", "adres": "Spaanseweg 7, 3028 HW Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000067890123",
+					"type": "Hoofdvestiging",
+					"adres": "Spaanseweg 7, 3028 HW Rotterdam"
+				}
+			],
 			"ubo": [
-				{ "naam": "Robin Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" },
-				{ "naam": "M.S. de Jong", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" }
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "25% – 50%"
+				},
+				{
+					"naam": "M.S. de Jong",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "25% – 50%"
+				}
 			],
 			"jaarrekeningen": []
 		},
 		"andereBedrijven": [],
-		"belangen": [{ "naam": "OnderhoudNL", "rol": "Lid" }],
+		"belangen": [
+			{
+				"naam": "OnderhoudNL",
+				"rol": "Lid"
+			}
+		],
 		"subsidies": ["praktijkleren", "kia", "bmkb", "seba", "mkb-groen", "isde", "rotterdam-verduurzaming-bedrijfspand", "rotterdam-leerwerkplek"],
 		"regelgeving": ["arbowet", "minimumloon", "omgevingswet", "milieubeheer", "was"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["loodvrij-schilderen"],
-		"homepageRegelgeving": ["arbowet-gevaarlijke-stoffen"]
+		"homepageRegelgeving": ["arbowet-gevaarlijke-stoffen"],
+		"archief": true
 	},
 	{
 		"id": "kunstsalon",
@@ -314,22 +495,40 @@
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 0,
 			"sbi": [
-				{ "code": "90041", "omschrijving": "Kunstgalerieën en expositieruimten" },
-				{ "code": "47783", "omschrijving": "Winkels in kunstvoorwerpen, schilderijen en lijsten" }
+				{
+					"code": "90041",
+					"omschrijving": "Kunstgalerieën en expositieruimten"
+				},
+				{
+					"code": "47783",
+					"omschrijving": "Winkels in kunstvoorwerpen, schilderijen en lijsten"
+				}
 			],
 			"vestigingsadresVolledig": "Voorhaven 62, 3024 RM Rotterdam",
 			"postadres": "Voorhaven 62, 3024 RM Rotterdam",
-			"vestigingen": [{ "nummer": "000078901234", "type": "Hoofdvestiging", "adres": "Voorhaven 62, 3024 RM Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000078901234",
+					"type": "Hoofdvestiging",
+					"adres": "Voorhaven 62, 3024 RM Rotterdam"
+				}
+			],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
-		"andereBedrijven": [{ "naam": "Lichtveld B&B", "rol": "Eigenaar" }],
+		"andereBedrijven": [
+			{
+				"naam": "Lichtveld B&B",
+				"rol": "Eigenaar"
+			}
+		],
 		"belangen": [],
 		"subsidies": ["bbsc", "kia", "mkb-groen", "cyberweerbaarheid", "sib", "rotterdam-evenementen-cultuur", "rotterdam-gevelverbetering"],
 		"regelgeving": ["dienstenwet", "avg", "omgevingswet", "mededingingswet", "transparante-arbeidsvoorwaarden", "warenwet"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["cultureel-ondernemerschap"],
-		"homepageRegelgeving": ["dienstenwet-informatieplicht"]
+		"homepageRegelgeving": ["dienstenwet-informatieplicht"],
+		"archief": true
 	},
 	{
 		"id": "melkveehouder",
@@ -357,25 +556,51 @@
 			"werkzamePersonenFulltime": 2,
 			"werkzamePersonenParttime": 1,
 			"sbi": [
-				{ "code": "01411", "omschrijving": "Fokken en houden van melkvee" },
-				{ "code": "01191", "omschrijving": "Teelt van groenvoeders" }
+				{
+					"code": "01411",
+					"omschrijving": "Fokken en houden van melkvee"
+				},
+				{
+					"code": "01191",
+					"omschrijving": "Teelt van groenvoeders"
+				}
 			],
 			"vestigingsadresVolledig": "Charloisse Lagedijk 3, 3084 KC Rotterdam",
 			"postadres": "Charloisse Lagedijk 3, 3084 KC Rotterdam",
-			"vestigingen": [{ "nummer": "000089012345", "type": "Hoofdvestiging", "adres": "Charloisse Lagedijk 3, 3084 KC Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000089012345",
+					"type": "Hoofdvestiging",
+					"adres": "Charloisse Lagedijk 3, 3084 KC Rotterdam"
+				}
+			],
 			"ubo": [
-				{ "naam": "Robin Vogel", "aardVanBelang": "Maat", "groottevanBelang": "50% – 75%" },
-				{ "naam": "A.J. Vogel-de Wit", "aardVanBelang": "Maat", "groottevanBelang": "25% – 50%" }
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Maat",
+					"groottevanBelang": "50% – 75%"
+				},
+				{
+					"naam": "A.J. Vogel-de Wit",
+					"aardVanBelang": "Maat",
+					"groottevanBelang": "25% – 50%"
+				}
 			],
 			"jaarrekeningen": []
 		},
 		"andereBedrijven": [],
-		"belangen": [{ "naam": "LTO Nederland", "rol": "Lid" }],
+		"belangen": [
+			{
+				"naam": "LTO Nederland",
+				"rol": "Lid"
+			}
+		],
 		"subsidies": ["sde", "kia", "bmkb", "eia", "mia-vamil", "groenprojecten", "rotterdam-verduurzaming-bedrijfspand", "rotterdam-groene-daken"],
 		"regelgeving": ["milieubeheer", "bestrijdingsmiddelen", "minimumloon", "arbowet", "omgevingswet", "was"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["duurzame-veehouderij", "precisielandbouw"],
-		"homepageRegelgeving": ["meststoffenwet-fosfaatplafond"]
+		"homepageRegelgeving": ["meststoffenwet-fosfaatplafond"],
+		"archief": true
 	},
 	{
 		"id": "attracties",
@@ -403,34 +628,84 @@
 			"werkzamePersonenFulltime": 25,
 			"werkzamePersonenParttime": 5,
 			"sbi": [
-				{ "code": "25992", "omschrijving": "Vervaardiging van overige producten van metaal" },
-				{ "code": "33200", "omschrijving": "Installatie van industriële machines en apparatuur" },
-				{ "code": "71121", "omschrijving": "Ingenieurs en overig technisch ontwerp en advies" }
+				{
+					"code": "25992",
+					"omschrijving": "Vervaardiging van overige producten van metaal"
+				},
+				{
+					"code": "33200",
+					"omschrijving": "Installatie van industriële machines en apparatuur"
+				},
+				{
+					"code": "71121",
+					"omschrijving": "Ingenieurs en overig technisch ontwerp en advies"
+				}
 			],
 			"vestigingsadresVolledig": "Marconistraat 36, 3029 AK Rotterdam",
 			"postadres": "Postbus 9876, 3007 AP Rotterdam",
 			"vestigingen": [
-				{ "nummer": "000090123456", "type": "Hoofdvestiging", "adres": "Marconistraat 36, 3029 AK Rotterdam" },
-				{ "nummer": "000090123457", "type": "Nevenvestiging — Werkplaats", "adres": "Vlaardingweg 22, 3044 CK Rotterdam" }
+				{
+					"nummer": "000090123456",
+					"type": "Hoofdvestiging",
+					"adres": "Marconistraat 36, 3029 AK Rotterdam"
+				},
+				{
+					"nummer": "000090123457",
+					"type": "Nevenvestiging — Werkplaats",
+					"adres": "Vlaardingweg 22, 3044 CK Rotterdam"
+				}
 			],
-			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "18 mei 2025" },
-				{ "jaar": "2023", "gedeponeerd": "14 juni 2024" },
-				{ "jaar": "2022", "gedeponeerd": "9 mei 2023" },
-				{ "jaar": "2021", "gedeponeerd": "20 juni 2022" },
-				{ "jaar": "2020", "gedeponeerd": "12 juli 2021" },
-				{ "jaar": "2019", "gedeponeerd": "8 juni 2020" },
-				{ "jaar": "2018", "gedeponeerd": "15 mei 2019" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "18 mei 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "14 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "9 mei 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "20 juni 2022"
+				},
+				{
+					"jaar": "2020",
+					"gedeponeerd": "12 juli 2021"
+				},
+				{
+					"jaar": "2019",
+					"gedeponeerd": "8 juni 2020"
+				},
+				{
+					"jaar": "2018",
+					"gedeponeerd": "15 mei 2019"
+				}
 			]
 		},
 		"andereBedrijven": [],
-		"belangen": [{ "naam": "IAAPA Europe", "rol": "Lid" }],
+		"belangen": [
+			{
+				"naam": "IAAPA Europe",
+				"rol": "Lid"
+			}
+		],
 		"subsidies": ["mit", "wbso", "kia", "bmkb", "innovatiekrediet", "mia-vamil", "eia", "groeifaciliteit", "dggf", "dei", "rotterdam-evenementen-cultuur", "rotterdam-verduurzaming-bedrijfspand"],
 		"regelgeving": ["arbowet", "dienstenwet", "minimumloon", "avg", "arbeid-vreemdelingen", "wor", "csrd", "klokkenluiders", "transparante-arbeidsvoorwaarden", "wet-werk-zekerheid"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["toeristische-innovatie", "mkb-digitaliseringssubsidie"],
-		"homepageRegelgeving": ["dienstenwet-informatieplicht"]
+		"homepageRegelgeving": ["dienstenwet-informatieplicht"],
+		"archief": true
 	},
 	{
 		"id": "partners",
@@ -458,20 +733,49 @@
 			"werkzamePersonenFulltime": 4,
 			"werkzamePersonenParttime": 1,
 			"sbi": [
-				{ "code": "70221", "omschrijving": "Organisatieadviesbureaus" },
-				{ "code": "70222", "omschrijving": "Advisering op het gebied van management en bedrijfsvoering" }
+				{
+					"code": "70221",
+					"omschrijving": "Organisatieadviesbureaus"
+				},
+				{
+					"code": "70222",
+					"omschrijving": "Advisering op het gebied van management en bedrijfsvoering"
+				}
 			],
 			"vestigingsadresVolledig": "Boompjes 30, 3011 XB Rotterdam",
 			"postadres": "Boompjes 30, 3011 XB Rotterdam",
-			"vestigingen": [{ "nummer": "000024681012", "type": "Hoofdvestiging", "adres": "Boompjes 30, 3011 XB Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000024681012",
+					"type": "Hoofdvestiging",
+					"adres": "Boompjes 30, 3011 XB Rotterdam"
+				}
+			],
 			"ubo": [
-				{ "naam": "Robin Vogel", "aardVanBelang": "Vennoot", "groottevanBelang": "50% – 75%" },
-				{ "naam": "P.S. Daalder", "aardVanBelang": "Vennoot", "groottevanBelang": "25% – 50%" }
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "50% – 75%"
+				},
+				{
+					"naam": "P.S. Daalder",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "25% – 50%"
+				}
 			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "10 juni 2025" },
-				{ "jaar": "2023", "gedeponeerd": "14 juni 2024" },
-				{ "jaar": "2022", "gedeponeerd": "20 mei 2023" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "10 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "14 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "20 mei 2023"
+				}
 			]
 		},
 		"andereBedrijven": [],
@@ -480,7 +784,8 @@
 		"regelgeving": ["avg", "minimumloon", "arbowet", "wwft", "loonbelasting"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher"],
-		"homepageRegelgeving": ["ai-verordening"]
+		"homepageRegelgeving": ["ai-verordening"],
+		"archief": true
 	},
 	{
 		"id": "kwartaal",
@@ -508,16 +813,40 @@
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 0,
 			"sbi": [
-				{ "code": "68201", "omschrijving": "Verhuur van onroerend goed" },
-				{ "code": "64202", "omschrijving": "Financiële holdings" }
+				{
+					"code": "68201",
+					"omschrijving": "Verhuur van onroerend goed"
+				},
+				{
+					"code": "64202",
+					"omschrijving": "Financiële holdings"
+				}
 			],
 			"vestigingsadresVolledig": "Westersingel 14, 3014 GP Rotterdam",
 			"postadres": "Westersingel 14, 3014 GP Rotterdam",
-			"vestigingen": [{ "nummer": "000035792468", "type": "Hoofdvestiging", "adres": "Westersingel 14, 3014 GP Rotterdam" }],
-			"ubo": [{ "naam": "Robin Vogel", "aardVanBelang": "Aandelen", "groottevanBelang": "75% – 100%" }],
+			"vestigingen": [
+				{
+					"nummer": "000035792468",
+					"type": "Hoofdvestiging",
+					"adres": "Westersingel 14, 3014 GP Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
 			"jaarrekeningen": [
-				{ "jaar": "2024", "gedeponeerd": "16 juni 2025" },
-				{ "jaar": "2023", "gedeponeerd": "11 juni 2024" }
+				{
+					"jaar": "2024",
+					"gedeponeerd": "16 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "11 juni 2024"
+				}
 			]
 		},
 		"andereBedrijven": [],
@@ -526,7 +855,8 @@
 		"regelgeving": ["omgevingswet", "avg", "wwft", "minimumloon"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["verduurzaming-bedrijfspanden"],
-		"homepageRegelgeving": ["ai-verordening"]
+		"homepageRegelgeving": ["ai-verordening"],
+		"archief": true
 	},
 	{
 		"id": "koffiezaak",
@@ -555,11 +885,20 @@
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 3,
 			"sbi": [
-				{ "code": "56102", "omschrijving": "Cafés" }
+				{
+					"code": "56102",
+					"omschrijving": "Cafés"
+				}
 			],
 			"vestigingsadresVolledig": "Meent 88, 3011 JM Rotterdam",
 			"postadres": "Meent 88, 3011 JM Rotterdam",
-			"vestigingen": [{ "nummer": "000085234567", "type": "Hoofdvestiging", "adres": "Meent 88, 3011 JM Rotterdam" }],
+			"vestigingen": [
+				{
+					"nummer": "000085234567",
+					"type": "Hoofdvestiging",
+					"adres": "Meent 88, 3011 JM Rotterdam"
+				}
+			],
 			"ubo": [],
 			"jaarrekeningen": []
 		},
@@ -569,6 +908,482 @@
 		"regelgeving": ["warenwet", "arbowet", "minimumloon", "avg", "tabakswet", "dienstenwet"],
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["verduurzaming-bedrijfspanden"],
+		"homepageRegelgeving": ["milieubeheer"],
+		"archief": true
+	},
+	{
+		"id": "bouwmanagement",
+		"actief": true,
+		"label": "Bouwmanagement",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Vogel Bouwregie B.V.",
+			"kvkNummer": "61234570",
+			"rsinNummer": "61234570",
+			"btwNummer": "NL00061234570",
+			"omzetbelastingnummer": "061234570B01",
+			"startdatum": "5 maart 2014",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Bouwnijverheid",
+			"vestigingsadres": "Waalhaven 120, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Directeur-grootaandeelhouder",
+			"vestigingsnummer": "000061234570",
+			"iban": "NL61 RABO 0006 1234 57",
+			"loonheffingennummer": "061234570L01",
+			"werkzamePersonenFulltime": 8,
+			"werkzamePersonenParttime": 1,
+			"sbi": [
+				{
+					"code": "41",
+					"omschrijving": "Algemene burgerlijke en utiliteitsbouw en projectontwikkeling"
+				},
+				{
+					"code": "71121",
+					"omschrijving": "Ingenieurs en overig technisch ontwerp en advies"
+				}
+			],
+			"vestigingsadresVolledig": "Waalhaven 120, 3089 JJ Rotterdam",
+			"postadres": "Postbus 8120, 3009 AC Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000061234570",
+					"type": "Hoofdvestiging",
+					"adres": "Waalhaven 120, 3089 JJ Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
+			"jaarrekeningen": [
+				{
+					"jaar": "2024",
+					"gedeponeerd": "14 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "10 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "22 mei 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "19 juni 2022"
+				},
+				{
+					"jaar": "2020",
+					"gedeponeerd": "11 juli 2021"
+				}
+			]
+		},
+		"andereBedrijven": [],
+		"belangen": [
+			{
+				"naam": "Bouwend Nederland",
+				"rol": "Lid"
+			}
+		],
+		"subsidies": ["bmkb", "kia", "eia", "verduurzaming-bedrijfspanden", "circulaire-bouwmaterialen", "mkb-groen", "isde"],
+		"regelgeving": ["omgevingswet", "milieubeheer", "arbowet", "minimumloon", "loonbelasting", "handelsregisterwet", "wet-werk-zekerheid"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["natuurinclusief-bouwen"],
+		"homepageRegelgeving": ["omgevingswet-stikstofnorm"]
+	},
+	{
+		"id": "bloemenkweker",
+		"actief": false,
+		"label": "Bloemenkweker",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Kwekerij De Bloesem",
+			"kvkNummer": "62345681",
+			"rsinNummer": "62345681",
+			"btwNummer": "NL00062345681",
+			"omzetbelastingnummer": "062345681B01",
+			"startdatum": "12 februari 2011",
+			"rechtsvorm": "Vennootschap onder firma",
+			"branche": "Landbouw, bosbouw en visserij",
+			"vestigingsadres": "Hoefweg 210, Bleiswijk",
+			"gemeente": "Lansingerland",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000062345681",
+			"iban": "NL62 RABO 0006 2345 68",
+			"loonheffingennummer": "062345681L01",
+			"werkzamePersonenFulltime": 5,
+			"werkzamePersonenParttime": 2,
+			"sbi": [
+				{
+					"code": "01192",
+					"omschrijving": "Teelt van bloemen, bloembollen en perkplanten (onder glas)"
+				},
+				{
+					"code": "01300",
+					"omschrijving": "Teelt van sierplanten voor vermeerdering"
+				}
+			],
+			"vestigingsadresVolledig": "Hoefweg 210, 2665 KG Bleiswijk",
+			"postadres": "Hoefweg 210, 2665 KG Bleiswijk",
+			"vestigingen": [
+				{
+					"nummer": "000062345681",
+					"type": "Hoofdvestiging",
+					"adres": "Hoefweg 210, 2665 KG Bleiswijk"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "50% – 75%"
+				},
+				{
+					"naam": "T.J. van Leeuwen",
+					"aardVanBelang": "Vennoot",
+					"groottevanBelang": "25% – 50%"
+				}
+			],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [
+			{
+				"naam": "Glastuinbouw Nederland",
+				"rol": "Lid"
+			}
+		],
+		"subsidies": ["sde", "isde", "mia-vamil", "eia", "kia", "precisielandbouw", "groenprojecten"],
+		"regelgeving": ["arbowet", "minimumloon", "loonbelasting", "bestrijdingsmiddelen", "milieubeheer"],
+		"buurt": null,
+		"homepageSubsidies": ["precisielandbouw"],
 		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "zorgcoordinator",
+		"actief": false,
+		"label": "Activiteiten Coördinator Zorg en Welzijn",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Samen Actief Zorg",
+			"kvkNummer": "63456792",
+			"rsinNummer": "63456792",
+			"btwNummer": "NL00063456792",
+			"omzetbelastingnummer": "063456792B01",
+			"startdatum": "1 september 2019",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Gezondheids- en welzijnszorg",
+			"vestigingsadres": "Bergweg 250, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000063456792",
+			"iban": "NL63 INGB 0006 3456 79",
+			"loonheffingennummer": "063456792L01",
+			"werkzamePersonenFulltime": 3,
+			"werkzamePersonenParttime": 2,
+			"sbi": [
+				{
+					"code": "88102",
+					"omschrijving": "Welzijnswerk voor ouderen"
+				},
+				{
+					"code": "88999",
+					"omschrijving": "Overig maatschappelijk advies, gemeenschapshuizen en samenwerkingsverbanden"
+				}
+			],
+			"vestigingsadresVolledig": "Bergweg 250, 3037 EN Rotterdam",
+			"postadres": "Bergweg 250, 3037 EN Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000063456792",
+					"type": "Hoofdvestiging",
+					"adres": "Bergweg 250, 3037 EN Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
+			"jaarrekeningen": [
+				{
+					"jaar": "2024",
+					"gedeponeerd": "12 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "9 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "18 mei 2023"
+				}
+			]
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["gezond-veilig-werken", "praktijkleren", "mkb-digitaliseringssubsidie", "kia", "bmkb"],
+		"regelgeving": ["arbowet", "minimumloon", "loonbelasting", "avg", "wet-werk-zekerheid", "handelsregisterwet"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["gezond-veilig-werken", "mkb-digitaliseringssubsidie"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "business-development",
+		"actief": false,
+		"label": "Business Development manager",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Vogel Industrieel Advies",
+			"kvkNummer": "64567803",
+			"rsinNummer": "64567803",
+			"btwNummer": "NL00064567803",
+			"omzetbelastingnummer": "064567803B01",
+			"startdatum": "18 april 2020",
+			"rechtsvorm": "Eenmanszaak",
+			"branche": "Industrie",
+			"vestigingsadres": "Vlaardingweg 40, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000064567803",
+			"iban": "NL64 KNAB 0006 4567 80",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "70222",
+					"omschrijving": "Advisering op het gebied van management en bedrijfsvoering"
+				},
+				{
+					"code": "71121",
+					"omschrijving": "Ingenieurs en overig technisch ontwerp en advies"
+				}
+			],
+			"vestigingsadresVolledig": "Vlaardingweg 40, 3044 CK Rotterdam",
+			"postadres": "Vlaardingweg 40, 3044 CK Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000064567803",
+					"type": "Hoofdvestiging",
+					"adres": "Vlaardingweg 40, 3044 CK Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["wbso", "mit", "innovatiekrediet", "kia", "eia"],
+		"regelgeving": ["loonbelasting", "handelsregisterwet", "arbowet", "avg"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["mkb-digitaliseringssubsidie"],
+		"homepageRegelgeving": ["ai-verordening"]
+	},
+	{
+		"id": "docent",
+		"actief": false,
+		"label": "Docent",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Vogel Onderwijs & Training",
+			"kvkNummer": "65678914",
+			"rsinNummer": "65678914",
+			"btwNummer": "NL00065678914",
+			"omzetbelastingnummer": "065678914B01",
+			"startdatum": "2 september 2022",
+			"rechtsvorm": "Eenmanszaak",
+			"branche": "Onderwijs",
+			"vestigingsadres": "Oostzeedijk 60, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000065678914",
+			"iban": "NL65 INGB 0006 5678 91",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "85592",
+					"omschrijving": "Bedrijfsopleiding en -training"
+				},
+				{
+					"code": "85599",
+					"omschrijving": "Studiebegeleiding, vorming en onderwijs (overig)"
+				}
+			],
+			"vestigingsadresVolledig": "Oostzeedijk 60, 3063 BC Rotterdam",
+			"postadres": "Oostzeedijk 60, 3063 BC Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000065678914",
+					"type": "Hoofdvestiging",
+					"adres": "Oostzeedijk 60, 3063 BC Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["praktijkleren", "mkb-digitaliseringssubsidie", "kia"],
+		"regelgeving": ["avg", "arbowet", "loonbelasting", "handelsregisterwet"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["mkb-digitaliseringssubsidie"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "hondenuitlater",
+		"actief": false,
+		"label": "Hondenuitlater en Dierenverzorging",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Vier Poten Onderweg",
+			"kvkNummer": "66789025",
+			"rsinNummer": "66789025",
+			"btwNummer": "NL00066789025",
+			"omzetbelastingnummer": "066789025B01",
+			"startdatum": "10 mei 2021",
+			"rechtsvorm": "Eenmanszaak",
+			"branche": "Overige dienstverlening",
+			"vestigingsadres": "Kralingse Plaslaan 90, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000066789025",
+			"iban": "NL66 KNAB 0006 6789 02",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "96091",
+					"omschrijving": "Dienstverlening voor huisdieren"
+				},
+				{
+					"code": "01620",
+					"omschrijving": "Dienstverlening voor het fokken en houden van dieren"
+				}
+			],
+			"vestigingsadresVolledig": "Kralingse Plaslaan 90, 3061 DE Rotterdam",
+			"postadres": "Kralingse Plaslaan 90, 3061 DE Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000066789025",
+					"type": "Hoofdvestiging",
+					"adres": "Kralingse Plaslaan 90, 3061 DE Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "financial-manager",
+		"actief": false,
+		"label": "Financial Manager en Accountant",
+		"persoon": {
+			"voornaam": "Robin",
+			"achternaam": "Vogel"
+		},
+		"bedrijf": {
+			"handelsnaam": "Vogel Finance & Groothandel B.V.",
+			"kvkNummer": "67890136",
+			"rsinNummer": "67890136",
+			"btwNummer": "NL00067890136",
+			"omzetbelastingnummer": "067890136B01",
+			"startdatum": "7 januari 2016",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Groothandel",
+			"vestigingsadres": "Vasteland 40, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000067890136",
+			"iban": "NL67 ABNA 0006 7890 13",
+			"loonheffingennummer": "067890136L01",
+			"werkzamePersonenFulltime": 3,
+			"werkzamePersonenParttime": 1,
+			"sbi": [
+				{
+					"code": "46900",
+					"omschrijving": "Niet-gespecialiseerde groothandel"
+				},
+				{
+					"code": "69203",
+					"omschrijving": "Boekhoudkantoren"
+				}
+			],
+			"vestigingsadresVolledig": "Vasteland 40, 3011 BM Rotterdam",
+			"postadres": "Vasteland 40, 3011 BM Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000067890136",
+					"type": "Hoofdvestiging",
+					"adres": "Vasteland 40, 3011 BM Rotterdam"
+				}
+			],
+			"ubo": [
+				{
+					"naam": "Robin Vogel",
+					"aardVanBelang": "Aandelen",
+					"groottevanBelang": "75% – 100%"
+				}
+			],
+			"jaarrekeningen": [
+				{
+					"jaar": "2024",
+					"gedeponeerd": "16 juni 2025"
+				},
+				{
+					"jaar": "2023",
+					"gedeponeerd": "11 juni 2024"
+				},
+				{
+					"jaar": "2022",
+					"gedeponeerd": "24 mei 2023"
+				},
+				{
+					"jaar": "2021",
+					"gedeponeerd": "20 juni 2022"
+				}
+			]
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-cyberweerbaarheid-voucher", "mkb-digitaliseringssubsidie", "wbso", "kia", "bmkb"],
+		"regelgeving": ["wwft", "loonbelasting", "arbowet", "minimumloon", "handelsregisterwet", "wet-werk-zekerheid"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["mkb-cyberweerbaarheid-voucher"],
+		"homepageRegelgeving": ["wwft-verscherpt-clientenonderzoek"]
 	}
 ]
