@@ -20,6 +20,7 @@ permalink: "/moza/berichtenbox/"
 
 		<section id="berichtenbox-inbox" aria-label="Berichten">
 			<section class="berichtenbox-content">
+				<span hidden data-feature="Dynamische berichten" data-feature-type="functionaliteit" data-feature-default="off"></span>
 				<div data-berichtenbox-toolbar>
 					{% set nTotaal = berichtenboxData.berichten | length %}{% set nBronnen = berichtenboxData.aantalMagazijnen %}{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>

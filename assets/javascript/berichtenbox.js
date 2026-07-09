@@ -96,6 +96,31 @@
 		return;
 	}
 
+	// Persona-relevantie (Aanpak A). Bepaal de actieve persona (zelfde volgorde als
+	// personas.js: ?persona= > localStorage > actief) en toon berichten met een
+	// relevantVoor-tag alleen bij de juiste persona. Berichten zonder tag zijn
+	// generiek en verschijnen altijd. Persona-wisseling herlaadt de pagina, dus
+	// het volstaat dit één keer bij het laden te bepalen.
+	const actievePersonaId = (function () {
+		const personas = window.personasData;
+		if (!Array.isArray(personas) || !personas.length) return null;
+		const param = new URLSearchParams(location.search).get('persona');
+		if (param) {
+			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
+			if (gevonden) return gevonden.id;
+		}
+		try {
+			const opgeslagen = localStorage.getItem('persona');
+			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
+		} catch (e) { /* localStorage niet toegankelijk */ }
+		const actief = personas.find((p) => p.actief);
+		return actief ? actief.id : personas[0].id;
+	})();
+	function persoonRelevant(bericht) {
+		if (!bericht || !Array.isArray(bericht.relevantVoor) || !bericht.relevantVoor.length) return true;
+		return actievePersonaId != null && bericht.relevantVoor.indexOf(actievePersonaId) !== -1;
+	}
+
 	// Eleventy pathPrefix — via window.PATH_PREFIX uit base.njk.
 	// pathPrefix moet beginnen met '/'; herstel dat als dat niet zo is.
 	let rawPrefix = (typeof window.PATH_PREFIX === 'string' && window.PATH_PREFIX) ? window.PATH_PREFIX : '/';
@@ -382,7 +407,7 @@
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
 		if (view === 'inbox') {
-			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId)).length;
+			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
 		} else if (view === 'archief') {
 			getoond = Object.keys(state.gearchiveerd).length;
 		} else if (view === 'prullenbak') {
@@ -395,7 +420,7 @@
 		if (tellerBronnen) {
 			const bronnen = new Set(
 				data.berichten
-					.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId))
+					.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b))
 					.map((b) => b.magazijnId)
 			);
 			tellerBronnen.textContent = bronnen.size;
@@ -404,7 +429,7 @@
 		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
 		if (tellerOngelezen) {
 			const n = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
+				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
 			).length;
 			tellerOngelezen.textContent = n;
 		}
@@ -412,11 +437,11 @@
 		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
 		if (navInbox) {
 			navInbox.textContent = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
+				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
 			).length;
 		}
 		const ongelezenAantal = data.berichten.filter((b) =>
-			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && isOngelezen(b.id, b.isOngelezen)
+			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
 		).length;
 		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
 			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : '';
@@ -1003,7 +1028,7 @@
 		if (uitvalGepland) return;
 		uitvalGepland = true;
 		const bronnen = [...new Set(
-			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId)).map((b) => b.magazijnId)
+			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId)
 		)];
 		if (!bronnen.length) return;
 		const vertraging = 4000 + Math.floor(Math.random() * 8000); // 4–12 s
@@ -1129,6 +1154,13 @@
 					return;
 				}
 				if (!magazijnToegestaan(rij.dataset.afzenderId)) {
+					rij.hidden = true;
+					return;
+				}
+				// Persona-relevantie: verberg berichten met een relevantVoor-tag die
+				// niet bij de actieve persona hoort.
+				const bericht = data.berichten.find((b) => b.id === rij.dataset.berichtId);
+				if (bericht && !persoonRelevant(bericht)) {
 					rij.hidden = true;
 					return;
 				}
@@ -1523,7 +1555,7 @@
 		const gezochteBronnen = new Set(
 			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnDoorOrgFilter(b.magazijnId)).map((b) => b.magazijnId)
 		);
-		const bereikteBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId));
+		const bereikteBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b));
 		const bereikteBronnen = new Set(bereikteBerichten.map((b) => b.magazijnId));
 		const totaalBronnen = gezochteBronnen.size || 1;
 		// Aantal bronnen dat daadwerkelijk antwoordt. Bij het "geen"-scenario is dit 0
@@ -1639,7 +1671,17 @@
 		if (live) live.textContent = 'Nieuw bericht van ' + bericht.afzender + ': ' + bericht.onderwerp;
 	}
 
+	// Feature flag "Dynamische berichten": staat standaard uit (default-off). Alleen
+	// als de flag expliciet aan staat, druppelen er willekeurig nieuwe berichten binnen.
+	function dynamischeBerichtenAan() {
+		try {
+			return localStorage.getItem('feature:Dynamische berichten') === 'true';
+		} catch (e) {
+			return false;
+		}
+	}
 	function startPolling() {
+		if (!dynamischeBerichtenAan()) return;
 		if (huidigeView() !== 'inbox') return;
 		// Alleen op pagina 1 — nieuwe berichten landen bovenaan, op pagina 2+ zouden ze onzichtbaar zijn.
 		if (/\/pagina-\d+\/$/.test(location.pathname)) return;

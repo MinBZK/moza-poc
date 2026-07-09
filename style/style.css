@@ -16,6 +16,9 @@
 /* CSS reset */
 @import "_reset.css";
 
+/* Prototype-only */
+@import "_prototype.css";
+
 /* Rijks Sans webfont */
 @font-face {
 	font-family: "RijksSansVF";
@@ -130,12 +133,6 @@ aside {
 	@media (max-width: 799px) {
 		max-inline-size: 100%;
 	}
-}
-
-footer {
-	background: var(--toepassing-color-footer-background);
-	color: var(--toepassing-color-text-inverse);
-	padding: var(--toepassing-space-padding-xl) var(--toepassing-space-padding-md);
 }
 
 article, hgroup, form, ul, ol {
@@ -326,13 +323,6 @@ li.option--confirmed {
 		margin-inline-end: var(--toepassing-space-margin-2xs);
 		mask-image: url("../assets/icons/icon-succes.svg");
 		vertical-align: middle;
-	}
-}
-
-[data-persona-toon], [data-persona-verberg] {
-	display: contents;
-	&[hidden] {
-		display: none;
 	}
 }
 
@@ -899,7 +889,11 @@ a[href$=".txt"]::before {
 }
 
 /* Navigatie: footer */
+
 footer {
+	background: var(--toepassing-color-footer-background);
+	color: var(--toepassing-color-text-inverse);
+	padding: var(--toepassing-space-padding-xl) var(--toepassing-space-padding-md);
 	a {
 		color: inherit !important;
 		display: inline-block;
@@ -1495,65 +1489,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 [data-actie="verwijderen"] svg {
 	color: var(--toepassing-color-feedback-error-emphasis);
-}
-
-/* Berichtenbox A/B/C-test varianten */
-.berichtenbox-detail-pdf {
-	display: none;
-	.berichtenbox-attachment-preview {
-		margin-block-start: 0;
-	}
-	p {
-		margin-block-start: var(--toepassing-space-margin-sm);
-	}
-	ul {
-		list-style: none;
-		margin-block: var(--toepassing-space-margin-sm) var(--toepassing-space-margin-xs);
-	}
-	a {
-		text-decoration-color: transparent;
-		&:hover {
-			text-decoration-color: inherit;
-		}
-	}
-}
-html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
-	display: block;
-}
-html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-attachments {
-	display: none;
-}
-/* C: elementen die alleen in variant C zichtbaar zijn */
-.variant-c-only {
-	display: none;
-}
-html[data-berichtenbox-variant="c"] .variant-c-only {
-	display: block;
-}
-/* In variant C wordt de standaardtekst vervangen door uitgebreide uitleg */
-html[data-berichtenbox-variant="c"] .variant-ab-only {
-	display: none;
-}
-/* Variant C: paneel met uitleg en directe acties */
-.berichtenbox-detail-acties-panel {
-	background: var(--toepassing-color-background-subtle);
-	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
-	margin-block: var(--toepassing-space-md);
-	padding: var(--toepassing-space-md);
-	h2 {
-		font-size: var(--rijkshuisstijl-text-font-size-xl);
-	}
-}
-html[data-berichtenbox-variant="c"] .berichtenbox-detail-acties-panel {
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-margin-sm);
-}
-.berichtenbox-detail-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-layout-xs);
 }
 
 /* Berichtenbox: verplaats bericht naar map paneel */
@@ -2395,8 +2330,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-md);
 	}
 }
-  
-  
+
 
 /* -- ANIMATIES -- */
 
@@ -2426,125 +2360,6 @@ h1, h2, h3, h4, h5, h6, a, button {
 		overflow: hidden;
 		padding-block: 0;
 		translate: 0 -1rem;
-	}
-}
-
-/* -- PROTOTYPING-ONLY -- */
-
-/* Feature flags */
-.feature-flags-toggle {
-	border-start-start-radius: var(--toepassing-border-radius-md);
-	inset-block-end: 0;
-	inset-inline-end: 0;
-	opacity: 0;
-	position: fixed;
-	transition: var(--toepassing-transition-opacity);
-	z-index: 2;
-	&:hover {
-		opacity: 1;
-		transition: var(--toepassing-transition-opacity);
-	}
-}
-
-/* Feature flags: verborgen elementen moeten altijd hidden respecteren, ook bij expliciete display */
-[data-feature][hidden] {
-	display: none;
-}
-.feature-flags-panel {
-	background: var(--toepassing-color-background-raised);
-	border-radius: var(--toepassing-border-radius-md);
-	box-shadow: var(--toepassing-box-shadow-default);
-	inset-block: 0;
-	inset-inline-end: var(--toepassing-space-padding-lg);
-	inset-inline-end: 0;
-	max-block-size: 100dvh;
-	overflow-y: auto;
-	padding: var(--toepassing-space-padding-md) var(--toepassing-space-padding-xl);
-	position: fixed;
-	z-index: 1;
-	.feature-flags-group-heading {
-		border-block-start: var(--toepassing-border-subtle);
-		color: var(--toepassing-color-text-subtle-1);
-		margin-block: var(--toepassing-space-padding-sm);
-		padding-block-start: var(--toepassing-space-padding-sm);
-	}
-	ul {
-		list-style: none;
-		padding: 0;
-	}
-	label {
-		align-items: center;
-		display: flex;
-		gap: var(--toepassing-space-padding-xs);
-		padding-block: var(--toepassing-space-padding-2xs);
-	}
-	.settings-radio-group {
-		align-items: center;
-		border: none;
-		display: flex;
-		gap: var(--toepassing-space-padding-xs);
-		margin-block: var(--toepassing-space-padding-2xs);
-		padding: 0;
-		legend {
-			font-weight: var(--toepassing-text-font-weight-semi-bold);
-			margin-inline-end: var(--toepassing-space-padding-xs);
-		}
-		.mode-option {
-			align-items: center;
-			display: flex;
-			gap: var(--toepassing-space-padding-2xs);
-			padding: 0;
-		}
-	}
-	.settings-field {
-		margin-block: var(--toepassing-space-padding-2xs);
-		label {
-			display: flex;
-			flex-direction: column;
-			font-weight: var(--toepassing-text-font-weight-semi-bold);
-			gap: 2px;
-			padding-block: 0;
-		}
-		input[type="password"], input[type="text"] {
-			border: var(--toepassing-border-subtle);
-			border-radius: var(--toepassing-border-radius-sm);
-			box-sizing: border-box;
-			font: inherit;
-			font-weight: normal;
-			inline-size: 100%;
-			padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-xs);
-		}
-	}
-	.feature-flags-fullscreen {
-		background: var(--toepassing-color-interactive-default-background);
-		border: var(--toepassing-border-default);
-		border-radius: var(--toepassing-border-radius-sm);
-		color: var(--toepassing-color-text-inverse);
-		cursor: pointer;
-		font: inherit;
-		inline-size: 100%;
-		padding-block: var(--toepassing-space-padding-2xs);
-		padding-inline: var(--toepassing-space-padding-sm);
-		text-align: start;
-		&:hover {
-			background: var(--toepassing-color-interactive-hover-background);
-			color: var(--toepassing-color-text-inverse);
-		}
-	}
-	.feature-flags-clear {
-		background: var(--toepassing-color-feedback-error-default);
-		border: none;
-		border-radius: var(--toepassing-border-radius-sm);
-		color: var(--toepassing-color-text-inverse);
-		cursor: pointer;
-		font: inherit;
-		inline-size: 100%;
-		margin-block: var(--toepassing-space-padding-md);
-		padding-block: var(--toepassing-space-padding-2xs);
-		padding-inline: var(--toepassing-space-padding-sm);
-		&:hover {
-			background: var(--toepassing-color-feedback-error-emphasis);
-		}
 	}
 }
 
@@ -2790,33 +2605,4 @@ body.authorized {
 			border-color: var(--rijkshuisstijl-color-oranje-600);
 		}
 	}
-}
-
-/* Tijdelijk: proof-of-concept banner (roterend lint rechtsboven) */
-.temp-moza-poc-banner {
-	background: var(--toepassing-color-feedback-success-default);
-	color: var(--toepassing-color-text-inverse);
-	font-weight: var(--toepassing-text-font-weight-bold);
-	inline-size: 256px;
-	inset-block-start: 3rem;
-	inset-inline-end: -4rem;
-	padding-block: var(--toepassing-space-padding-sm);
-	padding-inline: var(--toepassing-space-padding-lg);
-	position: fixed;
-	text-align: center;
-	text-decoration: none;
-	transform: rotate(45deg);
-	transform-origin: center;
-	z-index: 1;
-	&:hover {
-		background: var(--toepassing-color-feedback-success-emphasis);
-		color: var(--toepassing-color-text-inverse);
-	}
-}
-
-/* Tijdelijk: datum en tijdstip laatste wijziging */
-.poc-date-last-edit {
-	color: var(--toepassing-color-text-disabled);
-	font-size: var(--toepassing-text-size-body-xs);
-	text-align: end;
 }

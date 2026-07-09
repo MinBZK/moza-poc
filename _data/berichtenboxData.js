@@ -16,11 +16,13 @@ const INSTANTIES = [
 	{ id: "ind", naam: "IND" },
 	{ id: "ap", naam: "Autoriteit Persoonsgegevens" },
 	{ id: "kadaster", naam: "Kadaster" },
+	{ id: "nla", naam: "Nederlandse Arbeidsinspectie" },
 ];
 
 const GEMEENTES = [
 	"'s-Gravenhage",
 	"Voorburg",
+	"Rotterdam",
 ];
 
 function slugify(naam) {
@@ -231,6 +233,54 @@ const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
 		variantCInhoud: b.variantCInhoud || null,
 		actiesUitleg: b.actiesUitleg || null,
 		acties: b.acties || null,
+	});
+});
+
+// Persona-relevante berichten (Aanpak A). Server-gerenderd zodat detailpagina's
+// én tellers werken; client-side wordt op basis van relevantVoor gefilterd op de
+// actieve persona (zie persoonRelevant in berichtenbox.js). Berichten zonder
+// relevantVoor zijn generiek en verschijnen bij iedere persona.
+[
+	// Bouwmanagement (Bouwnijverheid)
+	{ magazijnId: "gem-rotterdam", onderwerp: "Omgevingsvergunning verleend voor uw bouwproject", datum: "2026-04-24", isOngelezen: true, heeftBijlage: true, relevantVoor: ["bouwmanagement"] },
+	{ magazijnId: "nla", onderwerp: "Aangekondigde controle op de bouwplaats", datum: "2026-04-21", isOngelezen: true, heeftBijlage: false, relevantVoor: ["bouwmanagement"] },
+	{ magazijnId: "rvo", onderwerp: "Subsidie verduurzaming bedrijfspand toegekend", datum: "2026-04-17", isOngelezen: false, heeftBijlage: true, relevantVoor: ["bouwmanagement"] },
+	// Bloemenkweker (Landbouw, bosbouw en visserij)
+	{ magazijnId: "nla", onderwerp: "Controle arbeidsomstandigheden in de glastuinbouw", datum: "2026-04-23", isOngelezen: true, heeftBijlage: false, relevantVoor: ["bloemenkweker"] },
+	{ magazijnId: "rvo", onderwerp: "Openstelling subsidie precisielandbouw", datum: "2026-04-19", isOngelezen: true, heeftBijlage: false, relevantVoor: ["bloemenkweker"] },
+	{ magazijnId: "belastingdienst", onderwerp: "Herinnering aangifte loonheffingen", datum: "2026-04-15", isOngelezen: false, heeftBijlage: false, relevantVoor: ["bloemenkweker"] },
+	// Activiteiten Coördinator Zorg en Welzijn (Gezondheids- en welzijnszorg)
+	{ magazijnId: "ap", onderwerp: "Verwerking van cliëntgegevens onder de AVG", datum: "2026-04-22", isOngelezen: true, heeftBijlage: false, relevantVoor: ["zorgcoordinator"] },
+	{ magazijnId: "rvo", onderwerp: "Subsidie gezond en veilig werken beschikbaar", datum: "2026-04-18", isOngelezen: true, heeftBijlage: false, relevantVoor: ["zorgcoordinator"] },
+	{ magazijnId: "uwv", onderwerp: "Wijziging in de ziekmeldingsprocedure voor werkgevers", datum: "2026-04-14", isOngelezen: false, heeftBijlage: false, relevantVoor: ["zorgcoordinator"] },
+	// Business Development manager (Industrie, ZZP)
+	{ magazijnId: "rvo", onderwerp: "Uw S&O-verklaring (WBSO) is beschikbaar", datum: "2026-04-24", isOngelezen: true, heeftBijlage: true, relevantVoor: ["business-development"] },
+	{ magazijnId: "kvk", onderwerp: "Controleer uw inschrijving in het Handelsregister", datum: "2026-04-16", isOngelezen: false, heeftBijlage: false, relevantVoor: ["business-development"] },
+	// Docent (Onderwijs)
+	{ magazijnId: "rvo", onderwerp: "Subsidie praktijkleren: aanvraagperiode geopend", datum: "2026-04-20", isOngelezen: true, heeftBijlage: false, relevantVoor: ["docent"] },
+	{ magazijnId: "belastingdienst", onderwerp: "Aangifte inkomstenbelasting voor ondernemers", datum: "2026-04-12", isOngelezen: false, heeftBijlage: true, relevantVoor: ["docent"] },
+	// Hondenuitlater en Dierenverzorging (ZZP)
+	{ magazijnId: "kvk", onderwerp: "Jaarlijkse controle van uw inschrijving", datum: "2026-04-21", isOngelezen: true, heeftBijlage: false, relevantVoor: ["hondenuitlater"] },
+	{ magazijnId: "belastingdienst", onderwerp: "Btw-aangifte eerste kwartaal 2026", datum: "2026-04-13", isOngelezen: false, heeftBijlage: false, relevantVoor: ["hondenuitlater"] },
+	// Financial Manager en Accountant (Groothandel)
+	{ magazijnId: "belastingdienst", onderwerp: "Verscherpt cliëntenonderzoek (Wwft): wat dit voor u betekent", datum: "2026-04-23", isOngelezen: true, heeftBijlage: true, relevantVoor: ["financial-manager"] },
+	{ magazijnId: "rvo", onderwerp: "Voucher mkb-cyberweerbaarheid beschikbaar", datum: "2026-04-17", isOngelezen: false, heeftBijlage: false, relevantVoor: ["financial-manager"] },
+].forEach((b) => {
+	const mag = magazijnen.find((m) => m.id === b.magazijnId);
+	berichten.push({
+		id: "msg-" + String(berichten.length + 1).padStart(4, "0"),
+		magazijnId: b.magazijnId,
+		afzender: mag ? mag.naam : b.magazijnId,
+		onderwerp: b.onderwerp,
+		inhoud: inhoudVoor(mag, b.onderwerp),
+		datum: b.datum,
+		isOngelezen: b.isOngelezen,
+		map: null,
+		heeftBijlage: b.heeftBijlage,
+		variantCInhoud: null,
+		actiesUitleg: null,
+		acties: null,
+		relevantVoor: b.relevantVoor,
 	});
 });
 

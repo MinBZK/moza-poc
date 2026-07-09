@@ -284,7 +284,31 @@
 		});
 	}
 
-	// Bouw de persona-kiezer in het feature flags paneel.
+	// Bouw één keuze-item (radio) voor een persona.
+	function maakPersonaItem(persona, i, actief) {
+		var li = document.createElement("li");
+		var label = document.createElement("label");
+		var radio = document.createElement("input");
+		radio.type = "radio";
+		radio.name = "persona";
+		radio.value = persona.id;
+		radio.checked = persona.id === actief.id;
+		radio.addEventListener("change", function () {
+			slaActiefOp(persona.id);
+			var params = new URLSearchParams(location.search);
+			params.set("persona", urlLabel(persona));
+			location.search = params.toString();
+		});
+		label.appendChild(radio);
+		var kiezerLabel = persona.label || ("Persona " + i);
+		label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
+		li.appendChild(label);
+		return li;
+	}
+
+	// Bouw de persona-kiezer in het feature flags paneel. Persona's met
+	// "archief": true blijven in de data (en aanroepbaar via ?persona=), maar
+	// staan in een apart uitklapbaar "Archief"-blok i.p.v. de hoofdlijst.
 	function bouwKiezer() {
 		var panel = document.querySelector(".feature-flags-panel");
 		if (!panel) return;
@@ -300,29 +324,34 @@
 		panel.insertBefore(heading, clearBtn);
 
 		var list = document.createElement("ul");
+		var archiefList = document.createElement("ul");
+		var aantalArchief = 0;
+		var actiefIsGearchiveerd = false;
 
 		personas.forEach(function (persona, i) {
-			var li = document.createElement("li");
-			var label = document.createElement("label");
-			var radio = document.createElement("input");
-			radio.type = "radio";
-			radio.name = "persona";
-			radio.value = persona.id;
-			radio.checked = persona.id === actief.id;
-			radio.addEventListener("change", function () {
-				slaActiefOp(persona.id);
-				var params = new URLSearchParams(location.search);
-				params.set("persona", urlLabel(persona));
-				location.search = params.toString();
-			});
-			label.appendChild(radio);
-			var kiezerLabel = persona.label || ("Persona " + i);
-			label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
-			li.appendChild(label);
-			list.appendChild(li);
+			var li = maakPersonaItem(persona, i, actief);
+			if (persona.archief) {
+				archiefList.appendChild(li);
+				aantalArchief++;
+				if (persona.id === actief.id) actiefIsGearchiveerd = true;
+			} else {
+				list.appendChild(li);
+			}
 		});
 
 		panel.insertBefore(list, clearBtn);
+
+		// Gearchiveerde persona's in een uitklapbaar blok; blijven aanroepbaar.
+		if (aantalArchief > 0) {
+			var details = document.createElement("details");
+			details.className = "feature-flags-persona-archief";
+			if (actiefIsGearchiveerd) details.open = true;
+			var summary = document.createElement("summary");
+			summary.textContent = "Persona archief (" + aantalArchief + ")";
+			details.appendChild(summary);
+			details.appendChild(archiefList);
+			panel.insertBefore(details, clearBtn);
+		}
 	}
 
 	// Initialisatie.
