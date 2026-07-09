@@ -158,7 +158,7 @@
 	.berichtenbox-attachment-preview {
 		margin-block-start: 0;
 	}
-	p {
+	> p {
 		margin-block-start: var(--toepassing-space-margin-sm);
 	}
 	ul {
@@ -174,9 +174,6 @@
 }
 html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
 	display: block;
-}
-html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-attachments {
-	display: none;
 }
 /* C: elementen die alleen in variant C zichtbaar zijn */
 .variant-c-only {

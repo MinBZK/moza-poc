@@ -66,14 +66,19 @@ eleventyComputed:
 			</div>
 			{% endif %}
 
-			{% if bericht.heeftBijlage %}
 			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden role="status" aria-live="polite">
+					<p>PDF wordt geladen…</p>
+					<div class="progress-bar"><div class="progress-bar-fill progress-bar-fill--indeterminate"></div></div>
+				</div>
 				<iframe class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview title="Voorbeeld van de bijlage" loading="lazy" hidden></iframe>
 				<ul class="list-indent">
 					<li><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></li>
 					<li><a href="#" class="content-link" data-berichtenbox-tekst-download target="_blank" rel="noopener" download hidden>Lees tekst-versie</a></li>
 				</ul>
 			</div>
+			<p class="variant-c-only"><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
+			{% if bericht.heeftBijlage %}
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments>
 				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading>Bijlagen ophalen bij {{ bericht.afzender }}…</p>

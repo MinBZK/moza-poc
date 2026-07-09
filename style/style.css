@@ -1280,7 +1280,7 @@ li, th, td {
 	white-space: nowrap;
 }
 .berichtenbox-row-attachment svg {
-	fill: var(--toepassing-color-interactive-default-background);
+	color: var(--toepassing-color-interactive-default-background);
 	inline-size: var(--toepassing-size-icon-sm);
 }
 .berichtenbox-row-folder-label {
@@ -2267,6 +2267,24 @@ h1, h2, h3, h4, h5, h6, a, button {
 	justify-content: center;
 	min-inline-size: fit-content;
 	white-space: nowrap;
+}
+/* Indeterminate variant: laadduur onbekend (bijv. PDF-viewer). Een deelvulling
+   schuift heen en weer i.p.v. een breedte-gedreven percentage. */
+.progress-bar-fill--indeterminate {
+	animation: progress-bar-indeterminate 1.4s var(--toepassing-motion-easing-default) infinite;
+	inline-size: 40%;
+	min-inline-size: 0;
+}
+@keyframes progress-bar-indeterminate {
+	from { margin-inline-start: -40%; }
+	to { margin-inline-start: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.progress-bar-fill--indeterminate {
+		animation: none;
+		inline-size: 100%;
+		margin-inline-start: 0;
+	}
 }
 
 /* Schakelaar */
