@@ -1498,7 +1498,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 
 /* Berichtenbox A/B/C-test varianten */
-/* B: PDF-preview vervangt de berichttekst; bijlage-sectie verborgen */
 .berichtenbox-detail-pdf {
 	display: none;
 	.berichtenbox-attachment-preview {
@@ -1520,9 +1519,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
 	display: block;
-}
-html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-detail-body {
-	display: none;
 }
 html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-attachments {
 	display: none;
