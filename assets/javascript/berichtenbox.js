@@ -1347,92 +1347,116 @@
 
 	function laadBijlagen() {
 		const bijlSec = document.querySelector('[data-berichtenbox-attachments]');
-		if (!bijlSec) return;
-		const laden = bijlSec.querySelector('[data-berichtenbox-attachments-loading]');
-		const lijst = bijlSec.querySelector('[data-berichtenbox-attachments-list]');
-		if (!laden || !lijst) {
-			console.warn('[Berichtenbox] Bijlage-sectie onvolledig: template-drift?');
-			return;
-		}
+		const previewVooraf = document.querySelector('[data-berichtenbox-attachments-preview]');
+		// De PDF-viewer staat bij élk bericht (alleen zichtbaar in variant B); de
+		// "Bijlage(n)"-lijst alleen bij een bericht met een echte bijlage.
+		if (!bijlSec && !previewVooraf) return;
+		const laden = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-loading]') : null;
+		const lijst = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-list]') : null;
+
+		// Toon de PDF-laadindicator meteen (de iframe blijft verborgen). De
+		// vertraging hieronder fungeert als zichtbare laadtijd; zonder dit zou de
+		// lokale PDF zó snel laden dat de indicator alleen even flitst.
+		const pdfLadenVooraf = document.querySelector('[data-pdf-laden]');
+		if (pdfLadenVooraf) pdfLadenVooraf.hidden = false;
+		if (previewVooraf) previewVooraf.hidden = true;
 
 		setTimeout(() => {
-			const namen = [
-				'Beschikking.pdf',
-				'Bijlage-specificatie.pdf',
-				'Toelichting.pdf',
-				'Overzicht.pdf',
-			];
-			const aantal = 1 + Math.floor(Math.random() * 3);
-			const gekozen = namen.slice(0, aantal);
-
 			// Voorbeeld-PDF voor zowel de bijlage-links als de preview (prototype).
 			const pdfHref = url('/assets/documents/voorbeeld-bijlage.pdf');
 
-			while (lijst.firstChild) lijst.removeChild(lijst.firstChild);
+			// Bijlagenlijst alleen opbouwen bij een bericht met een echte bijlage.
+			if (bijlSec && laden && lijst) {
+				const namen = [
+					'Beschikking.pdf',
+					'Bijlage-specificatie.pdf',
+					'Toelichting.pdf',
+					'Overzicht.pdf',
+				];
+				const aantal = 1 + Math.floor(Math.random() * 3);
+				const gekozen = namen.slice(0, aantal);
 
-			// Unhappy-flow (feature flag): laat willekeurig 1 of meer bijlagen falen.
-			// Elke gefaalde bijlage krijgt een foutmelding met een eigen retry-knop.
-			const faalIndexen = new Set();
-			if (unhappyFlowAan()) {
-				const aantalFout = 1 + Math.floor(Math.random() * gekozen.length);
-				while (faalIndexen.size < aantalFout) {
-					faalIndexen.add(Math.floor(Math.random() * gekozen.length));
+				while (lijst.firstChild) lijst.removeChild(lijst.firstChild);
+
+				// Unhappy-flow (feature flag): laat willekeurig 1 of meer bijlagen falen.
+				// Elke gefaalde bijlage krijgt een foutmelding met een eigen retry-knop.
+				const faalIndexen = new Set();
+				if (unhappyFlowAan()) {
+					const aantalFout = 1 + Math.floor(Math.random() * gekozen.length);
+					while (faalIndexen.size < aantalFout) {
+						faalIndexen.add(Math.floor(Math.random() * gekozen.length));
+					}
 				}
-			}
 
-			// Werkende bijlage-link.
-			function bijlageLink(naam) {
-				const a = document.createElement('a');
-				a.href = pdfHref;
-				a.target = '_blank';
-				a.rel = 'noopener';
-				a.textContent = naam;
-				return a;
-			}
-			// Gefaalde bijlage: feedback-warning met retry die de bijlage alsnog "ophaalt".
-			const WARNING_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
-			function bijlageFout(naam) {
-				const feedback = document.createElement('div');
-				feedback.className = 'feedback feedback-warning';
-				feedback.setAttribute('role', 'status');
-				const icoon = document.createElement('template');
-				icoon.innerHTML = WARNING_ICON;
-				feedback.appendChild(icoon.content.firstChild);
+				// Werkende bijlage-link.
+				function bijlageLink(naam) {
+					const a = document.createElement('a');
+					a.href = pdfHref;
+					a.target = '_blank';
+					a.rel = 'noopener';
+					a.textContent = naam;
+					return a;
+				}
+				// Gefaalde bijlage: feedback-warning met retry die de bijlage alsnog "ophaalt".
+				const WARNING_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
+				function bijlageFout(naam) {
+					const feedback = document.createElement('div');
+					feedback.className = 'feedback feedback-warning';
+					feedback.setAttribute('role', 'status');
+					const icoon = document.createElement('template');
+					icoon.innerHTML = WARNING_ICON;
+					feedback.appendChild(icoon.content.firstChild);
 
-				const inner = document.createElement('div');
-				const tekst = document.createElement('p');
-				tekst.textContent = 'Bijlage kon niet worden opgehaald.';
-				const actie = document.createElement('p');
-				const retry = document.createElement('button');
-				retry.type = 'button';
-				retry.className = 'link-button';
-				retry.textContent = 'Opnieuw proberen';
-				retry.addEventListener('click', () => {
-					feedback.replaceWith(bijlageLink(naam));
+					const inner = document.createElement('div');
+					const tekst = document.createElement('p');
+					tekst.textContent = 'Bijlage kon niet worden opgehaald.';
+					const actie = document.createElement('p');
+					const retry = document.createElement('button');
+					retry.type = 'button';
+					retry.className = 'link-button';
+					retry.textContent = 'Opnieuw proberen';
+					retry.addEventListener('click', () => {
+						feedback.replaceWith(bijlageLink(naam));
+					});
+					actie.appendChild(retry);
+					inner.append(tekst, actie);
+					feedback.appendChild(inner);
+					return feedback;
+				}
+
+				// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
+				gekozen.forEach((n, i) => {
+					const li = document.createElement('li');
+					li.appendChild(faalIndexen.has(i) ? bijlageFout(n) : bijlageLink(n));
+					lijst.appendChild(li);
 				});
-				actie.appendChild(retry);
-				inner.append(tekst, actie);
-				feedback.appendChild(inner);
-				return feedback;
+
+				laden.hidden = true;
+				lijst.hidden = false;
 			}
 
-			// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
-			gekozen.forEach((n, i) => {
-				const li = document.createElement('li');
-				li.appendChild(faalIndexen.has(i) ? bijlageFout(n) : bijlageLink(n));
-				lijst.appendChild(li);
-			});
-
-			laden.hidden = true;
-			lijst.hidden = false;
-
-			// Preview van de bijlage in een ingesloten PDF-viewer. Staat buiten de
-			// bijlage-sectie (variant B: PDF vervangt de berichttekst), dus document-
-			// breed opzoeken. Verberg de thumbnail-zijbalk en toon op volle breedte.
+			// Preview van de bijlage in een ingesloten PDF-viewer (bij élk bericht).
+			// Verberg de thumbnail-zijbalk en toon op volle breedte.
 			const preview = document.querySelector('[data-berichtenbox-attachments-preview]');
 			if (preview) {
+				// Laad-indicator (feedback-progress-stijl) tonen tot de PDF geladen is.
+				const pdfLaden = document.querySelector('[data-pdf-laden]');
+				if (pdfLaden) pdfLaden.hidden = false;
+				preview.hidden = true;
+				let getoond = false;
+				function toonPreview() {
+					if (getoond) return;
+					getoond = true;
+					if (pdfLaden) pdfLaden.hidden = true;
+					preview.hidden = false;
+				}
+				preview.addEventListener('load', toonPreview, { once: true });
+				// Fallback: mocht 'load' niet vuren, toon de viewer alsnog.
+				setTimeout(toonPreview, 8000);
+				// Geen lazy-loading: een verborgen iframe met loading="lazy" zou niet
+				// laden en de indicator zou blijven hangen.
+				preview.removeAttribute('loading');
 				preview.src = pdfHref + '#navpanes=0&view=FitH';
-				preview.hidden = false;
 			}
 			// Download PDF-link onder de preview.
 			const download = document.querySelector('[data-berichtenbox-pdf-download]');
@@ -1702,8 +1726,15 @@
 		}, intervalSec * 1000);
 	}
 
-	// Herstel eerder via polling binnengekomen berichten na reload.
-	if (state.nieuweBerichten.length > 0) {
+	// Herstel eerder via polling binnengekomen berichten na reload. Staat de flag
+	// "Dynamische berichten" uit (standaard), dan worden ze niet hersteld maar juist
+	// opgeruimd — zo verdwijnen eerder binnengedruppelde "Dit is een demo-bericht".
+	if (!dynamischeBerichtenAan()) {
+		if (state.nieuweBerichten.length > 0) {
+			state.nieuweBerichten = [];
+			opslaan();
+		}
+	} else if (state.nieuweBerichten.length > 0) {
 		state.nieuweBerichten.forEach((b) => {
 			if (!data.berichten.some((x) => x.id === b.id)) {
 				data.berichten.unshift(b);
