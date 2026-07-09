@@ -332,13 +332,6 @@ li.option--confirmed {
 	}
 }
 
-[data-persona-toon], [data-persona-verberg] {
-	display: contents;
-	&[hidden] {
-		display: none;
-	}
-}
-
 /* -- FORMULIEREN -- */
 
 fieldset {
@@ -1500,65 +1493,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	color: var(--toepassing-color-feedback-error-emphasis);
 }
 
-/* Berichtenbox A/B/C-test varianten */
-.berichtenbox-detail-pdf {
-	display: none;
-	.berichtenbox-attachment-preview {
-		margin-block-start: 0;
-	}
-	p {
-		margin-block-start: var(--toepassing-space-margin-sm);
-	}
-	ul {
-		list-style: none;
-		margin-block: var(--toepassing-space-margin-sm) var(--toepassing-space-margin-xs);
-	}
-	a {
-		text-decoration-color: transparent;
-		&:hover {
-			text-decoration-color: inherit;
-		}
-	}
-}
-html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
-	display: block;
-}
-html[data-berichtenbox-variant="b"] [data-heeft-bijlage] .berichtenbox-attachments {
-	display: none;
-}
-/* C: elementen die alleen in variant C zichtbaar zijn */
-.variant-c-only {
-	display: none;
-}
-html[data-berichtenbox-variant="c"] .variant-c-only {
-	display: block;
-}
-/* In variant C wordt de standaardtekst vervangen door uitgebreide uitleg */
-html[data-berichtenbox-variant="c"] .variant-ab-only {
-	display: none;
-}
-/* Variant C: paneel met uitleg en directe acties */
-.berichtenbox-detail-acties-panel {
-	background: var(--toepassing-color-background-subtle);
-	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
-	margin-block: var(--toepassing-space-md);
-	padding: var(--toepassing-space-md);
-	h2 {
-		font-size: var(--rijkshuisstijl-text-font-size-xl);
-	}
-}
-html[data-berichtenbox-variant="c"] .berichtenbox-detail-acties-panel {
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-margin-sm);
-}
-.berichtenbox-detail-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-layout-xs);
-}
-
 /* Berichtenbox: verplaats bericht naar map paneel */
 .berichtenbox-move-panel {
 	background: var(--toepassing-color-background-raised);
@@ -2398,8 +2332,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 		padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-md);
 	}
 }
-  
-  
+
 
 /* -- ANIMATIES -- */
 
@@ -2674,33 +2607,4 @@ body.authorized {
 			border-color: var(--rijkshuisstijl-color-oranje-600);
 		}
 	}
-}
-
-/* Tijdelijk: proof-of-concept banner (roterend lint rechtsboven) */
-.temp-moza-poc-banner {
-	background: var(--toepassing-color-feedback-success-default);
-	color: var(--toepassing-color-text-inverse);
-	font-weight: var(--toepassing-text-font-weight-bold);
-	inline-size: 256px;
-	inset-block-start: 3rem;
-	inset-inline-end: -4rem;
-	padding-block: var(--toepassing-space-padding-sm);
-	padding-inline: var(--toepassing-space-padding-lg);
-	position: fixed;
-	text-align: center;
-	text-decoration: none;
-	transform: rotate(45deg);
-	transform-origin: center;
-	z-index: 1;
-	&:hover {
-		background: var(--toepassing-color-feedback-success-emphasis);
-		color: var(--toepassing-color-text-inverse);
-	}
-}
-
-/* Tijdelijk: datum en tijdstip laatste wijziging */
-.poc-date-last-edit {
-	color: var(--toepassing-color-text-disabled);
-	font-size: var(--toepassing-text-size-body-xs);
-	text-align: end;
 }
