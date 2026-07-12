@@ -27,7 +27,7 @@ eleventyComputed:
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
 
 			<p class="berichtenbox-detail-meta">
-				<a class="content-link" href="{% if bericht.magazijnId == 'belastingdienst' %}{{ '/mijn-belastingdienst/berichtenbox/' | url }}{% else %}#{% endif %}">{{ bericht.afzender }}</a> · {{ bericht.datum | datumNL }}
+				{{ bericht.afzender }} · {{ bericht.datum | datumNL }}
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}
 			</p>
 
