@@ -131,6 +131,58 @@ function datumVoorIndex(i) {
 	return dag.toISOString().slice(0, 10);
 }
 
+// Variant C (A/B/C-test): leidt uit het onderwerp passende directe acties af.
+// Werkwoord-gericht, u-vorm, B1 (Schrijfwijzer). Eerste actie is primair (btn-cta).
+function actiesVoor(onderwerp) {
+	const o = onderwerp.toLowerCase();
+	function res(uitleg, acties) { return { actiesUitleg: uitleg, acties: acties }; }
+	if (o.includes("aanslag") || o.includes("naheffing")) return res(
+		"Betaal het bedrag op tijd. Bent u het niet eens met de aanslag? Dien dan bezwaar in.",
+		[{ label: "Direct betalen", primair: true, extern: true }, { label: "Bezwaar indienen", extern: true }, { label: "Uitstel van betaling aanvragen", extern: true }]);
+	if (o.includes("aangifte")) return res(
+		"Doe de aangifte op tijd. Lukt dat niet? Vraag dan uitstel aan.",
+		[{ label: "Aangifte doen", primair: true, extern: true }, { label: "Uitstel aanvragen", extern: true }]);
+	if (o.includes("jaarstukken") || o.includes("deponeren")) return res(
+		"Deponeer uw jaarstukken vóór de uiterste datum.",
+		[{ label: "Jaarstukken deponeren", primair: true, extern: true }, { label: "Uitstel aanvragen", extern: true }]);
+	if (o.includes("enquête") || o.includes("statistiek")) return res(
+		"Vul de enquête in. Deelname is wettelijk verplicht.",
+		[{ label: "Enquête invullen", primair: true, extern: true }, { label: "Uitstel aanvragen", extern: true }]);
+	if (o.includes("apk")) return res(
+		"Plan de APK-keuring op tijd in, zo voorkomt u een boete.",
+		[{ label: "APK inplannen", primair: true, extern: true }]);
+	if (o.includes("uittreksel")) return res(
+		"Uw uittreksel staat klaar om te downloaden.",
+		[{ label: "Uittreksel downloaden", primair: true, extern: true }]);
+	if (o.includes("handelsregister") || o.includes("inschrijving")) return res(
+		"Controleer of uw gegevens in het Handelsregister nog kloppen.",
+		[{ label: "Gegevens controleren", primair: true, extern: true }, { label: "Wijziging doorgeven", extern: true }]);
+	if (o.includes("controle") || o.includes("controleer")) return res(
+		"Bereid u voor op de controle en lever de gevraagde documenten aan.",
+		[{ label: "Bekijken wat u moet doen", primair: true, extern: true }, { label: "Contact opnemen", extern: true }]);
+	if (o.includes("wwft") || o.includes("cliëntenonderzoek")) return res(
+		"Lees wat het verscherpte cliëntenonderzoek voor u betekent.",
+		[{ label: "Meer informatie", primair: true, extern: true }]);
+	if (o.includes("avg") || o.includes("cliëntgegevens") || o.includes("persoonsgegevens") || o.includes("datalek")) return res(
+		"Lees hoe u persoonsgegevens veilig verwerkt en wat u moet doen.",
+		[{ label: "Meer informatie", primair: true, extern: true }]);
+	if (o.includes("subsidie") || o.includes("wbso") || o.includes("mit") || o.includes("slim") || o.includes("voucher") || o.includes("s&o")) return res(
+		"Bekijk de beschikking en wat dit voor uw onderneming betekent.",
+		[{ label: "Beschikking bekijken", primair: true, extern: true }, { label: "Vraag stellen", extern: true }]);
+	if (o.includes("vergunning") || o.includes("besluit") || o.includes("beschikking") || o.includes("ontheffing") || o.includes("handhaving")) return res(
+		"Bekijk het besluit. Bent u het er niet mee eens? Dien dan bezwaar in.",
+		[{ label: "Besluit bekijken", primair: true, extern: true }, { label: "Bezwaar indienen", extern: true }]);
+	if (o.includes("aanvraag") || o.includes("verwerkt") || o.includes("behandeling")) return res(
+		"Bekijk de status van uw aanvraag.",
+		[{ label: "Status bekijken", primair: true, extern: true }]);
+	if (o.includes("wijziging") || o.includes("gewijzigd") || o.includes("doorgegeven") || o.includes("overgeschreven") || o.includes("geregistreerd") || o.includes("bevestiging") || o.includes("melding")) return res(
+		"Controleer of de gegevens kloppen.",
+		[{ label: "Gegevens controleren", primair: true, extern: true }]);
+	return res(
+		"Bekijk dit bericht en onderneem waar nodig actie.",
+		[{ label: "Bericht bekijken", primair: true }, { label: "Reageren" }]);
+}
+
 const berichten = [];
 for (let i = 0; i < AANTAL_BERICHTEN; i++) {
 	const mag = pick(leverendeMagazijnen);
@@ -157,11 +209,7 @@ for (let i = 0; i < AANTAL_BERICHTEN; i++) {
 			`Dit bericht van ${mag.naam} gaat over “${onderwerp}”. Hieronder leest u wat dit voor uw onderneming betekent en wat u nu kunt doen.`,
 			"Bekijk de details en onderneem waar nodig actie. Hebt u vragen over de inhoud? Neem dan contact op met de afzender.",
 		].join("\n\n"),
-		actiesUitleg: "U kunt dit bericht bekijken en indien nodig direct reageren.",
-		acties: [
-			{ label: "Bericht bekijken", primair: true },
-			{ label: "Reageren" },
-		],
+		...actiesVoor(onderwerp),
 	});
 }
 
@@ -277,9 +325,11 @@ const belastingdienstMag = magazijnen.find((m) => m.id === "belastingdienst");
 		isOngelezen: b.isOngelezen,
 		map: null,
 		heeftBijlage: b.heeftBijlage,
-		variantCInhoud: null,
-		actiesUitleg: null,
-		acties: null,
+		variantCInhoud: [
+			`Dit bericht van ${mag ? mag.naam : b.magazijnId} gaat over “${b.onderwerp}”. Hieronder leest u wat dit voor uw onderneming betekent en wat u nu kunt doen.`,
+			"Bekijk de details en onderneem waar nodig actie. Hebt u vragen over de inhoud? Neem dan contact op met de afzender.",
+		].join("\n\n"),
+		...actiesVoor(b.onderwerp),
 		relevantVoor: b.relevantVoor,
 	});
 });
