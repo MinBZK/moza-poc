@@ -65,7 +65,7 @@ eleventyComputed:
 				<div class="berichtenbox-detail-acties">
 					{% for actie in bericht.acties %}
 					{% set actieClass = "btn-cta" if actie.primair else "secondary" %}
-					<button type="button" class="{{ actieClass }}"{% if actie.extern %} rel="external"{% endif %}>{{ actie.label }}</button>
+					<button type="button" class="{{ actieClass }}">{{ actie.label }}</button>
 					{% endfor %}
 				</div>
 			</div>
