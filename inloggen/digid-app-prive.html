@@ -110,5 +110,12 @@ eleventyExcludeFromCollections: true
 				</div>
 			</footer>
 		</div>
+		<script>
+			// Prototype: zet focus op het laatste koppelcode-veld na opbouw door code_box
+			window.addEventListener("load", function () {
+				var laatste = document.getElementById("app_verification_code_verification_code_field_3");
+				if (laatste) laatste.focus();
+			});
+		</script>
 	</body>
 </html>
