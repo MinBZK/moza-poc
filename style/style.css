@@ -2501,16 +2501,17 @@ h1, h2, h3, h4, h5, h6, a, button {
 			border-color: var(--toepassing-color-interactive-hover-border);
 		}
 	}
-	.card-inloggen-digid {
+	.card-inloggen-options {
 		h3::after {
 			content: url("../assets/icons/icon-chevron.svg");
 			display: inline-block;
 			inline-size: var(--toepassing-size-icon-xs);
 			margin-inline-start: auto;
+			transform: rotate(90deg);
 			transition: var(--toepassing-transition-transform);
 		}
 		&[open] h3::after {
-			transform: rotate(90deg);
+			transform: rotate(-90deg);
 		}
 	}
 	.inloggen-eh-logo {
