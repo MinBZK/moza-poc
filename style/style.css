@@ -2414,10 +2414,12 @@ h1, h2, h3, h4, h5, h6, a, button {
 		h2 {
 			font: var(--toepassing-text-heading-h5);
 			font-style: italic;
+			margin-block-end: var(--toepassing-space-margin-xs);
 		}
 		section {
 			display: flex;
 			flex-direction: column;
+			gap: var(--toepassing-space-margin-xs);
 			inline-size: 32rem;
 			max-inline-size: 100%;
 		}
@@ -2432,6 +2434,9 @@ h1, h2, h3, h4, h5, h6, a, button {
 			> .feedback {
 				grid-column: 3;
 			}
+		}
+		summary {
+			cursor: pointer;
 		}
 		a {
 			svg {
