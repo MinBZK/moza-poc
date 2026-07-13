@@ -1484,6 +1484,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	block-size: 72rem;
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-sm);
+	display: block;
 	inline-size: 100%;
 	margin-block-start: var(--toepassing-space-margin-sm);
 }
@@ -2243,6 +2244,7 @@ h1, h2, h3, h4, h5, h6, a, button {
 	border: var(--toepassing-border-subtle);
 	border-color: var(--toepassing-color-feedback-success-border);
 	border-radius: var(--toepassing-border-radius-sm);
+	margin-block-end: var(--toepassing-space-margin-sm);
 	padding: var(--toepassing-space-md);
 	.progress-bar {
 		margin-block-start: var(--toepassing-space-margin-xs);

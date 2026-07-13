@@ -175,6 +175,45 @@
 html[data-berichtenbox-variant="b"] .berichtenbox-detail-pdf {
 	display: block;
 }
+
+/* PDF-viewer onthullen: de viewer groeit vanuit de laadindicator naar de
+   eindpositie en de indicator vouwt tegelijk weg. */
+.pdf-reveal {
+	display: grid;
+	grid-template-rows: 1fr;
+}
+.pdf-reveal > .berichtenbox-attachment-preview {
+	min-block-size: 0;
+	overflow: hidden;
+}
+.pdf-reveal[data-collapsed] {
+	grid-template-rows: 0fr;
+}
+.pdf-reveal[data-collapsed] > .berichtenbox-attachment-preview {
+	opacity: 0;
+}
+.berichtenbox-detail-pdf .feedback-progress {
+	max-block-size: 20rem;
+	overflow: hidden;
+}
+.berichtenbox-detail-pdf .feedback-progress.feedback-progress--afgerond {
+	margin-block-end: 0;
+	max-block-size: 0;
+	opacity: 0;
+	padding-block: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.pdf-reveal {
+		transition: grid-template-rows 360ms var(--toepassing-motion-easing-default);
+	}
+	.pdf-reveal > .berichtenbox-attachment-preview {
+		transition: opacity 360ms var(--toepassing-motion-easing-default);
+	}
+	.berichtenbox-detail-pdf .feedback-progress {
+		transition: max-block-size 300ms var(--toepassing-motion-easing-default), opacity 300ms var(--toepassing-motion-easing-default), margin-block-end 300ms var(--toepassing-motion-easing-default), padding-block 300ms var(--toepassing-motion-easing-default);
+	}
+}
+
 /* C: elementen die alleen in variant C zichtbaar zijn */
 .variant-c-only {
 	display: none;

@@ -1354,7 +1354,7 @@
 		const laden = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-loading]') : null;
 		const lijst = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-list]') : null;
 
-		// Toon de PDF-laadindicator meteen (de iframe blijft verborgen). De
+		// Toon de PDF-laadindicator meteen (de viewer blijft verborgen). De
 		// vertraging hieronder fungeert als zichtbare laadtijd; zonder dit zou de
 		// lokale PDF zó snel laden dat de indicator alleen even flitst.
 		const pdfLadenVooraf = document.querySelector('[data-pdf-laden]');
@@ -1447,16 +1447,29 @@
 				function toonPreview() {
 					if (getoond) return;
 					getoond = true;
-					if (pdfLaden) pdfLaden.hidden = true;
+					// Onthul de viewer: start ingeklapt op de plek van de laadindicator
+					// en groei naar de eindpositie; de indicator vouwt tegelijk weg.
+					const reveal = preview.closest('.pdf-reveal');
 					preview.hidden = false;
+					if (reveal) {
+						reveal.setAttribute('data-collapsed', '');
+						void reveal.offsetHeight; // forceer reflow zodat de transitie loopt
+						reveal.removeAttribute('data-collapsed');
+					}
+					if (pdfLaden) {
+						pdfLaden.classList.add('feedback-progress--afgerond');
+						setTimeout(() => { pdfLaden.hidden = true; }, 340);
+					}
 				}
 				preview.addEventListener('load', toonPreview, { once: true });
-				// Fallback: mocht 'load' niet vuren, toon de viewer alsnog.
-				setTimeout(toonPreview, 8000);
-				// Geen lazy-loading: een verborgen iframe met loading="lazy" zou niet
-				// laden en de indicator zou blijven hangen.
-				preview.removeAttribute('loading');
-				preview.src = pdfHref + '#navpanes=0&view=FitH';
+				// Safari vuurt 'load' niet betrouwbaar op <object> met PDF; de
+				// voorbeeld-PDF is lokaal en laadt snel, dus toon de viewer sowieso
+				// na een korte tijd zodat de indicator niet blijft doorlopen.
+				setTimeout(toonPreview, 1200);
+				// <object type="application/pdf"> geeft in alle browsers (incl. Safari)
+				// de native PDF-viewer met toolbar; <iframe> deed dat in Safari niet.
+				// De bron staat op het data-attribuut, niet op src.
+				preview.setAttribute("data", pdfHref + "#navpanes=0&view=FitH");
 			}
 			// Download PDF-link onder de preview.
 			const download = document.querySelector('[data-berichtenbox-pdf-download]');
