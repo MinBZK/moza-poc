@@ -9,6 +9,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Bloom B.V.",
+			"functies": "Eigenaar, Organisatieadviseur",
+			"website": "https://www.bloombv.nl",
 			"kvkNummer": "12345678",
 			"rsinNummer": "12345678",
 			"btwNummer": "NL00012345678",
@@ -110,6 +112,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Viervoeter & Co",
+			"functies": "Eigenaar, Winkelier",
+			"website": "https://www.viervoeterenco.nl",
 			"kvkNummer": "23456789",
 			"rsinNummer": "23456789",
 			"btwNummer": "NL00023456789",
@@ -166,6 +170,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Makelaardij",
+			"functies": "Eigenaar, Makelaar-taxateur",
+			"website": "https://www.vogelmakelaardij.nl",
 			"kvkNummer": "34567890",
 			"rsinNummer": "34567890",
 			"btwNummer": "NL00034567890",
@@ -254,6 +260,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Kwartier Ontwikkeling B.V.",
+			"functies": "Eigenaar, Projectontwikkelaar",
+			"website": "https://www.kwartierontwikkeling.nl",
 			"kvkNummer": "45678901",
 			"rsinNummer": "45678901",
 			"btwNummer": "NL00045678901",
@@ -351,6 +359,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Roots & Locks",
+			"functies": "Eigenaar, Haarstylist",
+			"website": "https://www.rootsandlocks.nl",
 			"kvkNummer": "56789012",
 			"rsinNummer": "56789012",
 			"btwNummer": "NL00056789012",
@@ -407,6 +417,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Schilderwerken",
+			"functies": "Vennoot, Schilder",
+			"website": "https://www.vogelschilderwerken.nl",
 			"kvkNummer": "67890123",
 			"rsinNummer": "67890123",
 			"btwNummer": "NL00067890123",
@@ -479,6 +491,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Salon Lichtveld",
+			"functies": "Eigenaar, Galeriehouder",
+			"website": "https://www.salonlichtveld.nl",
 			"kvkNummer": "78901234",
 			"rsinNummer": "78901234",
 			"btwNummer": "NL00078901234",
@@ -540,6 +554,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Hoeve de Groene Weide",
+			"functies": "Maat, Melkveehouder",
+			"website": "https://www.hoevedegroeneweide.nl",
 			"kvkNummer": "89012345",
 			"rsinNummer": "89012345",
 			"btwNummer": "NL00089012345",
@@ -612,6 +628,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "ThemaCraft International B.V.",
+			"functies": "Eigenaar, Directeur",
+			"website": "https://www.themacraft.com",
 			"kvkNummer": "90123456",
 			"rsinNummer": "90123456",
 			"btwNummer": "NL00090123456",
@@ -717,6 +735,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel & Partners Consultancy",
+			"functies": "Vennoot, Adviseur",
+			"website": "https://www.vogelenpartners.nl",
 			"kvkNummer": "24681012",
 			"rsinNummer": "24681012",
 			"btwNummer": "NL00024681012",
@@ -797,6 +817,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Kwartaal Vastgoed B.V.",
+			"functies": "Eigenaar, Vastgoedbeheerder",
+			"website": "https://www.kwartaalvastgoed.nl",
 			"kvkNummer": "35792468",
 			"rsinNummer": "35792468",
 			"btwNummer": "NL00035792468",
@@ -869,6 +891,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Koffiezaak Noon",
+			"functies": "Eigenaar, Barista",
+			"website": "https://www.koffiezaaknoon.nl",
 			"kvkNummer": "85234567",
 			"rsinNummer": "85234567",
 			"btwNummer": "NL00085234567",
@@ -921,6 +945,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Bouwregie B.V.",
+			"functies": "Directeur-grootaandeelhouder, Bouwmanager",
+			"website": "https://www.vogelbouwregie.nl",
 			"kvkNummer": "61234570",
 			"rsinNummer": "61234570",
 			"btwNummer": "NL00061234570",
@@ -1008,6 +1034,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Kwekerij De Bloesem",
+			"functies": "Vennoot, Kweker",
+			"website": "https://www.kwekerijdebloesem.nl",
 			"kvkNummer": "62345681",
 			"rsinNummer": "62345681",
 			"btwNummer": "NL00062345681",
@@ -1079,6 +1107,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Samen Actief Zorg",
+			"functies": "Eigenaar, Activiteitencoördinator",
+			"website": "https://www.samenactiefzorg.nl",
 			"kvkNummer": "63456792",
 			"rsinNummer": "63456792",
 			"btwNummer": "NL00063456792",
@@ -1153,6 +1183,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Industrieel Advies",
+			"functies": "Eigenaar, Business developer",
+			"website": "https://www.vogelindustrieeladvies.nl",
 			"kvkNummer": "64567803",
 			"rsinNummer": "64567803",
 			"btwNummer": "NL00064567803",
@@ -1208,6 +1240,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Onderwijs & Training",
+			"functies": "Eigenaar, Docent-trainer",
+			"website": "https://www.vogelonderwijs.nl",
 			"kvkNummer": "65678914",
 			"rsinNummer": "65678914",
 			"btwNummer": "NL00065678914",
@@ -1263,6 +1297,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vier Poten Onderweg",
+			"functies": "Eigenaar, Hondenuitlater",
+			"website": "https://www.vierpotenonderweg.nl",
 			"kvkNummer": "66789025",
 			"rsinNummer": "66789025",
 			"btwNummer": "NL00066789025",
@@ -1318,6 +1354,8 @@
 		},
 		"bedrijf": {
 			"handelsnaam": "Vogel Finance & Groothandel B.V.",
+			"functies": "Eigenaar, Financieel manager",
+			"website": "https://www.vogelfinance.nl",
 			"kvkNummer": "67890136",
 			"rsinNummer": "67890136",
 			"btwNummer": "NL00067890136",
