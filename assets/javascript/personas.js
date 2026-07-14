@@ -11,6 +11,8 @@
  *   data-profiel="naam"              → persoon.voornaam + " " + persoon.achternaam
  *   data-profiel="voornaam-bedrijf"  → persoon.voornaam + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
  *   data-profiel="handelsnaam"       → bedrijf.handelsnaam
+ *   data-profiel="functies"          → bedrijf.functies
+ *   data-profiel="website"           → bedrijf.website (als klikbare link)
  *   data-profiel="kvkNummer"         → bedrijf.kvkNummer
  *   data-profiel="vestigingsnummer"  → bedrijf.vestigingsnummer
  *   data-profiel="rsinNummer"        → bedrijf.rsinNummer
@@ -113,6 +115,8 @@
 			case "naam": return p.voornaam + " " + p.achternaam;
 			case "voornaam-bedrijf": return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
 			case "handelsnaam": return b.handelsnaam;
+			case "functies": return b.functies;
+			case "website": return b.website;
 			case "kvkNummer": return b.kvkNummer;
 			case "vestigingsnummer": return b.vestigingsnummer;
 			case "rsinNummer": return b.rsinNummer;
@@ -188,7 +192,19 @@
 			}
 
 			if (tekst !== "" && tekst !== null && tekst !== undefined) {
-				el.textContent = String(tekst);
+				if (sleutel === "website") {
+					// Website als klikbare link tonen; de URL zonder protocol is
+					// leesbaarder als linktekst.
+					var url = String(tekst);
+					var link = document.createElement("a");
+					link.href = url;
+					link.target = "_blank";
+					link.rel = "external noopener";
+					link.textContent = url.replace(/^https?:\/\//, "");
+					el.replaceChildren(link);
+				} else {
+					el.textContent = String(tekst);
+				}
 			}
 		});
 
