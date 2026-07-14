@@ -2622,6 +2622,17 @@ body.mobu {
 	&.authorized {
 		--toepassing-border-pageheader-border: var(--toepassing-border-width-md) solid var(--rijkshuisstijl-color-oranje-500);
 	}
+	dl.data-overview {
+		column-gap: var(--toepassing-space-layout-md);
+		columns: 2 16rem;
+		padding: var(--toepassing-space-padding-sm);
+		> div {
+			break-inside: avoid;
+		}
+		.metadata {
+			display: none;
+		}
+	}
 }
 body.authorized {
 	--toepassing-color-interactive-alternate-selected-background: var(--rijkshuisstijl-color-oranje-50);
