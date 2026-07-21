@@ -28,3 +28,6 @@ build-storybook.log
 agent-os/standards/index.yml
 style-dictionary/node_modules/*
 *.log
+
+# VS Code / IDEs
+.vscode/
