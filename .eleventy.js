@@ -104,6 +104,7 @@ module.exports = function (eleventyConfig) {
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({
+		port: 8080,
 		headers: {
 			"Cache-Control": "no-store",
 		},

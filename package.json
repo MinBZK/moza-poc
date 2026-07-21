@@ -10,7 +10,8 @@
 		"lint:css": "stylelint 'style/**/*.css'",
 		"lint:css:fix": "stylelint 'style/**/*.css' --fix",
 		"vite:build": "vite build",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"proxy": "node server/proxy.js"
 	},
 	"devDependencies": {
 		"@11ty/eleventy": "^3.1.2",
@@ -23,11 +24,11 @@
 		"chokidar-cli": "^3.0.0",
 		"chromatic": "^15.2.0",
 		"concurrently": "^9.1.2",
+		"express": "^4.18.4",
+		"http-proxy-middleware": "^2.0.6",
 		"markuplint": "^4.18.3",
 		"prettier": "^3.0.0",
 		"prettier-plugin-nunjucks": "^0.1.5",
-		"react": "^19.2.7",
-		"react-dom": "^19.2.7",
 		"storybook": "^10.3.5",
 		"stylelint": "^17.4.0",
 		"stylelint-config-standard": "^40.0.0",
@@ -37,5 +38,10 @@
 	},
 	"overrides": {
 		"uuid": "^14.0.0"
+	},
+	"dependencies": {
+		"@tanstack/react-query": "^5.101.4",
+		"react": "^19.2.7",
+		"react-dom": "^19.2.7"
 	}
 }
