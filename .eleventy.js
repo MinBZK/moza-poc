@@ -83,7 +83,7 @@ module.exports = function (eleventyConfig) {
 
 	// React islands build output (Vite bouwt naar dist/js, buiten Eleventy's
 	// cleanOutput-zone; hier gekopieerd naar _site/js).
-	eleventyConfig.addPassthroughCopy({ "dist/js": "js" });
+	eleventyConfig.addPassthroughCopy("dist/js");
 
 	// mox/ landingspagina: self-contained assets meekopiëren naar _site/mox/
 	eleventyConfig.addPassthroughCopy("mox/css");
