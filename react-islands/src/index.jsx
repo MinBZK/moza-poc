@@ -1,10 +1,11 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
-import { ExampleButton } from "@/components/ExampleButton";
+import { ExampleButton } from "./components/ExampleButton";
+import { Contactgegevens } from "./components/contactgegevens/Contactgegevens";
 
 // Map of all island components
 const ISLANDS = {
 	"example-button": ExampleButton,
+	contactgegevens: Contactgegevens,
 };
 
 // Auto-hydrate all islands on page load

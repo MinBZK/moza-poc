@@ -34,6 +34,8 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			</ul>
 		</nav>
 
+		{% island "contactgegevens", { type: "zakelijk" } %}
+
 		<a class="icon-link" href="{{ '/moza/contactgegevens-wijzigen/' | url }}">{% include "icon-edit.njk" %} Contactgegevens wijzigen</a>
 		<dl class="data-overview">
 			<dt>E-mailadres</dt>
