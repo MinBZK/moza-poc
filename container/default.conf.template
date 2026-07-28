@@ -50,21 +50,47 @@ server {
     }
 
     location = /livecheck {
-        return 200 '{"status":"ok"}';
-        add_header Content-Type application/json;
+       return 200 '{"status":"ok"}';
+       add_header Content-Type application/json;
     }
 
-
-     # --- Per-API proxies (requires per-request x-proxy-target header) ---
-    # Proxy /api/profielservice/ to the target specified via x-proxy-target header
+    # --- Per-API proxies ---
+    # Proxy /api/profielservice/ to the public profiel service
     location /api/profielservice/ {
-        # Always use the public profiel service for this prefix in the container
-        set $proxy_target "https://profiel.mijnoverheidzakelijk.nl";
-        proxy_pass $proxy_target$request_uri;
-        proxy_set_header Host $host;
+       proxy_pass https://profiel.mijnoverheidzakelijk.nl$request_uri;
+       proxy_http_version 1.1;
+       # Preserve target host for SNI and correct virtual-host handling
+       proxy_set_header Host $proxy_host;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       # TLS and connection reuse
+       proxy_ssl_server_name on;
+       proxy_ssl_session_reuse on;
+       proxy_set_header Connection "";
+       # Timeouts tuned for upstream latency
+       proxy_connect_timeout 5s;
+       proxy_send_timeout 30s;
+       proxy_read_timeout 60s;
+       proxy_request_buffering off;
+       proxy_buffering off;
+    }
+
+    # Debug: test profiel endpoint - proxy to the real profiel service and forward response
+    location = /api/test-profiel {
+        proxy_pass https://profiel.mijnoverheidzakelijk.nl/api/profielservice/v1/partij;
+        proxy_http_version 1.1;
+        proxy_set_header Host $proxy_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+        proxy_pass_request_headers on;
         proxy_buffering off;
+        proxy_request_buffering off;
+        proxy_ssl_server_name on;
+        proxy_ssl_session_reuse on;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 60s;
     }
 
     # --- Statische Eleventy-site ---
