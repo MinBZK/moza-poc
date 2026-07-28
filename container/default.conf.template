@@ -49,6 +49,24 @@ server {
         proxy_set_header Host $host;
     }
 
+    location = /livecheck {
+        return 200 '{"status":"ok"}';
+        add_header Content-Type application/json;
+    }
+
+
+     # --- Per-API proxies (requires per-request x-proxy-target header) ---
+    # Proxy /api/profielservice/ to the target specified via x-proxy-target header
+    location /api/profielservice/ {
+        # Always use the public profiel service for this prefix in the container
+        set $proxy_target "https://profiel.mijnoverheidzakelijk.nl";
+        proxy_pass $proxy_target$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+
     # --- Statische Eleventy-site ---
     # Eleventy genereert mappen met een index.html. Val voor extensieloze URLs
     # terug op <pad>.html en geef anders een nette 404.

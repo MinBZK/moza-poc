@@ -10,7 +10,8 @@
 		"lint:css": "stylelint 'style/**/*.css'",
 		"lint:css:fix": "stylelint 'style/**/*.css' --fix",
 		"vite:build": "vite build",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"proxy": "node server/proxy.js"
 	},
 	"devDependencies": {
 		"@11ty/eleventy": "^3.1.2",
