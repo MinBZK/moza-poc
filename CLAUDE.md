@@ -71,6 +71,7 @@ MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy e
 - Pagina-layout: `body` is een flex column met `min-block-size: 100dvh`, `<main>` heeft `flex: 1` zodat `<footer>` altijd onderaan staat
 - Lege dynamische containers: geef ze `class="dynamic-list"` zodat ze via `.dynamic-list:empty { display: none }` uit de layout vallen tot er items zijn
 - Persona's (testaccounts): `_data/personas.json` + `assets/javascript/personas.js`. Wisselbaar via Flags-paneel of `?persona=`-URL-param. localStorage-key: `persona`. Debug-API: `window.Personas`
+- Digitale Assistent, sessie-identiteit: de chat stuurt `X-Test-User` mee; de backend leidt daaruit het KvK-nummer af. Het token per persona komt uit de build-env `MOZA_TEST_USERS` (`{"koffiezaak": "<token>"}`, via `_data/testUsers.js` → `window.MOZA_TEST_USERS`) of uit het Flags-paneel (`setting:test-user-token`, wint). Op deployments loopt dat via het gelijknamige repo-secret → `build-args` in de workflows → `ARG MOZA_TEST_USERS` in de Containerfile; het token is daar leesbaar in de paginabron, dus het is een demo-credential, geen echte beveiliging. **Nooit tokens in de repo** — deze repo is publiek. Persona's met een backend-profiel: `koffiezaak` (85234567), `bloemenkweker` (62345681), `haarstylist` (56789012); de rest hoort "log eerst in" te krijgen. Lokaal: `MOZA_TEST_USERS='{"koffiezaak": "<token>", …}' npm run dev` met aan de backend `TEST_USERS=<token>:85234567,…`; zonder overeenkomende tokens antwoordt elke vraag "log eerst in"
 
 ## Git
 

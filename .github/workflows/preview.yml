@@ -59,6 +59,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Testtokens voor de Digitale Assistent. Leeg bij PR's vanaf een fork
+          # (secrets zijn daar niet beschikbaar) en in previews zonder `dabackend`
+          # heeft het toch geen effect. Zie README → Sessie-identiteit.
+          build-args: |
+            MOZA_TEST_USERS=${{ secrets.MOZA_TEST_USERS }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

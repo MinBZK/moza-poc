@@ -7,8 +7,11 @@
  * = same-origin, zodat de nginx-proxy van de frontend naar de interne backend
  * stuurt (geen CORS). Lokaal zet `npm run dev` dit op http://localhost:8000.
  * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
- * Bewaart per LLM/transport-combinatie een sessie-id en gespreksgeschiedenis
+ * Bewaart per LLM/transport/persona-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
+ * De bedrijfsidentiteit bepaalt de backend uit de X-Test-User-header; het token
+ * van de actieve persona komt uit window.MOZA_TEST_USERS (build-time) of uit het
+ * Flags-paneel. Zonder token antwoordt de assistent "log eerst in".
  */
 
 (function () {
@@ -78,8 +81,28 @@
 		return localStorage.getItem("setting:transport") || "mcp";
 	}
 
+	// Testtoken voor de actieve persona. De backend leidt de bedrijfsidentiteit
+	// hieruit af (env TEST_USERS daar mapt token -> KvK-nummer), dus tokens staan
+	// niet in deze repo: ze komen uit de build-omgeving (MOZA_TEST_USERS) of uit
+	// een handmatige override in het Flags-paneel, die voorgaat. Geen token =
+	// lege header; de backend antwoordt dan met "log eerst in".
+	function getTestUser() {
+		var override = localStorage.getItem("setting:test-user-token");
+		if (override) return override;
+		var tokens = window.MOZA_TEST_USERS || {};
+		return tokens[getPersonaId()] || "";
+	}
+
+	function getPersonaId() {
+		var persona = window.Personas && window.Personas.actief();
+		return (persona && persona.id) || "";
+	}
+
+	// De persona hoort bij de sleutel: wisselt de identiteit, dan hoort daar een
+	// eigen session_id en gespreksgeschiedenis bij, zodat het gesprek van de
+	// vorige persona niet doorloopt.
 	function getComboKey() {
-		return getLLM() + ":" + getTransport();
+		return getLLM() + ":" + getTransport() + ":" + getPersonaId();
 	}
 
 	function getAPIMode() {
@@ -644,6 +667,8 @@
 					"Content-Type": "application/json",
 					"X-VLAM-API-Key": localStorage.getItem("setting:vlam-api-key") || "",
 					"X-Claude-API-Key": localStorage.getItem("setting:claude-api-key") || "",
+					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
+					"X-Test-User": getTestUser(),
 				},
 				body: JSON.stringify({
 					message: message,

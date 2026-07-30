@@ -72,6 +72,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Testtokens voor de Digitale Assistent; niet gezet = de assistent
+          # antwoordt "log eerst in". Zie README → Sessie-identiteit.
+          build-args: |
+            MOZA_TEST_USERS=${{ secrets.MOZA_TEST_USERS }}
           cache-from: type=gha
           cache-to: type=gha,mode=min # Changed from mode=max
 

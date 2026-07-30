@@ -271,11 +271,13 @@ function buildTogglePanel() {
 	});
 	panel.appendChild(transportFieldset);
 
-	// API Key velden
+	// API Key velden. Het testtoken bepaalt bij de backend welke bedrijfsidentiteit
+	// de assistent gebruikt; ingevuld wint het van het token uit de build-omgeving.
 	[
-		{ key: "vlam-api-key", label: "VLAM API Key" },
-		{ key: "claude-api-key", label: "Claude API Key" },
-	].forEach(({ key, label: labelText }) => {
+		{ key: "vlam-api-key", label: "VLAM API Key", placeholder: "sk-..." },
+		{ key: "claude-api-key", label: "Claude API Key", placeholder: "sk-..." },
+		{ key: "test-user-token", label: "Testtoken assistent", placeholder: "tok_..." },
+	].forEach(({ key, label: labelText, placeholder }) => {
 		const field = document.createElement("div");
 		field.className = "settings-field";
 		const label = document.createElement("label");
@@ -283,7 +285,7 @@ function buildTogglePanel() {
 		const input = document.createElement("input");
 		input.type = "password";
 		input.value = getSettingValue(key, "");
-		input.placeholder = "sk-...";
+		input.placeholder = placeholder;
 		input.addEventListener("input", () => setSettingValue(key, input.value));
 		label.appendChild(input);
 		field.appendChild(label);
