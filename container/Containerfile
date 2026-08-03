@@ -12,16 +12,6 @@ RUN cd style-dictionary && npm ci && npm run build
 #   https://…  = expliciete backend-URL (cross-origin; vereist CORS in de backend)
 ARG MOZA_CHAT_API=""
 ENV MOZA_CHAT_API=$MOZA_CHAT_API
-
-# Testtokens per persona voor de Digitale Assistent, als JSON-map van persona-id
-# naar token: {"koffiezaak": "<token>"}. De backend leidt hier de bedrijfsidentiteit
-# uit af (env TEST_USERS daar). Komt uit het repo-secret MOZA_TEST_USERS via
-# build-args; niet gezet = leeg object en de assistent antwoordt "log eerst in".
-# Let op: het token belandt in de HTML van de gebouwde site en is dus leesbaar
-# voor iedereen die de deployment bezoekt — behandel het als demo-credential en
-# roteer het via het secret én de backend-env.
-ARG MOZA_TEST_USERS=""
-ENV MOZA_TEST_USERS=$MOZA_TEST_USERS
 RUN npx @11ty/eleventy && ls -d _site
 RUN npx storybook build -o _site/storybook
 

@@ -9,9 +9,10 @@
  * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
  * Bewaart per LLM/transport/persona-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
- * De bedrijfsidentiteit bepaalt de backend uit de X-Test-User-header; het token
- * van de actieve persona komt uit window.MOZA_TEST_USERS (build-time) of uit het
- * Flags-paneel. Zonder token antwoordt de assistent "log eerst in".
+ * De bedrijfsidentiteit gaat als KvK-nummer van de actieve persona mee in de
+ * X-Test-User-header; de backend toetst dat aan zijn allowlist (TEST_KVK_NUMMERS)
+ * en injecteert het server-side bij elke bronaanroep. Staat het nummer daar niet
+ * in, dan antwoordt de assistent "log eerst in".
  */
 
 (function () {
@@ -81,20 +82,26 @@
 		return localStorage.getItem("setting:transport") || "mcp";
 	}
 
-	// Testtoken voor de actieve persona. De backend leidt de bedrijfsidentiteit
-	// hieruit af (env TEST_USERS daar mapt token -> KvK-nummer), dus tokens staan
-	// niet in deze repo: ze komen uit de build-omgeving (MOZA_TEST_USERS) of uit
-	// een handmatige override in het Flags-paneel, die voorgaat. Geen token =
-	// lege header; de backend antwoordt dan met "log eerst in".
+	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
+	// (env TEST_KVK_NUMMERS daar) en injecteert het bij elke bronaanroep. Het
+	// Flags-paneel kan een nummer forceren, handig om een nummer buiten de
+	// allowlist te testen. Geen persona of geen nummer = lege header; de backend
+	// antwoordt dan met "log eerst in". Dit is geen authenticatie: de header is in
+	// de browser aan te passen. Zie README → Sessie-identiteit.
 	function getTestUser() {
-		var override = localStorage.getItem("setting:test-user-token");
-		if (override) return override;
-		var tokens = window.MOZA_TEST_USERS || {};
-		return tokens[getPersonaId()] || "";
+		var override = localStorage.getItem("setting:test-user-kvk");
+		if (override) return override.trim();
+		var persona = getPersona();
+		// Als string, zodat een eventuele voorloopnul niet wegvalt.
+		return persona && persona.bedrijf ? String(persona.bedrijf.kvkNummer || "") : "";
+	}
+
+	function getPersona() {
+		return (window.Personas && window.Personas.actief()) || null;
 	}
 
 	function getPersonaId() {
-		var persona = window.Personas && window.Personas.actief();
+		var persona = getPersona();
 		return (persona && persona.id) || "";
 	}
 
@@ -536,7 +543,13 @@
 		updateStatusDisplay();
 	}
 
-	window.addEventListener("setting-changed", handleSwitch);
+	window.addEventListener("setting-changed", function (e) {
+		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
+		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
+		// het session_id: het volgende bericht start een schoon gesprek.
+		if (e.detail && e.detail.key === "test-user-kvk") delete sessions[getComboKey()];
+		handleSwitch();
+	});
 
 	// Suggestie-chips: vul het invoerveld en verstuur direct.
 	messages.addEventListener("click", function (e) {

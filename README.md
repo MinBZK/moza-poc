@@ -127,14 +127,15 @@ In productie draait alles achter **één origin**: de nginx van de frontend **pr
 | Variabele        | Waar                                                                  | Betekenis                                                                                                                                                                     |
 | ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
-| `MOZA_TEST_USERS` | build-time (`_data/testUsers.js` → `base.njk` → `window.MOZA_TEST_USERS`); op deployments via het repo-secret `MOZA_TEST_USERS` → build-arg | JSON-map van persona-id naar testtoken, bijvoorbeeld `{"koffiezaak": "<token>"}`. Bepaalt welke identiteit de assistent gebruikt (zie [Sessie-identiteit](#sessie-identiteit)). Niet gezet = leeg object. |
 | `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
+
+De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuurt gewoon het KvK-nummer van de actieve persona mee, zie [Sessie-identiteit](#sessie-identiteit).
 
 **Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
-1. `MOZA_TEST_USERS='{"koffiezaak": "<token-koffiezaak>", "bloemenkweker": "<token-bloemenkweker>", "haarstylist": "<token-haarstylist>"}' npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
+1. `npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
 2. Start de backend (FastAPI, poort `8000`) volgens de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent).
-3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080` en `TEST_USERS=<token-koffiezaak>:85234567,<token-bloemenkweker>:62345681,<token-haarstylist>:56789012` — **dezelfde tokens** aan beide kanten, anders geeft élke vraag "log eerst in".
+3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080` en `TEST_KVK_NUMMERS=85234567,62345681,56789012` (de persona's met een backend-profiel). Ontbreekt die allowlist, dan geeft élke vraag "log eerst in".
 
 > ⚠️ **Preview-deploys (`pr<nr>`):** het backend-component `dabackend` draait alleen in de gedeelde deployments (`poc`, gebruikersonderzoek), niet in per-PR previews. In een PR-preview is er dus geen backend en werkt de chat niet, tenzij `dabackend` aan die deployment wordt toegevoegd.
 
@@ -148,18 +149,18 @@ Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-fla
 
 ### Sessie-identiteit
 
-Welk bedrijf de assistent raadpleegt, bepaalt de **backend** — niet de browser. De frontend stuurt bij elke chat-request de header `X-Test-User` met een token; de backend mapt dat token via zijn eigen `TEST_USERS` (formaat `token:kvk,token:kvk`) naar een KvK-nummer en injecteert dat bij elke bronaanroep (PDR-009 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). De browser kan dus geen ander KvK-nummer afdwingen, ook niet door erom te vragen in het gesprek.
+De frontend stuurt bij elke chat-request de header `X-Test-User` met het **KvK-nummer van de actieve persona** (uit `_data/personas.json`). De backend toetst dat aan zijn allowlist `TEST_KVK_NUMMERS` en injecteert het nummer vervolgens server-side bij elke bronaanroep (PDR-009 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). De parameter `kvk_nummer` is uit alle tool-schema's gestript, dus het model ziet 'm niet en kan de identiteit niet kiezen — ook niet als iemand in het gesprek een ander nummer noemt.
 
-Het token hoort bij een persona en komt uit één van twee plekken, waarbij de eerste voorgaat:
+Het nummer komt uit één van twee plekken, waarbij de eerste voorgaat:
 
-1. **Flags-paneel** → veld "Testtoken assistent" (localStorage `setting:test-user-token`). Handmatige override voor testers; werkt zonder rebuild en ongeacht de actieve persona.
-2. **Build-omgeving** → `MOZA_TEST_USERS` als JSON-map van persona-id naar token, bijvoorbeeld `{"koffiezaak": "<token>", "haarstylist": "<token>"}`.
+1. **Flags-paneel** → veld "KvK-nummer assistent" (localStorage `setting:test-user-kvk`). Handmatige override, handig om een nummer buiten de allowlist te testen. Wijzigen start een schoon gesprek.
+2. **Actieve persona** → het veld `kvkNummer` van die persona in `_data/personas.json`.
 
-> 🔒 **Tokens horen niet in deze repo.** Deze repo is publiek: zet tokens alleen in de omgeving van de build (of in het Flags-paneel), nooit in `personas.json`, JS of een gecommit configbestand.
+Staat het nummer niet in de allowlist van de backend — of is er geen persona — dan antwoordt de assistent "Log eerst in om uw bedrijfsgegevens te kunnen gebruiken." Dat is gewenst gedrag, geen fout: alleen persona's met een backend-profiel zien bedrijfsgegevens. Bij een persona-wissel start de frontend een nieuwe sessie, zodat het gesprek van de vorige identiteit niet doorloopt.
 
-Heeft de actieve persona geen token, dan gaat de header leeg mee en antwoordt de assistent "Log eerst in om uw bedrijfsgegevens te kunnen gebruiken." Dat is gewenst gedrag: alleen persona's met een backend-tegenhanger zien bedrijfsgegevens. Bij een persona-wissel start de frontend een nieuwe sessie, zodat het gesprek van de vorige identiteit niet doorloopt.
+> ⚠️ **Dit is geen authenticatie.** Een gebruiker kan de header in de browser aanpassen en zo een andere testpersona worden; de allowlist begrenst alleen wélke nummers werken. Met een token was dat niet anders — dat stond leesbaar in de paginabron. Voor een gesloten testgroep met uitsluitend fictieve bedrijven is dat aanvaardbaar. Echte identiteitsvaststelling (eHerkenning/DigiD, via de NL GOV-profielen van OAuth/OIDC) is BETA-02 in de backend-repo.
 
-**Persona's met een backend-tegenhanger.** De backend kent alleen bedrijven waarvoor daar een profiel bestaat; voor de rest is er geen token en volgt terecht "log eerst in".
+**Persona's met een backend-profiel.** De backend kent alleen deze bedrijven; voor de rest volgt terecht "log eerst in".
 
 | Persona-id | Bedrijf | KvK | Bron backend-zijde |
 | --- | --- | --- | --- |
@@ -167,19 +168,11 @@ Heeft de actieve persona geen token, dan gaat de header leeg mee en antwoordt de
 | `bloemenkweker` | Kwekerij De Bloesem | 62345681 | mock in `services/mcp/kvk/server.py` |
 | `haarstylist` | Roots & Locks | 56789012 | mock in `services/mcp/kvk/server.py` |
 
-Een persona toevoegen is dus drie stappen: een profiel in de backend, een `token:kvk`-paar in `TEST_USERS` daar, en een regel in `MOZA_TEST_USERS` hier. Houd `_data/personas.json` en het backend-profiel gelijk — anders toont de pagina Bedrijfsgegevens andere gegevens dan de assistent.
+Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
 
 #### Op een deployment
 
-`MOZA_TEST_USERS` is een **build-time** variabele, dus die moet het container-image in. Dat loopt via het repo-secret met dezelfde naam:
-
-1. Zet in GitHub → *Settings* → *Secrets and variables* → *Actions* het secret **`MOZA_TEST_USERS`** met de JSON-map, bijvoorbeeld `{"koffiezaak": "<token>", "haarstylist": "<token>"}`.
-2. `production.yml`, `preview.yml` en `release.yml` geven dat secret als `build-args` mee aan `docker/build-push-action`; de `Containerfile` neemt het via `ARG MOZA_TEST_USERS` mee in de Eleventy-build.
-3. Zet op de **backend**-deployment `TEST_USERS` met dezelfde tokens (`<token>:85234567,<token>:56789012`). Lopen die uiteen, dan antwoordt de assistent overal "log eerst in".
-
-Zonder secret bouwt alles gewoon door met een lege map — dat is de veilige default, geen build-fout.
-
-> ⚠️ **Het token is publiek leesbaar op een deployment.** Het staat in de HTML van de gebouwde site, dus iedereen die de deployment bezoekt kan het uit de paginabron halen. Het secret houdt het uit de repo en uit de CI-logs, niet uit de pagina. Behandel het als **demo-credential** voor testbedrijven, niet als echte toegangsbeveiliging; roteren doe je door het secret én `TEST_USERS` op de backend te wijzigen en beide opnieuw uit te rollen. Wil je het token helemaal buiten de browser houden, dan is de header server-side injecteren in de nginx-proxy (runtime env, zoals `BACKEND_ORIGIN`) het alternatief — met als prijs één vaste identiteit per deployment.
+Niets in te stellen aan de frontend-kant: er is geen build-variabele, geen repo-secret en geen build-arg voor de identiteit. Zet alleen op de **backend**-deployment `TEST_KVK_NUMMERS=85234567,62345681,56789012`. Ontbreekt die, dan antwoordt de assistent overal "log eerst in".
 
 ### Demo: informatieplicht energiebesparing
 
@@ -187,7 +180,7 @@ Voor de demo van de ideale flow van de informatieplicht energiebesparing (Dag va
 
 Bij Claudia toont de tegel "Wetten en regelgeving" op het dashboard een korte melding over de informatieplicht energiebesparing (stap 0). De knop bij die melding opent direct het assistent-gesprek met een startvraag (stap 1, via de URL-parameter `?vraag=…` op de assistent-pagina); de geraadpleegde bronnen (KvK Handelsregister, netbeheerder) toont de assistent in het gesprek zelf. Dezelfde startknop staat voor Claudia ook op de detailpagina van de Wet milieubeheer (gestuurd door het veld `assistentVraag` in `_data/regelgevingData.json`). De stappen daarna — verbruik raadplegen, toets, geldende maatregelen, indienen en bevestiging — doet de assistent in het gesprek zelf (backend).
 
-> ⚠️ **Token nodig voor de Claudia-flow.** De assistent gebruikt alleen de gegevens van Koffiezaak Noon als de persona `koffiezaak` een testtoken heeft dat de backend kent (zie [Sessie-identiteit](#sessie-identiteit)). Zonder token antwoordt de assistent "log eerst in". Wisselen van persona kan zonder herstart van de backend: de identiteit volgt de header, niet de omgeving.
+> ⚠️ **Allowlist nodig voor de Claudia-flow.** De assistent gebruikt alleen de gegevens van Koffiezaak Noon als 85234567 in `TEST_KVK_NUMMERS` op de backend staat (zie [Sessie-identiteit](#sessie-identiteit)); anders antwoordt die "log eerst in". Wisselen van persona kan zonder herstart van de backend: de identiteit volgt de header, niet de omgeving.
 
 ### Containerisatie
 

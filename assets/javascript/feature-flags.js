@@ -271,21 +271,23 @@ function buildTogglePanel() {
 	});
 	panel.appendChild(transportFieldset);
 
-	// API Key velden. Het testtoken bepaalt bij de backend welke bedrijfsidentiteit
-	// de assistent gebruikt; ingevuld wint het van het token uit de build-omgeving.
+	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
+	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
+	// geheim (het staat al in personas.json), dus een gewoon tekstveld.
 	[
-		{ key: "vlam-api-key", label: "VLAM API Key", placeholder: "sk-..." },
-		{ key: "claude-api-key", label: "Claude API Key", placeholder: "sk-..." },
-		{ key: "test-user-token", label: "Testtoken assistent", placeholder: "tok_..." },
-	].forEach(({ key, label: labelText, placeholder }) => {
+		{ key: "vlam-api-key", label: "VLAM API Key", type: "password", placeholder: "sk-..." },
+		{ key: "claude-api-key", label: "Claude API Key", type: "password", placeholder: "sk-..." },
+		{ key: "test-user-kvk", label: "KvK-nummer assistent", type: "text", placeholder: "85234567" },
+	].forEach(({ key, label: labelText, type, placeholder }) => {
 		const field = document.createElement("div");
 		field.className = "settings-field";
 		const label = document.createElement("label");
 		label.textContent = labelText;
 		const input = document.createElement("input");
-		input.type = "password";
+		input.type = type;
 		input.value = getSettingValue(key, "");
 		input.placeholder = placeholder;
+		if (type === "text") input.inputMode = "numeric";
 		input.addEventListener("input", () => setSettingValue(key, input.value));
 		label.appendChild(input);
 		field.appendChild(label);
