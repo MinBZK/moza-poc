@@ -7,8 +7,12 @@
  * = same-origin, zodat de nginx-proxy van de frontend naar de interne backend
  * stuurt (geen CORS). Lokaal zet `npm run dev` dit op http://localhost:8000.
  * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
- * Bewaart per LLM/transport-combinatie een sessie-id en gespreksgeschiedenis
+ * Bewaart per LLM/transport/persona-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
+ * De bedrijfsidentiteit gaat als KvK-nummer van de actieve persona mee in de
+ * X-Test-User-header; de backend toetst dat aan zijn allowlist (TEST_KVK_NUMMERS)
+ * en injecteert het server-side bij elke bronaanroep. Staat het nummer daar niet
+ * in, dan antwoordt de assistent "log eerst in".
  */
 
 (function () {
@@ -78,8 +82,34 @@
 		return localStorage.getItem("setting:transport") || "mcp";
 	}
 
+	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
+	// (env TEST_KVK_NUMMERS daar) en injecteert het bij elke bronaanroep. Het
+	// Flags-paneel kan een nummer forceren, handig om een nummer buiten de
+	// allowlist te testen. Geen persona of geen nummer = lege header; de backend
+	// antwoordt dan met "log eerst in". Dit is geen authenticatie: de header is in
+	// de browser aan te passen. Zie README → Sessie-identiteit.
+	function getTestUser() {
+		var override = localStorage.getItem("setting:test-user-kvk");
+		if (override) return override.trim();
+		var persona = getPersona();
+		// Als string, zodat een eventuele voorloopnul niet wegvalt.
+		return persona && persona.bedrijf ? String(persona.bedrijf.kvkNummer || "") : "";
+	}
+
+	function getPersona() {
+		return (window.Personas && window.Personas.actief()) || null;
+	}
+
+	function getPersonaId() {
+		var persona = getPersona();
+		return (persona && persona.id) || "";
+	}
+
+	// De persona hoort bij de sleutel: wisselt de identiteit, dan hoort daar een
+	// eigen session_id en gespreksgeschiedenis bij, zodat het gesprek van de
+	// vorige persona niet doorloopt.
 	function getComboKey() {
-		return getLLM() + ":" + getTransport();
+		return getLLM() + ":" + getTransport() + ":" + getPersonaId();
 	}
 
 	function getAPIMode() {
@@ -513,7 +543,13 @@
 		updateStatusDisplay();
 	}
 
-	window.addEventListener("setting-changed", handleSwitch);
+	window.addEventListener("setting-changed", function (e) {
+		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
+		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
+		// het session_id: het volgende bericht start een schoon gesprek.
+		if (e.detail && e.detail.key === "test-user-kvk") delete sessions[getComboKey()];
+		handleSwitch();
+	});
 
 	// Suggestie-chips: vul het invoerveld en verstuur direct.
 	messages.addEventListener("click", function (e) {
@@ -644,6 +680,8 @@
 					"Content-Type": "application/json",
 					"X-VLAM-API-Key": localStorage.getItem("setting:vlam-api-key") || "",
 					"X-Claude-API-Key": localStorage.getItem("setting:claude-api-key") || "",
+					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
+					"X-Test-User": getTestUser(),
 				},
 				body: JSON.stringify({
 					message: message,
