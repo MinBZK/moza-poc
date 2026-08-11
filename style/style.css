@@ -1546,12 +1546,14 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
-/* "Nieuw gesprek" rechtsboven het gesprek: bereikbaar zonder te scrollen, en
-   buiten de berichtenlijst zodat hij niet meescrollt met het gesprek. */
-.chat-kop {
+/* Beide knoppen op één regel onder het invoerveld, rechts uitgelijnd: "Vraag
+   stellen" als laatste, want dat is de handeling die de gebruiker verwacht af te
+   sluiten. Wrapt op smalle schermen. */
+.chat-acties {
 	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
 	justify-content: flex-end;
-	margin-block-end: var(--toepassing-space-margin-xs);
 }
 
 /* De AI-melding staat vast onder het invoerveld en niet in het welkomstbericht:

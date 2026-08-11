@@ -31,10 +31,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 	</ul>
 
 	<section class="card chat-container">
-		<div class="chat-kop">
-			<h2 class="visually-hidden">Gesprek</h2>
-			<button type="button" class="secondary" id="chat-nieuw">Nieuw gesprek</button>
-		</div>
+		<h2 class="visually-hidden">Gesprek</h2>
 		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}">
 			<div class="chat-message chat-message-assistant">
 				<p>Welkom. Ik ben de digitale assistent van MijnOverheid Zakelijk. Ik zoek antwoorden op bij de overheid. Hierboven leest u hoe ik dat doe.</p>
@@ -59,7 +56,10 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 		<form id="chat-form">
 			<label for="chat-input" class="visually-hidden">Uw vraag</label>
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
-			<button type="submit">Vraag stellen</button>
+			<div class="chat-acties">
+				<button type="button" class="secondary" id="chat-nieuw">Nieuw gesprek</button>
+				<button type="submit">Vraag stellen</button>
+			</div>
 		</form>
 
 		<p class="chat-disclaimer">De antwoorden komen van AI en kunnen fouten bevatten. Controleer belangrijke informatie bij de bron.</p>
