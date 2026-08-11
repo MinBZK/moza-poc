@@ -1666,20 +1666,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	margin-block-start: var(--toepassing-space-margin-sm);
 }
 
-/* AI-markering naast de paginatitel. Bewust niet de .badge uit de navigatie: die
-   is een notificatieteller (attentiekleur, telt ongelezen items) en leest naast
-   een titel als een melding in plaats van als een typering van de dienst. */
-.ai-markering {
-	align-self: center;
-	background: var(--toepassing-color-background-subtle);
-	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-sm);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-label);
-	letter-spacing: 0.08em;
-	padding-inline: var(--toepassing-space-padding-2xs);
-	text-transform: uppercase;
-}
 h1.icon-label {
 	gap: var(--toepassing-space-layout-2xs);
 	svg {
