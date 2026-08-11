@@ -1561,7 +1561,10 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	border-block-start: var(--toepassing-border-subtle);
 	color: var(--toepassing-color-text-subtle-1);
 	font: var(--toepassing-text-smalltext);
+	/* De leesmaat van 77ch op `p` kapt hier ook de scheidingslijn af; die hoort
+	   de hele kaart te beslaan. */
 	margin-block: var(--toepassing-space-margin-sm) 0;
+	max-inline-size: none;
 	padding-block-start: var(--toepassing-space-padding-sm);
 }
 /* De bronnenlijst volgt direct op de melding; één scheidingslijn is genoeg. */
@@ -1599,11 +1602,11 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	}
 	li::before {
 		background: currentcolor;
-		block-size: var(--toepassing-size-2xs);
+		block-size: var(--toepassing-size-3xs);
 		border-radius: var(--toepassing-border-radius-round);
 		content: "";
 		display: inline-block;
-		inline-size: var(--toepassing-size-2xs);
+		inline-size: var(--toepassing-size-3xs);
 		margin-inline-end: var(--toepassing-space-padding-2xs);
 		vertical-align: middle;
 	}
@@ -1649,7 +1652,9 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 		visibility: hidden;
 	}
 	p {
+		font: inherit;
 		margin-block-end: var(--toepassing-space-padding-2xs);
+		max-inline-size: none;
 	}
 }
 .chat-status-warning {
