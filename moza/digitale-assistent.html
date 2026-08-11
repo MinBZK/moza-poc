@@ -35,7 +35,6 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			<div class="chat-message chat-message-assistant">
 				<p>Welkom. Ik ben de digitale assistent van MijnOverheid Zakelijk. Ik zoek antwoorden op bij de overheid. Hierboven leest u hoe ik dat doe.</p>
 				<p>Daarvoor gebruik ik uw gegevens bij de KvK en uw energieverbruik. <strong>Die haal ik pas op nadat u mij toestemming geeft.</strong></p>
-				<p><strong>Dit is een AI-systeem.</strong> Mijn antwoorden kunnen fouten bevatten. Controleer belangrijke informatie bij de bron.</p>
 				<p>Ik help u nu met één onderwerp: de informatieplicht energiebesparing. Daarbij kan ik:</p>
 				<ul class="list-indent">
 					<li>Uw bedrijfsgegevens opzoeken</li>
@@ -58,6 +57,8 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
 			<button type="submit">Vraag stellen</button>
 		</form>
+
+		<p class="chat-disclaimer">De antwoorden komen van AI en kunnen fouten bevatten. Controleer belangrijke informatie bij de bron.</p>
 
 		<div class="feedback feedback-error" id="chat-offline" hidden>
 			{% icon "/assets/icons/icon-foutmelding.svg" %}

@@ -1546,6 +1546,23 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
+/* De AI-melding staat vast onder het invoerveld en niet in het welkomstbericht:
+   daar scrolt hij weg zodra het gesprek loopt, terwijl hij juist geldt op het
+   moment dat iemand een antwoord leest. */
+.chat-disclaimer {
+	border-block-start: var(--toepassing-border-subtle);
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+	margin-block: var(--toepassing-space-margin-sm) 0;
+	padding-block-start: var(--toepassing-space-padding-sm);
+}
+/* De bronnenlijst volgt direct op de melding; één scheidingslijn is genoeg. */
+.chat-disclaimer + .chat-status, .chat-disclaimer + #chat-offline + .chat-status {
+	border-block-start: 0;
+	margin-block-start: var(--toepassing-space-margin-xs);
+	padding-block-start: 0;
+}
+
 /* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
    bolletjes rood zijn. Staat de melding er, dan draagt zij de scheiding en laat
    de lijst haar eigen bovenrand vallen — anders staan er twee lijnen. */
