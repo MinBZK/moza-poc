@@ -189,6 +189,25 @@
 		}
 		messages.appendChild(div);
 		messages.scrollTop = messages.scrollHeight;
+		return div;
+	}
+
+	// Vervolgstap onder een bericht: alleen tonen als die ook echt klopt bij wat
+	// er net gebeurde. Een knop die altijd staat, wijst de gebruiker net zo vaak
+	// de verkeerde kant op als de goede.
+	function voegVervolgstapToe(bericht, label, url) {
+		if (!bericht || !url) return;
+		// Bij een foutmelding staat de tekst in een binnenste div naast het icoon.
+		var doel = bericht.classList.contains("feedback") ? bericht.lastElementChild : bericht;
+		var acties = document.createElement("div");
+		acties.className = "chat-actions";
+		var link = document.createElement("a");
+		link.className = "btn-cta";
+		link.href = url;
+		link.textContent = label;
+		acties.appendChild(link);
+		doel.appendChild(acties);
+		messages.scrollTop = messages.scrollHeight;
 	}
 
 	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
@@ -659,6 +678,9 @@
 		setLoading(true);
 
 		var answered = false;
+		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
+		// antwoord een knop naar Lopende zaken krijgt.
+		var zaakGemaakt = false;
 
 		// Timeout-bescherming: 60s om verbinding te maken, 90s stilte tijdens streamen
 		var controller = new AbortController();
@@ -740,6 +762,7 @@
 					} else if (eventType === "case") {
 						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
 						addZaak(payload);
+						zaakGemaakt = true;
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
@@ -750,9 +773,10 @@
 							renderAssistentVraag(spec);
 						} else {
 							var role = eventType === "error" ? "error" : "assistant";
+							var bericht;
 							// Toon alleen als gebruiker nog in dezelfde combinatie zit
 							if (getComboKey() === comboKey) {
-								addMessage(payload.message, role);
+								bericht = addMessage(payload.message, role);
 							} else {
 								// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
 								var temp = messages.innerHTML;
@@ -760,6 +784,15 @@
 								addMessage(payload.message, role);
 								chatHistory[comboKey] = messages.innerHTML;
 								messages.innerHTML = temp;
+							}
+							// De vervolgstap hoort bij dit antwoord: een ingediende zaak
+							// verwijst naar Lopende zaken, een doodloper naar Contact.
+							// Alleen bij een zichtbaar bericht; in de weggeschreven
+							// historie zou de knop naar het verkeerde gesprek wijzen.
+							if (bericht && role === "error") {
+								voegVervolgstapToe(bericht, "Neem contact op", messages.dataset.urlContact);
+							} else if (bericht && zaakGemaakt) {
+								voegVervolgstapToe(bericht, "Bekijk in Lopende zaken", messages.dataset.urlZaken);
 							}
 						}
 					} else if (eventType === "done") {
@@ -784,7 +817,11 @@
 				} else {
 					reason = "De assistent is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.";
 				}
-				addMessage(reason, "error");
+				voegVervolgstapToe(
+					addMessage(reason, "error"),
+					"Neem contact op",
+					messages.dataset.urlContact
+				);
 			}
 		} finally {
 			clearTimeout(connectTimer);

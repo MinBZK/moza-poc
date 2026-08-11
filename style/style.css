@@ -1658,6 +1658,27 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	min-block-size: 6rem;
 }
 
+/* Vervolgstap onder een antwoord: knop naar Lopende zaken of Contact */
+.chat-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+
+/* AI-markering naast de paginatitel: herkenbaar, maar geen waarschuwingskleur —
+   dit is een typering van de dienst, geen melding die actie vraagt. */
+.badge-ai {
+	align-self: center;
+	background: var(--toepassing-color-background-subtle);
+	border: var(--toepassing-border-subtle);
+	color: var(--toepassing-color-text-default);
+	text-transform: uppercase;
+}
+h1.icon-label svg {
+	block-size: var(--toepassing-size-icon-md);
+}
+
 /* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
 .wallet-card {
 	background: var(--toepassing-color-background-default);
