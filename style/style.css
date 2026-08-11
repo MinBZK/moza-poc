@@ -1576,6 +1576,41 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	.chat-status-disconnected::before {
 		background: var(--toepassing-color-feedback-error-icon);
 	}
+	li {
+		position: relative;
+	}
+	/* Onderstreping als hint dat er uitleg achter zit; `cursor: help` bevestigt
+	   dat met de muis. */
+	.chat-status-bron {
+		border-block-end: var(--toepassing-border-width-xs) dotted currentcolor;
+		cursor: help;
+	}
+	/* De uitleg staat in de DOM (aria-describedby) en wordt alleen visueel
+	   verborgen, zodat een schermlezer hem altijd voorleest. */
+	.chat-status-uitleg {
+		background: var(--toepassing-color-background-raised);
+		border: var(--toepassing-border-default);
+		border-radius: var(--toepassing-border-radius-md);
+		inline-size: max-content;
+		inset-block-end: calc(100% + var(--toepassing-space-padding-2xs));
+		inset-inline-start: 0;
+		max-inline-size: 20rem;
+		opacity: 0;
+		padding: var(--toepassing-space-padding-sm);
+		position: absolute;
+		transition: var(--toepassing-transition-default);
+		visibility: hidden;
+		z-index: 1;
+	}
+	li:hover .chat-status-uitleg, li:focus-within .chat-status-uitleg {
+		opacity: 1;
+		visibility: visible;
+	}
+	/* Escape verbergt de uitleg zonder de muis te verplaatsen (WCAG 1.4.13). */
+	&.tooltips-uit .chat-status-uitleg {
+		opacity: 0;
+		visibility: hidden;
+	}
 	p {
 		margin-block-end: var(--toepassing-space-padding-2xs);
 	}

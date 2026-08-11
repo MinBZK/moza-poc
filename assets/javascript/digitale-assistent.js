@@ -48,12 +48,14 @@
 
 	// Wat de assistent gebruikt — in de chat getoond: capabilities + alle databronnen,
 	// op één plek, met live verbindingsstatus uit /health.
+	// `uitleg` zegt wat de bron voor de gebruiker doet; de statuszin komt er per
+	// bron achteraan. Samen vormen ze de beschrijving achter het bolletje.
 	var STATUS_ITEMS = [
-		{ key: "regelrecht", label: "RegelRecht" },
-		{ key: "rvo", label: "RVO" },
-		{ key: "netbeheerder", label: "Business Wallet" },
-		{ key: "kvk", label: "KvK Handelsregister" },
-		{ key: "koop", label: "KOOP Regelingenbank" },
+		{ key: "regelrecht", label: "RegelRecht", uitleg: "Rekent uit welke regels voor uw bedrijf gelden." },
+		{ key: "rvo", label: "RVO", uitleg: "Neemt uw rapportage in ontvangst." },
+		{ key: "netbeheerder", label: "Business Wallet", uitleg: "Levert uw energieverbruik, afgegeven door uw netbeheerder." },
+		{ key: "kvk", label: "KvK Handelsregister", uitleg: "Levert de gegevens van uw onderneming." },
+		{ key: "koop", label: "KOOP Regelingenbank", uitleg: "Levert de officiële wetteksten." },
 	];
 
 	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
@@ -515,12 +517,20 @@
 			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
 			// Geen icoon meer per bron: vijf rode kruizen onder een gesprek lezen als
-			// vijf storingen. De stip draagt de status, de verborgen tekst zegt hem
-			// voor wie het icoon niet ziet. Een echte storing staat in de melding
-			// boven het gesprek (#chat-offline).
-			var status = connected ? "verbonden" : "niet bereikbaar";
-			return '<li class="chat-status-' + dot + '">' + it.label +
-				'<span class="visually-hidden"> (' + status + ")</span></li>";
+			// vijf storingen. De stip draagt de status; de uitleg erachter zegt wat de
+			// bron doet en wat het betekent als hij eruit ligt. Een echte storing staat
+			// in de melding boven het gesprek (#chat-offline).
+			var status = connected
+				? "Nu bereikbaar."
+				: "Nu niet bereikbaar. De assistent kan deze bron op dit moment niet gebruiken.";
+			var id = "bron-uitleg-" + it.key;
+			// De naam is focusbaar (tabindex) zodat de uitleg ook met het toetsenbord
+			// te bereiken is, en aria-describedby koppelt hem voor de schermlezer —
+			// een title-attribuut doet geen van beide betrouwbaar.
+			return '<li class="chat-status-' + dot + '">' +
+				'<span class="chat-status-bron" tabindex="0" aria-describedby="' + id + '">' + it.label + "</span>" +
+				'<span class="chat-status-uitleg" role="tooltip" id="' + id + '">' + it.uitleg + " " + status + "</span>" +
+				"</li>";
 		}).join("");
 	}
 
@@ -536,6 +546,17 @@
 		if (offline) offline.hidden = false;
 		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
 	}
+
+	// De uitleg bij een bron moet weg te krijgen zijn zonder de muis te verplaatsen
+	// of de focus te verliezen (WCAG 2.1, 1.4.13 Content on Hover or Focus).
+	statusEl.addEventListener("keydown", function (e) {
+		if (e.key === "Escape") statusEl.classList.add("tooltips-uit");
+	});
+	["pointermove", "focusin"].forEach(function (type) {
+		statusEl.addEventListener(type, function () {
+			statusEl.classList.remove("tooltips-uit");
+		});
+	});
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
 	fetch(API_BASE + "/health", { signal: AbortSignal.timeout(3000) })
