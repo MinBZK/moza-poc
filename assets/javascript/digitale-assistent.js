@@ -28,11 +28,58 @@
 	var input = document.getElementById("chat-input");
 	var messages = document.getElementById("chat-messages");
 	var statusEl = document.getElementById("chat-status");
-	var sessions = {};
-	var chatHistory = {};
 	var serverStatus = null;
 	var submitting = false;
 	var initialMessages = messages.innerHTML;
+
+	// Het gesprek overleeft navigatie binnen hetzelfde tabblad: wie naar Lopende
+	// zaken klikt en terugkomt, vindt zijn gesprek terug. Bewust sessionStorage
+	// en geen localStorage — bij het sluiten van het tabblad is het weg, zodat er
+	// geen gesprek achterblijft op een gedeelde computer.
+	var OPSLAG_SESSIES = "chat:sessions";
+	var OPSLAG_HISTORIE = "chat:history";
+
+	function lees(sleutel) {
+		try {
+			return JSON.parse(sessionStorage.getItem(sleutel)) || {};
+		} catch (e) {
+			return {};
+		}
+	}
+
+	function schrijf(sleutel, waarde) {
+		try {
+			sessionStorage.setItem(sleutel, JSON.stringify(waarde));
+		} catch (e) {
+			/* privémodus of vol: het gesprek leeft dan alleen in het geheugen */
+		}
+	}
+
+	var sessions = lees(OPSLAG_SESSIES);
+	var chatHistory = lees(OPSLAG_HISTORIE);
+
+	function bewaarSessies() {
+		schrijf(OPSLAG_SESSIES, sessions);
+	}
+
+	// Alleen de zichtbare combinatie wordt bijgewerkt; de andere blijven staan
+	// zoals ze bij het wisselen zijn weggeschreven.
+	function bewaarHistorie(combo, html) {
+		chatHistory[combo] = typeof html === "string" ? html : messages.innerHTML;
+		schrijf(OPSLAG_HISTORIE, chatHistory);
+	}
+
+	function nieuwGesprek() {
+		var combo = getComboKey();
+		delete sessions[combo];
+		delete chatHistory[combo];
+		bewaarSessies();
+		schrijf(OPSLAG_HISTORIE, chatHistory);
+		messages.innerHTML = initialMessages;
+		messages.scrollTop = 0;
+		input.value = "";
+		input.focus();
+	}
 
 	// Leesbare labels per backend-sleutel, gecombineerd in ALL_LABELS voor friendlyTool.
 	var CAPABILITY_LABELS = {
@@ -577,6 +624,16 @@
 	// Bewaar en herstel gesprek bij wisselen van LLM of transport
 	var previousCombo = getComboKey();
 
+	// Terug van een andere pagina in hetzelfde tabblad: het gesprek staat nog
+	// in sessionStorage, dus zet het terug in plaats van het welkomstbericht.
+	if (chatHistory[previousCombo]) {
+		messages.innerHTML = chatHistory[previousCombo];
+		messages.scrollTop = messages.scrollHeight;
+	}
+
+	var nieuwKnop = document.getElementById("chat-nieuw");
+	if (nieuwKnop) nieuwKnop.addEventListener("click", nieuwGesprek);
+
 	function handleSwitch() {
 		if (submitting) return;
 
@@ -585,7 +642,7 @@
 		if (prev === next) return;
 
 		previousCombo = next;
-		chatHistory[prev] = messages.innerHTML;
+		bewaarHistorie(prev);
 
 		if (chatHistory[next]) {
 			messages.innerHTML = chatHistory[next];
@@ -600,7 +657,10 @@
 		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
 		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
 		// het session_id: het volgende bericht start een schoon gesprek.
-		if (e.detail && e.detail.key === "test-user-kvk") delete sessions[getComboKey()];
+		if (e.detail && e.detail.key === "test-user-kvk") {
+			delete sessions[getComboKey()];
+			bewaarSessies();
+		}
 		handleSwitch();
 	});
 
@@ -800,7 +860,10 @@
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
-						if (payload.session_id) sessions[comboKey] = payload.session_id;
+						if (payload.session_id) {
+							sessions[comboKey] = payload.session_id;
+							bewaarSessies();
+						}
 						// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
 						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
 						if (spec) {
@@ -816,7 +879,7 @@
 								var temp = messages.innerHTML;
 								messages.innerHTML = chatHistory[comboKey] || "";
 								addMessage(payload.message, role);
-								chatHistory[comboKey] = messages.innerHTML;
+								bewaarHistorie(comboKey);
 								messages.innerHTML = temp;
 							}
 							// De vervolgstap hoort bij dit antwoord: een ingediende zaak
@@ -861,6 +924,9 @@
 			clearTimeout(connectTimer);
 			if (idleTimer) clearTimeout(idleTimer);
 			submitting = false;
+			// Vastleggen na afloop van de beurt, niet per bericht: bij een
+			// afgebroken stream staat de laatste stand er dan alsnog in.
+			if (getComboKey() === comboKey) bewaarHistorie(comboKey);
 		}
 	});
 
