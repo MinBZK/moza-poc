@@ -216,6 +216,10 @@
 	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
 	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
 	// hetzelfde case-event geen duplicaat oplevert.
+	function zaakSleutel(zaak) {
+		return zaak.referentienummer || zaak.id || zaak.case_id || zaak.zaaknummer || "";
+	}
+
 	function addZaak(payload) {
 		if (!payload || typeof payload !== "object") return null;
 		var KEY = "zaken";
@@ -225,14 +229,18 @@
 		} catch (e) {
 			lijst = [];
 		}
-		var sleutel = payload.id || payload.case_id || payload.zaaknummer || payload.type;
+		// De backend stuurt de zaak onder `data` (event: case). Zonder uitpakken
+		// staat alleen het envelop-veld `type` op het topniveau, en werd elke zaak
+		// als dezelfde "case" gezien — de tweede indiening verdween dan stil.
+		var inhoud = payload.data && typeof payload.data === "object" ? payload.data : payload;
+		var sleutel = zaakSleutel(inhoud);
 		if (sleutel) {
 			var bestaat = lijst.some(function (z) {
-				return (z.id || z.case_id || z.zaaknummer || z.type) === sleutel;
+				return zaakSleutel(z) === sleutel;
 			});
 			if (bestaat) return null;
 		}
-		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
+		var zaak = Object.assign({ aangemaaktOp: Date.now() }, inhoud);
 		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
 		lijst.push(zaak);
 		try {
