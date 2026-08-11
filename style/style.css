@@ -1546,24 +1546,35 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
+/* Bronnenlijst onder het gesprek: dit is achtergrondinformatie, geen melding.
+   Een stip draagt de verbindingsstatus; een icoon per bron gaf vijf rode kruizen
+   naast elkaar, wat als vijf storingen las. Een echte storing staat in de melding
+   boven het gesprek. */
 .chat-status {
+	border-block-start: var(--toepassing-border-subtle);
 	color: var(--toepassing-color-text-subtle-1);
 	font: var(--toepassing-text-smalltext);
+	margin-block-start: var(--toepassing-space-margin-sm);
+	padding-block-start: var(--toepassing-space-padding-sm);
 	ul {
-		flex-direction: row;
-		gap: var(--toepassing-space-padding-md);
+		flex-flow: row wrap;
+		gap: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-md);
 	}
-	.chat-status-connected svg, .chat-status-disconnected svg {
-		block-size: var(--toepassing-size-icon-sm);
-		inline-size: var(--toepassing-size-icon-sm);
+	li::before {
+		background: currentcolor;
+		block-size: var(--toepassing-size-2xs);
+		border-radius: var(--toepassing-border-radius-round);
+		content: "";
+		display: inline-block;
+		inline-size: var(--toepassing-size-2xs);
 		margin-inline-end: var(--toepassing-space-padding-2xs);
-		vertical-align: text-top;
+		vertical-align: middle;
 	}
-	.chat-status-connected svg {
-		color: var(--toepassing-color-feedback-success-icon);
+	.chat-status-connected::before {
+		background: var(--toepassing-color-feedback-success-icon);
 	}
-	.chat-status-disconnected svg {
-		color: var(--toepassing-color-feedback-error-icon);
+	.chat-status-disconnected::before {
+		background: var(--toepassing-color-feedback-error-icon);
 	}
 	p {
 		margin-block-end: var(--toepassing-space-padding-2xs);

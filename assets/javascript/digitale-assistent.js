@@ -514,8 +514,13 @@
 		return STATUS_ITEMS.map(function (it) {
 			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
-			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
-			return '<li class="chat-status-' + dot + '">' + icon + it.label + "</li>";
+			// Geen icoon meer per bron: vijf rode kruizen onder een gesprek lezen als
+			// vijf storingen. De stip draagt de status, de verborgen tekst zegt hem
+			// voor wie het icoon niet ziet. Een echte storing staat in de melding
+			// boven het gesprek (#chat-offline).
+			var status = connected ? "verbonden" : "niet bereikbaar";
+			return '<li class="chat-status-' + dot + '">' + it.label +
+				'<span class="visually-hidden"> (' + status + ")</span></li>";
 		}).join("");
 	}
 
@@ -523,13 +528,13 @@
 		if (!serverStatus) return;
 		var transport = getTransport();
 		var sources = (transport === "cli" ? serverStatus.cli : serverStatus.servers) || {};
-		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
+		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
-		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
+		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
 	}
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)

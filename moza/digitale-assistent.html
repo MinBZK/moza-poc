@@ -33,7 +33,6 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			{% icon "/assets/icons/icon-foutmelding.svg" %}
 			<div><p>De bronnen zijn nu niet bereikbaar. Probeer het later opnieuw.</p></div>
 		</div>
-		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}">
 			<div class="chat-message chat-message-assistant">
 				<p>Welkom. Ik ben de digitale assistent van MijnOverheid Zakelijk. Ik beantwoord uw vragen namens de overheid. Daarvoor gebruik ik <a href="https://www.kvk.nl/over-het-handelsregister/" rel="external">het KvK Handelsregister</a>, <a href="https://drop.overheid.nl/Start/Login" rel="external">KOOP Regelingenbank</a>, <a href="https://regelrecht.rijks.app/" rel="external">RegelRecht</a>, <a href="https://www.rvo.nl/" rel="external">RVO</a> en <a href="https://digital-strategy.ec.europa.eu/nl/policies/business-wallets" rel="external">uw Business Wallet</a>.</p>
@@ -60,5 +59,7 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
 			<button type="submit">Vraag stellen</button>
 		</form>
+
+		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 	</section>
 </article>
