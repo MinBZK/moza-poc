@@ -937,7 +937,7 @@
 	},
 	{
 		"id": "bouwmanagement",
-		"actief": true,
+		"actief": false,
 		"label": "Bouwmanagement",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1026,7 +1026,7 @@
 	},
 	{
 		"id": "bloemenkweker",
-		"actief": false,
+		"actief": true,
 		"label": "Bloemenkweker",
 		"persoon": {
 			"voornaam": "Robin",
