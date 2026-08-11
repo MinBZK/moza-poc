@@ -31,10 +31,6 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 	</ul>
 
 	<section class="card chat-container">
-		<div class="feedback feedback-error" id="chat-offline" hidden>
-			{% icon "/assets/icons/icon-foutmelding.svg" %}
-			<div><p>De bronnen zijn nu niet bereikbaar. Probeer het later opnieuw.</p></div>
-		</div>
 		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}">
 			<div class="chat-message chat-message-assistant">
 				<p>Welkom. Ik ben de digitale assistent van MijnOverheid Zakelijk. Ik zoek antwoorden op bij de overheid. Hierboven leest u hoe ik dat doe.</p>
@@ -63,6 +59,10 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			<button type="submit">Vraag stellen</button>
 		</form>
 
+		<div class="feedback feedback-error" id="chat-offline" hidden>
+			{% icon "/assets/icons/icon-foutmelding.svg" %}
+			<div><p>De bronnen zijn nu niet bereikbaar. Probeer het later opnieuw.</p></div>
+		</div>
 		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 	</section>
 </article>

@@ -1546,6 +1546,18 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
+/* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
+   bolletjes rood zijn. Staat de melding er, dan draagt zij de scheiding en laat
+   de lijst haar eigen bovenrand vallen — anders staan er twee lijnen. */
+#chat-offline {
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+#chat-offline:not([hidden]) + .chat-status {
+	border-block-start: 0;
+	margin-block-start: var(--toepassing-space-margin-xs);
+	padding-block-start: 0;
+}
+
 /* Bronnenlijst onder het gesprek: dit is achtergrondinformatie, geen melding.
    Een stip draagt de verbindingsstatus; een icoon per bron gaf vijf rode kruizen
    naast elkaar, wat als vijf storingen las. Een echte storing staat in de melding
