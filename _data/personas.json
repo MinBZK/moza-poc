@@ -937,7 +937,8 @@
 	},
 	{
 		"id": "bouwmanagement",
-		"actief": true,
+		"actief": false,
+		"archief": true,
 		"label": "Bouwmanagement",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1026,7 +1027,7 @@
 	},
 	{
 		"id": "bloemenkweker",
-		"actief": false,
+		"actief": true,
 		"label": "Bloemenkweker",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1045,7 +1046,7 @@
 			"branche": "Landbouw, bosbouw en visserij",
 			"vestigingsadres": "Hoefweg 210, Bleiswijk",
 			"gemeente": "Lansingerland",
-			"rol": "Eigenaar",
+			"rol": "Vennoot",
 			"vestigingsnummer": "000062345681",
 			"iban": "NL62 RABO 0006 2345 68",
 			"loonheffingennummer": "062345681L01",
@@ -1100,6 +1101,7 @@
 	{
 		"id": "zorgcoordinator",
 		"actief": false,
+		"archief": true,
 		"label": "Activiteiten Coördinator Zorg en Welzijn",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1176,6 +1178,7 @@
 	{
 		"id": "business-development",
 		"actief": false,
+		"archief": true,
 		"label": "Business Development manager",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1233,6 +1236,7 @@
 	{
 		"id": "docent",
 		"actief": false,
+		"archief": true,
 		"label": "Docent",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1290,6 +1294,7 @@
 	{
 		"id": "hondenuitlater",
 		"actief": false,
+		"archief": true,
 		"label": "Hondenuitlater en Dierenverzorging",
 		"persoon": {
 			"voornaam": "Robin",
@@ -1347,6 +1352,7 @@
 	{
 		"id": "financial-manager",
 		"actief": false,
+		"archief": true,
 		"label": "Financial Manager en Accountant",
 		"persoon": {
 			"voornaam": "Robin",
