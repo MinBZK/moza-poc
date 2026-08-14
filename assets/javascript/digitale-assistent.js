@@ -334,8 +334,22 @@
 
 	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
 
-	var KWH_GRENS = 50000;
-	var GAS_GRENS = 25000;
+	// De drempelwaarden zijn wettelijke grenzen; die horen niet als constante in
+	// deze frontend te staan maar uit RegelRecht te komen (de "één bron van
+	// waarheid"). Faalt de ophaal, dan blijft dit null en toont walletCijfer
+	// straks geen grensvergelijking — geen terugval op een eigen constante.
+	var drempelWaarden = null;
+	fetch(API_BASE + "/regelrecht/drempels", { signal: AbortSignal.timeout(3000) })
+		.then(function (r) {
+			if (!r.ok) throw new Error("drempels-http-" + r.status);
+			return r.json();
+		})
+		.then(function (data) {
+			drempelWaarden = (data && data.drempelwaarden) || null;
+		})
+		.catch(function () {
+			drempelWaarden = null;
+		});
 
 	function escapeHTML(value) {
 		return String(value == null ? "" : value)
@@ -364,10 +378,17 @@
 		return { data: data, provenance: provenance };
 	}
 
+	// `grens` is optioneel: ontbreekt de drempelwaarde (ophaal mislukt), dan
+	// laten we de grensvergelijking gewoon weg in plaats van een oordeel te
+	// vellen op een waarde die we niet kennen.
 	function walletCijfer(label, waarde, eenheid, boven, grens) {
-		var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
-		var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
-		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span></dd></div>";
+		var grensHTML = "";
+		if (grens != null) {
+			var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
+			var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
+			grensHTML = '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span>";
+		}
+		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + grensHTML + "</dd></div>";
 	}
 
 	// Gestructureerde energiekaart uit de Wallet-credential (verborgen tot "Delen").
@@ -388,7 +409,14 @@
 		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
+		// Alleen een grensvergelijking tonen als de drempel daadwerkelijk is
+		// opgehaald bij RegelRecht; anders geen boven/onder-oordeel.
+		var kwhGrens = drempelWaarden && typeof drempelWaarden.DREMPEL_ELEKTRICITEIT_KWH === "number" ? drempelWaarden.DREMPEL_ELEKTRICITEIT_KWH : null;
+		var gasGrens = drempelWaarden && typeof drempelWaarden.DREMPEL_GAS_M3 === "number" ? drempelWaarden.DREMPEL_GAS_M3 : null;
+		var elektriciteitCijfer = walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwhGrens != null ? kwh > kwhGrens : undefined, kwhGrens != null ? kwhGrens.toLocaleString("nl-NL") : undefined);
+		var gasCijfer = walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", gasGrens != null ? m3 > gasGrens : undefined, gasGrens != null ? gasGrens.toLocaleString("nl-NL") : undefined);
+
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + elektriciteitCijfer + gasCijfer + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
 		return el;
 	}
 
@@ -699,13 +727,24 @@
 		form.requestSubmit();
 	});
 
-	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug.
+	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug,
+	// mét de losse antwoorden als `opgaven` (zie pendingOpgaven verderop). Zo
+	// blijft het antwoord toerekenbaar aan het veld dat de respondent invulde,
+	// in plaats van platgeslagen tot een zin die het model weer moet parsen.
+	var RADIO_WAARDE = { Uitgevoerd: true, Ja: true, "Niet uitgevoerd": false, Nee: false };
+	var REGELPARAMETER = /^[A-Z][A-Z0-9_]*$/;
+	// Overbrugt vraag-form-submit (hierboven) naar de hoofd-submit-handler
+	// (verderop): beide luisteren op een `submit`-event, maar op verschillende
+	// formulieren, dus dit is de enige weg om de opgaven mee te geven.
+	var pendingOpgaven = null;
+
 	messages.addEventListener("submit", function (e) {
 		var f = e.target;
 		if (!f.classList || !f.classList.contains("vraag-form")) return;
 		e.preventDefault();
 		if (submitting) return;
 		var delen = [];
+		var opgaven = {};
 		var ontbreekt = false;
 		f.querySelectorAll("[data-veld]").forEach(function (veld) {
 			var labelEl = veld.querySelector("legend") || veld.querySelector("label");
@@ -714,12 +753,31 @@
 			var key = codeM ? codeM[1] : labelTekst;
 			var radio = veld.querySelector("input[type=radio]:checked");
 			var tekst = veld.querySelector("input[type=text]");
+			var waarde = null;
 			if (radio) {
 				delen.push(key + ": " + radio.value);
+				// `normVeld` accepteert willekeurige `opties` uit een backend-
+				// `vraag.velden`-payload; een label buiten RADIO_WAARDE raden we
+				// niet naar true/false — dat zou een aanname het antwoord in
+				// smokkelen die de respondent niet gaf. We sturen dan liever
+				// niets dan de ruwe tekst, want de regelengine aan de andere
+				// kant verwacht hier een boolean feit, geen string. Het
+				// chatbericht (`delen`, hierboven) bevat de tekst gewoon, dat
+				// is voor de mens; `opgaven` niet, dat is voor de regel.
+				if (Object.prototype.hasOwnProperty.call(RADIO_WAARDE, radio.value)) {
+					waarde = RADIO_WAARDE[radio.value];
+				}
 			} else if (tekst && tekst.value.trim()) {
 				delen.push(key + ": " + tekst.value.trim());
+				waarde = tekst.value.trim();
 			} else {
 				ontbreekt = true;
+			}
+			// Naam draagt het veld al (naam in de veld-spec); alleen velden die
+			// eruitzien als regelparameter gaan mee, en nooit een lege/null-waarde.
+			var naam = veld.getAttribute("data-veld");
+			if (waarde !== null && REGELPARAMETER.test(naam)) {
+				opgaven[naam] = waarde;
 			}
 		});
 		if (ontbreekt) {
@@ -741,6 +799,10 @@
 		var acties = f.querySelector(".action-group");
 		if (acties) acties.outerHTML = '<p class="wallet-badge">' + ICON_SUCCES + "Antwoord verstuurd</p>";
 		input.value = bericht;
+		// De hoofd-submit-handler (verderop) leest en wist dit direct bij het
+		// opbouwen van het verzoek; zo bereikt het antwoord de fetch zonder de
+		// signature van form.requestSubmit() te hoeven ombouwen.
+		pendingOpgaven = Object.keys(opgaven).length ? opgaven : null;
 		form.requestSubmit();
 	});
 
@@ -764,6 +826,11 @@
 		// Leg mode en combo vast op moment van verzenden
 		var mode = getAPIMode();
 		var comboKey = getComboKey();
+		// Alleen gevuld als dit bericht net via het vraag-formulier is verstuurd;
+		// direct wissen zodat een volgend, los getypt bericht niet per ongeluk
+		// dezelfde opgaven meekrijgt.
+		var opgaven = pendingOpgaven;
+		pendingOpgaven = null;
 
 		submitting = true;
 		addMessage(message, "user");
@@ -799,11 +866,11 @@
 					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
 					"X-Test-User": getTestUser(),
 				},
-				body: JSON.stringify({
-					message: message,
-					session_id: sessions[comboKey],
-					mode: mode,
-				}),
+				body: JSON.stringify(
+					opgaven
+						? { message: message, session_id: sessions[comboKey], mode: mode, opgaven: opgaven }
+						: { message: message, session_id: sessions[comboKey], mode: mode }
+				),
 				signal: controller.signal,
 			});
 
