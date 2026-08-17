@@ -1,0 +1,53 @@
+---
+title: "MijnOverheid Zakelijk: Contactvoorkeuren privé"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/contactvoorkeuren' | url }}">Contactvoorkeuren</a>
+			</li>
+			<li aria-current="page">Privé</li>
+		</ol>
+	</nav>
+
+	<h1>Contactvoorkeuren</h1>
+
+	<section class="card">
+		<h2>Contactgegevens</h2>
+
+		<div id="flash-message" hidden></div>
+
+		<p>Uw contactgegevens bij organisaties waarmee u uw gegevens centraal deelt.</p>
+
+		<nav aria-label="Contactvoorkeuren-tabs">
+			<ul class="tablist">
+				<li>
+					<a href="{{ '/moza/contactvoorkeuren/#hoofd-inhoud' | url }}">Zakelijk</a>
+				</li>
+				<li>
+					<a href="{{ '/moza/contactvoorkeuren/prive/#hoofd-inhoud' | url }}" aria-current="page">Privé</a>
+				</li>
+			</ul>
+		</nav>
+
+		{% island "contactgegevens", { type: "prive" } %}
+
+		<a class="icon-link" href="{{ '/moza/contactgegevens-wijzigen/' | url }}">{% include "icon-edit.njk" %} Contactgegevens wijzigen</a>
+		<dl class="data-overview">
+			<dt>E-mailadres</dt>
+			<dd id="contact-email">info@bloombv.nl</dd>
+			<dt>Telefoonnummer</dt>
+			<dd>(+31) (0)6 12 34 56 78</dd>
+		</dl>
+	</section>
+
+	{% include "../../moza/contactvoorkeuren/_contactvoorkeuren-blocks.njk" %}
+
+</article>
