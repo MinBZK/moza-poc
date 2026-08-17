@@ -405,6 +405,39 @@
 		return el;
 	}
 
+	// Deelverzoek zonder gegevens: de backend vraagt om toestemming vóórdat er
+	// iets is opgehaald. De kaart hieronder toont het verbruik al (die hoort bij
+	// de demo-hook en bij een beurt waarin de bron wél geraadpleegd is); hier is
+	// er nog niets te tonen, en dat is precies de bedoeling van PDR-008: geen
+	// bron raadplegen voordat de ondernemer akkoord is.
+	//
+	// De kaart draagt `data-verzoek="backend"`, want alleen deze variant moet bij
+	// "Delen" een beurt versturen. De demo-kaart blijft lokaal.
+	function renderDeelverzoek(info) {
+		var bron = (info && info.bron) || "je Business Wallet";
+		var card = document.createElement("div");
+		card.className = "wallet-card";
+		card.setAttribute("data-verzoek", "backend");
+
+		var vraag = document.createElement("div");
+		vraag.className = "wallet-consent";
+		vraag.innerHTML =
+			"<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit " + escapeHTML(bron) + "</h3>" +
+			"<p>De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.</p>" +
+			'<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		card.appendChild(vraag);
+
+		var nietGedeeld = document.createElement("div");
+		nietGedeeld.className = "wallet-niet-gedeeld";
+		nietGedeeld.hidden = true;
+		nietGedeeld.innerHTML = "<p>Je hebt je energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met je Business Wallet-gegevens controleren.</p>";
+		card.appendChild(nietGedeeld);
+
+		messages.appendChild(card);
+		messages.scrollTop = messages.scrollHeight;
+		return card;
+	}
+
 	// Deelverzoek-kaart: één .wallet-card met de vraag + (verborgen) energiekaart + notitie.
 	// Alles staat direct in de DOM, zodat het de innerHTML-save/restore van handleSwitch overleeft.
 	function renderWalletConsent(data, provenance) {
@@ -731,8 +764,21 @@
 	messages.addEventListener("click", function (e) {
 		var card = e.target.closest(".wallet-card");
 		if (!card) return;
+		// Een deelverzoek van de backend moet een beurt opleveren: de host legt
+		// toestemming alleen vast via het contractveld `toestemming` (PDR-008),
+		// dus een kaart die alleen lokaal iets openklapt laat de regelloop
+		// wachten op een akkoord dat nooit aankomt.
+		var vanBackend = card.getAttribute("data-verzoek") === "backend";
+
 		if (e.target.closest(".wallet-delen")) {
 			card.querySelector(".wallet-consent").hidden = true;
+			if (vanBackend) {
+				if (submitting) return;
+				pendingToestemming = true;
+				input.value = "Ja, je mag mijn energieverbruik ophalen.";
+				form.requestSubmit();
+				return;
+			}
 			var energie = card.querySelector(".wallet-energie");
 			energie.hidden = false;
 			messages.scrollTop = messages.scrollHeight;
@@ -742,6 +788,14 @@
 			card.querySelector(".wallet-consent").hidden = true;
 			card.querySelector(".wallet-niet-gedeeld").hidden = false;
 			messages.scrollTop = messages.scrollHeight;
+			// Zonder beurt blijft de assistent wachten op een antwoord dat de
+			// respondent al gegeven heeft. Het weigeren gaat als bericht mee,
+			// niet als contractveld: toestemming wordt alleen vastgelegd, nooit
+			// ingetrokken.
+			if (vanBackend && !submitting) {
+				input.value = "Nee, ik deel mijn energieverbruik liever niet.";
+				form.requestSubmit();
+			}
 		}
 	});
 
@@ -763,6 +817,21 @@
 	// (verderop): beide luisteren op een `submit`-event, maar op verschillende
 	// formulieren, dus dit is de enige weg om de opgaven mee te geven.
 	var pendingOpgaven = null;
+
+	// Zelfde mechaniek als pendingOpgaven: de knop "Delen" zet de vlag en laat de
+	// hoofd-submit-handler hem meesturen als contractveld `toestemming`.
+	var pendingToestemming = false;
+
+	// Alleen velden meesturen die deze beurt ook echt iets betekenen. Een
+	// `toestemming: false` op elke beurt zou de host niets zeggen (toestemming
+	// wordt vastgelegd, niet ingetrokken) maar wel suggereren dat de respondent
+	// zojuist geweigerd heeft.
+	function bouwVerzoek(message, sessionId, mode, opgaven, toestemming) {
+		var body = { message: message, session_id: sessionId, mode: mode };
+		if (opgaven) body.opgaven = opgaven;
+		if (toestemming) body.toestemming = true;
+		return body;
+	}
 
 	// Stap 1 van het categorieveld opent stap 2. Bij het weer uitvinken gaan de
 	// vinkjes eronder mee uit: een verborgen aangevinkte categorie zou wél
@@ -894,6 +963,8 @@
 		// dezelfde opgaven meekrijgt.
 		var opgaven = pendingOpgaven;
 		pendingOpgaven = null;
+		var toestemming = pendingToestemming;
+		pendingToestemming = false;
 
 		submitting = true;
 		addMessage(message, "user");
@@ -905,6 +976,9 @@
 		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
 		// antwoord een knop naar Lopende zaken krijgt.
 		var zaakGemaakt = false;
+		// Het deelverzoek van deze beurt, pas te tonen nadat het antwoord in beeld
+		// staat: de kaart hoort ná de uitleg te komen, niet ervoor.
+		var verzoekNaBericht = null;
 
 		// Timeout-bescherming: 60s om verbinding te maken, 90s stilte tijdens streamen
 		var controller = new AbortController();
@@ -930,9 +1004,7 @@
 					"X-Test-User": getTestUser(),
 				},
 				body: JSON.stringify(
-					opgaven
-						? { message: message, session_id: sessions[comboKey], mode: mode, opgaven: opgaven }
-						: { message: message, session_id: sessions[comboKey], mode: mode }
+					bouwVerzoek(message, sessions[comboKey], mode, opgaven, toestemming)
 				),
 				signal: controller.signal,
 			});
@@ -995,6 +1067,12 @@
 							bewaarSessies();
 						}
 						// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
+						// Het deelverzoek komt als data mee (toestemming_nodig), niet als
+						// zin in de tekst: sinds de toestemmingspoort stuurt de host geen
+						// tool-event meer voor een bron die hij nog niet mág raadplegen.
+						if (eventType === "answer" && payload.toestemming_nodig && getComboKey() === comboKey) {
+							verzoekNaBericht = payload.toestemming_nodig;
+						}
 						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
 						if (spec) {
 							renderAssistentVraag(spec);
@@ -1054,6 +1132,9 @@
 			clearTimeout(connectTimer);
 			if (idleTimer) clearTimeout(idleTimer);
 			submitting = false;
+			// Na submitting = false, anders weigert de knop in de kaart de beurt die
+			// hij zelf moet starten.
+			if (verzoekNaBericht && getComboKey() === comboKey) renderDeelverzoek(verzoekNaBericht);
 			// Vastleggen na afloop van de beurt, niet per bericht: bij een
 			// afgebroken stream staat de laatste stand er dan alsnog in.
 			if (getComboKey() === comboKey) bewaarHistorie(comboKey);
