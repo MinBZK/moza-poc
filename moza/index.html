@@ -21,10 +21,29 @@ title: "MijnOverheid Zakelijk: Home"
 			<i>Sluit notificatie</i>
 		</button>
 	</div>
-	<h2>Actualiteiten</h2>
+	<section class="card">
+		<h2>Recente berichten</h2>
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+					<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for bericht in berichtenboxData.berichten %}
+				{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
+				{% endfor %}
+			</tbody>
+		</table>
+		<a class="btn-cta" href="{{ '/moza/berichtenbox/' | url }}">Ga naar uw zakelijke berichtenbox</a>
+	</section>
 	<div class="tiles">
 		<section class="card">
-			<h3>Subsidies en financiering</h3>
+			<h2>Subsidies en financiering</h2>
 			<p data-singular-of="subsidies-count" hidden>
 				Er is <a href="{{ '/moza/subsidies/' | url }}">1 nieuwe subsidie en/of financieringsmogelijkheid</a> sinds uw laatste bezoek die mogelijk interessant voor u kan zijn.
 			</p>
@@ -34,7 +53,7 @@ title: "MijnOverheid Zakelijk: Home"
 			<a class="btn-cta" href="{{ '/moza/subsidies/' | url }}">Ga naar Subsidies en financiering</a>
 		</section>
 		<section class="card">
-			<h3>Wetten en regelgeving</h3>
+			<h2>Wetten en regelgeving</h2>
 			<p data-singular-of="regelgeving-count" hidden>
 				Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.
 			</p>
@@ -43,11 +62,6 @@ title: "MijnOverheid Zakelijk: Home"
 			</p>
 			<ul class="list-content-links" aria-busy="true"></ul>
 			<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a>
-		</section>
-		<section class="card">
-			<h3>Berichten over uw buurt</h3>
-			<p>Berichten die betrekking hebben op de omgeving van uw bedrijfsadres.</p>
-			<a class="btn-cta" href="{{ '/moza/berichten/' | url }}">Ga naar Berichten over uw buurt</a>
 		</section>
 	</div>
 

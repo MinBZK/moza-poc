@@ -40,11 +40,8 @@ subNavActive: "/moza/regelgeving/"
 		<p>{{ alinea }}</p>
 		{% endfor %}
 
-		{% if regeling.assistentVraag and regeling.regelrechtRegel %}
-		{# Zichtbaar als de informatieplicht geldt: personas.js haalt de drempel
-		   pre-chat op uit RegelRecht (GET /regelrecht/definities?law=…) en
-		   vergelijkt die met het verbruik van de actieve persona. #}
-		<div data-persona-energiedrempel data-regelrecht-law="{{ regeling.regelrechtRegel }}" hidden>
+		{% if regeling.assistentVraag %}
+		<div data-persona-toon="koffiezaak" hidden>
 			<p>De digitale assistent helpt u de melding in één keer goed in te dienen.</p>
 			<a class="btn-cta" href="{{ '/moza/digitale-assistent/' | url }}?vraag={{ regeling.assistentVraag | urlencode }}">Start met de digitale assistent</a>
 		</div>

@@ -1,0 +1,315 @@
+.mijn-belastingdienst {
+	background-color: #f1f5f9;
+	/* B-testvariant: staat de feature (en dus de switch) aan, dan verbergen we de
+	   info-banner bovenaan. feature-flags.js zet hidden op de switch bij flag-uit,
+	   dus :not([hidden]) = flag aan. */
+	&:has(.switch[data-feature]:not([hidden])) .feedback-info {
+		display: none;
+	}
+	header {
+		border-block-end-color: #8fcae7;
+		border-width: 2px;
+		box-shadow: none;
+		padding-block-start: 8px;
+		.logo {
+			margin-block-end: 0;
+			img {
+				inline-size: 275px;
+				margin-inline-start: 225px;
+			}
+		}
+	}
+	.page-head {
+		padding-block-end: 0;
+	}
+	.page-title {
+		color: #154273;
+		font-size: 1.25rem;
+		margin-block-end: 6px;
+	}
+	.language-switch {
+		font-weight: 700;
+		margin-inline-end: 48px;
+		&::after {
+			background-color: currentcolor;
+			block-size: var(--toepassing-size-icon-xs);
+			content: "";
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-start: 12px;
+			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+		}
+	}
+	.bd-menu-wrapper {
+		position: relative;
+	}
+	.bd-menu {
+		align-items: center;
+		background: transparent;
+		block-size: 60px;
+		border: 0;
+		color: #01689b;
+		cursor: pointer;
+		display: inline-flex;
+		font: inherit;
+		font-size: 20px;
+		gap: 8px;
+		padding: 12px 24px;
+		text-decoration: none;
+		svg {
+			block-size: 16px;
+		}
+		&:hover, &:focus-visible {
+			background-color: #f1f5f9;
+			color: #01689b !important;
+		}
+	}
+	.bd-menu-list {
+		background: #fff;
+		border: 1px solid #cbd5e1;
+		display: none;
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+		min-inline-size: 280px;
+		position: absolute;
+		z-index: 10;
+		ul {
+			gap: 0;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		> ul > li > a, .bd-submenu-toggle {
+			color: #01689b;
+			display: block;
+			padding: 12px 24px;
+			text-decoration: none;
+		}
+		> ul > li > a:hover, .bd-submenu-toggle:hover {
+			background: #f1f5f9;
+		}
+	}
+	.bd-menu[aria-expanded="true"] + .bd-menu-list {
+		display: block;
+	}
+	/* Submenu's (accordion) */
+	.bd-submenu-toggle {
+		align-items: center;
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+		display: flex;
+		font: inherit;
+		inline-size: 100%;
+		justify-content: space-between;
+		text-align: start;
+		&::after {
+			background-color: currentcolor;
+			block-size: var(--toepassing-size-icon-xs);
+			content: "";
+			flex: 0 0 auto;
+			inline-size: var(--toepassing-size-icon-xs);
+			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+			rotate: 90deg;
+		}
+		&[aria-expanded="true"] {
+			background: #d4e8f5;
+			&::after {
+				rotate: -90deg;
+			}
+		}
+	}
+	.bd-submenu {
+		background: #eef6fb;
+		display: none;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		li {
+			margin-block-start: 0;
+		}
+		a {
+			color: #01689b;
+			display: block;
+			padding: 10px 24px;
+			text-decoration: none;
+			&:hover {
+				background: #d4e8f5;
+			}
+		}
+	}
+	.bd-submenu-toggle[aria-expanded="true"] + .bd-submenu {
+		display: block;
+	}
+	.bd-has-submenu button {
+		display: flex !important;
+		justify-content: space-between;
+		&::after {
+			background-color: currentcolor;
+			block-size: var(--toepassing-size-icon-xs);
+			content: "";
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-end: 6px;
+			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+			rotate: 90deg;
+		}
+	}
+	.user-menu {
+		align-items: center;
+		display: inline-flex;
+		font-size: 20px;
+		gap: 12px;
+		&::after {
+			background-color: currentcolor;
+			block-size: var(--toepassing-size-icon-xs);
+			content: "";
+			display: inline-block;
+			inline-size: var(--toepassing-size-icon-xs);
+			margin-inline-end: 6px;
+			mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+			rotate: 90deg;
+		}
+	}
+	main {
+		display: unset;
+		max-inline-size: 880px;
+		a {
+			color: #01689b;
+		}
+		&::after {
+			display: none;
+		}
+	}
+	.breadcrumb {
+		ol {
+			gap: 0;
+		}
+		li {
+			display: flex;
+			svg {
+				color: inherit;
+				inline-size: 16px;
+			}
+			&::after {
+				content: none;
+			}
+			&[aria-current="page"] {
+				font-weight: var(--toepassing-text-font-weight-semi-bold);
+			}
+		}
+		a {
+			text-decoration: none;
+		}
+	}
+	.feedback {
+		border: 0;
+		font-size: 1.125rem;
+		line-height: 1.75rem;
+		p {
+			font-size: 1.125rem;
+			line-height: 1.75rem;
+		}
+		p + p {
+			margin-block-start: 0;
+		}
+	}
+	.feedback-warning {
+		background: #fef4db;
+		svg path:not(.icon-color-inverse) {
+			fill: #ffb612;
+		}
+		.icon-color-inverse {
+			fill: #000;
+		}
+	}
+	.link-card {
+		text-decoration: none !important;
+		.card:hover {
+			border-color: #01689b !important;
+		}
+	}
+	.card {
+		border: 1px solid #cbd5e1;
+		border-radius: 0;
+		box-shadow: none;
+		gap: 8px;
+		padding: 1.5rem;
+		transition: var(--toepassing-transition-default);
+		h2 {
+			color: #01689b;
+			display: flex;
+			font-size: 1.3125rem;
+			font-weight: 700;
+			line-height: 1.75rem;
+			svg {
+				fill: #01689b;
+				inline-size: var(--toepassing-size-icon-md);
+				margin-inline-end: 8px;
+			}
+		}
+		p {
+			font-size: 0.875rem;
+			line-height: 1.375rem;
+			max-inline-size: none;
+		}
+	}
+	small {
+		font-size: .875rem;
+		text-align: center;
+	}
+	footer {
+		background: #fff;
+		h4 {
+			color: #050914;
+		}
+		a {
+			color: #01689b !important;
+			font-size: 1rem;
+			line-height: 1.5rem;
+		}
+	}
+	.footer-links {
+		justify-content: start;
+	}
+	.footer-links-internal {
+		padding-block-end: 72px;
+		div {
+			display: flex;
+		}
+		a {
+			inline-size: 388px;
+			padding: 0;
+			&::before {
+				background-color: currentcolor;
+				block-size: var(--toepassing-size-icon-xs);
+				content: "";
+				display: inline-block;
+				inline-size: var(--toepassing-size-icon-xs);
+				margin-inline-end: 6px;
+				mask: url("../../assets/icons/icon-chevron.svg") no-repeat center / contain;
+			}
+		}
+	}
+	.footer-links-legal {
+		border-block-start: 1px solid #8fcae7;
+		padding: 24px;
+		ul {
+			display: inline-flex;
+			flex-direction: row;
+			a {
+				border: 1px solid transparent;
+				display: flex;
+				font-weight: 700;
+				padding: 12px 24px;
+				&::after {
+					margin-block-start: 6px;
+					margin-inline-start: 12px;
+				}
+			}
+		}
+	}
+	.poc-date-last-edit {
+		display: none;
+	}
+}

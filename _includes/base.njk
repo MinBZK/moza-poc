@@ -3,15 +3,40 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Self-healing opruimen van een verouderde service worker + caches die
+        // soms de oude (Belastingdienst-snapshot) pagina serveerden. Dit
+        // prototype gebruikt zelf geen service worker, dus alles veilig weg.
+        // Geen handmatig cache legen meer nodig.
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (r) { r.unregister(); });
+            });
+        }
+        if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+                keys.forEach(function (k) { caches.delete(k); });
+            });
+        }
+    </script>
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ '/style/style.css' | url }}">
     <meta name="description" content="{{ description | default('MijnOverheid Zakelijk') }}">
-    <link rel="shortcut icon" href="{{ '/assets/favicon/favicon.ico' | url }}" type="image/x-icon">
-    <link rel="icon" sizes="192x192" href="{{ '/assets/favicon/touch-icon.png' | url }}">
-    <link rel="apple-touch-icon" href="{{ '/assets/favicon/apple-touch-icon.png' | url }}">
+    {% set faviconPad = "/mijn-belastingdienst/assets" if headerType == "belastingdienst" else "/assets/favicon" %}
+    <link rel="shortcut icon" href="{{ (faviconPad + '/favicon.ico') | url }}" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="{{ (faviconPad + '/touch-icon.png') | url }}">
+    <link rel="apple-touch-icon" href="{{ (faviconPad + '/apple-touch-icon.png') | url }}">
+    {% if styles %}
+        {% for s in styles %}
+            <link rel="stylesheet" href="{{ s }}">
+        {% endfor %}
+    {% endif %}
     {% if extraStyles %}{{ extraStyles | safe }}{% endif %}
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
+
+    {# TIJDELIJK: onderzoekslink links-boven. Verwijder deze regel om weg te halen. #}
+    {% include "temp-onderzoek-link.njk" %}
 
     {% if headerType == "overheid" %}
         {% include "header-overheid.njk" %}
@@ -21,8 +46,16 @@
         {% include "header-mobu.njk" %}
     {% elif headerType == "mobu-uitgelogd" %}
         {% include "header-mobu-uitgelogd.njk" %}
+    {% elif headerType == "belastingdienst" %}
+        {% include "header-belastingdienst.njk" %}
     {% elif headerType != "none" %}
         {% include "header-rijksoverheid.njk" %}
+    {% endif %}
+
+    {# Feature flag beschikbaar op alle moza-pagina's; verborgen marker zodat het
+       flags-paneel de optie toont, ook op pagina's zonder eigen unhappy-content. #}
+    {% if page.url.startsWith('/moza/') %}
+    <span hidden data-feature="Berichtenbox unhappy flow" data-feature-type="functionaliteit" data-feature-default="off"></span>
     {% endif %}
 
     <main>
@@ -33,6 +66,8 @@
         {% include "footer-overheid.njk" %}
     {% elif footerType == "mobu" %}
         {% include "footer-mobu.njk" %}
+    {% elif footerType == "belastingdienst" %}
+        {% include "footer-belastingdienst.njk" %}
     {% elif footerType != "none" %}
     <footer></footer>
     {% endif %}
@@ -48,13 +83,14 @@
     <script>window.personasData = {{ personas | dump | safe }};</script>
     <script>window.subsidiesData = {{ subsidiesData | dump | safe }};</script>
     <script>window.regelgevingData = {{ regelgevingData | dump | safe }};</script>
+    <script>window.activiteitenLogData = {{ activiteitenLogData | dump | safe }};</script>
     <script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/homepage-profiel.js' | url }}" defer></script>
-    <script src="{{ '/assets/javascript/tab-interface.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/external-links.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/berichtenbox.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/lopende-zaken.js' | url }}" defer></script>
     <script src="{{ '/assets/javascript/digitale-assistent.js' | url }}" defer></script>
-
+    <!-- React Islands hydration -->
+    <script src="{{ '/js/islands.js' | url }}" defer></script>
 </body>
 </html>

@@ -23,23 +23,54 @@ title: "MijnOverheid Zakelijk: Berichtenbox onderneming"
 					<th scope="col">Afzender</th>
 					<th scope="col">Onderwerp</th>
 					<th scope="col">Datum</th>
+					<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr class="berichtenbox-row is-unread">
-					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>Belastingdienst</td>
+					<td class="berichtenbox-row-sender"><span><i class="visually-hidden">Ongelezen.</i></span> Belastingdienst</td>
 					<td class="berichtenbox-row-subject"><a href="#">Ontvangstbevestiging verzoek om uitstel</a></td>
 					<td class="berichtenbox-row-date"><time datetime="2026-05-20">20 mei 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
 				</tr>
 				<tr class="berichtenbox-row is-unread">
-					<td class="berichtenbox-row-sender"><span class="visually-hidden">Ongelezen. </span>Belastingdienst</td>
+					<td class="berichtenbox-row-sender"><span><i class="visually-hidden">Ongelezen.</i></span> Belastingdienst</td>
 					<td class="berichtenbox-row-subject"><a href="#">Herinnering aangifte omzetbelasting tweede kwartaal</a></td>
 					<td class="berichtenbox-row-date"><time datetime="2026-07-10">10 juli 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
 				</tr>
 				<tr class="berichtenbox-row">
 					<td class="berichtenbox-row-sender">Belastingdienst</td>
 					<td class="berichtenbox-row-subject"><a href="#">Bevestiging aangifte omzetbelasting eerste kwartaal</a></td>
 					<td class="berichtenbox-row-date"><time datetime="2026-04-22">22 april 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
 				</tr>
 			</tbody>
 		</table>

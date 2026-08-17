@@ -12,58 +12,97 @@ layout: "base.njk"
 
 	<div class="login-selection">
 		<section>
-			<h2>Laatst gekozen inlogmethode</h2>
 			<section>
-				<details class="card card-inloggen-digid" open>
-					<summary>
-						<h3><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h3>
-					</summary>
-					<div>
-						<ul>
-							<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
-							</li>
-							<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
-								<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
-							</li>
-							<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
-								<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
-							</li>
-							<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
-								<a href="#">
-									{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als bewindvoerder, curator of mentor</b>
-								</a>
-							</li>
-							<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
-								<a href="#">
-									{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
-								</a>
-							</li>
-						</ul>
-						<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
-							{% include "icon-feedback-info.njk" %}
-							<div>
-								<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
+				<!-- <h2>Laatst gekozen inlogmiddel</h2> -->
+				<section>
+					<details class="card card-inloggen-options" open>
+						<summary>
+							<h3><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h3>
+						</summary>
+						<div>
+							<ul>
+								<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
+									<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
+								</li>
+								<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
+									<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
+								</li>
+								<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
+									<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
+								</li>
+								<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
+									<a href="#">
+										{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als bewindvoerder, curator of mentor</b>
+									</a>
+								</li>
+								<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+									<a href="#">
+										{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
+									</a>
+								</li>
+							</ul>
+							<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+								{% include "icon-feedback-info.njk" %}
+								<div>
+									<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
+								</div>
 							</div>
 						</div>
+					</details>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
+								eHerkenning
+							</h3>
+						</a>
 					</div>
-				</details>
-				<div class="card">
-					<a href="#">
-						<h3>
-							<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
-							eHerkenning
-						</h3>
-					</a>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-eidas.svg" alt="" />
+								European login
+							</h3>
+						</a>
+					</div>
+				</section>
+				<section class="login-wallet">
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
+								Digidentity
+							</h3>
+						</a>
+					</div>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-itsme.svg" alt="" />
+								Itsme
+							</h3>
+						</a>
+					</div>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
+								Cleverbase
+							</h3>
+						</a>
+					</div>
+				</section>
+				<div class="login-faq">
+					<details>
+						<summary>Ik wil inloggen voor iemand anders. Hoe werkt dat?</summary>
+						<p>U kunt voor iemand anders inloggen als die persoon u daarvoor heeft gemachtigd via DigiD Machtigen. Bent u bewindvoerder, curator of mentor? Dan logt u in met uw eigen DigiD en kiest u daarna voor wie u iets wilt regelen.</p>
+					</details>
+					<details>
+						<summary>Kan ik een ander inlogmiddel dan DigiD gebruiken?</summary>
+						<p>Ja. Naast DigiD kunt u inloggen met eHerkenning, een European login (eIDAS) of een privaat inlogmiddel zoals Digidentity, Itsme of Cleverbase. Welk middel u kiest, hangt af van uw situatie en het betrouwbaarheidsniveau dat de dienst vraagt.</p>
+					</details>
 				</div>
-				<div class="card">
-					<a href="#">
-						<h3>
-							<img src="/assets/inloggen/images/logo-eidas.svg" alt="" />
-							European login
-						</h3>
-					</a>
-				</div>
+				<a href="#">Meer hulp en informatie over inloggen</a>
 			</section>
 			<section class="login-wallet">
 				<h2 class="visually-hidden">EDI-wallets</h2>
@@ -92,19 +131,6 @@ layout: "base.njk"
 					</a>
 				</div>
 			</section>
-
-			<div class="login-faq">
-				<details>
-					<summary>Ik wil inloggen voor iemand anders. Hoe werkt dat?</summary>
-					<p>U kunt voor iemand anders inloggen als die persoon u daarvoor heeft gemachtigd via DigiD Machtigen. Bent u bewindvoerder, curator of mentor? Dan logt u in met uw eigen DigiD en kiest u daarna voor wie u iets wilt regelen.</p>
-				</details>
-				<details>
-					<summary>Kan ik een ander inlogmiddel dan DigiD gebruiken?</summary>
-					<p>Ja. Naast DigiD kunt u inloggen met eHerkenning, een European login (eIDAS) of een privaat inlogmiddel zoals Digidentity, Itsme of Cleverbase. Welk middel u kiest, hangt af van uw situatie en het betrouwbaarheidsniveau dat de dienst vraagt.</p>
-				</details>
-			</div>
-
-			<a href="#">Meer hulp en informatie over inloggen</a>
 		</section>
 
 		<div class="feedback feedback-info login-own-credentials">

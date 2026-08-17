@@ -21,8 +21,7 @@
 			"label": "Berichtenbox",
 			"url": "/moza/berichtenbox/",
 			"icon": "/assets/icons/icon-berichtenbox.svg",
-			"feature": "Berichtenbox",
-			"unreadBadge": false
+			"feature": "Berichtenbox"
 		},
 		{
 			"label": "Lopende zaken",

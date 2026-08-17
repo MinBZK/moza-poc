@@ -13,6 +13,23 @@
 const FEATURE_PREFIX = "feature:";
 const SETTING_PREFIX = "setting:";
 
+// Persistente feature flags: bewaard in een cookie i.p.v. localStorage, zodat de
+// keuze het wissen van localStorage (bv. de "localStorage wissen"-knop) overleeft.
+// Map: feature-naam -> cookienaam.
+const PERSISTENT_FEATURES = {
+	"Berichtenbox unhappy flow": "unhappy-flow",
+};
+
+function getCookie(naam) {
+	const rij = document.cookie.split("; ").find((r) => r.startsWith(naam + "="));
+	return rij ? decodeURIComponent(rij.split("=").slice(1).join("=")) : null;
+}
+
+function setCookie(naam, waarde) {
+	// 1 jaar houdbaar; path=/ zodat de flag op alle pagina's geldt.
+	document.cookie = naam + "=" + encodeURIComponent(waarde) + "; path=/; max-age=" + 60 * 60 * 24 * 365 + "; samesite=lax";
+}
+
 function getSettingValue(name, defaultValue) {
 	return localStorage.getItem(SETTING_PREFIX + name) || defaultValue;
 }
@@ -21,6 +38,36 @@ function setSettingValue(name, value) {
 	localStorage.setItem(SETTING_PREFIX + name, value);
 	window.dispatchEvent(new CustomEvent("setting-changed", { detail: { key: name } }));
 }
+
+// Berichtenbox A/B/C-test: één actieve variant. a = huidige, b = PDF-preview,
+// c = directe acties. Bron: ?variant= seedt alleen de eerste keer; een keuze in
+// het flags-paneel wint daarna (en verwijdert de URL-param) > setting > 'a'.
+const BX_VARIANTEN = ["a", "b", "c"];
+function pasBerichtenboxVariantToe(gebruikUrlParam) {
+	const param = (new URLSearchParams(location.search).get("variant") || "").toLowerCase();
+	let variant;
+	if (gebruikUrlParam && BX_VARIANTEN.includes(param)) {
+		variant = param;
+		localStorage.setItem(SETTING_PREFIX + "berichtenbox-variant", variant);
+	} else {
+		variant = getSettingValue("berichtenbox-variant", "a");
+		if (!BX_VARIANTEN.includes(variant)) variant = "a";
+	}
+	document.documentElement.dataset.berichtenboxVariant = variant;
+}
+pasBerichtenboxVariantToe(true);
+window.addEventListener("setting-changed", (e) => {
+	if (e.detail && e.detail.key === "berichtenbox-variant") {
+		// Paneelkeuze wint: verwijder een eventuele ?variant= uit de URL zodat die
+		// bij een reload de keuze niet opnieuw overschrijft.
+		const url = new URL(location.href);
+		if (url.searchParams.has("variant")) {
+			url.searchParams.delete("variant");
+			history.replaceState(null, "", url);
+		}
+		pasBerichtenboxVariantToe(false);
+	}
+});
 
 function getFeaturesByType() {
 	const groups = {};
@@ -43,6 +90,9 @@ document.querySelectorAll('[data-feature-default="off"]').forEach((el) => {
 });
 
 function isFeatureEnabled(name) {
+	if (PERSISTENT_FEATURES[name]) {
+		return getCookie(PERSISTENT_FEATURES[name]) === "true";
+	}
 	const stored = localStorage.getItem(FEATURE_PREFIX + name);
 	if (defaultOffFeatures.has(name)) {
 		return stored === "true";
@@ -76,6 +126,9 @@ function applyFeatureFlags() {
 			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/inloggen/";
 		}
 	});
+	// Laat andere scripts (bv. berichtenbox.js) reageren op een flag-wijziging
+	// zonder herladen. hidden-attributen staan op dit punt al goed.
+	document.dispatchEvent(new CustomEvent("feature-flags-applied"));
 }
 
 const TYPE_LABELS = {
@@ -115,7 +168,9 @@ function buildTogglePanel() {
 			checkbox.type = "checkbox";
 			checkbox.checked = isFeatureEnabled(name);
 			checkbox.addEventListener("change", () => {
-				if (checkbox.checked) {
+				if (PERSISTENT_FEATURES[name]) {
+					setCookie(PERSISTENT_FEATURES[name], checkbox.checked ? "true" : "false");
+				} else if (checkbox.checked) {
 					if (defaultOffFeatures.has(name)) {
 						localStorage.setItem(FEATURE_PREFIX + name, "true");
 					} else {
@@ -137,6 +192,36 @@ function buildTogglePanel() {
 		});
 		panel.appendChild(list);
 	});
+
+	// --- Berichtenbox A/B/C-test ---
+	const variantHeading = document.createElement("p");
+	variantHeading.className = "feature-flags-group-heading";
+	variantHeading.textContent = "Berichtenbox A/B/C-test";
+	panel.appendChild(variantHeading);
+
+	const variantFieldset = document.createElement("fieldset");
+	variantFieldset.className = "settings-radio-group";
+	const variantLegend = document.createElement("legend");
+	variantLegend.textContent = "Variant";
+	variantFieldset.appendChild(variantLegend);
+	[
+		["a", "A: Huidige berichtenbox"],
+		["b", "B: Bericht met PDF-preview"],
+		["c", "C: Bericht met directe acties"],
+	].forEach(([value, labelText]) => {
+		const label = document.createElement("label");
+		label.className = "mode-option";
+		const radio = document.createElement("input");
+		radio.type = "radio";
+		radio.name = "berichtenbox-variant";
+		radio.value = value;
+		radio.checked = getSettingValue("berichtenbox-variant", "a") === value;
+		radio.addEventListener("change", () => setSettingValue("berichtenbox-variant", value));
+		label.appendChild(radio);
+		label.appendChild(document.createElement("span")).textContent = labelText;
+		variantFieldset.appendChild(label);
+	});
+	panel.appendChild(variantFieldset);
 
 	// --- Digitale Assistent instellingen ---
 	const settingsHeading = document.createElement("p");
@@ -186,19 +271,23 @@ function buildTogglePanel() {
 	});
 	panel.appendChild(transportFieldset);
 
-	// API Key velden
+	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
+	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
+	// geheim (het staat al in personas.json), dus een gewoon tekstveld.
 	[
-		{ key: "vlam-api-key", label: "VLAM API Key" },
-		{ key: "claude-api-key", label: "Claude API Key" },
-	].forEach(({ key, label: labelText }) => {
+		{ key: "vlam-api-key", label: "VLAM API Key", type: "password", placeholder: "sk-..." },
+		{ key: "claude-api-key", label: "Claude API Key", type: "password", placeholder: "sk-..." },
+		{ key: "test-user-kvk", label: "KvK-nummer assistent", type: "text", placeholder: "85234567" },
+	].forEach(({ key, label: labelText, type, placeholder }) => {
 		const field = document.createElement("div");
 		field.className = "settings-field";
 		const label = document.createElement("label");
 		label.textContent = labelText;
 		const input = document.createElement("input");
-		input.type = "password";
+		input.type = type;
 		input.value = getSettingValue(key, "");
-		input.placeholder = "sk-...";
+		input.placeholder = placeholder;
+		if (type === "text") input.inputMode = "numeric";
 		input.addEventListener("input", () => setSettingValue(key, input.value));
 		label.appendChild(input);
 		field.appendChild(label);
