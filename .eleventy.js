@@ -83,7 +83,7 @@ module.exports = function (eleventyConfig) {
 
 	// React islands build output (Vite bouwt naar dist/js, buiten Eleventy's
 	// cleanOutput-zone; hier gekopieerd naar _site/js).
-	eleventyConfig.addPassthroughCopy({ "dist/js": "js" });
+	eleventyConfig.addPassthroughCopy({ "react-islands/dist": "js" });
 
 	// mox/ landingspagina: self-contained assets meekopiëren naar _site/mox/
 	eleventyConfig.addPassthroughCopy("mox/css");
@@ -104,6 +104,7 @@ module.exports = function (eleventyConfig) {
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({
+		port: 8080,
 		headers: {
 			"Cache-Control": "no-store",
 		},
