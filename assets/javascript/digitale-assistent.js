@@ -443,6 +443,7 @@
 			label: v.label || v.vraag || v.omschrijving || v.naam || "Veld " + (i + 1),
 			type: v.type || (opties ? "radio" : "tekst"),
 			opties: opties,
+			groepen: v.groepen || null,
 		};
 	}
 
@@ -552,8 +553,42 @@
 		};
 	}
 
+	// Het categorieveld is getrapt: eerst het onderdeel (Gebouwen, Faciliteiten,
+	// Processen), daarna alleen de categorieën die daaronder vallen. De erkende
+	// maatregelenlijst kent er achtentwintig; die in één lijst tonen maakt van een
+	// vraag een inventarisatie. De indeling komt van de backend, uit de wet zelf.
+	function categorieenHTML(veld, naam) {
+		var groepen = veld.groepen || [];
+		var stap1 = groepen
+			.map(function (g, j) {
+				var id = naam + "-onderdeel-" + j;
+				return '<li><input type="checkbox" class="onderdeel-keuze" id="' + id + '" data-onderdeel="' + escapeHTML(g.onderdeel) + '"> <label for="' + id + '">' + escapeHTML(g.onderdeel) + "</label></li>";
+			})
+			.join("");
+		var stap2 = groepen
+			.map(function (g, j) {
+				var opties = (g.opties || [])
+					.map(function (categorie, k) {
+						var id = naam + "-cat-" + j + "-" + k;
+						return '<li><input type="checkbox" class="categorie-keuze" id="' + id + '" value="' + escapeHTML(categorie) + '"> <label for="' + id + '">' + escapeHTML(categorie) + "</label></li>";
+					})
+					.join("");
+				return '<fieldset class="categorie-groep" data-onderdeel="' + escapeHTML(g.onderdeel) + '" hidden><legend>' + escapeHTML(g.onderdeel) + " — wat is hiervan aanwezig?</legend>" + '<ul class="list-plain">' + opties + "</ul></fieldset>";
+			})
+			.join("");
+		return (
+			'<fieldset data-veld="' + escapeHTML(veld.naam) + '" data-type="categorieen">' +
+			"<legend>" + escapeHTML(veld.label) + "</legend>" +
+			"<p>Kies eerst welke delen bij uw bedrijf voorkomen.</p>" +
+			'<ul class="list-plain">' + stap1 + "</ul>" +
+			stap2 +
+			"</fieldset>"
+		);
+	}
+
 	function veldHTML(veld, index) {
 		var naam = "vraag-" + index + "-" + String(veld.naam).replace(/[^a-z0-9]/gi, "");
+		if (veld.type === "categorieen") return categorieenHTML(veld, naam);
 		if (veld.type === "radio" && veld.opties && veld.opties.length) {
 			var opties = veld.opties
 				.map(function (optie, j) {
@@ -718,27 +753,94 @@
 		form.requestSubmit();
 	});
 
-	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug.
+	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug,
+	// mét de losse antwoorden als `opgaven` (zie pendingOpgaven verderop). Zo
+	// blijft het antwoord toerekenbaar aan het veld dat de respondent invulde,
+	// in plaats van platgeslagen tot een zin die het model weer moet parsen.
+	var RADIO_WAARDE = { Uitgevoerd: true, Ja: true, "Niet uitgevoerd": false, Nee: false };
+	var REGELPARAMETER = /^[A-Z][A-Z0-9_]*$/;
+	// Overbrugt vraag-form-submit (hierboven) naar de hoofd-submit-handler
+	// (verderop): beide luisteren op een `submit`-event, maar op verschillende
+	// formulieren, dus dit is de enige weg om de opgaven mee te geven.
+	var pendingOpgaven = null;
+
+	// Stap 1 van het categorieveld opent stap 2. Bij het weer uitvinken gaan de
+	// vinkjes eronder mee uit: een verborgen aangevinkte categorie zou wél
+	// meegestuurd worden, en dan krijgt de ondernemer maatregelen voor een
+	// bedrijfsdeel dat hij net wegklikte.
+	messages.addEventListener("change", function (e) {
+		var keuze = e.target;
+		if (!keuze.classList || !keuze.classList.contains("onderdeel-keuze")) return;
+		var veld = keuze.closest('[data-type="categorieen"]');
+		if (!veld) return;
+		var onderdeel = keuze.getAttribute("data-onderdeel");
+		veld.querySelectorAll(".categorie-groep").forEach(function (groep) {
+			if (groep.getAttribute("data-onderdeel") !== onderdeel) return;
+			groep.hidden = !keuze.checked;
+			if (!keuze.checked) {
+				groep.querySelectorAll(".categorie-keuze").forEach(function (vinkje) {
+					vinkje.checked = false;
+				});
+			}
+		});
+	});
+
 	messages.addEventListener("submit", function (e) {
 		var f = e.target;
 		if (!f.classList || !f.classList.contains("vraag-form")) return;
 		e.preventDefault();
 		if (submitting) return;
 		var delen = [];
+		var opgaven = {};
 		var ontbreekt = false;
 		f.querySelectorAll("[data-veld]").forEach(function (veld) {
+			if (veld.getAttribute("data-type") === "categorieen") {
+				var gekozen = [];
+				veld.querySelectorAll(".categorie-keuze:checked").forEach(function (vinkje) {
+					gekozen.push(vinkje.value);
+				});
+				if (!gekozen.length) {
+					ontbreekt = true;
+					return;
+				}
+				delen.push("Aanwezig: " + gekozen.join(", "));
+				var categorieVeld = veld.getAttribute("data-veld");
+				// Dezelfde poort als hieronder: alleen wat eruitziet als
+				// regelparameter gaat als opgave mee.
+				if (REGELPARAMETER.test(categorieVeld)) opgaven[categorieVeld] = gekozen;
+				return;
+			}
 			var labelEl = veld.querySelector("legend") || veld.querySelector("label");
 			var labelTekst = labelEl ? labelEl.textContent.trim() : veld.getAttribute("data-veld");
 			var codeM = labelTekst.match(/^([A-Z]{1,4}\d+)/);
 			var key = codeM ? codeM[1] : labelTekst;
 			var radio = veld.querySelector("input[type=radio]:checked");
 			var tekst = veld.querySelector("input[type=text]");
+			var waarde = null;
 			if (radio) {
 				delen.push(key + ": " + radio.value);
+				// `normVeld` accepteert willekeurige `opties` uit een backend-
+				// `vraag.velden`-payload; een label buiten RADIO_WAARDE raden we
+				// niet naar true/false — dat zou een aanname het antwoord in
+				// smokkelen die de respondent niet gaf. We sturen dan liever
+				// niets dan de ruwe tekst, want de regelengine aan de andere
+				// kant verwacht hier een boolean feit, geen string. Het
+				// chatbericht (`delen`, hierboven) bevat de tekst gewoon, dat
+				// is voor de mens; `opgaven` niet, dat is voor de regel.
+				if (Object.prototype.hasOwnProperty.call(RADIO_WAARDE, radio.value)) {
+					waarde = RADIO_WAARDE[radio.value];
+				}
 			} else if (tekst && tekst.value.trim()) {
 				delen.push(key + ": " + tekst.value.trim());
+				waarde = tekst.value.trim();
 			} else {
 				ontbreekt = true;
+			}
+			// Naam draagt het veld al (naam in de veld-spec); alleen velden die
+			// eruitzien als regelparameter gaan mee, en nooit een lege/null-waarde.
+			var naam = veld.getAttribute("data-veld");
+			if (waarde !== null && REGELPARAMETER.test(naam)) {
+				opgaven[naam] = waarde;
 			}
 		});
 		if (ontbreekt) {
@@ -760,6 +862,10 @@
 		var acties = f.querySelector(".action-group");
 		if (acties) acties.outerHTML = '<p class="wallet-badge">' + ICON_SUCCES + "Antwoord verstuurd</p>";
 		input.value = bericht;
+		// De hoofd-submit-handler (verderop) leest en wist dit direct bij het
+		// opbouwen van het verzoek; zo bereikt het antwoord de fetch zonder de
+		// signature van form.requestSubmit() te hoeven ombouwen.
+		pendingOpgaven = Object.keys(opgaven).length ? opgaven : null;
 		form.requestSubmit();
 	});
 
@@ -783,6 +889,11 @@
 		// Leg mode en combo vast op moment van verzenden
 		var mode = getAPIMode();
 		var comboKey = getComboKey();
+		// Alleen gevuld als dit bericht net via het vraag-formulier is verstuurd;
+		// direct wissen zodat een volgend, los getypt bericht niet per ongeluk
+		// dezelfde opgaven meekrijgt.
+		var opgaven = pendingOpgaven;
+		pendingOpgaven = null;
 
 		submitting = true;
 		addMessage(message, "user");
@@ -818,11 +929,11 @@
 					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
 					"X-Test-User": getTestUser(),
 				},
-				body: JSON.stringify({
-					message: message,
-					session_id: sessions[comboKey],
-					mode: mode,
-				}),
+				body: JSON.stringify(
+					opgaven
+						? { message: message, session_id: sessions[comboKey], mode: mode, opgaven: opgaven }
+						: { message: message, session_id: sessions[comboKey], mode: mode }
+				),
 				signal: controller.signal,
 			});
 
