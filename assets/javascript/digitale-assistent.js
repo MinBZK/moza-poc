@@ -458,6 +458,7 @@
 			label: v.label || v.vraag || v.omschrijving || v.naam || "Veld " + (i + 1),
 			type: v.type || (opties ? "radio" : "tekst"),
 			opties: opties,
+			groepen: v.groepen || null,
 		};
 	}
 
@@ -561,8 +562,42 @@
 		};
 	}
 
+	// Het categorieveld is getrapt: eerst het onderdeel (Gebouwen, Faciliteiten,
+	// Processen), daarna alleen de categorieën die daaronder vallen. De erkende
+	// maatregelenlijst kent er achtentwintig; die in één lijst tonen maakt van een
+	// vraag een inventarisatie. De indeling komt van de backend, uit de wet zelf.
+	function categorieenHTML(veld, naam) {
+		var groepen = veld.groepen || [];
+		var stap1 = groepen
+			.map(function (g, j) {
+				var id = naam + "-onderdeel-" + j;
+				return '<li><input type="checkbox" class="onderdeel-keuze" id="' + id + '" data-onderdeel="' + escapeHTML(g.onderdeel) + '"> <label for="' + id + '">' + escapeHTML(g.onderdeel) + "</label></li>";
+			})
+			.join("");
+		var stap2 = groepen
+			.map(function (g, j) {
+				var opties = (g.opties || [])
+					.map(function (categorie, k) {
+						var id = naam + "-cat-" + j + "-" + k;
+						return '<li><input type="checkbox" class="categorie-keuze" id="' + id + '" value="' + escapeHTML(categorie) + '"> <label for="' + id + '">' + escapeHTML(categorie) + "</label></li>";
+					})
+					.join("");
+				return '<fieldset class="categorie-groep" data-onderdeel="' + escapeHTML(g.onderdeel) + '" hidden><legend>' + escapeHTML(g.onderdeel) + " — wat is hiervan aanwezig?</legend>" + '<ul class="list-plain">' + opties + "</ul></fieldset>";
+			})
+			.join("");
+		return (
+			'<fieldset data-veld="' + escapeHTML(veld.naam) + '" data-type="categorieen">' +
+			"<legend>" + escapeHTML(veld.label) + "</legend>" +
+			"<p>Kies eerst welke delen bij uw bedrijf voorkomen.</p>" +
+			'<ul class="list-plain">' + stap1 + "</ul>" +
+			stap2 +
+			"</fieldset>"
+		);
+	}
+
 	function veldHTML(veld, index) {
 		var naam = "vraag-" + index + "-" + String(veld.naam).replace(/[^a-z0-9]/gi, "");
+		if (veld.type === "categorieen") return categorieenHTML(veld, naam);
 		if (veld.type === "radio" && veld.opties && veld.opties.length) {
 			var opties = veld.opties
 				.map(function (optie, j) {
@@ -738,6 +773,27 @@
 	// formulieren, dus dit is de enige weg om de opgaven mee te geven.
 	var pendingOpgaven = null;
 
+	// Stap 1 van het categorieveld opent stap 2. Bij het weer uitvinken gaan de
+	// vinkjes eronder mee uit: een verborgen aangevinkte categorie zou wél
+	// meegestuurd worden, en dan krijgt de ondernemer maatregelen voor een
+	// bedrijfsdeel dat hij net wegklikte.
+	messages.addEventListener("change", function (e) {
+		var keuze = e.target;
+		if (!keuze.classList || !keuze.classList.contains("onderdeel-keuze")) return;
+		var veld = keuze.closest('[data-type="categorieen"]');
+		if (!veld) return;
+		var onderdeel = keuze.getAttribute("data-onderdeel");
+		veld.querySelectorAll(".categorie-groep").forEach(function (groep) {
+			if (groep.getAttribute("data-onderdeel") !== onderdeel) return;
+			groep.hidden = !keuze.checked;
+			if (!keuze.checked) {
+				groep.querySelectorAll(".categorie-keuze").forEach(function (vinkje) {
+					vinkje.checked = false;
+				});
+			}
+		});
+	});
+
 	messages.addEventListener("submit", function (e) {
 		var f = e.target;
 		if (!f.classList || !f.classList.contains("vraag-form")) return;
@@ -747,6 +803,22 @@
 		var opgaven = {};
 		var ontbreekt = false;
 		f.querySelectorAll("[data-veld]").forEach(function (veld) {
+			if (veld.getAttribute("data-type") === "categorieen") {
+				var gekozen = [];
+				veld.querySelectorAll(".categorie-keuze:checked").forEach(function (vinkje) {
+					gekozen.push(vinkje.value);
+				});
+				if (!gekozen.length) {
+					ontbreekt = true;
+					return;
+				}
+				delen.push("Aanwezig: " + gekozen.join(", "));
+				var categorieVeld = veld.getAttribute("data-veld");
+				// Dezelfde poort als hieronder: alleen wat eruitziet als
+				// regelparameter gaat als opgave mee.
+				if (REGELPARAMETER.test(categorieVeld)) opgaven[categorieVeld] = gekozen;
+				return;
+			}
 			var labelEl = veld.querySelector("legend") || veld.querySelector("label");
 			var labelTekst = labelEl ? labelEl.textContent.trim() : veld.getAttribute("data-veld");
 			var codeM = labelTekst.match(/^([A-Z]{1,4}\d+)/);
