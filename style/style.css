@@ -180,10 +180,28 @@ p {
 	&.intro {
 		font: var(--toepassing-text-paragraph-intro);
 	}
+	a {
+		svg {
+			margin-inline-end: var(--toepassing-space-margin-4xs);
+			path:not(.icon-color-inverse), svg circle:not(.icon-color-inverse) {
+				fill: currentcolor !important;
+			}
+		}
+	}
 }
 
 small {
-	font: var(--toepassing-text-smalltext-default);
+	display: flex;
+	font: var(--toepassing-text-smalltext);
+	svg {
+		block-size: var(--toepassing-size-icon-sm);
+		flex-shrink: 0;
+		margin-block-start: var(--toepassing-space-margin-3xs);
+		margin-inline-end: var(--toepassing-space-margin-2xs);
+		path:not(.icon-color-inverse) {
+			fill: var(--toepassing-color-feedback-info-icon);
+		}
+	}
 }
 
 strong, b {
@@ -1287,6 +1305,13 @@ li, th, td {
 	}
 }
 
+small.disclaimer {
+	border-block-start: var(--toepassing-border-subtle);
+	color: var(--text-muted);
+	margin-block-start: var(--toepassing-space-margin-2xs);
+	padding-block-start: var(--toepassing-space-padding-xs);
+}
+
 /* -- BERICHTENBOX -- */
 [data-berichtenbox-toolbar] {
 	.metadata {
@@ -1599,26 +1624,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	justify-content: flex-end;
 }
 
-/* De AI-melding staat vast onder het invoerveld en niet in het welkomstbericht:
-   daar scrolt hij weg zodra het gesprek loopt, terwijl hij juist geldt op het
-   moment dat iemand een antwoord leest. */
-.chat-disclaimer {
-	border-block-start: var(--toepassing-border-subtle);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	/* De leesmaat van 77ch op `p` kapt hier ook de scheidingslijn af; die hoort
-	   de hele kaart te beslaan. */
-	margin-block: var(--toepassing-space-margin-sm) 0;
-	max-inline-size: none;
-	padding-block-start: var(--toepassing-space-padding-sm);
-}
-/* De bronnenlijst volgt direct op de melding; één scheidingslijn is genoeg. */
-.chat-disclaimer + .chat-status, .chat-disclaimer + #chat-offline + .chat-status {
-	border-block-start: 0;
-	margin-block-start: var(--toepassing-space-margin-xs);
-	padding-block-start: 0;
-}
-
 /* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
    bolletjes rood zijn. Staat de melding er, dan draagt zij de scheiding en laat
    de lijst haar eigen bovenrand vallen — anders staan er twee lijnen. */
@@ -1631,16 +1636,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	padding-block-start: 0;
 }
 
-/* Bronnenlijst onder het gesprek: dit is achtergrondinformatie, geen melding.
-   Een stip draagt de verbindingsstatus; een icoon per bron gaf vijf rode kruizen
-   naast elkaar, wat als vijf storingen las. Een echte storing staat in de melding
-   boven het gesprek. */
 .chat-status {
-	border-block-start: var(--toepassing-border-subtle);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	margin-block-start: var(--toepassing-space-margin-sm);
-	padding-block-start: var(--toepassing-space-padding-sm);
 	ul {
 		flex-flow: row wrap;
 		gap: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-md);
