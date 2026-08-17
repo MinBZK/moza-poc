@@ -62,12 +62,14 @@ subNavActive: "/moza/dataverwerking/"
 					<summary>
 						{{ entry.source }}<small>({{ entry.datetime | tijdgeledenNL }})</small>
 					</summary>
-					<p>
+					<div>
+						<p>
 						<div class="status-details">
 						<p class="status-date"><time datetime="{{ entry.datetime }}">{{ entry.datetime | datumtijdNL }}</time></p>
 						{% for d in entry.data %}
 						<strong>{{ d.request }}:</strong> {{ d.response }}{% if not loop.last %}<br />{% endif %} {% endfor %}
 					</p>
+					</div>
 				</details>
 			</li>
 			{% endfor %}
@@ -97,7 +99,9 @@ subNavActive: "/moza/dataverwerking/"
 					<summary>
 						<h3>Welke gegevensverwerkingen kan ik hier inzien?</h3>
 					</summary>
-					<p>U vindt hier een overzicht van gegevensuitwisselingen tussen overheidsorganisaties waarbij uw bedrijfsgegevens betrokken zijn. Denk aan gegevens die worden gedeeld met de Belastingdienst, KVK of het UWV.</p>
+					<div>
+						<p>U vindt hier een overzicht van gegevensuitwisselingen tussen overheidsorganisaties waarbij uw bedrijfsgegevens betrokken zijn. Denk aan gegevens die worden gedeeld met de Belastingdienst, KVK of het UWV.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -105,7 +109,9 @@ subNavActive: "/moza/dataverwerking/"
 					<summary>
 						<h3>Kan ik gegevensdeling tegenhouden?</h3>
 					</summary>
-					<p>Overheidsorganisaties delen gegevens op basis van wettelijke grondslagen. In sommige gevallen kunt u bezwaar maken tegen een specifieke verwerking. Neem hiervoor contact op met de betreffende organisatie of raadpleeg het <a href="https://www.autoriteitpersoonsgegevens.nl/">Autoriteit Persoonsgegevens</a>.</p>
+					<div>
+						<p>Overheidsorganisaties delen gegevens op basis van wettelijke grondslagen. In sommige gevallen kunt u bezwaar maken tegen een specifieke verwerking. Neem hiervoor contact op met de betreffende organisatie of raadpleeg het <a href="https://www.autoriteitpersoonsgegevens.nl/">Autoriteit Persoonsgegevens</a>.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -113,7 +119,9 @@ subNavActive: "/moza/dataverwerking/"
 					<summary>
 						<h3>Ik zie onjuiste gegevens. Wat kan ik doen?</h3>
 					</summary>
-					<p>Als gegevens van uw bedrijf niet kloppen, kunt u een terugmelding doen bij de organisatie die de gegevens beheert. Via dit overzicht ziet u welke organisatie de bronhouder is, zodat u weet waar u terecht kunt.</p>
+					<div>
+						<p>Als gegevens van uw bedrijf niet kloppen, kunt u een terugmelding doen bij de organisatie die de gegevens beheert. Via dit overzicht ziet u welke organisatie de bronhouder is, zodat u weet waar u terecht kunt.</p>
+					</div>
 				</details>
 			</li>
 		</ul>
