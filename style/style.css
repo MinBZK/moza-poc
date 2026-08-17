@@ -1919,18 +1919,6 @@ h1.icon-label {
 	}
 }
 
-/* Uitleg boven het gesprek: één uitklapper met een kop op h4-formaat. Vier
-   blokken met paginakoppen duwden de chat onder de vouw. */
-.chat-uitleg {
-	margin-block-end: var(--toepassing-space-margin-md);
-	summary h2 {
-		font: var(--toepassing-text-heading-h4);
-	}
-	h3 {
-		margin-block-start: var(--toepassing-space-margin-sm);
-	}
-}
-
 /* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
 .wallet-card {
 	background: var(--toepassing-color-background-default);
@@ -2084,10 +2072,7 @@ h1.icon-label {
 			transition: var(--toepassing-transition-transform);
 		}
 	}
-	h3,
-	h4,
-	h5,
-	h6 {
+	h2, h3, h4, h5, h6 {
 		font-size: var(--toepassing-text-size-body-md);
 	}
 	p {
