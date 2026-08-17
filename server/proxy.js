@@ -4,7 +4,8 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
-const PORT = process.env.PROXY_PORT || 8080;
+const PORT = process.env.PROXY_PORT || 4040;
+const TARGET = process.env.PROXY_TARGET;
 
 const app = express();
 
@@ -38,34 +39,26 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Proxy any request under /api to the target (requires per-request target via header or query)
+// Proxy any request under /api to the target (supports per-request target via header or query)
 app.use(
 	"/api",
 	createProxyMiddleware({
-		// Target is required per-request via x-proxy-target header or ?target= query parameter
-		target: "http://localhost",
+		// default target if none specified per-request
+		target: TARGET,
 		changeOrigin: true,
 		secure: true,
 		logLevel: "info",
-		// Require x-proxy-target header or ?target= query parameter; otherwise reject
+		// Allow per-request target via header 'x-proxy-target' or query '?target='
 		router: (req) => {
 			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
-			if (!perReq) {
-				console.error("[proxy] Missing target: provide x-proxy-target header or ?target= query parameter");
-				return null;
-			}
+			if (!perReq) return TARGET;
 			try {
 				const u = new URL(perReq);
-				console.log(`[proxy] routing request to target: ${u.origin}`);
 				return u.origin;
 			} catch (e) {
 				// If just an origin without protocol was provided, assume https
-				if (/^[a-z0-9.-]+(:[0-9]+)?$/i.test(perReq)) {
-					console.log(`[proxy] routing request to target: https://${perReq}`);
-					return `https://${perReq}`;
-				}
-				console.error("[proxy] Invalid target format:", perReq);
-				return null;
+				if (/^[a-z0-9.-]+(:[0-9]+)?$/i.test(perReq)) return `https://${perReq}`;
+				return TARGET;
 			}
 		},
 		// Resolve the upstream path dynamically: if a full URL was provided use its path,
@@ -112,7 +105,7 @@ app.use(
 		onError(err, req, res) {
 			console.error("[proxy] error", err && err.message);
 			if (err && err.code === "ECONNREFUSED") {
-				console.error("[proxy] ECONNREFUSED: ensure target is reachable via x-proxy-target header or ?target= query parameter");
+				console.error(`[proxy] ECONNREFUSED when connecting to target ${TARGET}. Is the target reachable?`);
 			}
 			if (!res.headersSent) {
 				res.statusCode = 502;
@@ -123,6 +116,5 @@ app.use(
 );
 
 app.listen(PORT, () => {
-	console.log(`[proxy] Listening on http://localhost:${PORT}`);
-	console.log(`[proxy] Target must be specified per-request via x-proxy-target header or ?target= query parameter`);
+	console.log(`[proxy] Listening on http://localhost:${PORT} -> ${TARGET}`);
 });

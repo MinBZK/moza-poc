@@ -4,129 +4,186 @@ title: "MijnOverheid Zakelijk: Actualiteiten"
 
 {% include "side-nav-overheid.njk" %}
 
-<article id="hoofd-inhoud">
-	<nav class="breadcrumb">
+<article id='hoofd-inhoud'>
+	<nav class='breadcrumb'>
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li aria-current="page">Actualiteiten</li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li aria-current='page'>Actualiteiten</li>
 		</ol>
 	</nav>
 
 	<h1>Actualiteiten</h1>
 
-	<div class="feedback feedback-info" id="info-actualiteiten">
+	<div id='info-actualiteiten' class='feedback feedback-info'>
 		{% icon "/assets/icons/icon-informatie.svg" %}
 		<div>
 			<p>We kiezen deze actualiteiten op basis van uw vestigingsadres, branche en rechtsvorm. Door items te bewaren, te delen of als niet relevant te markeren, krijgt u betere aanbevelingen.</p>
 		</div>
-		<button class="btn-close link-button">
-			<i>Sluit notificatie</i>
-		</button>
+		<button class='btn-close link-button'><i>Sluit notificatie</i></button>
 	</div>
 
-	<section class="card">
+	<section class='card'>
 		<hgroup>
-			<h2 id="section-subsidies">Subsidies en financiering</h2>
+			<h2 id='section-subsidies'>Subsidies en financiering</h2>
 			<p>Subsidies en financiering waar u mogelijk voor in aanmerking komt.</p>
 		</hgroup>
-		<ul class="list-content-links">
+		<ul class='list-content-links'>
 			{% for subsidie in subsidiesData %}
-			<li class="card-topic{% if loop.index0 >= 3 %} reserve-topic{% endif %}"{% if loop.index0 >= 3 %} hidden{% endif %}>
-				<a href="{{ '/moza/subsidies/' | url }}{{ subsidie.id }}/" class="content-link{% if subsidie.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ subsidie.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ subsidie.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Verstrekker</dt>
-					<dd>{{ subsidie.verstrekker }}</dd>
-					<dt>Type</dt>
-					<dd>{{ subsidie.type }}</dd>
-					<dt>Aanvraagperiode</dt>
-					<dd>{{ subsidie.aanvraagperiode }}</dd>
-					{% if subsidie.maximaalBedrag %}
-					<dt>Maximaal bedrag</dt>
-					<dd>{{ subsidie.maximaalBedrag }}</dd>
-					{% endif %} {% if subsidie.budgetVergeven %}
-					<dt>Budget vergeven</dt>
-					<dd>
-						<div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="{{ subsidie.budgetVergeven }}" aria-valuemin="0" aria-valuemax="100">
-							<div class="progress-bar-fill" style="inline-size: {{ subsidie.budgetVergeven }}%">{{ subsidie.budgetVergeven }}%</div>
-						</div>
-					</dd>
+				<li
+					class='
+						card-topic
+						{% if loop.index0 >= 3 %}
+							reserve-topic
+						{% endif %}
+					'
+					{% if loop.index0 >= 3 %}
+						hidden
 					{% endif %}
-				</dl>
-				{% include "action-group.njk" %}
-			</li>
+				>
+					<a
+						class='
+							content-link
+							{% if subsidie.isOngelezen %}
+								is-unread
+							{% endif %}
+						'
+						href="{{ '/moza/subsidies/' | url }}{{ subsidie.id }}/"
+					>
+						<h3>{{ subsidie.titel }}</h3>
+						<span class='card-link'></span>
+					</a>
+					<p>{{ subsidie.beschrijving }}</p>
+					<dl class='data-overview'>
+						<dt>Verstrekker</dt>
+						<dd>{{ subsidie.verstrekker }}</dd>
+						<dt>Type</dt>
+						<dd>{{ subsidie.type }}</dd>
+						<dt>Aanvraagperiode</dt>
+						<dd>{{ subsidie.aanvraagperiode }}</dd>
+						{% if subsidie.maximaalBedrag %}
+							<dt>Maximaal bedrag</dt>
+							<dd>
+								{{ subsidie.maximaalBedrag }}
+							</dd>
+						{% endif %}
+						{% if subsidie.budgetVergeven %}
+							<dt>Budget vergeven</dt>
+							<dd>
+								<div class='progress-bar' role='progressbar' aria-label='Budget vergeven' aria-valuenow='{{ subsidie.budgetVergeven }}' aria-valuemin='0' aria-valuemax='100'>
+									<div class='progress-bar-fill' style='inline-size: {{ subsidie.budgetVergeven }}%'>{{ subsidie.budgetVergeven }}%</div>
+								</div>
+							</dd>
+						{% endif %}
+					</dl>
+					{% include "action-group.njk" %}
+				</li>
 			{% endfor %}
 		</ul>
 
-		<a class="btn-cta" href="{{ '/moza/subsidies/' | url }}">Meer Subsidies en financiering</a>
+		<a class='btn-cta' href="{{ '/moza/subsidies/' | url }}">Meer Subsidies en financiering</a>
 	</section>
 
-	<section class="card">
+	<section class='card'>
 		<hgroup>
-			<h2 id="section-wetten">Wetten en regelgeving</h2>
+			<h2 id='section-wetten'>Wetten en regelgeving</h2>
 			<p>Wetten en regelgeving die mogelijk relevant voor uw onderneming kunnen zijn.</p>
 		</hgroup>
-		<ul class="list-content-links">
+		<ul class='list-content-links'>
 			{% for regeling in regelgevingData %}
-			<li class="card-topic{% if loop.index0 >= 3 %} reserve-topic{% endif %}"{% if loop.index0 >= 3 %} hidden{% endif %}>
-				<a href="{{ '/moza/regelgeving/' | url }}{{ regeling.id }}/" class="content-link{% if regeling.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ regeling.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ regeling.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Bron</dt>
-					<dd>{{ regeling.bron }}</dd>
-					<dt>Inwerkingtreding</dt>
-					<dd>{{ regeling.inwerkingtreding }}</dd>
-					<dt>Geldt voor</dt>
-					<dd>{{ regeling.geldtVoor }}</dd>
-				</dl>
-				{% include "action-group.njk" %}
-			</li>
+				<li
+					class='
+						card-topic
+						{% if loop.index0 >= 3 %}
+							reserve-topic
+						{% endif %}
+					'
+					{% if loop.index0 >= 3 %}
+						hidden
+					{% endif %}
+				>
+					<a
+						class='
+							content-link
+							{% if regeling.isOngelezen %}
+								is-unread
+							{% endif %}
+						'
+						href="{{ '/moza/regelgeving/' | url }}{{ regeling.id }}/"
+					>
+						<h3>{{ regeling.titel }}</h3>
+						<span class='card-link'></span>
+					</a>
+					<p>{{ regeling.beschrijving }}</p>
+					<dl class='data-overview'>
+						<dt>Bron</dt>
+						<dd>{{ regeling.bron }}</dd>
+						<dt>Inwerkingtreding</dt>
+						<dd>{{ regeling.inwerkingtreding }}</dd>
+						<dt>Geldt voor</dt>
+						<dd>{{ regeling.geldtVoor }}</dd>
+					</dl>
+					{% include "action-group.njk" %}
+				</li>
 			{% endfor %}
 		</ul>
 
-		<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Meer Wetten en regelgeving</a>
+		<a class='btn-cta' href="{{ '/moza/regelgeving/' | url }}">Meer Wetten en regelgeving</a>
 	</section>
 
-	<section class="card">
+	<section class='card'>
 		<hgroup>
-			<h2 id="section-berichten">Berichten over uw buurt</h2>
+			<h2 id='section-berichten'>Berichten over uw buurt</h2>
 			<p>Berichten die betrekking hebben op de omgeving van uw bedrijfsadres.</p>
 		</hgroup>
-		<ul class="list-content-links">
+		<ul class='list-content-links'>
 			{% for bericht in buurtberichtenData %}
-			<li class="card-topic{% if loop.index0 >= 3 %} reserve-topic{% endif %}"{% if loop.index0 >= 3 %} hidden{% endif %}>
-				<a href="{{ '/moza/berichten/' | url }}{{ bericht.id }}/" class="content-link{% if bericht.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ bericht.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ bericht.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Bron</dt>
-					<dd>{{ bericht.bron }}</dd>
-					<dt>Datum</dt>
-					<dd>{{ bericht.datum }}</dd>
-					<dt>Locatie</dt>
-					<dd>{{ bericht.locatie }}</dd>
-				</dl>
-				{% include "action-group.njk" %}
-			</li>
+				<li
+					class='
+						card-topic
+						{% if loop.index0 >= 3 %}
+							reserve-topic
+						{% endif %}
+					'
+					{% if loop.index0 >= 3 %}
+						hidden
+					{% endif %}
+				>
+					<a
+						class='
+							content-link
+							{% if bericht.isOngelezen %}
+								is-unread
+							{% endif %}
+						'
+						href="{{ '/moza/berichten/' | url }}{{ bericht.id }}/"
+					>
+						<h3>{{ bericht.titel }}</h3>
+						<span class='card-link'></span>
+					</a>
+					<p>{{ bericht.beschrijving }}</p>
+					<dl class='data-overview'>
+						<dt>Bron</dt>
+						<dd>{{ bericht.bron }}</dd>
+						<dt>Datum</dt>
+						<dd>{{ bericht.datum }}</dd>
+						<dt>Locatie</dt>
+						<dd>{{ bericht.locatie }}</dd>
+					</dl>
+					{% include "action-group.njk" %}
+				</li>
 			{% endfor %}
 		</ul>
 
-		<a class="btn-cta" href="{{ '/moza/berichten/' | url }}">Meer Berichten over uw buurt</a>
+		<a class='btn-cta' href="{{ '/moza/berichten/' | url }}">Meer Berichten over uw buurt</a>
 	</section>
 
-	<section class="card">
+	<section class='card'>
 		<h2>Veelgestelde vragen</h2>
-		<ul class="accordion">
+		<ul class='accordion'>
 			<li>
-				<details name="faq">
+				<details name='faq'>
 					<summary>
 						<h3>Hoe worden de actualiteiten voor mij geselecteerd?</h3>
 					</summary>
@@ -134,26 +191,19 @@ title: "MijnOverheid Zakelijk: Actualiteiten"
 				</details>
 			</li>
 			<li>
-				<details name="faq">
+				<details name='faq'>
 					<summary>
 						<h3>Kan ik meldingen ontvangen bij nieuwe actualiteiten?</h3>
 					</summary>
-					<p>
-						Ja, via uw contactvoorkeuren kunt u aangeven dat u per e-mail op de hoogte gehouden wilt worden van nieuwe berichten, subsidies en regelgeving die relevant zijn voor uw organisatie. Ga naar
-						<a href="{{ '/moza/contactvoorkeuren/' | url }}">Contactvoorkeuren</a>
-						om dit in te stellen.
-					</p>
+					<p>Ja, via uw contactvoorkeuren kunt u aangeven dat u per e-mail op de hoogte gehouden wilt worden van nieuwe berichten, subsidies en regelgeving die relevant zijn voor uw organisatie. Ga naar <a href="{{ '/moza/contactvoorkeuren/' | url }}">Contactvoorkeuren</a> om dit in te stellen.</p>
 				</details>
 			</li>
 			<li>
-				<details name="faq">
+				<details name='faq'>
 					<summary>
 						<h3>Ik mis een subsidie of regeling. Waar kan ik deze vinden?</h3>
 					</summary>
-					<p>
-						MijnOverheid Zakelijk toont een selectie van subsidies en regelgeving op basis van uw bedrijfsprofiel. Voor een volledig overzicht van alle beschikbare subsidies kunt u terecht op
-						<a href="https://www.rvo.nl/subsidies-financiering" rel="external">rvo.nl</a>. Wet- en regelgeving vindt u op <a href="https://wetten.overheid.nl/" rel="external">wetten.overheid.nl</a>.
-					</p>
+					<p>MijnOverheid Zakelijk toont een selectie van subsidies en regelgeving op basis van uw bedrijfsprofiel. Voor een volledig overzicht van alle beschikbare subsidies kunt u terecht op <a href='https://www.rvo.nl/subsidies-financiering' rel='external'>rvo.nl</a>. Wet- en regelgeving vindt u op <a href='https://wetten.overheid.nl/' rel='external'>wetten.overheid.nl</a>.</p>
 				</details>
 			</li>
 		</ul>

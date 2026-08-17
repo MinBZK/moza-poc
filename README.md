@@ -129,11 +129,13 @@ In productie draait alles achter **één origin**: de nginx van de frontend **pr
 | `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
 | `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
+De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuurt gewoon het KvK-nummer van de actieve persona mee, zie [Sessie-identiteit](#sessie-identiteit).
+
 **Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
 1. `npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
 2. Start de backend (FastAPI, poort `8000`) volgens de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent).
-3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080`.
+3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080` en `TEST_KVK_NUMMERS=85234567,62345681,56789012` (de persona's met een backend-profiel). Ontbreekt die allowlist, dan geeft élke vraag "log eerst in".
 
 > ⚠️ **Preview-deploys (`pr<nr>`):** het backend-component `dabackend` draait alleen in de gedeelde deployments (`poc`, gebruikersonderzoek), niet in per-PR previews. In een PR-preview is er dus geen backend en werkt de chat niet, tenzij `dabackend` aan die deployment wordt toegevoegd.
 
@@ -145,13 +147,40 @@ Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-fla
 
 > Let op: een **Claude**-sleutel uit de UI werkt zelfstandig. Voor **VLAM** vraagt de UI alleen de sleutel, maar VLAM heeft ook `VLAM_BASE_URL` + `VLAM_MODEL_ID` nodig — die moeten server-side op de backend staan. Het eenvoudigst is om de server-side keys op de backend-deployment te zetten, dan werkt de chat voor iedereen zonder iets in te vullen.
 
+### Sessie-identiteit
+
+De frontend stuurt bij elke chat-request de header `X-Test-User` met het **KvK-nummer van de actieve persona** (uit `_data/personas.json`). De backend toetst dat aan zijn allowlist `TEST_KVK_NUMMERS` en injecteert het nummer vervolgens server-side bij elke bronaanroep (PDR-009 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). De parameter `kvk_nummer` is uit alle tool-schema's gestript, dus het model ziet 'm niet en kan de identiteit niet kiezen — ook niet als iemand in het gesprek een ander nummer noemt.
+
+Het nummer komt uit één van twee plekken, waarbij de eerste voorgaat:
+
+1. **Flags-paneel** → veld "KvK-nummer assistent" (localStorage `setting:test-user-kvk`). Handmatige override, handig om een nummer buiten de allowlist te testen. Wijzigen start een schoon gesprek.
+2. **Actieve persona** → het veld `kvkNummer` van die persona in `_data/personas.json`.
+
+Staat het nummer niet in de allowlist van de backend — of is er geen persona — dan antwoordt de assistent "Log eerst in om uw bedrijfsgegevens te kunnen gebruiken." Dat is gewenst gedrag, geen fout: alleen persona's met een backend-profiel zien bedrijfsgegevens. Bij een persona-wissel start de frontend een nieuwe sessie, zodat het gesprek van de vorige identiteit niet doorloopt.
+
+> ⚠️ **Dit is geen authenticatie.** Een gebruiker kan de header in de browser aanpassen en zo een andere testpersona worden; de allowlist begrenst alleen wélke nummers werken. Met een token was dat niet anders — dat stond leesbaar in de paginabron. Voor een gesloten testgroep met uitsluitend fictieve bedrijven is dat aanvaardbaar. Echte identiteitsvaststelling (eHerkenning/DigiD, via de NL GOV-profielen van OAuth/OIDC) is BETA-02 in de backend-repo.
+
+**Persona's met een backend-profiel.** De backend kent alleen deze bedrijven; voor de rest volgt terecht "log eerst in".
+
+| Persona-id | Bedrijf | KvK | Bron backend-zijde |
+| --- | --- | --- | --- |
+| `koffiezaak` | Koffiezaak Noon | 85234567 | mock in `services/mcp/kvk/server.py` |
+| `bloemenkweker` | Kwekerij De Bloesem | 62345681 | mock in `services/mcp/kvk/server.py` |
+| `haarstylist` | Roots & Locks | 56789012 | mock in `services/mcp/kvk/server.py` |
+
+Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
+
+#### Op een deployment
+
+Niets in te stellen aan de frontend-kant: er is geen build-variabele, geen repo-secret en geen build-arg voor de identiteit. Zet alleen op de **backend**-deployment `TEST_KVK_NUMMERS=85234567,62345681,56789012`. Ontbreekt die, dan antwoordt de assistent overal "log eerst in".
+
 ### Demo: informatieplicht energiebesparing
 
 Voor de demo van de ideale flow van de informatieplicht energiebesparing (Dag van de Toekomst, 18 juni 2026) bevat het prototype de testpersona **Claudia van Dam**, eigenaar van **Koffiezaak Noon** in Rotterdam (KvK 85234567, eenmanszaak, SBI 56102 Cafés). Kies haar via het feature-flags-paneel rechtsonder (kopje "Persona's") of via `?persona=Horecaondernemer` in de URL.
 
-Bij Claudia toont de tegel "Wetten en regelgeving" op het dashboard een korte melding over de informatieplicht energiebesparing (stap 0). De knop bij die melding opent direct het assistent-gesprek met een startvraag (stap 1, via de URL-parameter `?vraag=…` op de assistent-pagina); de geraadpleegde bronnen (KvK Handelsregister, netbeheerder) toont de assistent in het gesprek zelf. Dezelfde startknop staat voor Claudia ook op de detailpagina van de Wet milieubeheer (gestuurd door het veld `assistentVraag` in `_data/regelgevingData.json`). De stappen daarna — verbruik raadplegen, toets, geldende maatregelen, indienen en bevestiging — doet de assistent in het gesprek zelf (backend).
+Of de informatieplicht geldt, bepaalt een business rule: het jaarverbruik van de actieve persona (`bedrijf.energie` in `_data/personas.json`) wordt vergeleken met de wettelijke drempel uit RegelRecht (50.000 kWh / 25.000 m³, gespiegeld in `_data/regelrecht.json`). Komt het verbruik daarboven — zoals bij Claudia — dan toont het dashboard bovenaan een melding over de informatieplicht energiebesparing (stap 0) met een knop naar de digitale assistent. Dezelfde drempel-check staat op de detailpagina van de Wet milieubeheer; daar opent de knop het assistent-gesprek meteen met een startvraag (stap 1, via de URL-parameter `?vraag=…`, gevuld uit het veld `assistentVraag`). De geraadpleegde bronnen (KvK Handelsregister, netbeheerder) toont de assistent in het gesprek zelf. De stappen daarna — verbruik raadplegen, toets, geldende maatregelen, indienen en bevestiging — doet de assistent in het gesprek zelf (backend). Na indiening verschijnt de zaak via het `case`-event onder Lopende zaken.
 
-> ⚠️ **Backend herstarten bij persona-wissel.** De backend kent maar één actief KvK-nummer per draaiende instantie (beperking van de PoC, zie PDR-007 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). Voor de Claudia-flow moet de backend draaien met `DEMO_KVK_NUMMER=85234567` en daarna herstart zijn. Zonder die variabele antwoordt de assistent op basis van de bestaande persona Robin Vogel (Test BV Donald). Wissel je in de frontend van persona, herstart dan ook de backend met het bijpassende KvK-nummer.
+> ⚠️ **Allowlist nodig voor de Claudia-flow.** De assistent gebruikt alleen de gegevens van Koffiezaak Noon als 85234567 in `TEST_KVK_NUMMERS` op de backend staat (zie [Sessie-identiteit](#sessie-identiteit)); anders antwoordt die "log eerst in". Wisselen van persona kan zonder herstart van de backend: de identiteit volgt de header, niet de omgeving.
 
 ### Containerisatie
 
@@ -210,7 +239,7 @@ npm install
 | ------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`             | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
 | `npm run build`           | Tokens + Eleventy              | Volledige productie-build                                                                                                                                                                           |
-| `npm run tokens`          | Alleen Style Dictionary        | Handmatig tokens bouwen                                                                                                                                                                             |
+| `npm run build:tokens`    | Alleen Style Dictionary        | Handmatig tokens bouwen                                                                                                                                                                             |
 | `npm run storybook`       | Storybook dev server           | Componentenbibliotheek lokaal bekijken                                                                                                                                                              |
 | `npm run build-storybook` | Storybook productie-build      | Statische Storybook-site bouwen                                                                                                                                                                     |
 
