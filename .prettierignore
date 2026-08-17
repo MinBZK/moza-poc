@@ -1,10 +1,3 @@
-*.njk
-
-# HTML-pagina's zijn Nunjucks-templates; Prettier breekt {% %}-tags
-# (bijv. een gewrapte >= operator, zie de eerdere actueel.html-build-fout).
-moza/**/*.html
-mobu/**/*.html
-inloggen/**/*.html
-
 # Build-output, niet formatteren
 _site/
+react-islands/dist/

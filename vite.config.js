@@ -1,15 +1,15 @@
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import path from 'path';
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist/js',
+    outDir: 'react-islands/dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        islands: 'src/islands/index.jsx',
+        islands: 'react-islands/src/index.jsx',
       },
       output: {
         entryFileNames: '[name].js',

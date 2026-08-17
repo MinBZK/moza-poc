@@ -260,13 +260,9 @@
 	}
 
 	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
-	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
-	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
-	// hetzelfde case-event geen duplicaat oplevert.
-	function zaakSleutel(zaak) {
-		return zaak.referentienummer || zaak.id || zaak.case_id || zaak.zaaknummer || "";
-	}
-
+	// gegevens (de lopende_zaak van de backend) komen al uitgepakt binnen; we
+	// voegen alleen een tijdstip en, als die ontbreekt, een id toe. Idempotent op
+	// het referentienummer, zodat hetzelfde case-event geen duplicaat oplevert.
 	function addZaak(payload) {
 		if (!payload || typeof payload !== "object") return null;
 		var KEY = "zaken";
@@ -276,14 +272,10 @@
 		} catch (e) {
 			lijst = [];
 		}
-		// De backend stuurt de zaak onder `data` (event: case). Zonder uitpakken
-		// staat alleen het envelop-veld `type` op het topniveau, en werd elke zaak
-		// als dezelfde "case" gezien — de tweede indiening verdween dan stil.
-		var inhoud = payload.data && typeof payload.data === "object" ? payload.data : payload;
-		var sleutel = zaakSleutel(inhoud);
+		var sleutel = payload.referentienummer || payload.id || payload.case_id || payload.zaaknummer;
 		if (sleutel) {
 			var bestaat = lijst.some(function (z) {
-				return zaakSleutel(z) === sleutel;
+				return (z.referentienummer || z.id || z.case_id || z.zaaknummer) === sleutel;
 			});
 			if (bestaat) return null;
 		}
@@ -334,21 +326,21 @@
 
 	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
 
-	// De drempelwaarden zijn wettelijke grenzen; die horen niet als constante in
-	// deze frontend te staan maar uit RegelRecht te komen (de "één bron van
-	// waarheid"). Faalt de ophaal, dan blijft dit null en toont walletCijfer
-	// straks geen grensvergelijking — geen terugval op een eigen constante.
-	var drempelWaarden = null;
-	fetch(API_BASE + "/regelrecht/drempels", { signal: AbortSignal.timeout(3000) })
+	// De grenzen voor de kaart komen uit RegelRecht (via de backend), niet uit
+	// eigen literals. We halen ze één keer op; lukt dat niet, dan toont de kaart de
+	// verbruikswaarden zonder grens-annotatie. Zelfde wet als de CTA-gating.
+	var WALLET_LAW = "omgevingswet/energiebesparing/informatieplicht";
+	var walletDrempel = null; // { kwh, gas } of null
+	fetch(API_BASE + "/regelrecht/definities?law=" + encodeURIComponent(WALLET_LAW), { signal: AbortSignal.timeout(4000) })
 		.then(function (r) {
-			if (!r.ok) throw new Error("drempels-http-" + r.status);
-			return r.json();
+			return r.ok ? r.json() : null;
 		})
-		.then(function (data) {
-			drempelWaarden = (data && data.drempelwaarden) || null;
+		.then(function (d) {
+			var def = d && d.definities;
+			if (def) walletDrempel = { kwh: Number(def.DREMPEL_ELEKTRICITEIT_KWH), gas: Number(def.DREMPEL_GAS_M3) };
 		})
 		.catch(function () {
-			drempelWaarden = null;
+			/* geen drempel beschikbaar: kaart toont waarden zonder grens */
 		});
 
 	function escapeHTML(value) {
@@ -378,17 +370,17 @@
 		return { data: data, provenance: provenance };
 	}
 
-	// `grens` is optioneel: ontbreekt de drempelwaarde (ophaal mislukt), dan
-	// laten we de grensvergelijking gewoon weg in plaats van een oordeel te
-	// vellen op een waarde die we niet kennen.
-	function walletCijfer(label, waarde, eenheid, boven, grens) {
-		var grensHTML = "";
+	// grens (kWh/m³) is null als de RegelRecht-drempel niet beschikbaar is; dan
+	// tonen we de waarde zonder boven/onder-annotatie.
+	function walletCijfer(label, waardeNum, eenheid, grens) {
+		var grensHtml = "";
 		if (grens != null) {
+			var boven = waardeNum > grens;
 			var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
-			var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
-			grensHTML = '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span>";
+			var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens.toLocaleString("nl-NL") + " " + eenheid;
+			grensHtml = '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span>";
 		}
-		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + grensHTML + "</dd></div>";
+		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waardeNum.toLocaleString("nl-NL")) + " " + escapeHTML(eenheid) + "</span>" + grensHtml + "</dd></div>";
 	}
 
 	// Gestructureerde energiekaart uit de Wallet-credential (verborgen tot "Delen").
@@ -409,14 +401,7 @@
 		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		// Alleen een grensvergelijking tonen als de drempel daadwerkelijk is
-		// opgehaald bij RegelRecht; anders geen boven/onder-oordeel.
-		var kwhGrens = drempelWaarden && typeof drempelWaarden.DREMPEL_ELEKTRICITEIT_KWH === "number" ? drempelWaarden.DREMPEL_ELEKTRICITEIT_KWH : null;
-		var gasGrens = drempelWaarden && typeof drempelWaarden.DREMPEL_GAS_M3 === "number" ? drempelWaarden.DREMPEL_GAS_M3 : null;
-		var elektriciteitCijfer = walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwhGrens != null ? kwh > kwhGrens : undefined, kwhGrens != null ? kwhGrens.toLocaleString("nl-NL") : undefined);
-		var gasCijfer = walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", gasGrens != null ? m3 > gasGrens : undefined, gasGrens != null ? gasGrens.toLocaleString("nl-NL") : undefined);
-
-		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + elektriciteitCijfer + gasCijfer + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
 		return el;
 	}
 
@@ -479,8 +464,14 @@
 			});
 		}
 
-		// Geen gestructureerde velden? Val terug op het parsen van de platte tekst.
-		if (!Array.isArray(velden) || velden.length === 0) return parseVraag(payload.message);
+		// Geen gestructureerde velden? Val alleen terug op het parsen van platte
+		// tekst als die tekst duidelijk een (EML-)maatregelenlijst is. Anders zou
+		// een gewoon antwoord met genummerde vragen ten onrechte een formulier
+		// worden en zou de antwoordtekst niet getoond worden.
+		if (!Array.isArray(velden) || velden.length === 0) {
+			var platteTekst = payload.message || "";
+			return /erkende maatregelenlijst|\bEML\b|maatregel/i.test(platteTekst) ? parseVraag(platteTekst) : null;
+		}
 		vraag = vraag || {};
 		return {
 			titel: vraag.titel || (maatregelenBron ? "Erkende Maatregelenlijst (EML 2023)" : "Vragen van de assistent"),
@@ -993,9 +984,9 @@
 							showThinking(friendlyTool(payload.message) + "...");
 						}
 					} else if (eventType === "case") {
-						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
-						addZaak(payload);
-						zaakGemaakt = true;
+						// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
+						// zaak zelf (payload.data) in localStorage.
+						addZaak(payload.data || payload);
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();

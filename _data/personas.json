@@ -908,6 +908,7 @@
 			"loonheffingennummer": "085234567L01",
 			"werkzamePersonenFulltime": 1,
 			"werkzamePersonenParttime": 3,
+			"energie": { "elektriciteitKwh": 61250, "gasM3": 9800 },
 			"sbi": [
 				{
 					"code": "56102",

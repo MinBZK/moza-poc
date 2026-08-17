@@ -21,6 +21,20 @@ server {
     # (default http://dabackend:8000; op ZAD te zetten op het frontend-component).
     set $backend_origin "${BACKEND_ORIGIN}";
 
+    # Per-API runtime backends. Set these env vars at runtime if you want specific
+    # API prefixes to proxy to different backends. If empty, they fall back to
+    # $backend_origin below.
+    set $backend_profiel "${BACKEND_PROFIEL}";
+    set $backend_api2 "${BACKEND_API_2}";
+
+    # Fallback to the generic backend_origin when a specific backend isn't set
+    if ($backend_profiel = "") {
+        set $backend_profiel $backend_origin;
+    }
+    if ($backend_api2 = "") {
+        set $backend_api2 $backend_origin;
+    }
+
     # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
     # Browser praat alleen met deze origin; nginx proxyt server-side. Geen CORS.
     # Dekt /chat, /chat/stream (SSE) en DELETE /chat/<session_id>.
@@ -39,6 +53,7 @@ server {
         proxy_read_timeout 3600s;
     }
 
+    # Health/tools proxy to generic backend
     location = /health {
         proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
@@ -47,6 +62,33 @@ server {
     location = /tools {
         proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
+    }
+
+    # --- Per-API proxies (configurable at runtime) ---
+    # Proxy the profiel service API prefix to BACKEND_PROFIEL when set
+    location /api/profielservice/ {
+        proxy_pass $backend_profiel$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+
+    # Example: another API prefix that can point to a different backend
+    # Set the env var BACKEND_API_2 to override, otherwise falls back to BACKEND_ORIGIN
+    location /api/other/ {
+        proxy_pass $backend_api2$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Catch-all for /api to the generic backend (BACKEND_ORIGIN)
+    location /api/ {
+        proxy_pass $backend_origin$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # --- Statische Eleventy-site ---
