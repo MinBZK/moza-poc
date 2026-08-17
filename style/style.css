@@ -369,6 +369,39 @@ li.option--confirmed {
 	}
 }
 
+/* Ongelezen staat */
+.is-unread {
+	h3, .berichtenbox-row-sender {
+		font-weight: var(--toepassing-text-font-weight-bold);
+		position: relative;
+	}
+	.berichtenbox-row-sender {
+		&::before {
+			margin-inline-start: calc(-1 * var(--toepassing-space-margin-sm));
+		}
+	}
+}
+
+.dynamic-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-md);
+	&:empty { /* Dynamisch gevulde container: verberg uit de layout zolang er nog geen content in zit */
+		display: none;
+	}
+}
+
+/* Persona-CTA-wrapper in een kaart is puur gedrag (personas.js): laat die uit
+   de layout wegvallen zodat de kinderen meedoen in de flex-gap van de kaart.
+   Alleen binnen een kaart; losse gated elementen (zoals de dashboard-melding)
+   houden hun eigen box en worden simpelweg met [hidden] verborgen. */
+.card > [data-persona-energiedrempel] {
+	display: contents;
+	&[hidden] {
+		display: none;
+	}
+}
+
 /* -- FORMULIEREN -- */
 
 fieldset {

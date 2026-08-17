@@ -7,8 +7,12 @@
  * = same-origin, zodat de nginx-proxy van de frontend naar de interne backend
  * stuurt (geen CORS). Lokaal zet `npm run dev` dit op http://localhost:8000.
  * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
- * Bewaart per LLM/transport-combinatie een sessie-id en gespreksgeschiedenis
+ * Bewaart per LLM/transport/persona-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
+ * De bedrijfsidentiteit gaat als KvK-nummer van de actieve persona mee in de
+ * X-Test-User-header; de backend toetst dat aan zijn allowlist (TEST_KVK_NUMMERS)
+ * en injecteert het server-side bij elke bronaanroep. Staat het nummer daar niet
+ * in, dan antwoordt de assistent "log eerst in".
  */
 
 (function () {
@@ -78,8 +82,34 @@
 		return localStorage.getItem("setting:transport") || "mcp";
 	}
 
+	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
+	// (env TEST_KVK_NUMMERS daar) en injecteert het bij elke bronaanroep. Het
+	// Flags-paneel kan een nummer forceren, handig om een nummer buiten de
+	// allowlist te testen. Geen persona of geen nummer = lege header; de backend
+	// antwoordt dan met "log eerst in". Dit is geen authenticatie: de header is in
+	// de browser aan te passen. Zie README → Sessie-identiteit.
+	function getTestUser() {
+		var override = localStorage.getItem("setting:test-user-kvk");
+		if (override) return override.trim();
+		var persona = getPersona();
+		// Als string, zodat een eventuele voorloopnul niet wegvalt.
+		return persona && persona.bedrijf ? String(persona.bedrijf.kvkNummer || "") : "";
+	}
+
+	function getPersona() {
+		return (window.Personas && window.Personas.actief()) || null;
+	}
+
+	function getPersonaId() {
+		var persona = getPersona();
+		return (persona && persona.id) || "";
+	}
+
+	// De persona hoort bij de sleutel: wisselt de identiteit, dan hoort daar een
+	// eigen session_id en gespreksgeschiedenis bij, zodat het gesprek van de
+	// vorige persona niet doorloopt.
 	function getComboKey() {
-		return getLLM() + ":" + getTransport();
+		return getLLM() + ":" + getTransport() + ":" + getPersonaId();
 	}
 
 	function getAPIMode() {
@@ -162,9 +192,9 @@
 	}
 
 	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
-	// gegevens komen uit de case-payload van de backend; we voegen alleen een id
-	// en tijdstip toe. Idempotent op een stabiele sleutel uit de payload, zodat
-	// hetzelfde case-event geen duplicaat oplevert.
+	// gegevens (de lopende_zaak van de backend) komen al uitgepakt binnen; we
+	// voegen alleen een tijdstip en, als die ontbreekt, een id toe. Idempotent op
+	// het referentienummer, zodat hetzelfde case-event geen duplicaat oplevert.
 	function addZaak(payload) {
 		if (!payload || typeof payload !== "object") return null;
 		var KEY = "zaken";
@@ -174,10 +204,10 @@
 		} catch (e) {
 			lijst = [];
 		}
-		var sleutel = payload.id || payload.case_id || payload.zaaknummer || payload.type;
+		var sleutel = payload.referentienummer || payload.id || payload.case_id || payload.zaaknummer;
 		if (sleutel) {
 			var bestaat = lijst.some(function (z) {
-				return (z.id || z.case_id || z.zaaknummer || z.type) === sleutel;
+				return (z.referentienummer || z.id || z.case_id || z.zaaknummer) === sleutel;
 			});
 			if (bestaat) return null;
 		}
@@ -228,8 +258,22 @@
 
 	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
 
-	var KWH_GRENS = 50000;
-	var GAS_GRENS = 25000;
+	// De grenzen voor de kaart komen uit RegelRecht (via de backend), niet uit
+	// eigen literals. We halen ze één keer op; lukt dat niet, dan toont de kaart de
+	// verbruikswaarden zonder grens-annotatie. Zelfde wet als de CTA-gating.
+	var WALLET_LAW = "omgevingswet/energiebesparing/informatieplicht";
+	var walletDrempel = null; // { kwh, gas } of null
+	fetch(API_BASE + "/regelrecht/definities?law=" + encodeURIComponent(WALLET_LAW), { signal: AbortSignal.timeout(4000) })
+		.then(function (r) {
+			return r.ok ? r.json() : null;
+		})
+		.then(function (d) {
+			var def = d && d.definities;
+			if (def) walletDrempel = { kwh: Number(def.DREMPEL_ELEKTRICITEIT_KWH), gas: Number(def.DREMPEL_GAS_M3) };
+		})
+		.catch(function () {
+			/* geen drempel beschikbaar: kaart toont waarden zonder grens */
+		});
 
 	function escapeHTML(value) {
 		return String(value == null ? "" : value)
@@ -258,10 +302,17 @@
 		return { data: data, provenance: provenance };
 	}
 
-	function walletCijfer(label, waarde, eenheid, boven, grens) {
-		var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
-		var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens + " " + eenheid;
-		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waarde) + " " + escapeHTML(eenheid) + "</span>" + '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span></dd></div>";
+	// grens (kWh/m³) is null als de RegelRecht-drempel niet beschikbaar is; dan
+	// tonen we de waarde zonder boven/onder-annotatie.
+	function walletCijfer(label, waardeNum, eenheid, grens) {
+		var grensHtml = "";
+		if (grens != null) {
+			var boven = waardeNum > grens;
+			var grensClass = boven ? "wallet-grens-boven" : "wallet-grens-onder";
+			var grensTekst = (boven ? "boven" : "onder") + " de grens van " + grens.toLocaleString("nl-NL") + " " + eenheid;
+			grensHtml = '<span class="wallet-grens ' + grensClass + '">' + grensTekst + "</span>";
+		}
+		return '<div class="wallet-cijfer"><dt>' + escapeHTML(label) + "</dt>" + '<dd><span class="wallet-waarde">' + escapeHTML(waardeNum.toLocaleString("nl-NL")) + " " + escapeHTML(eenheid) + "</span>" + grensHtml + "</dd></div>";
 	}
 
 	// Gestructureerde energiekaart uit de Wallet-credential (verborgen tot "Delen").
@@ -282,7 +333,7 @@
 		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh.toLocaleString("nl-NL"), "kWh", kwh > KWH_GRENS, KWH_GRENS.toLocaleString("nl-NL")) + walletCijfer("Gas", m3.toLocaleString("nl-NL"), "m³", m3 > GAS_GRENS, GAS_GRENS.toLocaleString("nl-NL")) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
 		return el;
 	}
 
@@ -344,8 +395,14 @@
 			});
 		}
 
-		// Geen gestructureerde velden? Val terug op het parsen van de platte tekst.
-		if (!Array.isArray(velden) || velden.length === 0) return parseVraag(payload.message);
+		// Geen gestructureerde velden? Val alleen terug op het parsen van platte
+		// tekst als die tekst duidelijk een (EML-)maatregelenlijst is. Anders zou
+		// een gewoon antwoord met genummerde vragen ten onrechte een formulier
+		// worden en zou de antwoordtekst niet getoond worden.
+		if (!Array.isArray(velden) || velden.length === 0) {
+			var platteTekst = payload.message || "";
+			return /erkende maatregelenlijst|\bEML\b|maatregel/i.test(platteTekst) ? parseVraag(platteTekst) : null;
+		}
 		vraag = vraag || {};
 		return {
 			titel: vraag.titel || (maatregelenBron ? "Erkende Maatregelenlijst (EML 2023)" : "Vragen van de assistent"),
@@ -513,7 +570,13 @@
 		updateStatusDisplay();
 	}
 
-	window.addEventListener("setting-changed", handleSwitch);
+	window.addEventListener("setting-changed", function (e) {
+		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
+		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
+		// het session_id: het volgende bericht start een schoon gesprek.
+		if (e.detail && e.detail.key === "test-user-kvk") delete sessions[getComboKey()];
+		handleSwitch();
+	});
 
 	// Suggestie-chips: vul het invoerveld en verstuur direct.
 	messages.addEventListener("click", function (e) {
@@ -644,6 +707,8 @@
 					"Content-Type": "application/json",
 					"X-VLAM-API-Key": localStorage.getItem("setting:vlam-api-key") || "",
 					"X-Claude-API-Key": localStorage.getItem("setting:claude-api-key") || "",
+					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
+					"X-Test-User": getTestUser(),
 				},
 				body: JSON.stringify({
 					message: message,
@@ -700,8 +765,9 @@
 							showThinking(friendlyTool(payload.message) + "...");
 						}
 					} else if (eventType === "case") {
-						// Backend stuurt de zaak-data; bewaar die als zaak in localStorage.
-						addZaak(payload);
+						// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
+						// zaak zelf (payload.data) in localStorage.
+						addZaak(payload.data || payload);
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();

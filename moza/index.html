@@ -6,8 +6,11 @@ title: "MijnOverheid Zakelijk: Home"
 
 <article id="hoofd-inhoud">
 	<h1>Welkom <span data-profiel="voornaam">Robin</span> <span data-profiel="achternaam">Vogel</span></h1>
-
-	<div class="feedback feedback-info">
+	{# Alleen tonen als de informatieplicht voor de actieve persona geldt: dezelfde
+	   business rule als de CTA op de regeling-pagina. personas.js haalt de drempel
+	   pre-chat op uit RegelRecht en vergelijkt die met het verbruik van de persona.
+	   data-regelrecht-law verwijst naar dezelfde regel als de Wet milieubeheer-pagina. #}
+	<div class="feedback feedback-info" data-persona-energiedrempel data-regelrecht-law="omgevingswet/energiebesparing/informatieplicht" hidden>
 		{% include "icon-feedback-info.njk" %}
 		<div>
 			<p>
