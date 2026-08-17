@@ -13,29 +13,30 @@ title: "MijnOverheid Zakelijk: Home"
 	<div class="feedback feedback-info" data-persona-energiedrempel data-regelrecht-law="omgevingswet/energiebesparing/informatieplicht" hidden>
 		{% include "icon-feedback-info.njk" %}
 		<div>
-			<p>
-				Binnenkort geldt de informatieplicht energiebesparing voor uw onderneming. <a href="/moza/digitale-assistent/">De digitale assistent helpt u</a> het rapport in één keer goed in te dienen.
-			</p>
+			<p>Binnenkort geldt de informatieplicht energiebesparing voor uw onderneming. <a href="/moza/digitale-assistent/">De digitale assistent helpt u</a> het rapport in één keer goed in te dienen.</p>
 		</div>
-		<button class="btn-close link-button">
-			<i>Sluit notificatie</i>
-		</button>
+		<button class="btn-close link-button"><i>Sluit notificatie</i></button>
 	</div>
 	<section class="card">
 		<h2>Recente berichten</h2>
 		<table>
 			<thead>
 				<tr>
-					<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
+					<th scope="col">
+						{% include "icon-markeren.njk" %}
+						<span class="visually-hidden">Gemarkeerd</span>
+					</th>
 					<th scope="col">Afzender</th>
 					<th scope="col">Onderwerp</th>
 					<th scope="col">Datum</th>
-					<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+					<th scope="col">
+						<span class="visually-hidden">Bijlage</span>
+					</th>
 				</tr>
 			</thead>
 			<tbody>
 				{% for bericht in berichtenboxData.berichten %}
-				{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
+					{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
 				{% endfor %}
 			</tbody>
 		</table>
@@ -44,22 +45,14 @@ title: "MijnOverheid Zakelijk: Home"
 	<div class="tiles">
 		<section class="card">
 			<h2>Subsidies en financiering</h2>
-			<p data-singular-of="subsidies-count" hidden>
-				Er is <a href="{{ '/moza/subsidies/' | url }}">1 nieuwe subsidie en/of financieringsmogelijkheid</a> sinds uw laatste bezoek die mogelijk interessant voor u kan zijn.
-			</p>
-			<p data-plural-of="subsidies-count">
-				Er zijn <a href="{{ '/moza/subsidies/' | url }}"><span data-badge-id="subsidies-count"></span> nieuwe subsidies en/of financieringsmogelijkheden</a> sinds uw laatste bezoek die mogelijk interessant voor u kunnen zijn.
-			</p>
+			<p data-singular-of="subsidies-count" hidden>Er is <a href="{{ '/moza/subsidies/' | url }}">1 nieuwe subsidie en/of financieringsmogelijkheid</a> sinds uw laatste bezoek die mogelijk interessant voor u kan zijn.</p>
+			<p data-plural-of="subsidies-count">Er zijn <a href="{{ '/moza/subsidies/' | url }}"><span data-badge-id="subsidies-count"></span> nieuwe subsidies en/of financieringsmogelijkheden</a> sinds uw laatste bezoek die mogelijk interessant voor u kunnen zijn.</p>
 			<a class="btn-cta" href="{{ '/moza/subsidies/' | url }}">Ga naar Subsidies en financiering</a>
 		</section>
 		<section class="card">
 			<h2>Wetten en regelgeving</h2>
-			<p data-singular-of="regelgeving-count" hidden>
-				Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.
-			</p>
-			<p data-plural-of="regelgeving-count">
-				Er zijn <a href="{{ '/moza/regelgeving/' | url }}"><span data-badge-id="regelgeving-count"></span> nieuwe wetten of regelgeving, of wijzigingen op bestaande wet- of regelgeving</a> die mogelijk op u van toepassing zijn.
-			</p>
+			<p data-singular-of="regelgeving-count" hidden>Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.</p>
+			<p data-plural-of="regelgeving-count">Er zijn <a href="{{ '/moza/regelgeving/' | url }}"><span data-badge-id="regelgeving-count"></span> nieuwe wetten of regelgeving, of wijzigingen op bestaande wet- of regelgeving</a> die mogelijk op u van toepassing zijn.</p>
 			<ul class="list-content-links" aria-busy="true"></ul>
 			<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a>
 		</section>
@@ -86,7 +79,9 @@ title: "MijnOverheid Zakelijk: Home"
 			</li>
 			<li>
 				<details name="faq">
-					<summary><h3>Waar vind ik berichten van mijn gemeente?</h3></summary>
+					<summary>
+						<h3>Waar vind ik berichten van mijn gemeente?</h3>
+					</summary>
 					<p>Berichten over uw buurt vindt u op de homepage onder ‘Berichten over uw buurt’. Dit zijn officiële bekendmakingen en besluiten die betrekking hebben op uw vestigingsadres.</p>
 				</details>
 			</li>
