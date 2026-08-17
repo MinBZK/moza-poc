@@ -1704,28 +1704,114 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
-.chat-status {
+/* Beide knoppen op één regel onder het invoerveld, rechts uitgelijnd: "Vraag
+   stellen" als laatste, want dat is de handeling die de gebruiker verwacht af te
+   sluiten. Wrapt op smalle schermen. */
+.chat-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
+	justify-content: flex-end;
+}
+
+/* De AI-melding staat vast onder het invoerveld en niet in het welkomstbericht:
+   daar scrolt hij weg zodra het gesprek loopt, terwijl hij juist geldt op het
+   moment dat iemand een antwoord leest. */
+.chat-disclaimer {
+	border-block-start: var(--toepassing-border-subtle);
 	color: var(--toepassing-color-text-subtle-1);
 	font: var(--toepassing-text-smalltext);
+	/* De leesmaat van 77ch op `p` kapt hier ook de scheidingslijn af; die hoort
+	   de hele kaart te beslaan. */
+	margin-block: var(--toepassing-space-margin-sm) 0;
+	max-inline-size: none;
+	padding-block-start: var(--toepassing-space-padding-sm);
+}
+/* De bronnenlijst volgt direct op de melding; één scheidingslijn is genoeg. */
+.chat-disclaimer + .chat-status, .chat-disclaimer + #chat-offline + .chat-status {
+	border-block-start: 0;
+	margin-block-start: var(--toepassing-space-margin-xs);
+	padding-block-start: 0;
+}
+
+/* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
+   bolletjes rood zijn. Staat de melding er, dan draagt zij de scheiding en laat
+   de lijst haar eigen bovenrand vallen — anders staan er twee lijnen. */
+#chat-offline {
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+#chat-offline:not([hidden]) + .chat-status {
+	border-block-start: 0;
+	margin-block-start: var(--toepassing-space-margin-xs);
+	padding-block-start: 0;
+}
+
+/* Bronnenlijst onder het gesprek: dit is achtergrondinformatie, geen melding.
+   Een stip draagt de verbindingsstatus; een icoon per bron gaf vijf rode kruizen
+   naast elkaar, wat als vijf storingen las. Een echte storing staat in de melding
+   boven het gesprek. */
+.chat-status {
+	border-block-start: var(--toepassing-border-subtle);
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+	margin-block-start: var(--toepassing-space-margin-sm);
+	padding-block-start: var(--toepassing-space-padding-sm);
 	ul {
-		flex-direction: row;
-		gap: var(--toepassing-space-padding-md);
+		flex-flow: row wrap;
+		gap: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-md);
 	}
 	.chat-status-connected svg,
 	.chat-status-disconnected svg {
 		block-size: var(--toepassing-size-icon-sm);
 		inline-size: var(--toepassing-size-icon-sm);
 		margin-inline-end: var(--toepassing-space-padding-2xs);
-		vertical-align: text-top;
+		vertical-align: middle;
 	}
-	.chat-status-connected svg {
-		color: var(--toepassing-color-feedback-success-icon);
+	.chat-status-connected::before {
+		background: var(--toepassing-color-feedback-success-icon);
 	}
-	.chat-status-disconnected svg {
-		color: var(--toepassing-color-feedback-error-icon);
+	.chat-status-disconnected::before {
+		background: var(--toepassing-color-feedback-error-icon);
+	}
+	li {
+		position: relative;
+	}
+	/* Onderstreping als hint dat er uitleg achter zit; `cursor: help` bevestigt
+	   dat met de muis. */
+	.chat-status-bron {
+		border-block-end: var(--toepassing-border-width-xs) dotted currentcolor;
+		cursor: help;
+	}
+	/* De uitleg staat in de DOM (aria-describedby) en wordt alleen visueel
+	   verborgen, zodat een schermlezer hem altijd voorleest. */
+	.chat-status-uitleg {
+		background: var(--toepassing-color-background-raised);
+		border: var(--toepassing-border-default);
+		border-radius: var(--toepassing-border-radius-md);
+		inline-size: max-content;
+		inset-block-end: calc(100% + var(--toepassing-space-padding-2xs));
+		inset-inline-start: 0;
+		max-inline-size: 20rem;
+		opacity: 0;
+		padding: var(--toepassing-space-padding-sm);
+		position: absolute;
+		transition: var(--toepassing-transition-default);
+		visibility: hidden;
+		z-index: 1;
+	}
+	li:hover .chat-status-uitleg, li:focus-within .chat-status-uitleg {
+		opacity: 1;
+		visibility: visible;
+	}
+	/* Escape verbergt de uitleg zonder de muis te verplaatsen (WCAG 1.4.13). */
+	&.tooltips-uit .chat-status-uitleg {
+		opacity: 0;
+		visibility: hidden;
 	}
 	p {
+		font: inherit;
 		margin-block-end: var(--toepassing-space-padding-2xs);
+		max-inline-size: none;
 	}
 }
 .chat-status-warning {
@@ -1816,6 +1902,33 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 
 #chat-input {
 	min-block-size: 6rem;
+}
+
+/* Vervolgstap onder een antwoord: knop naar Lopende zaken of Contact */
+.chat-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-padding-sm);
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+
+h1.icon-label {
+	gap: var(--toepassing-space-layout-2xs);
+	svg {
+		block-size: var(--toepassing-size-icon-md);
+	}
+}
+
+/* Uitleg boven het gesprek: één uitklapper met een kop op h4-formaat. Vier
+   blokken met paginakoppen duwden de chat onder de vouw. */
+.chat-uitleg {
+	margin-block-end: var(--toepassing-space-margin-md);
+	summary h2 {
+		font: var(--toepassing-text-heading-h4);
+	}
+	h3 {
+		margin-block-start: var(--toepassing-space-margin-sm);
+	}
 }
 
 /* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */

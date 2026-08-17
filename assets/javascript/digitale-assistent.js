@@ -28,11 +28,58 @@
 	var input = document.getElementById("chat-input");
 	var messages = document.getElementById("chat-messages");
 	var statusEl = document.getElementById("chat-status");
-	var sessions = {};
-	var chatHistory = {};
 	var serverStatus = null;
 	var submitting = false;
 	var initialMessages = messages.innerHTML;
+
+	// Het gesprek overleeft navigatie binnen hetzelfde tabblad: wie naar Lopende
+	// zaken klikt en terugkomt, vindt zijn gesprek terug. Bewust sessionStorage
+	// en geen localStorage — bij het sluiten van het tabblad is het weg, zodat er
+	// geen gesprek achterblijft op een gedeelde computer.
+	var OPSLAG_SESSIES = "chat:sessions";
+	var OPSLAG_HISTORIE = "chat:history";
+
+	function lees(sleutel) {
+		try {
+			return JSON.parse(sessionStorage.getItem(sleutel)) || {};
+		} catch (e) {
+			return {};
+		}
+	}
+
+	function schrijf(sleutel, waarde) {
+		try {
+			sessionStorage.setItem(sleutel, JSON.stringify(waarde));
+		} catch (e) {
+			/* privémodus of vol: het gesprek leeft dan alleen in het geheugen */
+		}
+	}
+
+	var sessions = lees(OPSLAG_SESSIES);
+	var chatHistory = lees(OPSLAG_HISTORIE);
+
+	function bewaarSessies() {
+		schrijf(OPSLAG_SESSIES, sessions);
+	}
+
+	// Alleen de zichtbare combinatie wordt bijgewerkt; de andere blijven staan
+	// zoals ze bij het wisselen zijn weggeschreven.
+	function bewaarHistorie(combo, html) {
+		chatHistory[combo] = typeof html === "string" ? html : messages.innerHTML;
+		schrijf(OPSLAG_HISTORIE, chatHistory);
+	}
+
+	function nieuwGesprek() {
+		var combo = getComboKey();
+		delete sessions[combo];
+		delete chatHistory[combo];
+		bewaarSessies();
+		schrijf(OPSLAG_HISTORIE, chatHistory);
+		messages.innerHTML = initialMessages;
+		messages.scrollTop = 0;
+		input.value = "";
+		input.focus();
+	}
 
 	// Leesbare labels per backend-sleutel, gecombineerd in ALL_LABELS voor friendlyTool.
 	var CAPABILITY_LABELS = {
@@ -48,12 +95,14 @@
 
 	// Wat de assistent gebruikt — in de chat getoond: capabilities + alle databronnen,
 	// op één plek, met live verbindingsstatus uit /health.
+	// `uitleg` zegt wat de bron voor de gebruiker doet; de statuszin komt er per
+	// bron achteraan. Samen vormen ze de beschrijving achter het bolletje.
 	var STATUS_ITEMS = [
-		{ key: "regelrecht", label: "RegelRecht" },
-		{ key: "rvo", label: "RVO" },
-		{ key: "netbeheerder", label: "Business Wallet" },
-		{ key: "kvk", label: "KvK Handelsregister" },
-		{ key: "koop", label: "KOOP Regelingenbank" },
+		{ key: "regelrecht", label: "RegelRecht", uitleg: "Rekent uit welke regels voor uw bedrijf gelden." },
+		{ key: "rvo", label: "RVO", uitleg: "Neemt uw rapportage in ontvangst." },
+		{ key: "netbeheerder", label: "Business Wallet", uitleg: "Levert uw energieverbruik, afgegeven door uw netbeheerder." },
+		{ key: "kvk", label: "KvK Handelsregister", uitleg: "Levert de gegevens van uw onderneming." },
+		{ key: "koop", label: "KOOP Regelingenbank", uitleg: "Levert de officiële wetteksten." },
 	];
 
 	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
@@ -189,6 +238,25 @@
 		}
 		messages.appendChild(div);
 		messages.scrollTop = messages.scrollHeight;
+		return div;
+	}
+
+	// Vervolgstap onder een bericht: alleen tonen als die ook echt klopt bij wat
+	// er net gebeurde. Een knop die altijd staat, wijst de gebruiker net zo vaak
+	// de verkeerde kant op als de goede.
+	function voegVervolgstapToe(bericht, label, url) {
+		if (!bericht || !url) return;
+		// Bij een foutmelding staat de tekst in een binnenste div naast het icoon.
+		var doel = bericht.classList.contains("feedback") ? bericht.lastElementChild : bericht;
+		var acties = document.createElement("div");
+		acties.className = "chat-actions";
+		var link = document.createElement("a");
+		link.className = "btn-cta";
+		link.href = url;
+		link.textContent = label;
+		acties.appendChild(link);
+		doel.appendChild(acties);
+		messages.scrollTop = messages.scrollHeight;
 	}
 
 	// Bewaar een zaak uit het case-event in localStorage (key "zaken"). De
@@ -211,7 +279,7 @@
 			});
 			if (bestaat) return null;
 		}
-		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
+		var zaak = Object.assign({ aangemaaktOp: Date.now() }, inhoud);
 		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
 		lijst.push(zaak);
 		try {
@@ -522,8 +590,21 @@
 		return STATUS_ITEMS.map(function (it) {
 			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
-			var icon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
-			return '<li class="chat-status-' + dot + '">' + icon + it.label + "</li>";
+			// Geen icoon meer per bron: vijf rode kruizen onder een gesprek lezen als
+			// vijf storingen. De stip draagt de status; de uitleg erachter zegt wat de
+			// bron doet en wat het betekent als hij eruit ligt. Een echte storing staat
+			// in de melding boven het gesprek (#chat-offline).
+			var status = connected
+				? "Nu bereikbaar."
+				: "Nu niet bereikbaar. De assistent kan deze bron op dit moment niet gebruiken.";
+			var id = "bron-uitleg-" + it.key;
+			// De naam is focusbaar (tabindex) zodat de uitleg ook met het toetsenbord
+			// te bereiken is, en aria-describedby koppelt hem voor de schermlezer —
+			// een title-attribuut doet geen van beide betrouwbaar.
+			return '<li class="chat-status-' + dot + '">' +
+				'<span class="chat-status-bron" tabindex="0" aria-describedby="' + id + '">' + it.label + "</span>" +
+				'<span class="chat-status-uitleg" role="tooltip" id="' + id + '">' + it.uitleg + " " + status + "</span>" +
+				"</li>";
 		}).join("");
 	}
 
@@ -531,14 +612,25 @@
 		if (!serverStatus) return;
 		var transport = getTransport();
 		var sources = (transport === "cli" ? serverStatus.cli : serverStatus.servers) || {};
-		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
+		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
-		statusEl.innerHTML = '<p>De assistent gebruikt:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
+		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
 	}
+
+	// De uitleg bij een bron moet weg te krijgen zijn zonder de muis te verplaatsen
+	// of de focus te verliezen (WCAG 2.1, 1.4.13 Content on Hover or Focus).
+	statusEl.addEventListener("keydown", function (e) {
+		if (e.key === "Escape") statusEl.classList.add("tooltips-uit");
+	});
+	["pointermove", "focusin"].forEach(function (type) {
+		statusEl.addEventListener(type, function () {
+			statusEl.classList.remove("tooltips-uit");
+		});
+	});
 
 	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
 	fetch(API_BASE + "/health", { signal: AbortSignal.timeout(3000) })
@@ -551,6 +643,16 @@
 	// Bewaar en herstel gesprek bij wisselen van LLM of transport
 	var previousCombo = getComboKey();
 
+	// Terug van een andere pagina in hetzelfde tabblad: het gesprek staat nog
+	// in sessionStorage, dus zet het terug in plaats van het welkomstbericht.
+	if (chatHistory[previousCombo]) {
+		messages.innerHTML = chatHistory[previousCombo];
+		messages.scrollTop = messages.scrollHeight;
+	}
+
+	var nieuwKnop = document.getElementById("chat-nieuw");
+	if (nieuwKnop) nieuwKnop.addEventListener("click", nieuwGesprek);
+
 	function handleSwitch() {
 		if (submitting) return;
 
@@ -559,7 +661,7 @@
 		if (prev === next) return;
 
 		previousCombo = next;
-		chatHistory[prev] = messages.innerHTML;
+		bewaarHistorie(prev);
 
 		if (chatHistory[next]) {
 			messages.innerHTML = chatHistory[next];
@@ -574,7 +676,10 @@
 		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
 		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
 		// het session_id: het volgende bericht start een schoon gesprek.
-		if (e.detail && e.detail.key === "test-user-kvk") delete sessions[getComboKey()];
+		if (e.detail && e.detail.key === "test-user-kvk") {
+			delete sessions[getComboKey()];
+			bewaarSessies();
+		}
 		handleSwitch();
 	});
 
@@ -686,6 +791,9 @@
 		setLoading(true);
 
 		var answered = false;
+		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
+		// antwoord een knop naar Lopende zaken krijgt.
+		var zaakGemaakt = false;
 
 		// Timeout-bescherming: 60s om verbinding te maken, 90s stilte tijdens streamen
 		var controller = new AbortController();
@@ -771,23 +879,36 @@
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
-						if (payload.session_id) sessions[comboKey] = payload.session_id;
+						if (payload.session_id) {
+							sessions[comboKey] = payload.session_id;
+							bewaarSessies();
+						}
 						// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
 						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
 						if (spec) {
 							renderAssistentVraag(spec);
 						} else {
 							var role = eventType === "error" ? "error" : "assistant";
+							var bericht;
 							// Toon alleen als gebruiker nog in dezelfde combinatie zit
 							if (getComboKey() === comboKey) {
-								addMessage(payload.message, role);
+								bericht = addMessage(payload.message, role);
 							} else {
 								// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
 								var temp = messages.innerHTML;
 								messages.innerHTML = chatHistory[comboKey] || "";
 								addMessage(payload.message, role);
-								chatHistory[comboKey] = messages.innerHTML;
+								bewaarHistorie(comboKey);
 								messages.innerHTML = temp;
+							}
+							// De vervolgstap hoort bij dit antwoord: een ingediende zaak
+							// verwijst naar Lopende zaken, een doodloper naar Contact.
+							// Alleen bij een zichtbaar bericht; in de weggeschreven
+							// historie zou de knop naar het verkeerde gesprek wijzen.
+							if (bericht && role === "error") {
+								voegVervolgstapToe(bericht, "Neem contact op", messages.dataset.urlContact);
+							} else if (bericht && zaakGemaakt) {
+								voegVervolgstapToe(bericht, "Bekijk in Lopende zaken", messages.dataset.urlZaken);
 							}
 						}
 					} else if (eventType === "done") {
@@ -812,12 +933,19 @@
 				} else {
 					reason = "De assistent is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.";
 				}
-				addMessage(reason, "error");
+				voegVervolgstapToe(
+					addMessage(reason, "error"),
+					"Neem contact op",
+					messages.dataset.urlContact
+				);
 			}
 		} finally {
 			clearTimeout(connectTimer);
 			if (idleTimer) clearTimeout(idleTimer);
 			submitting = false;
+			// Vastleggen na afloop van de beurt, niet per bericht: bij een
+			// afgebroken stream staat de laatste stand er dan alsnog in.
+			if (getComboKey() === comboKey) bewaarHistorie(comboKey);
 		}
 	});
 

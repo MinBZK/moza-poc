@@ -294,11 +294,22 @@ function buildTogglePanel() {
 		panel.appendChild(field);
 	});
 
+	// Hard reset: beide opslagen leeg. localStorage draagt bewaarde items, verborgen
+	// items en de lopende zaken die de assistent aanmaakt; sessionStorage draagt het
+	// gesprek zelf. Alleen localStorage wissen laat het gesprek van de vorige
+	// gebruiker staan — bij demo's en gebruikersonderzoek precies wat je niet wilt.
+	// De feature flags overleven dit: die staan in een cookie.
 	const clearBtn = document.createElement("button");
 	clearBtn.className = "feature-flags-clear";
-	clearBtn.textContent = "localStorage wissen";
+	clearBtn.textContent = "Hard reset (alles wissen)";
 	clearBtn.addEventListener("click", () => {
+		if (!window.confirm("Alles wissen? Het gesprek, de bewaarde items en de lopende zaken verdwijnen.")) return;
 		localStorage.clear();
+		try {
+			sessionStorage.clear();
+		} catch (e) {
+			/* privémodus: er was dan ook niets bewaard */
+		}
 		location.reload();
 	});
 	panel.appendChild(clearBtn);
