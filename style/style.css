@@ -1828,7 +1828,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	flex-direction: column;
 	gap: var(--toepassing-space-padding-md);
 	inline-size: 100%;
-	min-block-size: 28em;
+	min-block-size: 24em;
 	overflow-y: auto;
 	padding: var(--toepassing-space-padding-xs);
 }
