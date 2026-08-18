@@ -183,7 +183,17 @@ p {
 }
 
 small {
-	font: var(--toepassing-text-smalltext-default);
+	display: flex;
+	font: var(--toepassing-text-smalltext);
+	svg {
+		block-size: var(--toepassing-size-icon-sm);
+		flex-shrink: 0;
+		margin-block-start: var(--toepassing-space-margin-3xs);
+		margin-inline-end: var(--toepassing-space-margin-2xs);
+		path:not(.icon-color-inverse) {
+			fill: var(--toepassing-color-feedback-info-icon);
+		}
+	}
 }
 
 strong, b {
@@ -641,7 +651,11 @@ button, a.btn, a.btn-cta, button.btn-cta {
 		}
 	}
 	svg {
+		block-size: var(--toepassing-size-icon-md);
 		margin-inline-end: var(--toepassing-space-margin-2xs);
+		path {
+			fill: currentcolor !important;
+		}
 	}
 }
 .btn-small {
@@ -1232,6 +1246,11 @@ caption {
 		flex-shrink: 0;
 		inline-size: var(--toepassing-size-icon-md);
 	}
+	div {
+		display: flex;
+		flex-direction: column;
+		gap: var(--toepassing-space-margin-xs);
+	}
 }
 .feedback-info {
 	background: var(--toepassing-color-feedback-info-subtle);
@@ -1285,6 +1304,13 @@ li, th, td {
 			block-size: var(--toepassing-size-icon-sm);
 		}
 	}
+}
+
+small.disclaimer {
+	border-block-start: var(--toepassing-border-subtle);
+	color: var(--text-muted);
+	margin-block-start: var(--toepassing-space-margin-2xs);
+	padding-block-start: var(--toepassing-space-padding-xs);
 }
 
 /* -- BERICHTENBOX -- */
@@ -1589,35 +1615,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
 }
-/* Beide knoppen op één regel onder het invoerveld, rechts uitgelijnd: "Vraag
-   stellen" als laatste, want dat is de handeling die de gebruiker verwacht af te
-   sluiten. Wrapt op smalle schermen. */
-.chat-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-padding-sm);
-	justify-content: flex-end;
-}
-
-/* De AI-melding staat vast onder het invoerveld en niet in het welkomstbericht:
-   daar scrolt hij weg zodra het gesprek loopt, terwijl hij juist geldt op het
-   moment dat iemand een antwoord leest. */
-.chat-disclaimer {
-	border-block-start: var(--toepassing-border-subtle);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	/* De leesmaat van 77ch op `p` kapt hier ook de scheidingslijn af; die hoort
-	   de hele kaart te beslaan. */
-	margin-block: var(--toepassing-space-margin-sm) 0;
-	max-inline-size: none;
-	padding-block-start: var(--toepassing-space-padding-sm);
-}
-/* De bronnenlijst volgt direct op de melding; één scheidingslijn is genoeg. */
-.chat-disclaimer + .chat-status, .chat-disclaimer + #chat-offline + .chat-status {
-	border-block-start: 0;
-	margin-block-start: var(--toepassing-space-margin-xs);
-	padding-block-start: 0;
-}
 
 /* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
    bolletjes rood zijn. Staat de melding er, dan draagt zij de scheiding en laat
@@ -1631,16 +1628,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	padding-block-start: 0;
 }
 
-/* Bronnenlijst onder het gesprek: dit is achtergrondinformatie, geen melding.
-   Een stip draagt de verbindingsstatus; een icoon per bron gaf vijf rode kruizen
-   naast elkaar, wat als vijf storingen las. Een echte storing staat in de melding
-   boven het gesprek. */
 .chat-status {
-	border-block-start: var(--toepassing-border-subtle);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	margin-block-start: var(--toepassing-space-margin-sm);
-	padding-block-start: var(--toepassing-space-padding-sm);
 	ul {
 		flex-flow: row wrap;
 		gap: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-md);

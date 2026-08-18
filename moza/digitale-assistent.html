@@ -14,6 +14,15 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 
 	<h1 class="icon-label">Digitale assistent (AI)</h1>
 
+	<div class="feedback feedback-error" id="chat-offline" hidden>
+		{% icon "/assets/icons/icon-foutmelding.svg" %}
+		<div>
+			<p>De digitale assistent is momenteel niet beschikbaar. Probeer het later opnieuw.</p>
+			<button class="btn-small secondary" onclick="window.location.reload(); return false;">{% icon "/assets/icons/icon-ververs.svg" %} Ververs pagina</button>
+		</div>
+	</div>
+	<div class="chat-status" id="chat-status" aria-live="polite"></div>
+
 	<ul class="accordion">
 		<li>
 			<details>
@@ -58,18 +67,13 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 		<form id="chat-form">
 			<label for="chat-input" class="visually-hidden">Uw vraag</label>
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
-			<div class="chat-acties">
-				<button type="button" class="secondary" id="chat-nieuw">Nieuw gesprek</button>
+			<div class="action-group">
 				<button type="submit">Vraag stellen</button>
+				<button type="button" class="secondary" id="chat-nieuw">Nieuw gesprek starten</button>
 			</div>
 		</form>
 
-		<p class="chat-disclaimer">De antwoorden komen van AI en kunnen fouten bevatten. Controleer belangrijke informatie bij de bron.</p>
+		<small class="disclaimer">{% icon "/assets/icons/icon-informatie.svg" %} De antwoorden van deze assistent worden door AI gegenereerd en kunnen fouten bevatten. Controleer belangrijke informatie altijd bij de oorspronkelijke bron.</small>
 
-		<div class="feedback feedback-error" id="chat-offline" hidden>
-			{% icon "/assets/icons/icon-foutmelding.svg" %}
-			<div><p>De bronnen zijn nu niet bereikbaar. Probeer het later opnieuw.</p></div>
-		</div>
-		<div class="chat-status" id="chat-status" aria-live="polite"></div>
 	</section>
 </article>
