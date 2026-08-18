@@ -1,0 +1,35 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Ontwerppatronen/AI-statussen" />
+
+# AI-statusindicator
+
+Voor de AI-statussen denken, typen en reageren.
+
+Voor de digitale assistent is een expliciet patroon nodig voor de tijd dat de AI actief is zonder een volledig antwoord te hebben gegeven. Het patroon moet de gebruiker laten zien dat het systeem werkt, zonder een valse indruk te geven van een afgerond antwoord.
+
+## Ontwerppatroon
+
+- **Gebruiker krijgt directe feedback**; zodra het formulier is verzonden, verschijnt direct een statusbericht in het chatlog: “Vraag analyseren…”, “Ik controleer de brondata…” of “Ik formuleer het antwoord…”.
+- **Status is zichtbaar maar niet afleidend**; de status staat in dezelfde visuele stroom als het chatgesprek en vervangt geen antwoord. Het is een tijdelijke tussenstaat, geen vaste melding.
+- **Het patroon is toegankelijk**; de chatcontainer heeft een live region (`aria-live="polite"`) en de status wordt bij voorkeur ook gekoppeld aan `aria-busy="true"` terwijl de assistent bezig is.
+- **Buttons worden tijdelijk geblokkeerd**; de verzendknop krijgt een `aria-disabled`-status en de gebruiker kan niet nog een vraag tegelijk sturen.
+- **Bij streaming tekst** wordt de tekst in kleine stappen opgebouwd, zodat de gebruiker ziet dat het antwoord live wordt geschreven. Niet met een willekeurige “loading spinner” zonder context.
+
+## Gedrag per fase
+
+1. **Vraag verzonden**; de input wordt geblokkeerd en een statusbericht verschijnt in de chat.
+2. **AI is actief**; de gebruiker ziet een korte, beschrijvende tekst die de werkfase benoemt (bijvoorbeeld “Ik controleer de regels…”).
+3. **Antwoord verschijnt**; naarmate het antwoord wordt opgebouwd, verschijnt tekst in het chatlog en blijft de status zichtbaar totdat de laatste zin is afgerond.
+4. **Voltooid**; de status verdwijnt, de verzendknop wordt weer actief en de gebruiker kan doorvragen.
+
+## Voorbeeld in dit prototype
+
+Het bestaande chatgedrag in [assets/javascript/digitale-assistent.js](../assets/javascript/digitale-assistent.js#L299-L323) past dit patroon al toe via `setLoading()` en `showThinking()`. De ervaring is bewust kort en semantisch: de gebruiker ziet geen lege spinner, maar een tekst die de actie beschrijft. Dat past beter bij overheidscontext en voorkomt dat de AI onduidelijk lijkt te “hangen”.
+
+## Richtlijnen
+
+- Gebruik geen generieke “thinking” spinner zonder tekst; dat geeft geen inzicht in de staat.
+- Vermijd lange, vage berichten zoals “Even geduld…”. Benoem wat de assistent doet.
+- Houd de tekst kort, informatief en geruststellend.
+- Als het antwoord streams, laat dan alleen de laatste zin of het laatste woord met een typ-cursor verschijnen, niet een volledige “copy-paste” van het eindantwoord.

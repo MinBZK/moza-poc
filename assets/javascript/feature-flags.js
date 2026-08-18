@@ -271,6 +271,17 @@ function buildTogglePanel() {
 	});
 	panel.appendChild(transportFieldset);
 
+	// Demo-modus voor de Digitale Assistent: toon het patroon zonder backend.
+	const demoField = document.createElement("label");
+	demoField.className = "settings-field";
+	const demoToggle = document.createElement("input");
+	demoToggle.type = "checkbox";
+	demoToggle.checked = getSettingValue("demo-mode", "false") === "true";
+	demoToggle.addEventListener("change", () => setSettingValue("demo-mode", demoToggle.checked ? "true" : "false"));
+	demoField.appendChild(demoToggle);
+	demoField.appendChild(document.createTextNode(" Demo-modus: toon een werkend voorbeeld zonder echte API"));
+	panel.appendChild(demoField);
+
 	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
 	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
 	// geheim (het staat al in personas.json), dus een gewoon tekstveld.

@@ -131,6 +131,16 @@
 		return localStorage.getItem("setting:transport") || "mcp";
 	}
 
+	function getDemoMode() {
+		return localStorage.getItem("setting:demo-mode") === "true";
+	}
+
+	function wait(ms) {
+		return new Promise(function (resolve) {
+			setTimeout(resolve, ms);
+		});
+	}
+
 	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
 	// (env TEST_KVK_NUMMERS daar) en injecteert het bij elke bronaanroep. Het
 	// Flags-paneel kan een nummer forceren, handig om een nummer buiten de
@@ -900,6 +910,24 @@
 		input.value = "";
 		input.style.blockSize = "auto";
 		setLoading(true);
+
+		if (getDemoMode()) {
+			try {
+				await wait(600);
+				showThinking("Ik controleer de regels voor uw situatie…");
+				await wait(900);
+				hideThinking();
+				addMessage(
+					"Dit is een demo-antwoord van de digitale assistent. Het laat het werkende loading- en thinking-patroon zien zonder een echte backend.",
+					"assistant"
+				);
+			} finally {
+				setLoading(false);
+				submitting = false;
+				if (getComboKey() === comboKey) bewaarHistorie(comboKey);
+			}
+			return;
+		}
 
 		var answered = false;
 		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
