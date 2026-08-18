@@ -159,11 +159,11 @@
 			// Toon wait-indicator
 			showThinking("");
 			await wait(1600);
-			
+
 			// Verberg indicator en toon bericht
 			hideThinking();
 			addAssistantMessage(onboardingMessages[i]);
-			
+
 			// Pauze voordat volgende ballon komt
 			await wait(800);
 		}
@@ -1005,9 +1005,34 @@
 
 	// Vraag-formulier: "Leg mij dit uit" vraagt de assistent om uitleg en laat het
 	// formulier staan, zodat je daarna alsnog kunt antwoorden.
+	//
+	// De knop stuurt mee waar hij bij hoort. Zonder dat kwam er letterlijk
+	// "Leg mij dit uit" binnen, zonder onderwerp, en antwoordde de assistent
+	// met een wedervraag ("wat wilt u uitgelegd hebben?"). Voor de ondernemer
+	// leest dat als een knop die niets doet. De titel zegt waar het formulier
+	// over gaat, de vraagteksten zeggen waar hij op vastloopt - en juist die
+	// komen uit de regeling zelf, dus in wetstaal.
 	messages.addEventListener("click", function (e) {
-		if (!e.target.closest(".vraag-uitleg") || submitting) return;
-		input.value = "Leg mij dit uit";
+		var knop = e.target.closest(".vraag-uitleg");
+		if (!knop || submitting) return;
+		var kaart = knop.closest(".wallet-card");
+		var kop = kaart && kaart.querySelector("h3");
+		var vragen = [];
+		if (kaart) {
+			kaart.querySelectorAll("[data-veld]").forEach(function (veld) {
+				// De vraag zelf: de legend van een keuzeveld, of het label van een
+				// tekstveld. Niet de antwoordopties eronder - die zeggen niets over
+				// waar de ondernemer op vastloopt.
+				var el = veld.querySelector("legend") || veld.querySelector("label");
+				var tekst = el ? el.textContent.trim() : "";
+				if (tekst) vragen.push(tekst);
+			});
+		}
+		var onderwerp = kop ? kop.textContent.trim() : "";
+		var bericht = "Leg mij dit uit";
+		if (onderwerp) bericht += ': "' + onderwerp + '"';
+		if (vragen.length) bericht += ". Het gaat om deze vragen: " + vragen.join(" / ");
+		input.value = bericht;
 		form.requestSubmit();
 	});
 
