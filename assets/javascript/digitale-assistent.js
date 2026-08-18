@@ -186,6 +186,33 @@
 		schrijf(OPSLAG_HISTORIE, chatHistory);
 	}
 
+	// De assistent "denkt" kort voordat die iets nieuws zegt: dezelfde
+	// wait-indicator als tijdens de onboarding, zodat een nieuw gesprek, een
+	// wissel of een volgende page-load niet abrupt met kant-en-klare tekst
+	// begint. Het token laat een snel opvolgende wachtbeurt de vorige afbreken.
+	// Bij het laden van de pagina langer wachten dan bij een wissel: de eerste
+	// verf komt pas na het opbouwen van de pagina, dus een korte wachttijd is dan
+	// al voorbij voordat de indicator te zien is.
+	var WACHT_KORT = 700;
+	var WACHT_PAGINALAAD = 1600;
+	var wachtToken = 0;
+	function naWachten(callback, duur) {
+		var eigenToken = ++wachtToken;
+		showThinking("");
+		// Pas na de eerstvolgende verf de klok starten, anders telt de tijd die de
+		// browser nog aan de pagina besteedt mee als wachttijd.
+		requestAnimationFrame(function () {
+			requestAnimationFrame(function () {
+				if (eigenToken !== wachtToken) return;
+				setTimeout(function () {
+					if (eigenToken !== wachtToken) return;
+					hideThinking();
+					callback();
+				}, duur || WACHT_KORT);
+			});
+		});
+	}
+
 	function nieuwGesprek() {
 		var combo = getComboKey();
 		delete sessions[combo];
@@ -196,9 +223,12 @@
 		messages.scrollTop = 0;
 		input.value = "";
 		verwijderSuggestieIntro();
-		showSuggestionPrompt(true);
+		heeftGesprek = false;
 		disableNieuwKnop();
 		input.focus();
+		naWachten(function () {
+			showSuggestionPrompt(true);
+		});
 	}
 
 	// Leesbare labels per backend-sleutel, gecombineerd in ALL_LABELS voor friendlyTool.
@@ -851,18 +881,30 @@
 	}
 
 	var nieuwKnop = document.getElementById("chat-nieuw");
-	if (nieuwKnop) nieuwKnop.addEventListener("click", nieuwGesprek);
+	// Er valt pas iets te wissen zodra de gebruiker een bericht heeft gestuurd.
+	// Tijdens het streamen van een antwoord blijft de knop bereikbaar voor
+	// toetsenbord en screenreader (aria-disabled, geen disabled), maar doet die
+	// niets: anders wist een klik de chat onder het lopende antwoord vandaan.
+	var heeftGesprek = false;
+	if (nieuwKnop)
+		nieuwKnop.addEventListener("click", function () {
+			if (nieuwKnop.getAttribute("aria-disabled") === "true") return;
+			nieuwGesprek();
+		});
 
 	function enableNieuwKnop() {
-		if (nieuwKnop) nieuwKnop.removeAttribute("disabled");
+		if (nieuwKnop) nieuwKnop.removeAttribute("aria-disabled");
 	}
 
 	function disableNieuwKnop() {
-		if (nieuwKnop) nieuwKnop.setAttribute("disabled", "");
+		if (nieuwKnop) nieuwKnop.setAttribute("aria-disabled", "true");
 	}
 
-	// Zorg dat de knop altijd disabled start
-	disableNieuwKnop();
+	// Uitgeschakeld starten, tenzij er een gesprek is teruggezet uit deze sessie:
+	// dan valt er wél iets te wissen.
+	heeftGesprek = Boolean(chatHistory[previousCombo]);
+	if (heeftGesprek) enableNieuwKnop();
+	else disableNieuwKnop();
 
 	function handleSwitch() {
 		if (submitting) return;
@@ -874,13 +916,27 @@
 		previousCombo = next;
 		bewaarHistorie(prev);
 
+		// Per combinatie een eigen gesprek: de knop volgt de combinatie waar we
+		// naartoe wisselen, niet die we verlaten.
+		heeftGesprek = Boolean(chatHistory[next]);
+		if (heeftGesprek) enableNieuwKnop();
+		else disableNieuwKnop();
+
+		// Bestaand gesprek komt meteen terug: er is niets nieuws van de assistent.
+		// Een leeg gesprek begint wél met de wait-indicator, net als bij een
+		// nieuw gesprek en een volgende page-load.
 		if (chatHistory[next]) {
 			messages.innerHTML = chatHistory[next];
-		} else {
-			messages.innerHTML = initialMessages;
+			messages.scrollTop = messages.scrollHeight;
+			updateStatusDisplay();
+			return;
 		}
-		messages.scrollTop = messages.scrollHeight;
+		messages.innerHTML = "";
 		updateStatusDisplay();
+		naWachten(function () {
+			messages.innerHTML = initialMessages;
+			messages.scrollTop = messages.scrollHeight;
+		});
 	}
 
 	window.addEventListener("setting-changed", function (e) {
@@ -1115,7 +1171,8 @@
 		pendingToestemming = false;
 
 		submitting = true;
-		enableNieuwKnop();
+		heeftGesprek = true;
+		disableNieuwKnop();
 		addMessage(message, "user");
 		input.value = "";
 		input.style.blockSize = "auto";
@@ -1134,6 +1191,7 @@
 			} finally {
 				setLoading(false);
 				submitting = false;
+				if (heeftGesprek) enableNieuwKnop();
 				if (getComboKey() === comboKey) bewaarHistorie(comboKey);
 			}
 			return;
@@ -1299,6 +1357,7 @@
 			clearTimeout(connectTimer);
 			if (idleTimer) clearTimeout(idleTimer);
 			submitting = false;
+			if (heeftGesprek) enableNieuwKnop();
 			// Na submitting = false, anders weigert de knop in de kaart de beurt die
 			// hij zelf moet starten.
 			if (verzoekNaBericht && getComboKey() === comboKey) renderDeelverzoek(verzoekNaBericht);
@@ -1358,11 +1417,13 @@
 	// zodat het gesprek zonder extra klik begint.
 	var startvraag = new URLSearchParams(location.search).get("vraag");
 	if (heeftOnboardingGezien()) {
-		showSuggestionPrompt(true);
-		if (startvraag && startvraag.trim()) {
-			input.value = startvraag.trim();
-			form.requestSubmit();
-		}
+		naWachten(function () {
+			showSuggestionPrompt(true);
+			if (startvraag && startvraag.trim()) {
+				input.value = startvraag.trim();
+				form.requestSubmit();
+			}
+		}, WACHT_PAGINALAAD);
 	} else if (startvraag && startvraag.trim()) {
 		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
 		showOnboardingMessages().then(function() {
