@@ -1828,10 +1828,12 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	flex-direction: column;
 	gap: var(--toepassing-space-padding-md);
 	inline-size: 100%;
+	min-block-size: 28em;
 	overflow-y: auto;
 	padding: var(--toepassing-space-padding-xs);
 }
 .chat-message,
+.chat-suggestions,
 .chat-suggestions button {
 	border-radius: var(--toepassing-border-radius-lg);
 	display: flex;
@@ -1853,6 +1855,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	}
 }
 .chat-message-assistant,
+.chat-suggestions,
 .chat-message-loading {
 	align-self: flex-start;
 	background: var(--toepassing-color-background-subtle);
@@ -1875,8 +1878,14 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	}
 }
 .chat-suggestions {
-	padding: var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
+	border-radius: var(--toepassing-border-radius-lg);
+	display: grid;
+	gap: 0;
+	inline-size: 100%;
+	max-inline-size: 100%;
+	padding: var(--toepassing-space-padding-lg) var(--toepassing-space-padding-xl);
 	button {
+		justify-self: start;
 		margin-block-end: var(--toepassing-space-margin-sm);
 		&:nth-child(even) {
 			justify-self: end;
@@ -1889,6 +1898,12 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 			background: var(--toepassing-color-interactive-active-background);
 		}
 	}
+}
+.chat-suggestions-label {
+	margin-block-end: var(--toepassing-space-margin-lg);
+}
+.thinking-text {
+	margin-inline-start: var(--toepassing-space-margin-2xs);
 }
 
 #chat-input {
@@ -2582,7 +2597,8 @@ button {
 .thinking-wrapper {
 	align-items: center;
 	display: flex;
-	gap: var(--toepassing-space-margin-2xs);
+	/* gap: var(--toepassing-space-margin-2xs); */
+	gap: 0;
 }
 
 /* Pauzeermodus voor animaties */
