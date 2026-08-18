@@ -57,15 +57,37 @@
 
 	var sessions = lees(OPSLAG_SESSIES);
 	var chatHistory = lees(OPSLAG_HISTORIE);
+	var ONBOARDING_SEEN_KEY = "chat:onboarding-seen";
+
+	function heeftOnboardingGezien() {
+		try {
+			return localStorage.getItem(ONBOARDING_SEEN_KEY) === "true";
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function markeerOnboardingGezien() {
+		try {
+			localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+		} catch (e) {
+			/* privé-/beperkte modus */
+		}
+	}
 
 	// Onboarding-ballonnen die één voor één verschijnen
 	var onboardingMessages = [
 		"<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Ik help u bij uw vragen en taken.</p>",
-		"<p>Ik kan bijvoorbeeld helpen met:</p><ul class=\"list-indent\"><li>het opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u kunnen zijn</li><li>voorbereiden van uw belastingaagiften</li></ul>",
-		"<p>Ik haal uw gegevens pas op <strong>nadat u toestemming geeft</strong>. Ik vraag dit tijdens het gesprek, voordat iets anders gebeurt.</p>",
+		"<p>Ik kan bijvoorbeeld helpen met:</p><ul class=\"list-indent\"><li>het opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u kunnen zijn</li><li>voorbereiden van uw belastingaangiften</li></ul>",
+		"<p>Ik haal uw gegevens pas op <strong>nadat u hier expliciet toestemming voor geeft</strong>.</p>",
 		"<p>Ik raadpleeg onder meer het KvK Handelsregister, KOOP Regelingenbank, RegelRecht en de RVO.</p>",
-		"<p>Bij elk antwoord ziet u de bron. De antwoorden zijn consistent en traceerbaar.</p>",
-		"<p>Raadpleeg een adviseur of de bevoegde instantie voor juridisch advies.</p>"
+		"<p>Elk antwoord is traceerbaar en toont de bron.</p>",
+		"<p>Raadpleeg een adviseur of de bevoegde instantie indien u juridisch advies nodig heeft.</p>"
+	];
+	var exampleQuestions = [
+		"Geldt de energiebesparingsinformatieplicht voor mij?",
+		"Hoe kan ik mijn bedrijfsgegevens bekijken?",
+		"Hoe bereid ik mijn belastingaangifte voor?"
 	];
 
 	function addAssistantMessage(html) {
@@ -76,11 +98,67 @@
 		messages.scrollTop = messages.scrollHeight;
 	}
 
+	function addSuggestionButtons() {
+		var wrapper = document.createElement("div");
+		wrapper.className = "chat-suggestions";
+		var intro = document.createElement("p");
+		intro.className = "chat-suggestions-label";
+		intro.textContent = "Stel uw vraag, of probeer bijvoorbeeld:";
+		wrapper.appendChild(intro);
+		exampleQuestions.forEach(function (question) {
+			var button = document.createElement("button");
+			button.type = "button";
+			button.className = "chat-suggestion secondary";
+			button.textContent = question;
+			wrapper.appendChild(button);
+		});
+		if (wrapper.dataset.showReplay === "true") {
+			var replay = document.createElement("button");
+			replay.type = "button";
+			replay.className = "secondary chat-show-onboarding";
+			replay.textContent = "Toon opnieuw de uitleg.";
+			wrapper.appendChild(replay);
+		}
+		messages.appendChild(wrapper);
+	}
+
+	function showSuggestionPrompt(includeReplayButton) {
+		var suggestions = document.createElement("div");
+		suggestions.className = "chat-suggestions";
+		var intro = document.createElement("p");
+		intro.className = "chat-suggestions-label";
+		intro.textContent = "Stel uw vraag, of probeer bijvoorbeeld:";
+		suggestions.appendChild(intro);
+		exampleQuestions.forEach(function (question) {
+			var button = document.createElement("button");
+			button.type = "button";
+			button.className = "chat-suggestion secondary";
+			button.textContent = question;
+			suggestions.appendChild(button);
+		});
+		if (includeReplayButton) {
+			var replay = document.createElement("button");
+			replay.type = "button";
+			replay.className = "secondary chat-show-onboarding";
+			replay.textContent = "Toon opnieuw de uitleg.";
+			suggestions.appendChild(replay);
+		}
+		messages.appendChild(suggestions);
+	}
+
+	function verwijderSuggestieIntro() {
+		var replayIntro = messages.querySelector(".chat-replay-intro");
+		if (replayIntro) replayIntro.remove();
+		var suggestions = messages.querySelector(".chat-suggestions");
+		if (suggestions) suggestions.remove();
+	}
+
 	async function showOnboardingMessages() {
+		verwijderSuggestieIntro();
 		for (var i = 0; i < onboardingMessages.length; i++) {
 			// Toon wait-indicator
 			showThinking("");
-			await wait(800);
+			await wait(1600);
 			
 			// Verberg indicator en toon bericht
 			hideThinking();
@@ -89,6 +167,10 @@
 			// Pauze voordat volgende ballon komt
 			await wait(800);
 		}
+		showThinking("");
+		await wait(700);
+		hideThinking();
+		showSuggestionPrompt(heeftOnboardingGezien());
 		// Na onboarding: sla de initiële state op voor "Nieuw gesprek"
 		initialMessages = messages.innerHTML;
 	}
@@ -110,9 +192,12 @@
 		delete chatHistory[combo];
 		bewaarSessies();
 		schrijf(OPSLAG_HISTORIE, chatHistory);
-		messages.innerHTML = initialMessages;
+		messages.innerHTML = "";
 		messages.scrollTop = 0;
 		input.value = "";
+		verwijderSuggestieIntro();
+		showSuggestionPrompt(true);
+		disableNieuwKnop();
 		input.focus();
 	}
 
@@ -768,6 +853,17 @@
 	var nieuwKnop = document.getElementById("chat-nieuw");
 	if (nieuwKnop) nieuwKnop.addEventListener("click", nieuwGesprek);
 
+	function enableNieuwKnop() {
+		if (nieuwKnop) nieuwKnop.removeAttribute("disabled");
+	}
+
+	function disableNieuwKnop() {
+		if (nieuwKnop) nieuwKnop.setAttribute("disabled", "");
+	}
+
+	// Zorg dat de knop altijd disabled start
+	disableNieuwKnop();
+
 	function handleSwitch() {
 		if (submitting) return;
 
@@ -800,6 +896,11 @@
 
 	// Suggestie-chips: vul het invoerveld en verstuur direct.
 	messages.addEventListener("click", function (e) {
+		var replay = e.target.closest(".chat-show-onboarding");
+		if (replay) {
+			showOnboardingMessages();
+			return;
+		}
 		var chip = e.target.closest(".chat-suggestion");
 		if (!chip || submitting) return;
 		input.value = chip.textContent.trim();
@@ -1014,6 +1115,7 @@
 		pendingToestemming = false;
 
 		submitting = true;
+		enableNieuwKnop();
 		addMessage(message, "user");
 		input.value = "";
 		input.style.blockSize = "auto";
@@ -1255,14 +1357,23 @@
 	// notificatie op het dashboard. Vult het invoerveld en verstuurt direct,
 	// zodat het gesprek zonder extra klik begint.
 	var startvraag = new URLSearchParams(location.search).get("vraag");
-	if (startvraag && startvraag.trim()) {
-		// Toon onboarding voordat startvraag wordt verstuurd
+	if (heeftOnboardingGezien()) {
+		showSuggestionPrompt(true);
+		if (startvraag && startvraag.trim()) {
+			input.value = startvraag.trim();
+			form.requestSubmit();
+		}
+	} else if (startvraag && startvraag.trim()) {
+		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
 		showOnboardingMessages().then(function() {
+			markeerOnboardingGezien();
 			input.value = startvraag.trim();
 			form.requestSubmit();
 		});
 	} else {
-		// Toon alleen onboarding-berichten
-		showOnboardingMessages();
+		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
+		showOnboardingMessages().then(function() {
+			markeerOnboardingGezien();
+		});
 	}
 })();
