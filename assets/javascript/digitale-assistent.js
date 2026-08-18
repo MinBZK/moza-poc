@@ -639,6 +639,11 @@
 			type: v.type || (opties ? "radio" : "tekst"),
 			opties: opties,
 			groepen: v.groepen || null,
+			// Voorgevulde waarde en de herkomst daarvan: de host heeft dit veld zelf
+			// afgeleid uit een registratie. De ondernemer hoort te zien wát er is
+			// aangenomen en waarop, anders kan hij het niet weerspreken.
+			waarde: v.waarde || null,
+			toelichting: v.toelichting || null,
 		};
 	}
 
@@ -788,10 +793,12 @@
 			var opties = veld.opties
 				.map(function (optie, j) {
 					var id = naam + "-" + j;
-					return '<li><input type="radio" id="' + id + '" name="' + naam + '" value="' + escapeHTML(optie) + '"> <label for="' + id + '">' + escapeHTML(optie) + "</label></li>";
+					var gekozen = veld.waarde && optie === veld.waarde ? " checked" : "";
+					return '<li><input type="radio" id="' + id + '" name="' + naam + '" value="' + escapeHTML(optie) + '"' + gekozen + "> <label for=\"" + id + '">' + escapeHTML(optie) + "</label></li>";
 				})
 				.join("");
-			return '<fieldset data-veld="' + escapeHTML(veld.naam) + '"><legend>' + escapeHTML(veld.label) + '</legend><ul class="list-plain">' + opties + "</ul></fieldset>";
+			var toelichting = veld.toelichting ? '<p class="veld-toelichting">' + escapeHTML(veld.toelichting) + "</p>" : "";
+			return '<fieldset data-veld="' + escapeHTML(veld.naam) + '"><legend>' + escapeHTML(veld.label) + "</legend>" + toelichting + '<ul class="list-plain">' + opties + "</ul></fieldset>";
 		}
 		return '<div data-veld="' + escapeHTML(veld.naam) + '"><label for="' + naam + '">' + escapeHTML(veld.label) + '</label><input type="text" id="' + naam + '" name="' + naam + '"></div>';
 	}
