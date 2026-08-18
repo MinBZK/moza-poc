@@ -58,6 +58,41 @@
 	var sessions = lees(OPSLAG_SESSIES);
 	var chatHistory = lees(OPSLAG_HISTORIE);
 
+	// Onboarding-ballonnen die één voor één verschijnen
+	var onboardingMessages = [
+		"<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Ik help u bij uw vragen en taken.</p>",
+		"<p>Ik kan bijvoorbeeld helpen met:</p><ul class=\"list-indent\"><li>het opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u kunnen zijn</li><li>voorbereiden van uw belastingaagiften</li></ul>",
+		"<p>Ik haal uw gegevens pas op <strong>nadat u toestemming geeft</strong>. Ik vraag dit tijdens het gesprek, voordat iets anders gebeurt.</p>",
+		"<p>Ik raadpleeg onder meer het KvK Handelsregister, KOOP Regelingenbank, RegelRecht en de RVO.</p>",
+		"<p>Bij elk antwoord ziet u de bron. De antwoorden zijn consistent en traceerbaar.</p>",
+		"<p>Raadpleeg een adviseur of de bevoegde instantie voor juridisch advies.</p>"
+	];
+
+	function addAssistantMessage(html) {
+		var div = document.createElement("div");
+		div.className = "chat-message chat-message-assistant";
+		div.innerHTML = html;
+		messages.appendChild(div);
+		messages.scrollTop = messages.scrollHeight;
+	}
+
+	async function showOnboardingMessages() {
+		for (var i = 0; i < onboardingMessages.length; i++) {
+			// Toon wait-indicator
+			showThinking("");
+			await wait(800);
+			
+			// Verberg indicator en toon bericht
+			hideThinking();
+			addAssistantMessage(onboardingMessages[i]);
+			
+			// Pauze voordat volgende ballon komt
+			await wait(800);
+		}
+		// Na onboarding: sla de initiële state op voor "Nieuw gesprek"
+		initialMessages = messages.innerHTML;
+	}
+
 	function bewaarSessies() {
 		schrijf(OPSLAG_SESSIES, sessions);
 	}
@@ -129,6 +164,16 @@
 
 	function getTransport() {
 		return localStorage.getItem("setting:transport") || "mcp";
+	}
+
+	function getDemoMode() {
+		return localStorage.getItem("setting:demo-mode") === "true";
+	}
+
+	function wait(ms) {
+		return new Promise(function (resolve) {
+			setTimeout(resolve, ms);
+		});
 	}
 
 	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
@@ -312,7 +357,7 @@
 		if (!el) {
 			el = document.createElement("div");
 			el.className = "chat-message chat-message-thinking chat-message-assistant";
-			el.innerHTML = '<p class="thinking-text"></p>';
+			el.innerHTML = '<div class="thinking-wrapper"><div class="wait-indicator"></div><p class="thinking-text"></p></div>';
 			messages.appendChild(el);
 		}
 		el.querySelector(".thinking-text").textContent = text;
@@ -321,7 +366,9 @@
 
 	function hideThinking() {
 		var el = messages.querySelector(".chat-message-thinking");
-		if (el) el.remove();
+		if (el && localStorage.getItem("setting:freeze-thinking") !== "true") {
+			el.remove();
+		}
 	}
 
 	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
@@ -647,13 +694,13 @@
 		if (!serverStatus) return;
 		var transport = getTransport();
 		var sources = (transport === "cli" ? serverStatus.cli : serverStatus.servers) || {};
-		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
+		statusEl.innerHTML = '<p>Status van bronnen:</p><ul class="list-plain">' + statusLijst(sources) + "</ul>";
 	}
 
 	function renderStatusOffline() {
 		var offline = document.getElementById("chat-offline");
 		if (offline) offline.hidden = false;
-		statusEl.innerHTML = '<p>Bronnen die de assistent kan raadplegen:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
+		statusEl.innerHTML = '<p>Status van bronnen:</p><ul class="list-plain">' + statusLijst(null) + "</ul>";
 	}
 
 	// De uitleg bij een bron moet weg te krijgen zijn zonder de muis te verplaatsen
@@ -901,6 +948,24 @@
 		input.style.blockSize = "auto";
 		setLoading(true);
 
+		if (getDemoMode()) {
+			try {
+				await wait(600);
+				showThinking("Ik controleer de regels voor uw situatie…");
+				await wait(900);
+				hideThinking();
+				addMessage(
+					"Dit is een demo-antwoord van de digitale assistent. Het laat het werkende loading- en thinking-patroon zien zonder een echte backend.",
+					"assistant"
+				);
+			} finally {
+				setLoading(false);
+				submitting = false;
+				if (getComboKey() === comboKey) bewaarHistorie(comboKey);
+			}
+			return;
+		}
+
 		var answered = false;
 		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
 		// antwoord een knop naar Lopende zaken krijgt.
@@ -1110,7 +1175,13 @@
 	// zodat het gesprek zonder extra klik begint.
 	var startvraag = new URLSearchParams(location.search).get("vraag");
 	if (startvraag && startvraag.trim()) {
-		input.value = startvraag.trim();
-		form.requestSubmit();
+		// Toon onboarding voordat startvraag wordt verstuurd
+		showOnboardingMessages().then(function() {
+			input.value = startvraag.trim();
+			form.requestSubmit();
+		});
+	} else {
+		// Toon alleen onboarding-berichten
+		showOnboardingMessages();
 	}
 })();
