@@ -3,6 +3,7 @@
  * Gebruikt design tokens uit twee lagen:
  * _rijkshuisstijl.css: visuele opties vanuit de Rijkshuisstijl
  * _toepassing.css: toepassing van die opties op componenten
+ *
  */
 
 /* Importeer rijkshuisstijl design tokens */
