@@ -7,73 +7,39 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 <article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
 			<li aria-current="page">Digitale assistent (AI)</li>
 		</ol>
 	</nav>
 
 	<h1 class="icon-label">Digitale assistent (AI)</h1>
 
-	<div class="feedback feedback-error" id="chat-offline" hidden>
+	<!-- <div id="chat-offline" class="feedback feedback-error" hidden>
 		{% icon "/assets/icons/icon-foutmelding.svg" %}
 		<div>
 			<p>De digitale assistent is momenteel niet beschikbaar. Probeer het later opnieuw.</p>
-			<button class="btn-small secondary" onclick="window.location.reload(); return false;">{% icon "/assets/icons/icon-ververs.svg" %} Ververs pagina</button>
+			<button class="btn-small" onclick="window.location.reload(); return false;">{% icon "/assets/icons/icon-ververs.svg" %} Ververs pagina</button>
 		</div>
-	</div>
-	<div class="chat-status" id="chat-status" aria-live="polite"></div>
-
-	<ul class="accordion">
-		<li>
-			<details>
-				<summary>
-					<h2>Hoe werkt de digitale assistent?</h2>
-				</summary>
-				<div>
-					<p>U stelt uw vraag in gewone taal. De assistent zoekt zelf de juiste bronnen erbij.</p>
-					<p><strong>Uw gegevens worden pas opgehaald nadat u daar toestemming voor geeft.</strong> U krijgt die vraag in het gesprek, voordat er iets gebeurt. Uw bedrijfsgegevens komen uit het KvK Handelsregister. Uw energieverbruik komt van uw netbeheerder, via uw Business Wallet.</p>
-					<p>De assistent rekent zelf niet. RegelRecht rekent de wet uit. Dezelfde gegevens geven altijd dezelfde uitkomst.</p>
-					<p>Bij elk antwoord ziet u de bron en het wetsartikel. Indienen gebeurt pas nadat u het zelf bevestigt.</p>
-					<p>Dit is een proef voor één onderwerp: de informatieplicht energiebesparing.</p>
-					<p>De assistent raadpleegt <a href="https://www.kvk.nl/over-het-handelsregister/" rel="external">het KvK Handelsregister</a>, <a href="https://drop.overheid.nl/Start/Login" rel="external">KOOP Regelingenbank</a>, <a href="https://regelrecht.rijks.app/" rel="external">RegelRecht</a>, <a href="https://www.rvo.nl/" rel="external">RVO</a> en <a href="https://digital-strategy.ec.europa.eu/nl/policies/business-wallets" rel="external">uw Business Wallet</a>. Wilt u juridisch advies? Ga dan naar een adviseur of naar de instantie die erover gaat.</p>
-				</div>
-			</details>
-		</li>
-	</ul>
+	</div> -->
 
 	<section class="card chat-container">
 		<h2 class="visually-hidden">Gesprek</h2>
-		<div class="chat-messages" id="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}">
-			<div class="chat-message chat-message-assistant">
-				<p>Welkom. Ik ben de digitale assistent van MijnOverheid Zakelijk. Ik zoek uw gegevens en de regels op in officiële bronnen. Hierboven leest u hoe ik dat doe.</p>
-				<p>Daarvoor gebruik ik uw gegevens bij de KvK en uw energieverbruik. <strong>Die haal ik pas op nadat u mij toestemming geeft.</strong></p>
-				<p>Ik help u nu met één onderwerp: de informatieplicht energiebesparing. Daarbij kan ik:</p>
-				<ul class="list-indent">
-					<li>Uw bedrijfsgegevens opzoeken</li>
-					<li>Controleren of de plicht voor u geldt</li>
-					<li>De regels erbij zoeken</li>
-					<li>Uw rapportage indienen bij RVO</li>
-				</ul>
-				<p>Stel uw vraag. Of kies een voorbeeld:</p>
-				<div class="chat-suggestions">
-					<button type="button" class="secondary chat-suggestion">Geldt de energiebesparingsplicht voor mij?</button>
-					<button type="button" class="secondary chat-suggestion">Wat zijn mijn bedrijfsgegevens?</button>
-					<button type="button" class="secondary chat-suggestion">Wanneer moet ik rapporteren over energiebesparing?</button>
-					<button type="button" class="secondary chat-suggestion">Zoek de regels over energiebesparing</button>
-				</div>
-			</div>
-		</div>
+		<div id="chat-messages" class="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}"></div>
 
 		<form id="chat-form">
-			<label for="chat-input" class="visually-hidden">Uw vraag</label>
+			<label class="visually-hidden" for="chat-input">Uw vraag</label>
 			<textarea id="chat-input" placeholder="Waarmee kan ik u helpen?" required></textarea>
 			<div class="action-group">
 				<button type="submit">Vraag stellen</button>
-				<button type="button" class="secondary" id="chat-nieuw">Nieuw gesprek starten</button>
+				<button id="chat-nieuw" class="secondary" type="button">Nieuw gesprek starten</button>
 			</div>
 		</form>
 
 		<small class="disclaimer">{% icon "/assets/icons/icon-informatie.svg" %} De antwoorden van deze assistent worden door AI gegenereerd en kunnen fouten bevatten. Controleer belangrijke informatie altijd bij de oorspronkelijke bron.</small>
+
+		<div id="chat-status" class="chat-status" aria-live="polite"></div>
 
 	</section>
 </article>
