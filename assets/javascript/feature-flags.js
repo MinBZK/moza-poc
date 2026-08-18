@@ -282,6 +282,41 @@ function buildTogglePanel() {
 	demoField.appendChild(document.createTextNode(" Demo-modus: toon een werkend voorbeeld zonder echte API"));
 	panel.appendChild(demoField);
 
+	// Freeze thinking element: houdt het denk-element zichtbaar voor animatie-aanpassingen
+	const freezeField = document.createElement("label");
+	freezeField.className = "settings-field";
+	const freezeToggle = document.createElement("input");
+	freezeToggle.type = "checkbox";
+	freezeToggle.checked = getSettingValue("freeze-thinking", "false") === "true";
+	freezeToggle.addEventListener("change", () => setSettingValue("freeze-thinking", freezeToggle.checked ? "true" : "false"));
+	freezeField.appendChild(freezeToggle);
+	freezeField.appendChild(document.createTextNode(" Freeze thinking element (voor tweaking)"));
+	panel.appendChild(freezeField);
+
+	// Pauzeknop voor de wait-indicator animatie: handig om de animatie visueel aan te passen
+	const pauseField = document.createElement("label");
+	pauseField.className = "settings-field";
+	const pauseToggle = document.createElement("input");
+	pauseToggle.type = "checkbox";
+	pauseToggle.checked = getSettingValue("pause-animations", "false") === "true";
+	pauseToggle.addEventListener("change", () => {
+		const isPaused = pauseToggle.checked;
+		setSettingValue("pause-animations", isPaused ? "true" : "false");
+		if (isPaused) {
+			document.documentElement.classList.add("animations-paused");
+		} else {
+			document.documentElement.classList.remove("animations-paused");
+		}
+	});
+	pauseField.appendChild(pauseToggle);
+	pauseField.appendChild(document.createTextNode(" Animaties pauzeren (voor aanpassingen)"));
+	panel.appendChild(pauseField);
+
+	// Pas de initiële pauzestaat toe
+	if (getSettingValue("pause-animations", "false") === "true") {
+		document.documentElement.classList.add("animations-paused");
+	}
+
 	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
 	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
 	// geheim (het staat al in personas.json), dus een gewoon tekstveld.

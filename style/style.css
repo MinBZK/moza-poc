@@ -1754,18 +1754,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 		}
 	}
 }
-.chat-message-thinking .thinking-text::before {
-	animation: spin 0.8s linear infinite;
-	block-size: var(--toepassing-size-icon-md);
-	border: var(--toepassing-border-width-lg) solid var(--toepassing-color-interactive-active-border);
-	border-block-start-color: transparent;
-	border-radius: 50%;
-	content: "";
-	display: inline-block;
-	inline-size: var(--toepassing-size-icon-md);
-	margin-inline-end: var(--toepassing-space-margin-xs);
-	vertical-align: middle;
-}
 
 #chat-input {
 	min-block-size: 6rem;
@@ -2415,6 +2403,37 @@ h1, h2, h3, h4, h5, h6, a, button {
 		animation: none;
 		inline-size: 100%;
 		margin-inline-start: 0;
+	}
+}
+
+/* Wachtindicatie */
+.wait-indicator {
+	animation: wait-indication var(--toepassing-motion-speed-slow) steps(4) infinite;
+	aspect-ratio: 4;
+	background: radial-gradient(circle closest-side,var(--toepassing-color-text-default) 90%,#0000) 0/calc(100%/3) 100% space;
+	clip-path: inset(0 100% 0 0);
+	inline-size: var(--toepassing-size-icon-xl);
+}
+
+/* Wrapper voor thinking-element met indicator */
+.thinking-wrapper {
+	align-items: flex-start;
+	display: flex;
+	gap: var(--toepassing-space-margin-md);
+}
+.thinking-wrapper .thinking-text {
+	margin: 0;
+	margin-block-start: 2px;
+}
+
+/* Pauzeermodus voor animaties */
+.animations-paused .wait-indicator {
+	animation-play-state: paused;
+	clip-path: inset(0 75% 0 0);
+}
+@keyframes wait-indication {
+	to {
+		clip-path: inset(0 -33% 0 0);
 	}
 }
 

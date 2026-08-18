@@ -1,6 +1,6 @@
 import { Meta } from "@storybook/addon-docs/blocks";
 
-<Meta title="Ontwerppatronen/AI-statussen" />
+<Meta title="Ontwerppatronen/AI-statusindicator" />
 
 # AI-statusindicator
 
@@ -26,7 +26,14 @@ Voor de digitale assistent is een expliciet patroon nodig voor de tijd dat de AI
 ## Voorbeeld in dit prototype
 
 Het bestaande chatgedrag in [assets/javascript/digitale-assistent.js](../assets/javascript/digitale-assistent.js#L299-L323) past dit patroon al toe via `setLoading()` en `showThinking()`. De ervaring is bewust kort en semantisch: de gebruiker ziet geen lege spinner, maar een tekst die de actie beschrijft. Dat past beter bij overheidscontext en voorkomt dat de AI onduidelijk lijkt te “hangen”.
+## Wachtindicator visueel
 
+<div style={{ display: 'flex', gap: 'var(--toepassing-space-margin-md)', alignItems: 'flex-start', padding: 'var(--toepassing-space-padding-md)', backgroundColor: 'var(--toepassing-color-background-default)', borderRadius: 'var(--toepassing-border-radius-default)', border: `1px solid var(--toepassing-color-border-default)` }}>
+	<div className="wait-indicator"></div>
+	<p style={{ margin: 0, marginBlockStart: '2px', fontSize: '0.875rem' }}>Ik controleer de regels voor uw situatie…</p>
+</div>
+
+De `.wait-indicator` is een subtiele, lichte animatie met vier stappen die aangeven dat het systeem werkt. Het staat naast de beschrijvende tekst, niet als zelfstandige spinner.
 ## Richtlijnen
 
 - Gebruik geen generieke “thinking” spinner zonder tekst; dat geeft geen inzicht in de staat.

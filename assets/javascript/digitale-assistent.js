@@ -322,7 +322,7 @@
 		if (!el) {
 			el = document.createElement("div");
 			el.className = "chat-message chat-message-thinking chat-message-assistant";
-			el.innerHTML = '<p class="thinking-text"></p>';
+			el.innerHTML = '<div class="thinking-wrapper"><div class="wait-indicator"></div><p class="thinking-text"></p></div>';
 			messages.appendChild(el);
 		}
 		el.querySelector(".thinking-text").textContent = text;
@@ -331,7 +331,9 @@
 
 	function hideThinking() {
 		var el = messages.querySelector(".chat-message-thinking");
-		if (el) el.remove();
+		if (el && localStorage.getItem("setting:freeze-thinking") !== "true") {
+			el.remove();
+		}
 	}
 
 	// --- Wallet (EU Business Wallet, mock): deelverzoek + gestructureerde energieweergave ---
