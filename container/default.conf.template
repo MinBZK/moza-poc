@@ -25,14 +25,14 @@ server {
     # API prefixes to proxy to different backends. If empty, they fall back to
     # $backend_origin below.
     set $backend_profiel "${BACKEND_PROFIEL}";
-    set $backend_api2 "${BACKEND_API_2}";
+    set $backend_api_2 "${BACKEND_API_2}";
 
     # Fallback to the generic backend_origin when a specific backend isn't set
     if ($backend_profiel = "") {
         set $backend_profiel $backend_origin;
     }
-    if ($backend_api2 = "") {
-        set $backend_api2 $backend_origin;
+    if ($backend_api_2 = "") {
+        set $backend_api_2 $backend_origin;
     }
 
     # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
@@ -77,7 +77,7 @@ server {
     # Example: another API prefix that can point to a different backend
     # Set the env var BACKEND_API_2 to override, otherwise falls back to BACKEND_ORIGIN
     location /api/other/ {
-        proxy_pass $backend_api2$request_uri;
+        proxy_pass $backend_api_2$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
