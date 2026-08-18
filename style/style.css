@@ -180,14 +180,6 @@ p {
 	&.intro {
 		font: var(--toepassing-text-paragraph-intro);
 	}
-	a {
-		svg {
-			margin-inline-end: var(--toepassing-space-margin-4xs);
-			path:not(.icon-color-inverse), svg circle:not(.icon-color-inverse) {
-				fill: currentcolor !important;
-			}
-		}
-	}
 }
 
 small {
@@ -659,7 +651,11 @@ button, a.btn, a.btn-cta, button.btn-cta {
 		}
 	}
 	svg {
+		block-size: var(--toepassing-size-icon-md);
 		margin-inline-end: var(--toepassing-space-margin-2xs);
+		path {
+			fill: currentcolor !important;
+		}
 	}
 }
 .btn-small {
@@ -1250,6 +1246,11 @@ caption {
 		flex-shrink: 0;
 		inline-size: var(--toepassing-size-icon-md);
 	}
+	div {
+		display: flex;
+		flex-direction: column;
+		gap: var(--toepassing-space-margin-xs);
+	}
 }
 .feedback-info {
 	background: var(--toepassing-color-feedback-info-subtle);
@@ -1613,15 +1614,6 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	flex-wrap: wrap;
 	gap: var(--toepassing-space-padding-md);
 	justify-content: space-between;
-}
-/* Beide knoppen op één regel onder het invoerveld, rechts uitgelijnd: "Vraag
-   stellen" als laatste, want dat is de handeling die de gebruiker verwacht af te
-   sluiten. Wrapt op smalle schermen. */
-.chat-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-padding-sm);
-	justify-content: flex-end;
 }
 
 /* De storingsmelding staat bij de bronnenlijst, want die legt uit waarom de
