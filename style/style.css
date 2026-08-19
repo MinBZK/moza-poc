@@ -1492,11 +1492,8 @@ small.disclaimer {
 
 /* Gemarkeerd-kolom */
 .berichtenbox-row-mark {
-	block-size: 1px;
-	inline-size: var(--toepassing-size-icon-md);
-	padding-block: 0;
+	padding-inline: var(--toepassing-space-padding-xs) 0;
 	position: relative;
-	text-align: center;
 	z-index: 1;
 }
 button.mark-toggle {
