@@ -2602,8 +2602,7 @@ button {
 .thinking-wrapper {
 	align-items: center;
 	display: flex;
-	/* gap: var(--toepassing-space-margin-2xs); */
-	gap: 0;
+	gap: var(--toepassing-space-margin-2xs);
 }
 
 /* Pauzeermodus voor animaties */
