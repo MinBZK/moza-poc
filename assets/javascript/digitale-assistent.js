@@ -439,7 +439,7 @@
 			});
 			if (bestaat) return null;
 		}
-		var zaak = Object.assign({ aangemaaktOp: Date.now() }, inhoud);
+		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
 		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
 		lijst.push(zaak);
 		try {
