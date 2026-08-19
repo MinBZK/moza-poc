@@ -577,6 +577,13 @@
 	// "Delen" een beurt versturen. De demo-kaart blijft lokaal.
 	function renderDeelverzoek(info) {
 		var bron = (info && info.bron) || "je Business Wallet";
+		// De backend zegt per bron wat er gedeeld wordt (toestemming_nodig.omschrijving):
+		// sinds toestemming per bron geldt, kan dit verzoek ook over het
+		// Handelsregister gaan. De wallet-tekst blijft de terugval voor een
+		// backend die het veld nog niet meestuurt.
+		var omschrijving =
+			(info && info.omschrijving) ||
+			"De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.";
 		var card = document.createElement("div");
 		card.className = "wallet-card";
 		card.setAttribute("data-verzoek", "backend");
@@ -585,7 +592,7 @@
 		vraag.className = "wallet-consent";
 		vraag.innerHTML =
 			"<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit " + escapeHTML(bron) + "</h3>" +
-			"<p>De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.</p>" +
+			"<p>" + escapeHTML(omschrijving) + "</p>" +
 			'<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
 		card.appendChild(vraag);
 
