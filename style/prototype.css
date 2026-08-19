@@ -106,7 +106,7 @@
 			padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-xs);
 		}
 	}
-	.feature-flags-fullscreen {
+	.feature-flags-actie, .feature-flags-fullscreen {
 		background: var(--toepassing-color-interactive-default-background);
 		border: var(--toepassing-border-default);
 		border-radius: var(--toepassing-border-radius-sm);

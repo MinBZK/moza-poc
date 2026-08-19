@@ -317,6 +317,19 @@ function buildTogglePanel() {
 		document.documentElement.classList.add("animations-paused");
 	}
 
+	// Testantwoord met bronvermelding: alleen zinvol op een pagina met een chat.
+	// digitale-assistent.js laadt na dit script, dus we controleren op het element
+	// en niet op window.MozaAssistent — die bestaat hier nog niet.
+	if (document.getElementById("chat-messages")) {
+		const testAntwoordBtn = document.createElement("button");
+		testAntwoordBtn.className = "feature-flags-actie";
+		testAntwoordBtn.textContent = "Testantwoord met bronvermelding tonen";
+		testAntwoordBtn.addEventListener("click", () => {
+			if (window.MozaAssistent) window.MozaAssistent.testAntwoord();
+		});
+		panel.appendChild(testAntwoordBtn);
+	}
+
 	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
 	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
 	// geheim (het staat al in personas.json), dus een gewoon tekstveld.

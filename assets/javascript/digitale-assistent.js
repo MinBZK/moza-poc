@@ -1400,6 +1400,72 @@
 		}
 	});
 
+	// Demo/test-hook: een volledig antwoord met bronvermelding, zonder backend.
+	// Laat zien hoe de assistent haar antwoord traceerbaar maakt: elke bron die is
+	// geraadpleegd staat eronder, met de datum van raadpleging.
+	var TEST_VRAAG = "Geldt de energiebesparingsinformatieplicht voor mijn bedrijf?";
+	var TEST_ANTWOORD =
+		"Ja, die geldt voor uw bedrijf. U gebruikt per jaar meer dan 50.000 kWh elektriciteit of 25.000 m³ aardgas, en dan bent u verplicht energie te besparen én te rapporteren welke maatregelen u heeft genomen.\n\n" +
+		"Voor uw branche staan 5 erkende maatregelen op de lijst. U rapporteert uiterlijk 1 december 2026 bij de RVO.\n\n" +
+		"Controleer dit bij twijfel bij uw omgevingsdienst: die houdt toezicht op deze plicht.";
+	var TEST_BRONNEN = [
+		{
+			label: "KvK Handelsregister",
+			titel: "Bedrijfsgegevens: SBI-code, rechtsvorm en vestiging",
+			url: "https://www.kvk.nl/handelsregister/",
+		},
+		{
+			label: "KOOP Regelingenbank",
+			titel: "Activiteitenbesluit milieubeheer, artikel 2.15",
+			url: "https://wetten.overheid.nl/BWBR0022762/",
+		},
+		{
+			label: "RVO",
+			titel: "Informatieplicht energiebesparing: rapportagetermijn",
+			url: "https://www.rvo.nl/onderwerpen/informatieplicht-energiebesparing",
+		},
+	];
+
+	function bronnenHTML() {
+		var vandaag = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+		var items = TEST_BRONNEN.map(function (bron) {
+			return (
+				"<li>" +
+				'<a rel="external" target="_blank" href="' +
+				escapeHTML(bron.url) +
+				'">' +
+				escapeHTML(bron.label) +
+				": " +
+				escapeHTML(bron.titel) +
+				"</a>" +
+				'<small class="chat-bron-datum">Geraadpleegd op ' +
+				escapeHTML(vandaag) +
+				"</small>" +
+				"</li>"
+			);
+		}).join("");
+		return '<p class="chat-bronnen-label">Bronnen:</p><ul class="list-plain chat-bronnen">' + items + "</ul>";
+	}
+
+	function toonTestAntwoord() {
+		verwijderSuggestieIntro();
+		addMessage(TEST_VRAAG, "user");
+		showThinking("Bronnen raadplegen…");
+		return wait(1200).then(function () {
+			hideThinking();
+			var bericht = addMessage(TEST_ANTWOORD, "assistant");
+			bericht.insertAdjacentHTML("beforeend", bronnenHTML());
+			messages.scrollTop = messages.scrollHeight;
+			return bericht;
+		});
+	}
+
+	// Demo/test-hook: een antwoord mét bronvermelding in de chat zetten. Wordt ook
+	// aangeroepen vanuit het Flags-paneel.
+	window.MozaAssistent = {
+		testAntwoord: toonTestAntwoord,
+	};
+
 	// Demo/test-hook: toon de Wallet-flow zonder backend met de voorbeeld-credential.
 	// Staat los van de live SSE-flow; handig om de kaart te demonstreren of te testen.
 	window.MozaWallet = {
