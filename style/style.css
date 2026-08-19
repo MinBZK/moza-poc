@@ -35,7 +35,7 @@
 /* -- PAGINA-LAYOUT -- */
 
 body {
-	background: var(--toepassing-color-background-subtle);
+	background: var(--toepassing-color-background-subtle-2);
 	color: var(--toepassing-color-text-default);
 	display: flex;
 	flex-direction: column;
@@ -248,7 +248,7 @@ kbd,
 pre,
 samp,
 var {
-	background: var(--toepassing-color-background-subtle);
+	background: var(--toepassing-color-background-subtle-2);
 	font: var(--toepassing-text-code);
 }
 pre {
@@ -1271,7 +1271,7 @@ caption {
 	}
 }
 .action-options {
-	background: var(--toepassing-color-background-subtle);
+	background: var(--toepassing-color-background-subtle-2);
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
 	padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
@@ -1856,10 +1856,10 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 .chat-suggestions,
 .chat-message-loading {
 	align-self: flex-start;
-	background: var(--toepassing-color-background-subtle);
+	background: var(--toepassing-color-background-subtle-1);
 	filter: drop-shadow(1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(-1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(0 1px 0 var(--toepassing-color-border-subtle)) drop-shadow(0 -1px 0 var(--toepassing-color-border-subtle));
 	&::before {
-		background: var(--toepassing-color-background-subtle);
+		background: var(--toepassing-color-background-subtle-2);
 		clip-path: shape(from 0% 0%, line to 100% 0%, line to 20% 80%, curve to 0% 80% with 0% 100%);
 		inset-inline-start: var(--toepassing-size-2xs);
 	}
@@ -2027,7 +2027,7 @@ h1.icon-label {
 }
 .wallet-bron {
 	align-self: flex-start;
-	background: var(--toepassing-color-background-subtle);
+	background: var(--toepassing-color-background-subtle-2);
 	border-radius: var(--toepassing-border-radius-md);
 	color: var(--toepassing-color-text-subtle-1);
 	font: var(--toepassing-text-smalltext);
@@ -2075,7 +2075,7 @@ h1.icon-label {
 		}
 	}
 	summary {
-		background: var(--toepassing-color-background-subtle);
+		background: var(--toepassing-color-background-subtle-2);
 		display: flex;
 		gap: var(--toepassing-space-layout-2xs);
 		padding: var(--toepassing-space-padding-sm);
@@ -2607,7 +2607,7 @@ button {
 .wait-indicator {
 	animation: wait-indication var(--toepassing-motion-speed-slow) steps(4) infinite;
 	aspect-ratio: 4;
-	background: radial-gradient(circle closest-side, var(--toepassing-color-text-default) 90%, var(--toepassing-color-background-subtle)) 0 / calc(100% / 3) 100% space;
+	background: radial-gradient(circle closest-side, var(--toepassing-color-text-default) 90%, var(--toepassing-color-background-subtle-2)) 0 / calc(100% / 3) 100% space;
 	clip-path: inset(0 100% 0 0);
 	inline-size: var(--toepassing-size-icon-lg);
 }
@@ -2802,7 +2802,7 @@ button {
 		[role="tablist"] {
 			z-index: 1;
 			button {
-				background: var(--toepassing-color-background-subtle);
+				background: var(--toepassing-color-background-subtle-2);
 				border: var(--toepassing-border-default);
 				border-block-end: 0;
 				border-radius: var(--toepassing-border-radius-lg) var(--toepassing-border-radius-lg) 0 0;

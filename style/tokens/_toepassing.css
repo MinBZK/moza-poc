@@ -30,7 +30,8 @@
 	--toepassing-color-background-default: var(--toepassing-color-background-canvas); /** Primaire oppervlak (kaarten, panelen, contentgebieden) */
 	--toepassing-color-background-inverse: var(--rijkshuisstijl-color-lintblauw-500); /** Donker oppervlak in een licht thema (en andersom), voor contrastrijke secties zoals footers */
 	--toepassing-color-background-raised: var(--rijkshuisstijl-color-grijs-100); /** Verhoogde oppervlakken zoals kaarten, popovers en dropdowns. Zit visueel boven color.background.default */
-	--toepassing-color-background-subtle: var(--rijkshuisstijl-color-grijs-100); /** Gedempt oppervlak, voor secundaire panelen of verdiepte gebieden zoals codeblokken en tabelkoppen */
+	--toepassing-color-background-subtle-1: var(--rijkshuisstijl-color-grijs-50); /** Gedempt oppervlak, voor secundaire panelen of verdiepte gebieden zoals codeblokken en tabelkoppen */
+	--toepassing-color-background-subtle-2: var(--rijkshuisstijl-color-grijs-100); /** Gedempt oppervlak, voor secundaire panelen of verdiepte gebieden zoals codeblokken en tabelkoppen */
 	--toepassing-color-badge-background: var(--toepassing-color-feedback-attention);
 	--toepassing-color-badge-text: var(--toepassing-color-text-inverse);
 	--toepassing-color-border-default: var(--rijkshuisstijl-color-grijs-500); /** Standaardranden voor invoervelden, kaarten en scheidingslijnen */

@@ -743,6 +743,11 @@
       }
     },
     "grijs": {
+      "50": {
+        "$type": "color",
+        "$value": "#f9f9f9",
+        "$description": "Grijs 50"
+      },
       "100": {
         "$type": "color",
         "$value": "#f3f3f3",
@@ -1071,7 +1076,12 @@
         "$value": "{color.background.canvas}",
         "$description": "Primaire oppervlak (kaarten, panelen, contentgebieden)"
       },
-      "subtle": {
+      "subtle-1": {
+        "$type": "color",
+        "$value": "{color.grijs.50}",
+        "$description": "Gedempt oppervlak, voor secundaire panelen of verdiepte gebieden zoals codeblokken en tabelkoppen"
+      },
+      "subtle-2": {
         "$type": "color",
         "$value": "{color.grijs.100}",
         "$description": "Gedempt oppervlak, voor secundaire panelen of verdiepte gebieden zoals codeblokken en tabelkoppen"
