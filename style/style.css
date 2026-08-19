@@ -1746,37 +1746,31 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 
 .chat-status {
-	display: none;
 	ul {
 		flex-flow: row wrap;
 		gap: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-md);
 	}
 	li {
-		padding-inline-start: calc(var(--toepassing-size-icon-sm) + var(--toepassing-space-padding-2xs));
+		align-items: start;
+		display: flex;
+		gap: var(--toepassing-space-padding-2xs);
 		position: relative;
 	}
-	li::before {
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
+	/* Het icoon staat in de markup, zodat het via currentColor de statuskleur
+	   overneemt; een achtergrondafbeelding kan dat niet. De kleur zit op het
+	   icoon en niet op de hele regel, zodat de naam van de bron gewone tekst
+	   blijft. */
+	li > svg {
 		block-size: var(--toepassing-size-icon-sm);
-		content: "";
+		flex: none;
 		inline-size: var(--toepassing-size-icon-sm);
-		inset-block-start: 0.15em;
-		inset-inline-start: 0;
-		position: absolute;
+		margin-block-start: 0.15em;
 	}
-	.chat-status-connected {
-		color: red;
-		&::before {
-			background-image: url("../assets/icons/icon-succes.svg");
-		}
+	.chat-status-connected > svg {
+		color: var(--toepassing-color-feedback-success-icon);
 	}
-	.chat-status-disconnected {
-		color: red;
-		&::before {
-			background-image: url("../assets/icons/icon-foutmelding.svg");
-		}
+	.chat-status-disconnected > svg {
+		color: var(--toepassing-color-feedback-error-icon);
 	}
 	/* Onderstreping als hint dat er uitleg achter zit; `cursor: help` bevestigt
 	   dat met de muis. */

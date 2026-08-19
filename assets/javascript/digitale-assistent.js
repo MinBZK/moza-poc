@@ -827,10 +827,11 @@
 		return STATUS_ITEMS.map(function (it) {
 			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
-			// Geen icoon meer per bron: vijf rode kruizen onder een gesprek lezen als
-			// vijf storingen. De stip draagt de status; de uitleg erachter zegt wat de
-			// bron doet en wat het betekent als hij eruit ligt. Een echte storing staat
-			// in de melding boven het gesprek (#chat-offline).
+			// Het icoon staat in de markup en niet als achtergrond in CSS, zodat het
+			// via currentColor de statuskleur volgt. Het is decoratief (aria-hidden):
+			// de status staat in woorden in de uitleg erachter. Een echte storing
+			// staat in de melding boven het gesprek (#chat-offline).
+			var icoon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
 			var status = connected
 				? "Nu bereikbaar."
 				: "Nu niet bereikbaar. De assistent kan deze bron op dit moment niet gebruiken.";
@@ -838,7 +839,7 @@
 			// De naam is focusbaar (tabindex) zodat de uitleg ook met het toetsenbord
 			// te bereiken is, en aria-describedby koppelt hem voor de schermlezer —
 			// een title-attribuut doet geen van beide betrouwbaar.
-			return '<li class="chat-status-' + dot + '">' +
+			return '<li class="chat-status-' + dot + '">' + icoon +
 				'<span class="chat-status-bron" tabindex="0" aria-describedby="' + id + '">' + it.label + "</span>" +
 				'<span class="chat-status-uitleg" role="tooltip" id="' + id + '">' + it.uitleg + " " + status + "</span>" +
 				"</li>";
