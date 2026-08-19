@@ -1816,13 +1816,14 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	font-style: italic;
 }
 .chat-messages {
-	/* border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md); */
+	block-size: 24em;
+	border: var(--toepassing-border-subtle);
+	border-radius: var(--toepassing-border-radius-md);
 	display: flex;
 	flex-direction: column;
 	gap: var(--toepassing-space-padding-md);
 	inline-size: 100%;
-	min-block-size: 24em;
+	/* min-block-size: 24em; */
 	overflow-y: auto;
 	padding: var(--toepassing-space-padding-xs);
 }
