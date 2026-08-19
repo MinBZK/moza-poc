@@ -81,7 +81,7 @@
 		"<p>Ik kan bijvoorbeeld helpen met:</p><ul class=\"list-indent\"><li>het opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u kunnen zijn</li><li>voorbereiden van uw belastingaangiften</li></ul>",
 		"<p>Ik haal uw gegevens pas op <strong>nadat u hier expliciet toestemming voor geeft</strong>.</p>",
 		"<p>Ik raadpleeg onder meer het KvK Handelsregister, KOOP Regelingenbank, RegelRecht en de RVO.</p>",
-		"<p>Elk antwoord is traceerbaar en toont de bron.</p>",
+		"<p>Elk antwoord is traceerbaar en verwijst naar de bron.</p>",
 		"<p>Raadpleeg een adviseur of de bevoegde instantie indien u juridisch advies nodig heeft.</p>"
 	];
 	var exampleQuestions = [
@@ -103,7 +103,7 @@
 		wrapper.className = "chat-suggestions";
 		var intro = document.createElement("p");
 		intro.className = "chat-suggestions-label";
-		intro.textContent = "Stel uw vraag, of probeer bijvoorbeeld:";
+		intro.textContent = "Stel uw vraag, of probeer een van deze voorbeeldvragen:";
 		wrapper.appendChild(intro);
 		exampleQuestions.forEach(function (question) {
 			var button = document.createElement("button");
@@ -127,7 +127,7 @@
 		suggestions.className = "chat-suggestions";
 		var intro = document.createElement("p");
 		intro.className = "chat-suggestions-label";
-		intro.textContent = "Stel uw vraag, of probeer bijvoorbeeld:";
+		intro.textContent = "Stel uw vraag, of probeer een van deze voorbeeldvragen:";
 		suggestions.appendChild(intro);
 		exampleQuestions.forEach(function (question) {
 			var button = document.createElement("button");
