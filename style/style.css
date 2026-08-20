@@ -364,6 +364,16 @@ pre {
 	}
 }
 
+/* Focus die de pagina zelf verzet na een muisklik: de gebruiker staat wel op de
+   juiste plek, maar krijgt geen ring te zien. De browser rekent zo'n sprong als
+   toetsenbordfocus zodra het vorige element een tekstveld was, en dat klopt hier
+   niet. JavaScript haalt het attribuut weg bij de eerste toetsaanslag, dus voor
+   wie daarna verder tabt is de ring er meteen weer. */
+[data-focus-stil]:focus-visible {
+	box-shadow: none;
+	outline: none;
+}
+
 /* Bevestigde opties (niet meer wijzigbaar, gemarkeerd met vinkje, wordt gebruikt voor Aangesloten organisaties onder Contactgegevens) */
 li.option--confirmed {
 	&::before {
@@ -1822,7 +1832,8 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 .chat-message,
 .chat-suggestions,
-.chat-suggestions button {
+.chat-suggestions button,
+.wallet-card {
 	border-radius: var(--toepassing-border-radius-lg);
 	display: flex;
 	flex-direction: column;
@@ -1847,7 +1858,8 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 .chat-message-assistant,
 .chat-suggestions,
-.chat-message-loading {
+.chat-message-loading,
+.wallet-card {
 	align-self: flex-start;
 	background: var(--toepassing-color-background-subtle-1);
 	filter: drop-shadow(1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(-1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(0 1px 0 var(--toepassing-color-border-subtle)) drop-shadow(0 -1px 0 var(--toepassing-color-border-subtle));
@@ -1926,43 +1938,52 @@ h1.icon-label {
 		block-size: var(--toepassing-size-icon-md);
 	}
 }
+.vraag-form {
+	legend {
+		font: var(--toepassing-text-heading-h5);
+		margin-block-end: var(--toepassing-space-margin-2xs);
+	}
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		gap: var(--toepassing-space-margin-2xs);
+	}
+	ul {
+		margin-block: var(--toepassing-space-margin-2xs);
+	}
+}
 
 /* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
-.wallet-card {
-	background: var(--toepassing-color-background-default);
-	border: var(--toepassing-border-default);
-	border-radius: var(--toepassing-border-radius-md);
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-padding-sm);
-	padding: var(--toepassing-space-padding-md);
+.wallet-consent {
+	display: contents;
 }
-.wallet-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-padding-sm);
+.wallet-consent[hidden] {
+	display: none;
 }
 .wallet-uitgever {
-	align-items: center;
 	color: var(--toepassing-color-text-subtle-1);
 	display: flex;
-	flex-wrap: wrap;
-	font: var(--toepassing-text-smalltext);
+	flex-flow: column wrap;
 	gap: var(--toepassing-space-padding-2xs);
+	margin-block: var(--toepassing-space-margin-2xs);
 }
 .wallet-badge {
 	align-items: center;
 	background: var(--toepassing-color-feedback-success-subtle);
 	border-radius: var(--toepassing-border-radius-md);
-	color: var(--toepassing-color-feedback-success-border);
+	/* color: var(--toepassing-color-feedback-success-border); */
 	display: inline-flex;
+	font: var(--toepassing-text-smalltext);
 	gap: var(--toepassing-space-padding-2xs);
+	inline-size: fit-content;
+	margin-block-end: var(--toepassing-space-margin-xs);
 	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
 }
 .wallet-badge svg {
 	block-size: var(--toepassing-size-icon-sm);
 	color: var(--toepassing-color-feedback-success-icon);
 	inline-size: var(--toepassing-size-icon-sm);
+	margin-inline-end: var(--toepassing-space-margin-3xs);
 }
 .wallet-cijfers {
 	display: grid;
@@ -1980,7 +2001,7 @@ h1.icon-label {
 }
 .wallet-waarde {
 	display: block;
-	font: var(--toepassing-text-heading-h3);
+	font: var(--toepassing-text-heading-h5);
 }
 .wallet-grens {
 	align-items: center;
@@ -2008,20 +2029,14 @@ h1.icon-label {
 .wallet-grens-onder::before {
 	background: var(--toepassing-color-feedback-success-icon);
 }
-.wallet-bron {
-	align-self: flex-start;
-	background: var(--toepassing-color-background-subtle-2);
-	border-radius: var(--toepassing-border-radius-md);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
-}
+
 /* Decoratief stap-icoon naast de kop van een Wallet-kaart */
 .stap-icoon {
 	block-size: var(--toepassing-size-icon-md);
 	inline-size: var(--toepassing-size-icon-md);
-	margin-inline-end: var(--toepassing-space-padding-2xs);
-	vertical-align: text-bottom;
+	margin-block-start: var(--toepassing-space-padding-3xs);
+	margin-inline-end: var(--toepassing-space-padding-xs);
+	vertical-align: text-top;
 }
 
 /* -- OVERIGE COMPONENTEN -- */
