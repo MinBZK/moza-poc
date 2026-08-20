@@ -1812,7 +1812,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 .chat-messages {
 	block-size: 25em;
 	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
+	border-radius: var(--toepassing-border-radius-sm);
 	display: flex;
 	flex-direction: column;
 	gap: var(--toepassing-space-padding-md);
