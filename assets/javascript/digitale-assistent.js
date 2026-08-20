@@ -587,6 +587,10 @@
 		var card = document.createElement("div");
 		card.className = "wallet-card";
 		card.setAttribute("data-verzoek", "backend");
+		// De klik-handler heeft de bron nodig: de bevestiging en de weigering
+		// horen te zeggen welke bron het betrof - dit verzoek kan net zo goed
+		// over het Handelsregister gaan als over de Business Wallet.
+		card.setAttribute("data-bron", bron);
 
 		var vraag = document.createElement("div");
 		vraag.className = "wallet-consent";
@@ -599,7 +603,7 @@
 		var nietGedeeld = document.createElement("div");
 		nietGedeeld.className = "wallet-niet-gedeeld";
 		nietGedeeld.hidden = true;
-		nietGedeeld.innerHTML = "<p>Je hebt je energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met je Business Wallet-gegevens controleren.</p>";
+		nietGedeeld.innerHTML = "<p>Je hebt geen toestemming gegeven voor " + escapeHTML(bron) + ". De assistent raadpleegt deze bron niet.</p>";
 		card.appendChild(nietGedeeld);
 
 		messages.appendChild(card);
@@ -1000,14 +1004,22 @@
 		var vanBackend = card.getAttribute("data-verzoek") === "backend";
 
 		if (e.target.closest(".wallet-delen")) {
-			card.querySelector(".wallet-consent").hidden = true;
 			if (vanBackend) {
 				if (submitting) return;
+				// Niet verbergen maar vervangen: een lege kaart-rand blijft anders
+				// als loze balk in het gesprek staan, en de respondent hoort terug
+				// te kunnen lezen waar hij ja tegen zei (traceability).
+				var kaartBron = card.getAttribute("data-bron") || "deze bron";
+				card.querySelector(".wallet-consent").innerHTML =
+					"<p>Toestemming gegeven voor " + escapeHTML(kaartBron) + ".</p>";
 				pendingToestemming = true;
-				input.value = "Ja, je mag mijn energieverbruik ophalen.";
+				// De scope van het akkoord ligt server-side vast bij het openstaande
+				// deelverzoek; de tekst hier is voor het gesprek, niet het contract.
+				input.value = "Ja, ik geef toestemming.";
 				form.requestSubmit();
 				return;
 			}
+			card.querySelector(".wallet-consent").hidden = true;
 			var energie = card.querySelector(".wallet-energie");
 			energie.hidden = false;
 			messages.scrollTop = messages.scrollHeight;
@@ -1022,7 +1034,7 @@
 			// niet als contractveld: toestemming wordt alleen vastgelegd, nooit
 			// ingetrokken.
 			if (vanBackend && !submitting) {
-				input.value = "Nee, ik deel mijn energieverbruik liever niet.";
+				input.value = "Nee, ik geef geen toestemming.";
 				form.requestSubmit();
 			}
 		}
