@@ -1492,11 +1492,8 @@ small.disclaimer {
 
 /* Gemarkeerd-kolom */
 .berichtenbox-row-mark {
-	block-size: 1px;
-	inline-size: var(--toepassing-size-icon-md);
-	padding-block: 0;
+	padding-inline: var(--toepassing-space-padding-xs) 0;
 	position: relative;
-	text-align: center;
 	z-index: 1;
 }
 button.mark-toggle {
@@ -1815,7 +1812,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 .chat-messages {
 	block-size: 25em;
 	border: var(--toepassing-border-subtle);
-	border-radius: var(--toepassing-border-radius-md);
+	border-radius: var(--toepassing-border-radius-sm);
 	display: flex;
 	flex-direction: column;
 	gap: var(--toepassing-space-padding-md);

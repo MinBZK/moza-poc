@@ -131,7 +131,7 @@
 	--toepassing-motion-easing-default: ease;
 	--toepassing-motion-speed-fast: 0.2s;
 	--toepassing-motion-speed-slow: 0.8s;
-	--toepassing-opacity-interactive-disabled: .6;
+	--toepassing-opacity-interactive-disabled: 0.6;
 	--toepassing-page-max-inline-size: 71.25rem;
 	--toepassing-pointer-target-min-size: var(--toepassing-size-md);
 	--toepassing-size-2xl: var(--rijkshuisstijl-size-160);

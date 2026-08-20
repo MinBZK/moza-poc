@@ -3,12 +3,15 @@ title: "MijnOverheid Zakelijk: Berichtenbox"
 permalink: "/moza/berichtenbox/"
 ---
 
-{% include "berichtenbox-data.njk" %} {% include "side-nav-overheid.njk" %}
+{% include "berichtenbox-data.njk" %}
+{% include "side-nav-overheid.njk" %}
 
 <article id="hoofd-inhoud" class="berichtenbox">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
 			<li aria-current="page">Berichtenbox</li>
 		</ol>
 	</nav>
@@ -22,14 +25,16 @@ permalink: "/moza/berichtenbox/"
 			<section class="berichtenbox-content">
 				<span hidden data-feature="Dynamische berichten" data-feature-type="functionaliteit" data-feature-default="off"></span>
 				<div data-berichtenbox-toolbar>
-					{% set nTotaal = berichtenboxData.berichten | length %}{% set nBronnen = berichtenboxData.aantalMagazijnen %}{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
+					{% set nTotaal = berichtenboxData.berichten | length %}
+					{% set nBronnen = berichtenboxData.aantalMagazijnen %}
+					{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
 					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
 
 					<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
 						{% include "icon-feedback-warning.njk" %}
 						<div>
 							<p>De <b>RDW</b> is momenteel niet bereikbaar. Berichten van overige overheidsorganisaties staan hieronder.</p>
-							<p><button type="button" class="link-button" data-bron-retry>RDW opnieuw proberen</button></p>
+							<p><button class="link-button" type="button" data-bron-retry>RDW opnieuw proberen</button></p>
 						</div>
 					</div>
 
@@ -37,7 +42,7 @@ permalink: "/moza/berichtenbox/"
 						{% include "icon-feedback-error.njk" %}
 						<div>
 							<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
-							<p><button type="button" class="link-button" data-bron-retry>Opnieuw proberen</button></p>
+							<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 						</div>
 					</div>
 
@@ -45,20 +50,22 @@ permalink: "/moza/berichtenbox/"
 						{% include "icon-feedback-warning.njk" %}
 						<div>
 							<p><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden. Berichten van deze organisatie zijn nu mogelijk niet beschikbaar.</p>
-							<p><button type="button" class="link-button" data-bron-retry>Opnieuw proberen</button></p>
+							<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 						</div>
 					</div>
 
 					<div class="berichtenbox-search">
 						<label for="search-berichtenbox">Filter berichten</label>
-						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op afzender of onderwerp" />
+						<input id="search-berichtenbox" type="search" data-berichtenbox-search-input placeholder="Filter op afzender of onderwerp" />
 					</div>
 				</div>
 
 				<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">
 					<p>Berichten worden opgehaald bij de bron…</p>
 					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total>{{ berichtenboxData.aantalMagazijnen }}</b> <span data-meervoud="data-berichtenbox-progress-total" data-ev="bron" data-mv="bronnen">{{ "bron" if berichtenboxData.aantalMagazijnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-progress-found>0</b> <span data-meervoud="data-berichtenbox-progress-found" data-ev="bericht" data-mv="berichten">berichten</span> gevonden</p>
-					<div class="progress-bar"><div class="progress-bar-fill" data-berichtenbox-progress-bar></div></div>
+					<div class="progress-bar">
+						<div class="progress-bar-fill" data-berichtenbox-progress-bar></div>
+					</div>
 				</div>
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
@@ -66,18 +73,33 @@ permalink: "/moza/berichtenbox/"
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>
 						<tr>
-							<th scope="col">{% include "icon-markeren.njk" %}<span class="visually-hidden">Gemarkeerd</span></th>
-							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="afzender">Afzender</button></th>
-							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="onderwerp">Onderwerp</button></th>
-							<th scope="col" aria-sort="none"><button type="button" class="berichtenbox-sort" data-sort="datum">Datum</button></th>
-							<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+							<th class="berichtenbox-row-mark" scope="col">
+								{% include "icon-markeren.njk" %}
+								<span class="visually-hidden">Gemarkeerd</span>
+							</th>
+							<th scope="col" aria-sort="none">
+								<button class="berichtenbox-sort" type="button" data-sort="afzender">Afzender</button>
+							</th>
+							<th scope="col" aria-sort="none">
+								<button class="berichtenbox-sort" type="button" data-sort="onderwerp">Onderwerp</button>
+							</th>
+							<th scope="col" aria-sort="none">
+								<button class="berichtenbox-sort" type="button" data-sort="datum">Datum</button>
+							</th>
+							<th scope="col">
+								<span class="visually-hidden">Bijlage</span>
+							</th>
 							<!-- <th scope="col">Map</th> -->
-							<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
+							<th class="berichtenbox-actions-th" scope="col">
+								<span class="visually-hidden">Acties</span>
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{% set rijActies = true %}
-						{% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
+						{% for bericht in berichtenboxData.berichten %}
+							{% include "berichtenbox-row.njk" %}
+						{% endfor %}
 					</tbody>
 				</table>
 
