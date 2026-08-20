@@ -831,7 +831,17 @@
 	}
 
 	function statusLijst(sources) {
-		return STATUS_ITEMS.map(function (it) {
+		// Een bron die niet in /health staat bestaat niet in deze omgeving -
+		// bewust uitgezet (bv. de Business Wallet tijdens het onderzoek). Die
+		// hoort niet in de lijst als "niet bereikbaar": dat presenteert een
+		// besluit als storing, en een respondent leest dat als "er is iets
+		// kapot". Alleen als /health zelf onbereikbaar is (sources == null)
+		// tonen we de volledige lijst als niet bereikbaar - dan is er echt
+		// iets mis en is dat precies de boodschap.
+		var items = STATUS_ITEMS.filter(function (it) {
+			return !sources || sources[it.key] !== undefined;
+		});
+		return items.map(function (it) {
 			var connected = !!(sources && sources[it.key] === "verbonden");
 			var dot = connected ? "connected" : "disconnected";
 			// Het icoon staat in de markup en niet als achtergrond in CSS, zodat het
