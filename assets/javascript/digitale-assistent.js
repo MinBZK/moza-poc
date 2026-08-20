@@ -681,7 +681,12 @@
 		// worden en zou de antwoordtekst niet getoond worden.
 		if (!Array.isArray(velden) || velden.length === 0) {
 			var platteTekst = payload.message || "";
-			return /erkende maatregelenlijst|\bEML\b|maatregel/i.test(platteTekst) ? parseVraag(platteTekst) : null;
+			var geparsed = /erkende maatregelenlijst|\bEML\b|maatregel/i.test(platteTekst) ? parseVraag(platteTekst) : null;
+			// Gemarkeerd als "uit de tekst geparsed": de tekst en het formulier
+			// zijn dan hetzelfde ding, en de tekst er nog eens boven zetten zou
+			// alles dubbel tonen.
+			if (geparsed) geparsed.vanTekst = true;
+			return geparsed;
 		}
 		vraag = vraag || {};
 		return {
@@ -1366,6 +1371,17 @@
 						}
 						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
 						if (spec) {
+							// De tekst niet weggooien: zolang de toets op een opgave
+							// wacht draagt elk antwoord het formulier mee, ook het
+							// antwoord op "Leg mij dit uit". Zonder deze regel verving
+							// het formulier de uitleg en leek de knop stuk - de
+							// respondent kreeg letterlijk hetzelfde formulier terug.
+							// Alleen bij een gestructureerde vraag: is het formulier
+							// uit de tekst zelf geparsed, dan zíjn tekst en formulier
+							// hetzelfde en zou alles dubbel staan.
+							if (payload.message && !spec.vanTekst) {
+								addMessage(payload.message, "assistant");
+							}
 							renderAssistentVraag(spec);
 						} else {
 							var role = eventType === "error" ? "error" : "assistant";
