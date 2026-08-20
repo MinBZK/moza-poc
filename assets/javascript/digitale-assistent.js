@@ -1346,6 +1346,10 @@
 						// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
 						// zaak zelf (payload.data) in localStorage.
 						addZaak(payload.data || payload);
+						// Het case-event komt vóór het answer-event; deze vlag laat het
+						// antwoord straks de knop "Bekijk in Lopende zaken" dragen. Hij
+						// werd gedeclareerd maar nooit gezet - de knop verscheen dus nooit.
+						zaakGemaakt = true;
 					} else if ((eventType === "answer" || eventType === "error") && !answered) {
 						answered = true;
 						hideThinking();
