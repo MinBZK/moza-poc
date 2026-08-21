@@ -106,6 +106,14 @@
 			padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-xs);
 		}
 	}
+	.feature-flags-uitleg {
+		color: var(--toepassing-color-text-subtle-1);
+		font-size: var(--toepassing-text-size-body-sm);
+		margin-block: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
+	}
+	.feature-flags-actie + .feature-flags-actie {
+		margin-block-start: var(--toepassing-space-padding-2xs);
+	}
 	.feature-flags-actie, .feature-flags-fullscreen {
 		background: var(--toepassing-color-interactive-default-background);
 		border: var(--toepassing-border-default);

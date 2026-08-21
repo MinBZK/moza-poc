@@ -141,6 +141,47 @@ De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuur
 
 > Voor losse demo's van de CLI-tools (`kvk-cli`, `koop-cli`, …) gebruik je de backend-repo; die bevat de standalone bash-tools.
 
+### Demo-modus (zonder backend)
+
+Zonder backend of API-sleutel blijft het grootste deel van de assistent onzichtbaar: het deelverzoek, de energiekaart uit de Business Wallet, de vraagformulieren en de zaak die bij de RVO wordt ingediend komen allemaal uit backend-events. **Demo-modus** speelt die events af uit een draaiboek, zodat je ze zonder backend kunt zien, beoordelen en tonen.
+
+Aanzetten via het feature-flags-paneel rechtsonder → kopje "Digitale Assistent" → **Demo-modus** (localStorage `setting:demo-mode`). Zolang die aanstaat gaat er geen enkele request naar de backend; ook `/health` en de RegelRecht-drempel komen uit het draaiboek, zodat de bronstatus niet ten onrechte "niet bereikbaar" toont.
+
+Het draaiboek staat in `assets/javascript/digitale-assistent-demo.js` en levert dezelfde events als de backend (`status`, `tool`, `case`, `answer`, `error`). `digitale-assistent.js` verwerkt ze via `verwerkEvent()` — hetzelfde renderpad als een echte beurt. Wat in demo-modus te zien is, is dus wat live ook gebeurt.
+
+**Bronvermelding.** Elke bronvermelding in de chat gebruikt hetzelfde patroon (`.chat-bronnen`): bron en titel apart, met de datum van raadpleging, en bij een URL een externe link met `rel="external noopener" target="_blank"`. Dat geldt voor het antwoord, voor de regel onder een vraagformulier en voor de energiekaart uit de Business Wallet.
+
+De chat vult die lijst uit twee bronnen, in deze volgorde:
+
+1. **Veld `bronnen` op het `answer`-event** — een lijst van `{ label, titel?, url?, geraadpleegdOp? }`. Het draaiboek van de demo gebruikt dit.
+2. **De slotregel van de antwoordtekst** — de backend schrijft de bron als laatste regel: `Bron: RegelRecht (art. 5.15 Besluit activiteiten leefomgeving)` (zie `prompts/blocks/shared/format.md` in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). `haalBronnenUitTekst()` haalt die regel eraf en rendert hem als bronvermelding. Ook een `Bronnen:`-kop met een opsomming eronder wordt herkend.
+
+Zo krijgt een live antwoord dezelfde vormgeving als de demo, zonder dat de backend iets hoeft te veranderen. Herkent de parser niets, dan blijft de tekst onaangeroerd — een opsomming midden in een antwoord wordt nooit als bronvermelding gelezen.
+
+**Links op bronnen.** De backend noemt een bron alleen bij naam ("Bron: RegelRecht"), zonder verwijzing. De link komt daarom uit het veld `url` in `STATUS_ITEMS` (`digitale-assistent.js`) — dezelfde lijst die de statusregel boven het gesprek vult. `bronURL()` zoekt de naam terug, zodat zowel "KvK" als "KvK Handelsregister" raak is. Een bron die zijn eigen `url` meestuurt (het demo-draaiboek doet dat, met diepe links naar het wetsartikel) wint van de lijst.
+
+| Bron                | Link                                                                 |
+| ------------------- | -------------------------------------------------------------------- |
+| RegelRecht          | <https://regelrecht.rijks.app/>                                      |
+| KvK Handelsregister | <https://www.kvk.nl/handelsregister/>                                |
+| KOOP Regelingenbank | <https://wetten.overheid.nl/>                                        |
+| RVO                 | <https://www.rvo.nl/>                                                |
+| Business Wallet     | geen — mock in dit prototype, dus die bron toont de naam zonder link |
+
+| Vraag in de chat                                       | Wat je te zien krijgt                                                                                                                                                                                                 |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Geldt de energiebesparingsinformatieplicht voor mij?" | Vier beurten: deelverzoek Business Wallet → energiekaart met grens-annotatie → getrapt categorieformulier → maatregelenlijst (EML, met één voorgevuld veld en toelichting) → `case`-event met knop naar Lopende zaken |
+| "Hoe kan ik mijn bedrijfsgegevens bekijken?"           | Deelverzoek voor het KvK Handelsregister, daarna het uittreksel met bronvermelding                                                                                                                                    |
+| "Hoe bereid ik mijn belastingaangifte voor?"           | Vraagformulier met gemengde veldtypen (keuze + open veld), daarna het antwoord                                                                                                                                        |
+| "fout"                                                 | De foutmelding met de knop "Neem contact op"                                                                                                                                                                          |
+| "Leg mij dit uit"                                      | Uitleg-antwoord; het formulier blijft staan (schuift het draaiboek niet vooruit)                                                                                                                                      |
+| "Niet delen" in een deelverzoek                        | De assistent respecteert de weigering en raadpleegt de bron niet                                                                                                                                                      |
+| Persona buiten de allowlist                            | "Log eerst in" — als gewoon antwoord, niet als foutmelding                                                                                                                                                            |
+
+De inhoud volgt de **actieve persona**: het uittreksel toont de gegevens uit `_data/personas.json` en de energiekaart het verbruik uit `bedrijf.energie` (alleen Koffiezaak Noon heeft dat; de rest krijgt een demo-verbruik boven de drempel). Blijft een persona onder beide drempels, dan eindigt het scenario met "geldt niet voor u" in plaats van een rapportage.
+
+Losse onderdelen bekijken zonder een gesprek te voeren kan met de knoppen in hetzelfde paneel: testantwoord met bronvermelding, deelverzoek Business Wallet, formulier maatregelenlijst en formulier ja/nee-vraag. "Nieuw gesprek" zet het draaiboek terug op de eerste beurt.
+
 ### API-sleutels
 
 Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd (de proxy laat die headers door). Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys.
@@ -162,11 +203,11 @@ Staat het nummer niet in de allowlist van de backend — of is er geen persona �
 
 **Persona's met een backend-profiel.** De backend kent alleen deze bedrijven; voor de rest volgt terecht "log eerst in".
 
-| Persona-id | Bedrijf | KvK | Bron backend-zijde |
-| --- | --- | --- | --- |
-| `koffiezaak` | Koffiezaak Noon | 85234567 | mock in `services/mcp/kvk/server.py` |
+| Persona-id      | Bedrijf             | KvK      | Bron backend-zijde                   |
+| --------------- | ------------------- | -------- | ------------------------------------ |
+| `koffiezaak`    | Koffiezaak Noon     | 85234567 | mock in `services/mcp/kvk/server.py` |
 | `bloemenkweker` | Kwekerij De Bloesem | 62345681 | mock in `services/mcp/kvk/server.py` |
-| `haarstylist` | Roots & Locks | 56789012 | mock in `services/mcp/kvk/server.py` |
+| `haarstylist`   | Roots & Locks       | 56789012 | mock in `services/mcp/kvk/server.py` |
 
 Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
 

@@ -76,19 +76,8 @@
 	}
 
 	// Onboarding-ballonnen die één voor één verschijnen
-	var onboardingMessages = [
-		"<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Ik help u bij uw vragen en taken.</p>",
-		"<p>Ik kan bijvoorbeeld helpen met:</p><ul class=\"list-indent\"><li>het opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u kunnen zijn</li><li>voorbereiden van uw belastingaangiften</li></ul>",
-		"<p>Ik haal uw gegevens pas op <strong>nadat u hier expliciet toestemming voor geeft</strong>.</p>",
-		"<p>Ik raadpleeg onder meer het KvK Handelsregister, KOOP Regelingenbank, RegelRecht en de RVO.</p>",
-		"<p>Elk antwoord is traceerbaar en verwijst naar de bron.</p>",
-		"<p>Raadpleeg een adviseur of de bevoegde instantie indien u juridisch advies nodig heeft.</p>"
-	];
-	var exampleQuestions = [
-		"Geldt de energiebesparingsinformatieplicht voor mij?",
-		"Hoe kan ik mijn bedrijfsgegevens bekijken?",
-		"Hoe bereid ik mijn belastingaangifte voor?"
-	];
+	var onboardingMessages = ["<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Ik help bij uw vragen en taken. Hiervoor raadpleeg ik onder meer het KvK Handelsregister, de KOOP Regelingenbank, RegelRecht en de RVO.</p>", '<p>Ik kan bijvoorbeeld helpen met:</p><ul class="list-indent"><li>opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u zijn</li><li>voorbereiden van belastingaangiften</li></ul>', "<p>Uw gegevens haal ik pas op <strong>nadat u hier expliciet toestemming voor geeft</strong> en elk antwoord is traceerbaar en verwijst naar de bron.</p>"];
+	var exampleQuestions = ["Geldt de energiebesparingsinformatieplicht voor mij?", "Hoe kan ik mijn bedrijfsgegevens bekijken?", "Hoe bereid ik mijn belastingaangifte voor?"];
 
 	function addAssistantMessage(html) {
 		var div = document.createElement("div");
@@ -223,9 +212,10 @@
 		messages.scrollTop = 0;
 		input.value = "";
 		verwijderSuggestieIntro();
+		demoStand = { scenario: null, beurt: 0 };
 		heeftGesprek = false;
 		disableNieuwKnop();
-		input.focus();
+		zetFocus(input);
 		naWachten(function () {
 			showSuggestionPrompt(true);
 		});
@@ -247,13 +237,37 @@
 	// op één plek, met live verbindingsstatus uit /health.
 	// `uitleg` zegt wat de bron voor de gebruiker doet; de statuszin komt er per
 	// bron achteraan. Samen vormen ze de beschrijving achter het bolletje.
+	//
+	// `url` is waar de ondernemer de bron zelf kan naslaan. De backend noemt bij een
+	// antwoord alleen de naam van de bron ("Bron: RegelRecht"), zonder verwijzing;
+	// zonder deze lijst zou een bronvermelding een doodlopende tekstregel zijn.
+	// Eén plek voor beide gebruiken: de statuslijst hierboven het gesprek en de
+	// bronvermelding onder een antwoord.
 	var STATUS_ITEMS = [
-		{ key: "regelrecht", label: "RegelRecht", uitleg: "Rekent uit welke regels voor uw bedrijf gelden." },
-		{ key: "rvo", label: "RVO", uitleg: "Neemt uw rapportage in ontvangst." },
-		{ key: "netbeheerder", label: "Business Wallet", uitleg: "Levert uw energieverbruik, afgegeven door uw netbeheerder." },
-		{ key: "kvk", label: "KvK Handelsregister", uitleg: "Levert de gegevens van uw onderneming." },
-		{ key: "koop", label: "KOOP Regelingenbank", uitleg: "Levert de officiële wetteksten." },
+		{ key: "regelrecht", label: "RegelRecht", url: "https://regelrecht.rijks.app/", uitleg: "Rekent uit welke regels voor uw bedrijf gelden." },
+		{ key: "rvo", label: "RVO", url: "https://www.rvo.nl/", uitleg: "Neemt uw rapportage in ontvangst." },
+		// De Business Wallet is in dit prototype een mock: er is geen pagina om naar
+		// te verwijzen, dus die bron blijft zonder link.
+		{ key: "netbeheerder", label: "Business Wallet", url: "", uitleg: "Levert uw energieverbruik, afgegeven door uw netbeheerder." },
+		{ key: "kvk", label: "KvK Handelsregister", url: "https://www.kvk.nl/handelsregister/", uitleg: "Levert de gegevens van uw onderneming." },
+		{ key: "koop", label: "KOOP Regelingenbank", url: "https://wetten.overheid.nl/", uitleg: "Levert de officiële wetteksten." },
 	];
+
+	// Naam van een bron uit een antwoord terugbrengen tot de URL uit STATUS_ITEMS.
+	// De assistent schrijft niet altijd de volledige naam ("KvK" of "KvK
+	// Handelsregister"), dus we vergelijken beide kanten op.
+	function bronURL(label) {
+		var naam = String(label == null ? "" : label)
+			.trim()
+			.toLowerCase();
+		if (!naam) return "";
+		var treffer = STATUS_ITEMS.filter(function (item) {
+			if (!item.url) return false;
+			var itemNaam = item.label.toLowerCase();
+			return naam === itemNaam || naam.indexOf(itemNaam) !== -1 || itemNaam.indexOf(naam) !== -1;
+		})[0];
+		return treffer ? treffer.url : "";
+	}
 
 	// Gecombineerd, zodat een rauwe tool-sleutel (server__tool) nooit ruw aan de
 	// gebruiker wordt getoond maar als leesbaar label.
@@ -284,6 +298,11 @@
 	function getDemoMode() {
 		return localStorage.getItem("setting:demo-mode") === "true";
 	}
+
+	// Waar het demo-draaiboek staat: welk scenario loopt en de hoeveelste beurt
+	// daarvan volgt. Bewust niet in sessionStorage: een demo hoort bij "Nieuw
+	// gesprek" en bij een verse pagina weer bij beurt één te beginnen.
+	var demoStand = { scenario: null, beurt: 0 };
 
 	function wait(ms) {
 		return new Promise(function (resolve) {
@@ -327,74 +346,89 @@
 		return getLLM();
 	}
 
-	function parseMarkdown(text) {
-		var lines = text.split("\n");
-		var html = [];
-		var inList = false;
-
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-			// Headers
-			if (/^#### (.+)$/.test(line)) {
-				line = "<strong>" + line.replace(/^#### /, "") + "</strong>";
-			} else if (/^### (.+)$/.test(line)) {
-				line = "<strong>" + line.replace(/^### /, "") + "</strong>";
-			} else if (/^## (.+)$/.test(line)) {
-				line = "<strong>" + line.replace(/^## /, "") + "</strong>";
-			} else if (/^# (.+)$/.test(line)) {
-				line = "<strong>" + line.replace(/^# /, "") + "</strong>";
-			}
-
-			// List items
-			if (/^[-*] (.+)$/.test(line)) {
-				if (!inList) {
-					html.push("<ul>");
-					inList = true;
-				}
-				line = "<li>" + line.replace(/^[-*] /, "") + "</li>";
-			} else if (inList) {
-				html.push("</ul>");
-				inList = false;
-			}
-
-			// Inline formatting
-			line = line
+	// Inline opmaak binnen één regel: vet, cursief, code en links.
+	function inlineOpmaak(regel) {
+		return (
+			regel
 				.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
 				.replace(/\*(.+?)\*/g, "<em>$1</em>")
 				.replace(/`(.+?)`/g, "<code>$1</code>")
-				.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+				// rel="external" hoort erbij: daar hangt het externe-link-icoon aan
+				// (a[rel~="external"]::after). external-links.js vult noopener alleen
+				// aan bij het laden van de pagina, dus die zetten we hier zelf.
+				.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="external noopener">$1</a>')
+		);
+	}
 
-			html.push(line);
+	// Markdown van de assistent omzetten naar blokken: elke regel wordt een <p> en
+	// opeenvolgende opsommingsregels worden één <ul>. Geen <br>: de ruimte tussen
+	// de blokken komt uit de `gap` van de ballon, die is overal in de chat gelijk.
+	// Een lege regel scheidt alleen en levert zelf niets op.
+	//
+	// De <ul> staat naast de <p>'s en niet erin. Dat moet ook: een <ul> mag geen
+	// kind van een <p> zijn, en bij het terugzetten van een bewaard gesprek
+	// (handleSwitch schrijft messages.innerHTML weg en leest het terug) sluit de
+	// parser die <p> alsnog — dan zou de opbouw van het bericht veranderen.
+	function parseMarkdown(text) {
+		var regels = String(text == null ? "" : text).split("\n");
+		var blokken = [];
+		var lijst = [];
+
+		function sluitLijst() {
+			if (!lijst.length) return;
+			blokken.push("<ul>" + lijst.join("") + "</ul>");
+			lijst = [];
 		}
 
-		if (inList) html.push("</ul>");
-		return html
-			.join("<br>")
-			.replace(/<br><ul>/g, "<ul>")
-			.replace(/<\/ul><br>/g, "</ul>")
-			.replace(/<br><li>/g, "<li>")
-			.replace(/<\/li><br><li>/g, "</li><li>");
+		for (var i = 0; i < regels.length; i++) {
+			var regel = regels[i].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+
+			var lijstM = regel.match(/^[-*]\s+(.+)$/);
+			if (lijstM) {
+				lijst.push("<li>" + inlineOpmaak(lijstM[1]) + "</li>");
+				continue;
+			}
+
+			sluitLijst();
+			if (!regel) continue;
+
+			// Koppen worden vet en geen <h*>: deze tekst staat in een chatballon,
+			// midden in de kopstructuur van de pagina.
+			var kopM = regel.match(/^#{1,4}\s+(.+)$/);
+			if (kopM) {
+				blokken.push("<p><strong>" + inlineOpmaak(kopM[1]) + "</strong></p>");
+				continue;
+			}
+
+			blokken.push("<p>" + inlineOpmaak(regel) + "</p>");
+		}
+
+		sluitLijst();
+		return blokken.join("");
 	}
 
 	function addMessage(text, role) {
 		var div = document.createElement("div");
-		var p = document.createElement("p");
 		if (role === "error") {
 			div.className = "feedback feedback-error";
 			var content = document.createElement("div");
-			p.textContent = text;
-			content.appendChild(p);
+			var foutTekst = document.createElement("p");
+			foutTekst.textContent = text;
+			content.appendChild(foutTekst);
 			div.innerHTML = ICON_FOUTMELDING;
 			div.appendChild(content);
 		} else {
 			div.className = "chat-message chat-message-" + role;
 			if (role === "assistant") {
-				p.innerHTML = parseMarkdown(text);
+				// parseMarkdown levert blokken (<p> en <ul>) die rechtstreeks in de
+				// ballon horen. De ballon is een flex-column met gap, dus alinea's en
+				// lijsten krijgen hun onderlinge ruimte vanzelf.
+				div.innerHTML = parseMarkdown(text);
 			} else {
-				p.textContent = text;
+				var vraag = document.createElement("p");
+				vraag.textContent = text;
+				div.appendChild(vraag);
 			}
-			div.appendChild(p);
 		}
 		messages.appendChild(div);
 		messages.scrollTop = messages.scrollHeight;
@@ -416,6 +450,112 @@
 		link.textContent = label;
 		acties.appendChild(link);
 		doel.appendChild(acties);
+		messages.scrollTop = messages.scrollHeight;
+	}
+
+	// Bronvermelding onder een antwoord. Komt als gestructureerde lijst mee in het
+	// answer-event (`payload.bronnen`), niet als markdown in de antwoordtekst: de
+	// markdown-parser maakt er een kale <ul> van, terwijl de bronvermelding een
+	// eigen patroon is met een label, de bron los van de titel en de datum van
+	// raadpleging. Elke bron: { label, titel?, url?, geraadpleegdOp? }.
+	//
+	// rel="external" is niet decoratief: daar hangt het externe-link-icoon aan
+	// (a[rel~="external"]::after). noopener staat er meteen bij, omdat
+	// external-links.js alleen bij het laden van de pagina langsgaat en deze
+	// links pas daarna in de DOM komen.
+	function bronnenHTML(bronnen) {
+		if (!Array.isArray(bronnen) || !bronnen.length) return "";
+		var vandaag = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+		var items = bronnen
+			.map(function (bron) {
+				var tekst = escapeHTML(bron.label) + (bron.titel ? ": " + escapeHTML(bron.titel) : "");
+				// De bron mag zijn eigen URL meesturen; anders die uit STATUS_ITEMS,
+				// zodat ook een bron die alleen bij naam genoemd wordt na te slaan is.
+				var url = bron.url || bronURL(bron.label);
+				var naam = url ? '<a rel="external noopener" target="_blank" href="' + escapeHTML(url) + '">' + tekst + "</a>" : "<span>" + tekst + "</span>";
+				return "<li>" + naam + '<small class="chat-bron-datum">Geraadpleegd op ' + escapeHTML(bron.geraadpleegdOp || vandaag) + "</small></li>";
+			})
+			.join("");
+		// Live noemt de assistent meestal één bron per antwoord; "Bronnen:" boven een
+		// lijst van één leest als een fout.
+		var label = bronnen.length === 1 ? "Bron:" : "Bronnen:";
+		return '<p class="chat-bronnen-label">' + label + '</p><ul class="list-plain chat-bronnen">' + items + "</ul>";
+	}
+
+	// Eén bronvermelding uit tekst omzetten naar { label, titel, url }. Accepteert
+	// wat de assistent in de praktijk schrijft:
+	//   RegelRecht (art. 5.15 Besluit activiteiten leefomgeving)
+	//   KvK Handelsregister: uittreksel onderneming
+	//   [RVO: informatieplicht](https://www.rvo.nl/...)
+	function maakBron(waarde) {
+		var tekst = String(waarde == null ? "" : waarde)
+			.trim()
+			.replace(/[.\s]+$/, "");
+		var url = "";
+		var link = tekst.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+		if (link) {
+			tekst = link[1].trim();
+			url = link[2];
+		}
+		// De toevoeging tussen haakjes of achter de dubbele punt is de titel: het
+		// wetsartikel of het onderdeel waar de bron over ging. Die hoort naast de
+		// naam van de bron te staan, niet erin.
+		var haakje = tekst.match(/^(.+?)\s*\((.+)\)$/);
+		var dubbelePunt = tekst.match(/^([^:]+):\s*(.+)$/);
+		var label = tekst;
+		var titel = "";
+		if (haakje) {
+			label = haakje[1];
+			titel = haakje[2];
+		} else if (dubbelePunt) {
+			label = dubbelePunt[1];
+			titel = dubbelePunt[2];
+		}
+		return { label: label.trim(), titel: titel.trim(), url: url };
+	}
+
+	// De backend zet de bronvermelding als slotregel in de antwoordtekst
+	// ("Bron: RegelRecht (art. 5.15 …)", zie prompts/blocks/shared/format.md daar),
+	// niet als apart veld. Zonder deze stap blijft die regel gewone lopende tekst
+	// midden in de ballon, terwijl de chat er een eigen patroon voor heeft.
+	//
+	// Haalt de bronregel(s) van het eind van de tekst en geeft { tekst, bronnen }
+	// terug. Herkent zowel de slotregel als een "Bronnen:"-kop met opsomming
+	// eronder. Staat er iets anders dan een opsomming vóór de kop, dan blijft de
+	// tekst ongemoeid: een opsomming midden in een antwoord is inhoud, geen bron.
+	var BRON_REGEL = /^bron(?:nen)?\s*:\s*(.*)$/i;
+	function haalBronnenUitTekst(tekst) {
+		var regels = String(tekst == null ? "" : tekst).split("\n");
+		var opsomming = [];
+		for (var i = regels.length - 1; i >= 0; i--) {
+			var regel = regels[i].trim();
+			if (!regel) continue;
+			var bulletM = regel.match(/^[-*]\s+(.+)$/);
+			if (bulletM) {
+				opsomming.unshift(bulletM[1]);
+				continue;
+			}
+			var bronM = regel.match(BRON_REGEL);
+			if (!bronM) break;
+			// "Bron: X" (waarde op dezelfde regel) of een kale "Bronnen:"-kop met de
+			// opsomming die we hierboven al verzamelden.
+			var waarden = bronM[1].trim() ? [bronM[1]] : opsomming;
+			if (!waarden.length) break;
+			var rest = regels.slice(0, i).join("\n").replace(/\s+$/, "");
+			// Bestaat het hele bericht alleen uit de bronvermelding, dan is er geen
+			// antwoord om hem onder te hangen; laat het dan zoals het was.
+			if (!rest) break;
+			return { tekst: rest, bronnen: waarden.map(maakBron) };
+		}
+		return { tekst: tekst, bronnen: [] };
+	}
+
+	// Bronnen onder een bericht hangen, vóór een eventuele vervolgstap-knop: die
+	// knop hoort de laatste regel van de ballon te zijn.
+	function voegBronnenToe(bericht, bronnen) {
+		var html = bronnenHTML(bronnen);
+		if (!bericht || !html) return;
+		bericht.insertAdjacentHTML("beforeend", html);
 		messages.scrollTop = messages.scrollHeight;
 	}
 
@@ -493,17 +633,24 @@
 	// verbruikswaarden zonder grens-annotatie. Zelfde wet als de CTA-gating.
 	var WALLET_LAW = "omgevingswet/energiebesparing/informatieplicht";
 	var walletDrempel = null; // { kwh, gas } of null
-	fetch(API_BASE + "/regelrecht/definities?law=" + encodeURIComponent(WALLET_LAW), { signal: AbortSignal.timeout(4000) })
-		.then(function (r) {
-			return r.ok ? r.json() : null;
-		})
-		.then(function (d) {
-			var def = d && d.definities;
-			if (def) walletDrempel = { kwh: Number(def.DREMPEL_ELEKTRICITEIT_KWH), gas: Number(def.DREMPEL_GAS_M3) };
-		})
-		.catch(function () {
-			/* geen drempel beschikbaar: kaart toont waarden zonder grens */
-		});
+	if (getDemoMode()) {
+		// Zonder backend is er geen RegelRecht om de grens op te halen, en dan zou
+		// de energiekaart de verbruikscijfers zonder grens-annotatie tonen — juist
+		// die annotatie is waar de kaart om draait. Het draaiboek levert hem.
+		walletDrempel = window.MozaDemoScript ? window.MozaDemoScript.drempel : null;
+	} else {
+		fetch(API_BASE + "/regelrecht/definities?law=" + encodeURIComponent(WALLET_LAW), { signal: AbortSignal.timeout(4000) })
+			.then(function (r) {
+				return r.ok ? r.json() : null;
+			})
+			.then(function (d) {
+				var def = d && d.definities;
+				if (def) walletDrempel = { kwh: Number(def.DREMPEL_ELEKTRICITEIT_KWH), gas: Number(def.DREMPEL_GAS_M3) };
+			})
+			.catch(function () {
+				/* geen drempel beschikbaar: kaart toont waarden zonder grens */
+			});
+	}
 
 	function escapeHTML(value) {
 		return String(value == null ? "" : value)
@@ -560,11 +707,107 @@
 		el.className = "wallet-energie";
 		el.hidden = true;
 
-		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "geverifieerd · met toestemming gedeeld</span>" : "";
+		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "Geverifieerd, met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + '<p class="wallet-bron">bron: Business Wallet</p>';
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + bronnenHTML([{ label: "Business Wallet", titel: "Energieverbruik-attestatie, afgegeven door " + uitgever }]);
 		return el;
+	}
+
+	// Elke kaart krijgt een eigen nummer. Zonder dat zouden twee formulieren in
+	// hetzelfde gesprek dezelfde veld-id's krijgen — en dan bedient een label in
+	// het tweede formulier het keuzerondje van het eerste, omdat `for=` het eerste
+	// element met die id pakt.
+	var kaartTeller = 0;
+
+	// --- Focus-ring alleen voor wie met het toetsenbord werkt -------------------
+	//
+	// De browser regelt dit normaal zelf met :focus-visible, maar hier gaat dat op
+	// twee punten mis:
+	//
+	//   1. Een tekstveld matcht áltijd :focus-visible, ook bij een muisklik. Het
+	//      invoerveld onderaan de chat krijgt dus altijd een ring.
+	//   2. Springt de focus daarna programmatisch naar een keuzerondje of knop, dan
+	//      erft dat element die vlag van het tekstveld — ook na een muisklik.
+	//
+	// We houden daarom zelf bij waarmee de gebruiker het laatst werkte en zetten
+	// `data-focus-stil` op het element waar de ring niet hoort. De CSS-regel staat
+	// bij de andere focusregels in style.css.
+	//
+	// Let op: spraakbediening en schakelaars sturen vaak een pointer-event, dus wie
+	// zo werkt mist deze ring ook. Bij de eerste toets die de focus verplaatst is
+	// hij er weer.
+	var laatsteInvoerWasToets = false;
+
+	// Toetsen die de focus verzetten. Alleen dán hoort de ring terug te komen:
+	// gewoon doortypen in het invoerveld waar je net in klikte, moet niet ineens
+	// een ring opleveren.
+	var VERPLAATST_FOCUS = { Tab: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1, Home: 1, End: 1, PageUp: 1, PageDown: 1 };
+
+	function maakFocusStil(el) {
+		if (!el || el.hasAttribute("data-focus-stil")) return;
+		el.setAttribute("data-focus-stil", "");
+		el.addEventListener(
+			"blur",
+			function () {
+				el.removeAttribute("data-focus-stil");
+			},
+			{ once: true }
+		);
+	}
+
+	document.addEventListener(
+		"keydown",
+		function (e) {
+			laatsteInvoerWasToets = true;
+			// Wie met het toetsenbord verder navigeert, hoort weer te zien waar de
+			// focus staat — ook op het element waar wij de ring net weglieten.
+			if (!VERPLAATST_FOCUS[e.key] && e.target.hasAttribute && e.target.hasAttribute("data-focus-stil")) return;
+			document.querySelectorAll("[data-focus-stil]").forEach(function (el) {
+				el.removeAttribute("data-focus-stil");
+			});
+		},
+		true
+	);
+
+	document.addEventListener(
+		"pointerdown",
+		function (e) {
+			laatsteInvoerWasToets = false;
+			// Klikken in het invoerveld hoort geen ring te geven; de cursor laat al
+			// zien waar je bent. Dit gebeurt vóór de focus, zodat de ring niet even
+			// oplicht. Alleen voor de chat: de rest van het prototype houdt het
+			// browsergedrag.
+			if (e.target === input) maakFocusStil(input);
+		},
+		true
+	);
+
+	// Focus verzetten, met de ring alleen voor wie met het toetsenbord werkt.
+	function zetFocus(el) {
+		if (!el) return null;
+		if (!laatsteInvoerWasToets) maakFocusStil(el);
+		el.focus();
+		return el;
+	}
+
+	// Vraagt de assistent iets in het gesprek zelf, dan hoort de focus daar te
+	// staan en niet in het invoerveld onderaan: dáár is de vraag, en typen is niet
+	// wat er van de gebruiker gevraagd wordt. Focus gaat naar het eerste veld of de
+	// eerste knop; is er niets te bedienen, dan naar de kop van de kaart.
+	//
+	// `beschrijving` is de id (of id's) van de kop en inleiding van de kaart. Die
+	// hangen we als aria-describedby aan het eerste veld, zodat een schermlezer de
+	// context nog steeds voorleest — die zou je anders overslaan door midden in het
+	// formulier te beginnen.
+	function focusEersteVraag(card, beschrijving) {
+		// Staat er half getypte tekst in het invoerveld, dan laten we de focus met
+		// rust: iemand midden in een zin de cursor afpakken is erger dan een extra
+		// tab-druk.
+		if (document.activeElement === input && input.value.trim()) return null;
+		var eerste = card.querySelector("input:not([type=hidden]), select, textarea, button");
+		if (eerste && beschrijving) eerste.setAttribute("aria-describedby", beschrijving);
+		return zetFocus(eerste || card.querySelector("h3"));
 	}
 
 	// Deelverzoek zonder gegevens: de backend vraagt om toestemming vóórdat er
@@ -581,9 +824,7 @@
 		// sinds toestemming per bron geldt, kan dit verzoek ook over het
 		// Handelsregister gaan. De wallet-tekst blijft de terugval voor een
 		// backend die het veld nog niet meestuurt.
-		var omschrijving =
-			(info && info.omschrijving) ||
-			"De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.";
+		var omschrijving = (info && info.omschrijving) || "De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.";
 		var card = document.createElement("div");
 		card.className = "wallet-card";
 		card.setAttribute("data-verzoek", "backend");
@@ -592,12 +833,10 @@
 		// over het Handelsregister gaan als over de Business Wallet.
 		card.setAttribute("data-bron", bron);
 
+		var kaartId = "deelverzoek-" + ++kaartTeller;
 		var vraag = document.createElement("div");
 		vraag.className = "wallet-consent";
-		vraag.innerHTML =
-			"<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit " + escapeHTML(bron) + "</h3>" +
-			"<p>" + escapeHTML(omschrijving) + "</p>" +
-			'<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		vraag.innerHTML = '<h3 id="' + kaartId + '-kop" tabindex="-1">' + stapIcoon("gegevensdeling") + "Deelverzoek uit " + escapeHTML(bron) + "</h3>" + '<p id="' + kaartId + '-uitleg">' + escapeHTML(omschrijving) + "</p>" + '<div class="action-group"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
 		card.appendChild(vraag);
 
 		var nietGedeeld = document.createElement("div");
@@ -608,6 +847,9 @@
 
 		messages.appendChild(card);
 		messages.scrollTop = messages.scrollHeight;
+		// Hier wordt een besluit gevraagd, geen tekst: de focus hoort op "Delen" te
+		// staan en niet in het invoerveld onderaan.
+		focusEersteVraag(card, kaartId + "-kop " + kaartId + "-uitleg");
 		return card;
 	}
 
@@ -617,9 +859,10 @@
 		var card = document.createElement("div");
 		card.className = "wallet-card";
 
+		var kaartId = "wallet-" + ++kaartTeller;
 		var vraag = document.createElement("div");
 		vraag.className = "wallet-consent";
-		vraag.innerHTML = "<h3>" + stapIcoon("gegevensdeling") + "Deelverzoek uit je Business Wallet</h3>" + "<p>De assistent wil je energieverbruik-attestatie uit je Business Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>" + '<div class="wallet-acties"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		vraag.innerHTML = '<h3 id="' + kaartId + '-kop" tabindex="-1">' + stapIcoon("gegevensdeling") + "Deelverzoek uit je Business Wallet</h3>" + '<p id="' + kaartId + '-uitleg">De assistent wil je energieverbruik-attestatie uit je Business Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>' + '<div class="action-group"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
 		card.appendChild(vraag);
 
 		card.appendChild(buildWalletEnergie(data, provenance));
@@ -632,6 +875,7 @@
 
 		messages.appendChild(card);
 		messages.scrollTop = messages.scrollHeight;
+		focusEersteVraag(card, kaartId + "-kop " + kaartId + "-uitleg");
 		return card;
 	}
 
@@ -792,25 +1036,18 @@
 				return '<fieldset class="categorie-groep" data-onderdeel="' + escapeHTML(g.onderdeel) + '" hidden><legend>' + escapeHTML(g.onderdeel) + " — wat is hiervan aanwezig?</legend>" + '<ul class="list-plain">' + opties + "</ul></fieldset>";
 			})
 			.join("");
-		return (
-			'<fieldset data-veld="' + escapeHTML(veld.naam) + '" data-type="categorieen">' +
-			"<legend>" + escapeHTML(veld.label) + "</legend>" +
-			"<p>Kies eerst welke delen bij uw bedrijf voorkomen.</p>" +
-			'<ul class="list-plain">' + stap1 + "</ul>" +
-			stap2 +
-			"</fieldset>"
-		);
+		return '<fieldset data-veld="' + escapeHTML(veld.naam) + '" data-type="categorieen">' + "<legend>" + escapeHTML(veld.label) + "</legend>" + "<p>Kies eerst welke delen bij uw bedrijf voorkomen.</p>" + '<ul class="list-plain">' + stap1 + "</ul>" + stap2 + "</fieldset>";
 	}
 
-	function veldHTML(veld, index) {
-		var naam = "vraag-" + index + "-" + String(veld.naam).replace(/[^a-z0-9]/gi, "");
+	function veldHTML(veld, index, kaartId) {
+		var naam = kaartId + "-" + index + "-" + String(veld.naam).replace(/[^a-z0-9]/gi, "");
 		if (veld.type === "categorieen") return categorieenHTML(veld, naam);
 		if (veld.type === "radio" && veld.opties && veld.opties.length) {
 			var opties = veld.opties
 				.map(function (optie, j) {
 					var id = naam + "-" + j;
 					var gekozen = veld.waarde && optie === veld.waarde ? " checked" : "";
-					return '<li><input type="radio" id="' + id + '" name="' + naam + '" value="' + escapeHTML(optie) + '"' + gekozen + "> <label for=\"" + id + '">' + escapeHTML(optie) + "</label></li>";
+					return '<li><input type="radio" id="' + id + '" name="' + naam + '" value="' + escapeHTML(optie) + '"' + gekozen + '> <label for="' + id + '">' + escapeHTML(optie) + "</label></li>";
 				})
 				.join("");
 			var toelichting = veld.toelichting ? '<p class="veld-toelichting">' + escapeHTML(veld.toelichting) + "</p>" : "";
@@ -822,13 +1059,27 @@
 	function renderAssistentVraag(spec) {
 		var card = document.createElement("div");
 		card.className = "wallet-card";
-		var velden = spec.velden.map(veldHTML).join("");
-		var bronRegel = spec.bron ? '<p class="wallet-bron">bron: ' + escapeHTML(spec.bron) + "</p>" : "";
-		card.innerHTML = '<h3 tabindex="-1">' + escapeHTML(spec.titel) + "</h3>" + (spec.intro ? "<p>" + escapeHTML(spec.intro) + "</p>" : "") + (spec.tekst ? "<p>" + escapeHTML(spec.tekst) + "</p>" : "") + '<form class="vraag-form">' + velden + '<div class="action-group"><button type="submit">Antwoord versturen</button><button type="button" class="secondary vraag-uitleg">Leg mij dit uit</button></div>' + "</form>" + bronRegel;
+		var kaartId = "vraag-" + ++kaartTeller;
+		var kopId = kaartId + "-kop";
+		var introId = kaartId + "-intro";
+		var velden = spec.velden
+			.map(function (veld, index) {
+				return veldHTML(veld, index, kaartId);
+			})
+			.join("");
+		// Kop en inleiding staan in één blok met een eigen id, zodat het eerste veld
+		// ernaar kan verwijzen: wie meteen in dat veld belandt, hoort anders wel de
+		// vraag maar niet waar die over gaat.
+		var intro = spec.intro ? "<p>" + escapeHTML(spec.intro) + "</p>" : "";
+		var tekst = spec.tekst ? "<p>" + escapeHTML(spec.tekst) + "</p>" : "";
+		// Zelfde bronvermelding als onder een antwoord: een formulier vraagt om
+		// gegevens namens een regeling, dus de herkomst hoort er net zo bij te
+		// staan — en op dezelfde manier, anders lijkt het een ander soort ding.
+		var bronRegel = spec.bron ? bronnenHTML([maakBron(spec.bron)]) : "";
+		card.innerHTML = '<h3 id="' + kopId + '" tabindex="-1">' + escapeHTML(spec.titel) + "</h3>" + (intro || tekst ? '<div id="' + introId + '">' + intro + tekst + "</div>" : "") + '<form class="vraag-form">' + velden + '<div class="action-group"><button type="submit">Antwoord versturen</button><button type="button" class="secondary vraag-uitleg">Leg mij dit uit</button></div>' + "</form>" + bronRegel;
 		messages.appendChild(card);
 		messages.scrollTop = messages.scrollHeight;
-		var kop = card.querySelector("h3");
-		if (kop) kop.focus();
+		focusEersteVraag(card, kopId + (intro || tekst ? " " + introId : ""));
 		return card;
 	}
 
@@ -850,26 +1101,23 @@
 		var items = STATUS_ITEMS.filter(function (it) {
 			return !sources || sources[it.key] !== undefined;
 		});
-		return items.map(function (it) {
-			var connected = !!(sources && sources[it.key] === "verbonden");
-			var dot = connected ? "connected" : "disconnected";
-			// Het icoon staat in de markup en niet als achtergrond in CSS, zodat het
-			// via currentColor de statuskleur volgt. Het is decoratief (aria-hidden):
-			// de status staat in woorden in de uitleg erachter. Een echte storing
-			// staat in de melding boven het gesprek (#chat-offline).
-			var icoon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
-			var status = connected
-				? "Nu bereikbaar."
-				: "Nu niet bereikbaar. De assistent kan deze bron op dit moment niet gebruiken.";
-			var id = "bron-uitleg-" + it.key;
-			// De naam is focusbaar (tabindex) zodat de uitleg ook met het toetsenbord
-			// te bereiken is, en aria-describedby koppelt hem voor de schermlezer —
-			// een title-attribuut doet geen van beide betrouwbaar.
-			return '<li class="chat-status-' + dot + '">' + icoon +
-				'<span class="chat-status-bron" tabindex="0" aria-describedby="' + id + '">' + it.label + "</span>" +
-				'<span class="chat-status-uitleg" role="tooltip" id="' + id + '">' + it.uitleg + " " + status + "</span>" +
-				"</li>";
-		}).join("");
+		return items
+			.map(function (it) {
+				var connected = !!(sources && sources[it.key] === "verbonden");
+				var dot = connected ? "connected" : "disconnected";
+				// Het icoon staat in de markup en niet als achtergrond in CSS, zodat het
+				// via currentColor de statuskleur volgt. Het is decoratief (aria-hidden):
+				// de status staat in woorden in de uitleg erachter. Een echte storing
+				// staat in de melding boven het gesprek (#chat-offline).
+				var icoon = connected ? ICON_SUCCES : ICON_FOUTMELDING;
+				var status = connected ? "Nu bereikbaar." : "Nu niet bereikbaar. De assistent kan deze bron op dit moment niet gebruiken.";
+				var id = "bron-uitleg-" + it.key;
+				// De naam is focusbaar (tabindex) zodat de uitleg ook met het toetsenbord
+				// te bereiken is, en aria-describedby koppelt hem voor de schermlezer —
+				// een title-attribuut doet geen van beide betrouwbaar.
+				return '<li class="chat-status-' + dot + '">' + icoon + '<span class="chat-status-bron" tabindex="0" aria-describedby="' + id + '">' + it.label + "</span>" + '<span class="chat-status-uitleg" role="tooltip" id="' + id + '">' + it.uitleg + " " + status + "</span>" + "</li>";
+			})
+			.join("");
 	}
 
 	function updateStatusDisplay() {
@@ -896,13 +1144,23 @@
 		});
 	});
 
-	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait)
-	fetch(API_BASE + "/health", { signal: AbortSignal.timeout(3000) })
-		.then(function (r) {
-			return r.json();
-		})
-		.then(renderStatus)
-		.catch(renderStatusOffline);
+	// Haal status op bij laden (3s timeout zodat de pagina niet hangt als de host niet draait).
+	// In demo-modus komt de status uit het draaiboek: zonder backend zou /health
+	// falen en stond er vijf keer "niet bereikbaar", wat als storing leest terwijl
+	// er niets stuk is.
+	function haalStatus() {
+		if (getDemoMode()) {
+			renderStatus(window.MozaDemoScript ? window.MozaDemoScript.health : {});
+			return;
+		}
+		fetch(API_BASE + "/health", { signal: AbortSignal.timeout(3000) })
+			.then(function (r) {
+				return r.json();
+			})
+			.then(renderStatus)
+			.catch(renderStatusOffline);
+	}
+	haalStatus();
 
 	// Bewaar en herstel gesprek bij wisselen van LLM of transport
 	var previousCombo = getComboKey();
@@ -981,6 +1239,13 @@
 			delete sessions[getComboKey()];
 			bewaarSessies();
 		}
+		// Demo-modus aan of uit zetten verandert waar de bronstatus vandaan komt en
+		// waar het draaiboek staat, zonder dat de pagina herlaadt.
+		if (e.detail && e.detail.key === "demo-mode") {
+			demoStand = { scenario: null, beurt: 0 };
+			if (getDemoMode() && window.MozaDemoScript) walletDrempel = window.MozaDemoScript.drempel;
+			haalStatus();
+		}
 		handleSwitch();
 	});
 
@@ -994,7 +1259,7 @@
 		var chip = e.target.closest(".chat-suggestion");
 		if (!chip || submitting) return;
 		input.value = chip.textContent.trim();
-		input.focus();
+		zetFocus(input);
 		form.requestSubmit();
 	});
 
@@ -1015,8 +1280,7 @@
 				// als loze balk in het gesprek staan, en de respondent hoort terug
 				// te kunnen lezen waar hij ja tegen zei (traceability).
 				var kaartBron = card.getAttribute("data-bron") || "deze bron";
-				card.querySelector(".wallet-consent").innerHTML =
-					"<p>Toestemming gegeven voor " + escapeHTML(kaartBron) + ".</p>";
+				card.querySelector(".wallet-consent").innerHTML = "<p>Toestemming gegeven voor " + escapeHTML(kaartBron) + ".</p>";
 				pendingToestemming = true;
 				// De scope van het akkoord ligt server-side vast bij het openstaande
 				// deelverzoek; de tekst hier is voor het gesprek, niet het contract.
@@ -1028,8 +1292,7 @@
 			var energie = card.querySelector(".wallet-energie");
 			energie.hidden = false;
 			messages.scrollTop = messages.scrollHeight;
-			var kop = energie.querySelector("h3");
-			if (kop) kop.focus();
+			zetFocus(energie.querySelector("h3"));
 		} else if (e.target.closest(".wallet-niet-delen")) {
 			card.querySelector(".wallet-consent").hidden = true;
 			card.querySelector(".wallet-niet-gedeeld").hidden = false;
@@ -1072,7 +1335,9 @@
 		}
 		var onderwerp = kop ? kop.textContent.trim() : "";
 		var bericht = "Leg mij dit uit";
-		if (onderwerp) bericht += ': "' + onderwerp + '"';
+		// Typografische aanhalingstekens: dit is lopende tekst in het gesprek, geen
+		// code. Zie de Schrijfwijzer.
+		if (onderwerp) bericht += ": “" + onderwerp + "”";
 		if (vragen.length) bericht += ". Het gaat om deze vragen: " + vragen.join(" / ");
 		input.value = bericht;
 		form.requestSubmit();
@@ -1221,6 +1486,124 @@
 		}
 	});
 
+	// Eén binnengekomen event verwerken (status, tool, case, answer, error, done).
+	// Staat los van de fetch-lus, zodat de demo-modus dezelfde events kan afspelen
+	// als de backend stuurt: één renderpad, dus wat in de demo te zien is, is wat
+	// de gebruiker live ook krijgt.
+	//
+	// `beurt` draagt wat binnen één beurt onthouden moet worden:
+	//   comboKey    — de combinatie waarin deze beurt begon
+	//   answered    — er is al een answer of error getoond
+	//   zaakGemaakt — er kwam een case-event, dus het antwoord krijgt een knop
+	//   verzoek     — het deelverzoek van deze beurt, pas te tonen ná het antwoord
+	function verwerkEvent(eventType, payload, beurt) {
+		var comboKey = beurt.comboKey;
+
+		if (eventType === "status") {
+			showThinking(friendlyTool(payload.message));
+		} else if (eventType === "tool") {
+			var wallet = walletPayload(payload);
+			if (wallet) {
+				hideThinking();
+				renderWalletConsent(wallet.data, wallet.provenance);
+			} else {
+				showThinking(friendlyTool(payload.message) + "...");
+			}
+		} else if (eventType === "case") {
+			// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
+			// zaak zelf (payload.data) in localStorage.
+			addZaak(payload.data || payload);
+			// Het case-event komt vóór het answer-event; deze vlag laat het
+			// antwoord straks de knop "Bekijk in Lopende zaken" dragen.
+			beurt.zaakGemaakt = true;
+		} else if ((eventType === "answer" || eventType === "error") && !beurt.answered) {
+			beurt.answered = true;
+			hideThinking();
+			if (payload.session_id) {
+				sessions[comboKey] = payload.session_id;
+				bewaarSessies();
+			}
+			// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
+			// Het deelverzoek komt als data mee (toestemming_nodig), niet als
+			// zin in de tekst: sinds de toestemmingspoort stuurt de host geen
+			// tool-event meer voor een bron die hij nog niet mág raadplegen.
+			if (eventType === "answer" && payload.toestemming_nodig && getComboKey() === comboKey) {
+				beurt.verzoek = payload.toestemming_nodig;
+			}
+			// Bronvermelding: bij voorkeur als data (`bronnen`), anders uit de
+			// slotregel van de tekst. Een foutmelding blijft ongemoeid — daar
+			// hoort de contactknop onder, geen bronvermelding.
+			var uitTekst = eventType === "answer" ? haalBronnenUitTekst(payload.message) : { tekst: payload.message, bronnen: [] };
+			var bronnen = Array.isArray(payload.bronnen) && payload.bronnen.length ? payload.bronnen : uitTekst.bronnen;
+			var tekst = uitTekst.tekst;
+
+			var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
+			if (spec) {
+				// De tekst niet weggooien: zolang de toets op een opgave
+				// wacht draagt elk antwoord het formulier mee, ook het
+				// antwoord op "Leg mij dit uit". Zonder deze regel verving
+				// het formulier de uitleg en leek de knop stuk - de
+				// respondent kreeg letterlijk hetzelfde formulier terug.
+				// Alleen bij een gestructureerde vraag: is het formulier
+				// uit de tekst zelf geparsed, dan zíjn tekst en formulier
+				// hetzelfde en zou alles dubbel staan.
+				if (tekst && !spec.vanTekst) {
+					voegBronnenToe(addMessage(tekst, "assistant"), bronnen);
+				}
+				renderAssistentVraag(spec);
+			} else {
+				var role = eventType === "error" ? "error" : "assistant";
+				var bericht;
+				// Toon alleen als gebruiker nog in dezelfde combinatie zit
+				if (getComboKey() === comboKey) {
+					bericht = addMessage(tekst, role);
+				} else {
+					// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
+					var temp = messages.innerHTML;
+					messages.innerHTML = chatHistory[comboKey] || "";
+					voegBronnenToe(addMessage(tekst, role), role === "assistant" ? bronnen : null);
+					bewaarHistorie(comboKey);
+					messages.innerHTML = temp;
+				}
+				// Eerst de bronnen, dan pas de vervolgstap: de knop hoort de
+				// laatste regel van de ballon te zijn.
+				if (role === "assistant") voegBronnenToe(bericht, bronnen);
+				// De vervolgstap hoort bij dit antwoord: een ingediende zaak
+				// verwijst naar Lopende zaken, een doodloper naar Contact.
+				// Alleen bij een zichtbaar bericht; in de weggeschreven
+				// historie zou de knop naar het verkeerde gesprek wijzen.
+				if (bericht && role === "error") {
+					voegVervolgstapToe(bericht, "Neem contact op", messages.dataset.urlContact);
+				} else if (bericht && beurt.zaakGemaakt) {
+					voegVervolgstapToe(bericht, "Bekijk in Lopende zaken", messages.dataset.urlZaken);
+				}
+			}
+		} else if (eventType === "done") {
+			hideThinking();
+		}
+	}
+
+	// Demo-modus: speel de events van deze beurt af uit het draaiboek
+	// (digitale-assistent-demo.js) alsof ze van de backend komen. De wachttijden
+	// zitten in het draaiboek, zodat het tempo daar in één oogopslag te zien is.
+	async function speelDemoBeurt(message, beurt) {
+		var script = window.MozaDemoScript;
+		if (!script) {
+			verwerkEvent("error", { message: "Het demo-draaiboek is niet geladen. Herlaad de pagina." }, beurt);
+			return;
+		}
+		var persona = getPersona();
+		var stappen = script.kies(message, demoStand, { kvkNummer: getTestUser(), bedrijf: persona && persona.bedrijf }) || [];
+		for (var i = 0; i < stappen.length; i++) {
+			await wait(stappen[i].wacht || 600);
+			// Tussentijds van persona of LLM gewisseld: de rest van het draaiboek
+			// hoort niet in het gesprek waar de gebruiker nu naar kijkt.
+			if (getComboKey() !== beurt.comboKey) return;
+			verwerkEvent(stappen[i].event, stappen[i].data, beurt);
+		}
+		verwerkEvent("done", {}, beurt);
+	}
+
 	form.addEventListener("submit", async function (e) {
 		e.preventDefault();
 		var message = input.value.trim();
@@ -1245,32 +1628,25 @@
 		input.style.blockSize = "auto";
 		setLoading(true);
 
+		// Alles wat deze beurt onthouden moet worden; verwerkEvent vult het aan.
+		// Het deelverzoek (`verzoek`) wordt pas ná het antwoord getoond: de kaart
+		// hoort ná de uitleg te komen, niet ervoor.
+		var beurt = { comboKey: comboKey, answered: false, zaakGemaakt: false, verzoek: null };
+
 		if (getDemoMode()) {
 			try {
-				await wait(600);
-				showThinking("Ik controleer de regels voor uw situatie…");
-				await wait(900);
-				hideThinking();
-				addMessage(
-					"Dit is een demo-antwoord van de digitale assistent. Het laat het werkende loading- en thinking-patroon zien zonder een echte backend.",
-					"assistant"
-				);
+				await speelDemoBeurt(message, beurt);
 			} finally {
 				setLoading(false);
 				submitting = false;
 				if (heeftGesprek) enableNieuwKnop();
+				// Na submitting = false, anders weigert de knop in de kaart de beurt
+				// die hij zelf moet starten.
+				if (beurt.verzoek && getComboKey() === comboKey) renderDeelverzoek(beurt.verzoek);
 				if (getComboKey() === comboKey) bewaarHistorie(comboKey);
 			}
 			return;
 		}
-
-		var answered = false;
-		// Per beurt bijhouden of er een zaak is aangemaakt; bepaalt of het
-		// antwoord een knop naar Lopende zaken krijgt.
-		var zaakGemaakt = false;
-		// Het deelverzoek van deze beurt, pas te tonen nadat het antwoord in beeld
-		// staat: de kaart hoort ná de uitleg te komen, niet ervoor.
-		var verzoekNaBericht = null;
 
 		// Timeout-bescherming: 60s om verbinding te maken, 90s stilte tijdens streamen
 		var controller = new AbortController();
@@ -1295,9 +1671,7 @@
 					// Op moment van versturen bepaald, zodat een persona-wissel direct meetelt.
 					"X-Test-User": getTestUser(),
 				},
-				body: JSON.stringify(
-					bouwVerzoek(message, sessions[comboKey], mode, opgaven, toestemming)
-				),
+				body: JSON.stringify(bouwVerzoek(message, sessions[comboKey], mode, opgaven, toestemming)),
 				signal: controller.signal,
 			});
 
@@ -1335,88 +1709,14 @@
 					}
 					if (!dataLine) continue;
 
-					var payload = JSON.parse(dataLine);
-
-					if (eventType === "status") {
-						showThinking(friendlyTool(payload.message));
-					} else if (eventType === "tool") {
-						var wallet = walletPayload(payload);
-						if (wallet) {
-							hideThinking();
-							renderWalletConsent(wallet.data, wallet.provenance);
-						} else {
-							showThinking(friendlyTool(payload.message) + "...");
-						}
-					} else if (eventType === "case") {
-						// Backend stuurt { type:"case", data: <lopende_zaak> }; bewaar de
-						// zaak zelf (payload.data) in localStorage.
-						addZaak(payload.data || payload);
-						// Het case-event komt vóór het answer-event; deze vlag laat het
-						// antwoord straks de knop "Bekijk in Lopende zaken" dragen. Hij
-						// werd gedeclareerd maar nooit gezet - de knop verscheen dus nooit.
-						zaakGemaakt = true;
-					} else if ((eventType === "answer" || eventType === "error") && !answered) {
-						answered = true;
-						hideThinking();
-						if (payload.session_id) {
-							sessions[comboKey] = payload.session_id;
-							bewaarSessies();
-						}
-						// Bevat het antwoord een gestructureerde vraag? Toon een formulier.
-						// Het deelverzoek komt als data mee (toestemming_nodig), niet als
-						// zin in de tekst: sinds de toestemmingspoort stuurt de host geen
-						// tool-event meer voor een bron die hij nog niet mág raadplegen.
-						if (eventType === "answer" && payload.toestemming_nodig && getComboKey() === comboKey) {
-							verzoekNaBericht = payload.toestemming_nodig;
-						}
-						var spec = eventType === "answer" && getComboKey() === comboKey ? vraagSpec(payload) : null;
-						if (spec) {
-							// De tekst niet weggooien: zolang de toets op een opgave
-							// wacht draagt elk antwoord het formulier mee, ook het
-							// antwoord op "Leg mij dit uit". Zonder deze regel verving
-							// het formulier de uitleg en leek de knop stuk - de
-							// respondent kreeg letterlijk hetzelfde formulier terug.
-							// Alleen bij een gestructureerde vraag: is het formulier
-							// uit de tekst zelf geparsed, dan zíjn tekst en formulier
-							// hetzelfde en zou alles dubbel staan.
-							if (payload.message && !spec.vanTekst) {
-								addMessage(payload.message, "assistant");
-							}
-							renderAssistentVraag(spec);
-						} else {
-							var role = eventType === "error" ? "error" : "assistant";
-							var bericht;
-							// Toon alleen als gebruiker nog in dezelfde combinatie zit
-							if (getComboKey() === comboKey) {
-								bericht = addMessage(payload.message, role);
-							} else {
-								// Sla op in chatHistory zodat het zichtbaar wordt bij terugwisselen
-								var temp = messages.innerHTML;
-								messages.innerHTML = chatHistory[comboKey] || "";
-								addMessage(payload.message, role);
-								bewaarHistorie(comboKey);
-								messages.innerHTML = temp;
-							}
-							// De vervolgstap hoort bij dit antwoord: een ingediende zaak
-							// verwijst naar Lopende zaken, een doodloper naar Contact.
-							// Alleen bij een zichtbaar bericht; in de weggeschreven
-							// historie zou de knop naar het verkeerde gesprek wijzen.
-							if (bericht && role === "error") {
-								voegVervolgstapToe(bericht, "Neem contact op", messages.dataset.urlContact);
-							} else if (bericht && zaakGemaakt) {
-								voegVervolgstapToe(bericht, "Bekijk in Lopende zaken", messages.dataset.urlZaken);
-							}
-						}
-					} else if (eventType === "done") {
-						hideThinking();
-					}
+					verwerkEvent(eventType, JSON.parse(dataLine), beurt);
 				}
 			}
 
 			setLoading(false);
 		} catch (err) {
 			setLoading(false);
-			if (!answered) {
+			if (!beurt.answered) {
 				var reason;
 				if (err && err.name === "AbortError") {
 					reason = "De assistent reageerde te lang niet. Probeer het opnieuw.";
@@ -1429,11 +1729,7 @@
 				} else {
 					reason = "De assistent is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.";
 				}
-				voegVervolgstapToe(
-					addMessage(reason, "error"),
-					"Neem contact op",
-					messages.dataset.urlContact
-				);
+				voegVervolgstapToe(addMessage(reason, "error"), "Neem contact op", messages.dataset.urlContact);
 			}
 		} finally {
 			clearTimeout(connectTimer);
@@ -1442,7 +1738,7 @@
 			if (heeftGesprek) enableNieuwKnop();
 			// Na submitting = false, anders weigert de knop in de kaart de beurt die
 			// hij zelf moet starten.
-			if (verzoekNaBericht && getComboKey() === comboKey) renderDeelverzoek(verzoekNaBericht);
+			if (beurt.verzoek && getComboKey() === comboKey) renderDeelverzoek(beurt.verzoek);
 			// Vastleggen na afloop van de beurt, niet per bericht: bij een
 			// afgebroken stream staat de laatste stand er dan alsnog in.
 			if (getComboKey() === comboKey) bewaarHistorie(comboKey);
@@ -1453,10 +1749,7 @@
 	// Laat zien hoe de assistent haar antwoord traceerbaar maakt: elke bron die is
 	// geraadpleegd staat eronder, met de datum van raadpleging.
 	var TEST_VRAAG = "Geldt de energiebesparingsinformatieplicht voor mijn bedrijf?";
-	var TEST_ANTWOORD =
-		"Ja, die geldt voor uw bedrijf. U gebruikt per jaar meer dan 50.000 kWh elektriciteit of 25.000 m³ aardgas, en dan bent u verplicht energie te besparen én te rapporteren welke maatregelen u heeft genomen.\n\n" +
-		"Voor uw branche staan 5 erkende maatregelen op de lijst. U rapporteert uiterlijk 1 december 2026 bij de RVO.\n\n" +
-		"Controleer dit bij twijfel bij uw omgevingsdienst: die houdt toezicht op deze plicht.";
+	var TEST_ANTWOORD = "Ja, die geldt voor uw bedrijf. U gebruikt per jaar meer dan 50.000 kWh elektriciteit of 25.000 m³ aardgas, en dan bent u verplicht energie te besparen én te rapporteren welke maatregelen u heeft genomen.\n\n" + "Voor uw branche staan 5 erkende maatregelen op de lijst. U rapporteert uiterlijk 1 december 2026 bij de RVO.\n\n" + "Controleer dit bij twijfel bij uw omgevingsdienst: die houdt toezicht op deze plicht.";
 	var TEST_BRONNEN = [
 		{
 			label: "KvK Handelsregister",
@@ -1475,27 +1768,6 @@
 		},
 	];
 
-	function bronnenHTML() {
-		var vandaag = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
-		var items = TEST_BRONNEN.map(function (bron) {
-			return (
-				"<li>" +
-				'<a rel="external" target="_blank" href="' +
-				escapeHTML(bron.url) +
-				'">' +
-				escapeHTML(bron.label) +
-				": " +
-				escapeHTML(bron.titel) +
-				"</a>" +
-				'<small class="chat-bron-datum">Geraadpleegd op ' +
-				escapeHTML(vandaag) +
-				"</small>" +
-				"</li>"
-			);
-		}).join("");
-		return '<p class="chat-bronnen-label">Bronnen:</p><ul class="list-plain chat-bronnen">' + items + "</ul>";
-	}
-
 	function toonTestAntwoord() {
 		verwijderSuggestieIntro();
 		addMessage(TEST_VRAAG, "user");
@@ -1503,8 +1775,7 @@
 		return wait(1200).then(function () {
 			hideThinking();
 			var bericht = addMessage(TEST_ANTWOORD, "assistant");
-			bericht.insertAdjacentHTML("beforeend", bronnenHTML());
-			messages.scrollTop = messages.scrollHeight;
+			voegBronnenToe(bericht, TEST_BRONNEN);
 			return bericht;
 		});
 	}
@@ -1574,14 +1845,14 @@
 		}, WACHT_PAGINALAAD);
 	} else if (startvraag && startvraag.trim()) {
 		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
-		showOnboardingMessages().then(function() {
+		showOnboardingMessages().then(function () {
 			markeerOnboardingGezien();
 			input.value = startvraag.trim();
 			form.requestSubmit();
 		});
 	} else {
 		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
-		showOnboardingMessages().then(function() {
+		showOnboardingMessages().then(function () {
 			markeerOnboardingGezien();
 		});
 	}
