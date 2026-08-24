@@ -38,6 +38,16 @@
 	// geen gesprek achterblijft op een gedeelde computer.
 	var OPSLAG_SESSIES = "chat:sessions";
 	var OPSLAG_HISTORIE = "chat:history";
+	var OPSLAG_VERSIE = "chat:opmaak-versie";
+
+	// Het gesprek wordt als kant-en-klare HTML bewaard en bij terugkomst zo weer in
+	// de DOM gezet. Verandert de opmaak van een bericht, dan blijft een gesprek uit
+	// een eerdere versie er dus uitzien zoals het toen was — met oude markup en al.
+	// Tijdens ontwikkeling levert dat spookmeldingen op ("ik zie nog steeds het
+	// oude formaat") terwijl de code allang klopt. Hoog dit nummer op zodra de
+	// opbouw van een bericht wijzigt; het bewaarde gesprek wordt dan één keer
+	// weggegooid en opnieuw opgebouwd.
+	var OPMAAK_VERSIE = "2";
 
 	function lees(sleutel) {
 		try {
@@ -53,6 +63,19 @@
 		} catch (e) {
 			/* privémodus of vol: het gesprek leeft dan alleen in het geheugen */
 		}
+	}
+
+	// Ook het session_id gaat mee weg: de gebruiker ziet een leeg gesprek, dus een
+	// backend die de vorige beurten nog kent zou antwoorden op iets wat hier niet
+	// meer staat.
+	try {
+		if (sessionStorage.getItem(OPSLAG_VERSIE) !== OPMAAK_VERSIE) {
+			sessionStorage.removeItem(OPSLAG_HISTORIE);
+			sessionStorage.removeItem(OPSLAG_SESSIES);
+			sessionStorage.setItem(OPSLAG_VERSIE, OPMAAK_VERSIE);
+		}
+	} catch (e) {
+		/* privémodus: er is dan toch niets bewaard */
 	}
 
 	var sessions = lees(OPSLAG_SESSIES);
@@ -76,7 +99,7 @@
 	}
 
 	// Onboarding-ballonnen die één voor één verschijnen
-	var onboardingMessages = ["<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Ik help bij uw vragen en taken. Hiervoor raadpleeg ik onder meer het KvK Handelsregister, de KOOP Regelingenbank, RegelRecht en de RVO.</p>", '<p>Ik kan bijvoorbeeld helpen met:</p><ul class="list-indent"><li>opzoeken van uw bedrijfsgegevens</li><li>regels en wetten opzoeken die relevant voor u zijn</li><li>voorbereiden van belastingaangiften</li></ul>', "<p>Uw gegevens haal ik pas op <strong>nadat u hier expliciet toestemming voor geeft</strong> en elk antwoord is traceerbaar en verwijst naar de bron.</p>"];
+	var onboardingMessages = ["<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Voor hulp bij vragen of ondersteuning van taken raadpleeg ik een aantal betrouwbare overheidsbronnen.</p>", '<p>Ik kan bijvoorbeeld:</p><ul class="list-indent"><li>uw bedrijfsgegevens opzoeken</li><li>uitzoeken welke regels voor u gelden</li><li>uw belastingaangifte voorbereiden</li></ul>', "<p>Ik gebruik uw gegevens pas <strong>als u daar toestemming voor geeft</strong>. Bij elk antwoord ziet u welke bron ik heb geraadpleegd.</p>"];
 	var exampleQuestions = ["Geldt de energiebesparingsinformatieplicht voor mij?", "Hoe kan ik mijn bedrijfsgegevens bekijken?", "Hoe bereid ik mijn belastingaangifte voor?"];
 
 	function addAssistantMessage(html) {
@@ -92,7 +115,7 @@
 		wrapper.className = "chat-suggestions";
 		var intro = document.createElement("p");
 		intro.className = "chat-suggestions-label";
-		intro.textContent = "Stel uw vraag, of probeer een van deze voorbeeldvragen:";
+		intro.textContent = "Stel uw vraag of kies een voorbeeld:";
 		wrapper.appendChild(intro);
 		exampleQuestions.forEach(function (question) {
 			var button = document.createElement("button");
@@ -105,7 +128,7 @@
 			var replay = document.createElement("button");
 			replay.type = "button";
 			replay.className = "secondary chat-show-onboarding";
-			replay.textContent = "Toon opnieuw de uitleg.";
+			replay.textContent = "Toon de uitleg opnieuw";
 			wrapper.appendChild(replay);
 		}
 		messages.appendChild(wrapper);
@@ -129,7 +152,7 @@
 			var replay = document.createElement("button");
 			replay.type = "button";
 			replay.className = "secondary chat-show-onboarding";
-			replay.textContent = "Toon opnieuw de uitleg.";
+			replay.textContent = "Toon de uitleg opnieuw";
 			suggestions.appendChild(replay);
 		}
 		messages.appendChild(suggestions);
