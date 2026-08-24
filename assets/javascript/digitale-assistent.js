@@ -1436,7 +1436,7 @@
 	});
 
 	// Vraag-formulier: stel het antwoord samen en stuur het als chatbericht terug,
-	// mét de losse antwoorden als `opgaven` (zie pendingOpgaven verderop). Zo
+	// mét de losse antwoorden als `opgaven` (zie pendingFormulier verderop). Zo
 	// blijft het antwoord toerekenbaar aan het veld dat de respondent invulde,
 	// in plaats van platgeslagen tot een zin die het model weer moet parsen.
 	var RADIO_WAARDE = { Uitgevoerd: true, Ja: true, "Niet uitgevoerd": false, Nee: false };
@@ -1444,9 +1444,29 @@
 	// Overbrugt vraag-form-submit (hierboven) naar de hoofd-submit-handler
 	// (verderop): beide luisteren op een `submit`-event, maar op verschillende
 	// formulieren, dus dit is de enige weg om de opgaven mee te geven.
-	var pendingOpgaven = null;
+	// `opgaven` zijn de losse antwoorden voor de regel; `samenvatting` is wat de
+	// respondent van zijn eigen inzending te zien krijgt. Het bericht zelf gaat
+	// wél naar de backend (de maatregel-statussen bereiken het model alleen zo),
+	// maar verschijnt niet als getypte ballon: het vergrendelde formulier toont
+	// de antwoorden al, en een dictaat van 23 regels leest niet als iets dat de
+	// respondent zei.
+	var pendingFormulier = null;
 
-	// Zelfde mechaniek als pendingOpgaven: de knop "Delen" zet de vlag en laat de
+	// Eén regel over wat er is ingevuld, voor onder het vergrendelde formulier.
+	function samenvatFormulier(delen, radioWaarden) {
+		var uitgevoerd = 0;
+		var nietUitgevoerd = 0;
+		radioWaarden.forEach(function (w) {
+			if (w === "Uitgevoerd") uitgevoerd++;
+			else if (w === "Niet uitgevoerd") nietUitgevoerd++;
+		});
+		if (uitgevoerd + nietUitgevoerd >= 3) {
+			return "Antwoorden verstuurd: " + (uitgevoerd + nietUitgevoerd) + " maatregelen, " + uitgevoerd + " uitgevoerd, " + nietUitgevoerd + " niet uitgevoerd";
+		}
+		return "Antwoorden verstuurd: " + delen.join(", ");
+	}
+
+	// Zelfde mechaniek als pendingFormulier: de knop "Delen" zet de vlag en laat de
 	// hoofd-submit-handler hem meesturen als contractveld `toestemming`.
 	var pendingToestemming = false;
 
@@ -1489,6 +1509,7 @@
 		if (submitting) return;
 		var delen = [];
 		var opgaven = {};
+		var radioWaarden = [];
 		var ontbreekt = false;
 		f.querySelectorAll("[data-veld]").forEach(function (veld) {
 			if (veld.getAttribute("data-type") === "categorieen") {
@@ -1516,6 +1537,7 @@
 			var waarde = null;
 			if (radio) {
 				delen.push(key + ": " + radio.value);
+				radioWaarden.push(radio.value);
 				// `normVeld` accepteert willekeurige `opties` uit een backend-
 				// `vraag.velden`-payload; een label buiten RADIO_WAARDE raden we
 				// niet naar true/false — dat zou een aanname het antwoord in
@@ -1557,12 +1579,18 @@
 			el.disabled = true;
 		});
 		var acties = f.querySelector(".action-group");
-		if (acties) acties.outerHTML = '<p class="wallet-badge">' + ICON_SUCCES + "Antwoord verstuurd</p>";
+		if (acties) {
+			var badge = document.createElement("p");
+			badge.className = "wallet-badge";
+			badge.innerHTML = ICON_SUCCES;
+			badge.appendChild(document.createTextNode(samenvatFormulier(delen, radioWaarden)));
+			acties.replaceWith(badge);
+		}
 		input.value = bericht;
 		// De hoofd-submit-handler (verderop) leest en wist dit direct bij het
 		// opbouwen van het verzoek; zo bereikt het antwoord de fetch zonder de
 		// signature van form.requestSubmit() te hoeven ombouwen.
-		pendingOpgaven = Object.keys(opgaven).length ? opgaven : null;
+		pendingFormulier = { opgaven: Object.keys(opgaven).length ? opgaven : null };
 		form.requestSubmit();
 	});
 
@@ -1714,8 +1742,9 @@
 		// Alleen gevuld als dit bericht net via het vraag-formulier is verstuurd;
 		// direct wissen zodat een volgend, los getypt bericht niet per ongeluk
 		// dezelfde opgaven meekrijgt.
-		var opgaven = pendingOpgaven;
-		pendingOpgaven = null;
+		var formulier = pendingFormulier;
+		pendingFormulier = null;
+		var opgaven = formulier ? formulier.opgaven : null;
 		var toestemming = pendingToestemming;
 		pendingToestemming = false;
 
@@ -1724,7 +1753,9 @@
 		disableNieuwKnop();
 		// Het gesprek is met deze vraag veranderd, dus er valt weer wat te bewaren.
 		herstelBewaarKnop();
-		addMessage(message, "user");
+		// Een formulierinzending staat al in beeld (vergrendeld, met samenvatting);
+		// alleen een getypt bericht krijgt een ballon.
+		if (!formulier) addMessage(message, "user");
 		input.value = "";
 		input.style.blockSize = "auto";
 		setLoading(true);
