@@ -1,0 +1,625 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    ContactType:
+      type: string
+      enum:
+      - Email
+      - Telefoonnummer
+      - ApplicatieId
+    ContactgegevenRequest:
+      description: Request object voor het toevoegen van een contactgegeven aan een
+        partij
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      - type
+      - waarde
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+        type:
+          $ref: "#/components/schemas/ContactType"
+        waarde:
+          type: string
+        scope:
+          $ref: "#/components/schemas/ScopeRequest"
+    ContactgegevenResponse:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        type:
+          $ref: "#/components/schemas/ContactType"
+        waarde:
+          type: string
+        isGeverifieerd:
+          type: boolean
+        isDefault:
+          type: boolean
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        lastUpdated:
+          $ref: "#/components/schemas/Instant"
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScopeResponse"
+    ContactgegevenUpdateRequest:
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      - type
+      - waarde
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+        type:
+          $ref: "#/components/schemas/ContactType"
+        waarde:
+          type: string
+        scope:
+          $ref: "#/components/schemas/ScopeRequest"
+        id:
+          $ref: "#/components/schemas/UUID"
+        isDefault:
+          type: boolean
+    DienstRequest:
+      description: Request object voor het toevoegen van een dienst aan een dienstverlener
+      type: object
+      required:
+      - naam
+      properties:
+        naam:
+          type: string
+          pattern: \S
+        beschrijving:
+          type: string
+    DienstverlenerRequest:
+      description: Request object voor het toevoegen van een dienstverlener
+      type: object
+      required:
+      - naam
+      properties:
+        naam:
+          type: string
+        beschrijving:
+          type: string
+    EmailVerificatieCodeAanvraagRequest:
+      type: object
+      required:
+      - email
+      - identificatieNummer
+      - identificatieType
+      properties:
+        email:
+          type: string
+          pattern: \S
+        identificatieNummer:
+          type: string
+          pattern: \S
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+    EmailVerificatieRequest:
+      description: Request object voor het verifiëren van een emailadres
+      type: object
+      required:
+      - email
+      - identificatieNummer
+      - identificatieType
+      - verificatieCode
+      properties:
+        email:
+          type: string
+        identificatieNummer:
+          type: string
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        verificatieCode:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+        timestamp:
+          $ref: "#/components/schemas/OffsetDateTime"
+    IdentificatieResponse:
+      type: object
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+    IdentificatieType:
+      type: string
+      enum:
+      - BSN
+      - KVK
+      - RSIN
+    Instant:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T16:15:50Z
+    OffsetDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50-04:00
+    PartijBulkRequest:
+      type: object
+      required:
+      - identificaties
+      properties:
+        identificaties:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartijIdentificatieRequest"
+          minItems: 1
+    PartijIdentificatieRequest:
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+    PartijRequest:
+      description: Request object voor het ophalen van een Partij
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+        dienstverlener:
+          type: string
+        dienstNaam:
+          type: string
+    PartijResponse:
+      type: object
+      properties:
+        partijId:
+          $ref: "#/components/schemas/UUID"
+        identificaties:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdentificatieResponse"
+        voorkeuren:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoorkeurResponse"
+        contactgegevens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactgegevenResponse"
+    ScopeRequest:
+      type: object
+      properties:
+        dienstverlenerNaam:
+          type: string
+        dienstNaam:
+          type: string
+    ScopeResponse:
+      type: object
+      properties:
+        dienstverlenerNaam:
+          type: string
+        dienstNaam:
+          type: string
+    UUID:
+      type: string
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+    VoorkeurRequest:
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      - voorkeurType
+      - waarde
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+        voorkeurType:
+          $ref: "#/components/schemas/VoorkeurType"
+        waarde:
+          type: string
+        scope:
+          $ref: "#/components/schemas/ScopeRequest"
+    VoorkeurResponse:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        voorkeurType:
+          $ref: "#/components/schemas/VoorkeurType"
+        waarde:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        lastUpdated:
+          $ref: "#/components/schemas/Instant"
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScopeResponse"
+    VoorkeurType:
+      type: string
+      enum:
+      - WebsiteTaal
+      - MagGebeldWorden
+      - WebsiteThema
+      - Aanhef
+      - OntvangViaBerichtenbox
+    VoorkeurUpdateRequest:
+      type: object
+      required:
+      - identificatieType
+      - identificatieNummer
+      - voorkeurType
+      - waarde
+      properties:
+        identificatieType:
+          $ref: "#/components/schemas/IdentificatieType"
+        identificatieNummer:
+          type: string
+          pattern: \S
+        voorkeurType:
+          $ref: "#/components/schemas/VoorkeurType"
+        waarde:
+          type: string
+        scope:
+          $ref: "#/components/schemas/ScopeRequest"
+        id:
+          $ref: "#/components/schemas/UUID"
+tags:
+- name: Dienstverlener
+  description: Endpoints voor het beheren van dienstverleners en diensten
+- name: EmailVerificatie
+  description: Endpoints voor het verifiëren van emails
+- name: Profiel
+  description: Endpoints voor het beheren van partijen
+paths:
+  /api/profielservice/v1/contactgegeven:
+    put:
+      summary: Update contactgegeven van een partij
+      description: "Werk type, waarde en scope van een contactgegeven bij. Identificatie\
+        \ kan niet aangepast worden."
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactgegevenUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: Contactgegeven succesvol bijgewerkt
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Request body mag niet leeg zijn
+        "404":
+          description: Contactgegeven of partij niet gevonden
+    post:
+      summary: Toevoegen nieuwe contactgegeven voor een partij
+      description: Voegt een nieuwe contactgegeven toe. Creëert automatisch ontbrekende
+        partijen.
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactgegevenRequest"
+        required: true
+      responses:
+        "201":
+          description: Contactgegeven succesvol toegevoegd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactgegevenResponse"
+        "200":
+          description: Contactgegeven was al geregistreerd voor deze partij en scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactgegevenResponse"
+        "400":
+          description: Request body mag niet leeg zijn
+  /api/profielservice/v1/contactgegeven/{contactgegevenId}:
+    delete:
+      summary: Verwijder contactgegeven van een partij
+      description: Verwijdert een contactgegeven volledig
+      tags:
+      - Profiel
+      parameters:
+      - name: contactgegevenId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartijIdentificatieRequest"
+        required: true
+      responses:
+        "204":
+          description: Contactgegeven succesvol verwijderd
+        "404":
+          description: Contactgegeven of partij niet gevonden
+  /api/profielservice/v1/dienstverlener:
+    post:
+      summary: Voegt een dienstverlener toe
+      description: Voegt een nieuwe dienstverlener toe met optionele beschrijving
+      tags:
+      - Dienstverlener
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DienstverlenerRequest"
+        required: true
+      responses:
+        "201":
+          description: Dienstverlener succesvol toegevoegd
+        "400":
+          description: Request body mag niet leeg zijn
+  /api/profielservice/v1/dienstverlener/{dienstverlenerNaam}/diensten:
+    post:
+      summary: Voegt een dienst toe aan een dienstverlener
+      description: Voegt een nieuwe dienst toe met beschrijving
+      tags:
+      - Dienstverlener
+      parameters:
+      - name: dienstverlenerNaam
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DienstRequest"
+        required: true
+      responses:
+        "201":
+          description: Dienst succesvol toegevoegd
+        "400":
+          description: Request body mag niet leeg zijn
+  /api/profielservice/v1/dienstverlener/{naam}:
+    get:
+      summary: Vraagt gegevens van dienstverlener
+      description: Geeft gegevens van gevraagde Dienstverlener terug
+      tags:
+      - Dienstverlener
+      parameters:
+      - name: naam
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Dienstverlener succesvol opgehaald
+        "404":
+          description: Dienstverlener niet gevonden
+  /api/profielservice/v1/emailverificatie:
+    post:
+      tags:
+      - EmailVerificatie
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailVerificatieRequest"
+        required: true
+      responses:
+        "200":
+          description: Email verificatie succesvol
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Email verificatie mislukt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      summary: Post Email Verificatie
+  /api/profielservice/v1/emailverificatie/code:
+    post:
+      summary: (Opnieuw) aanvragen voor een code van een (al geverifieerde) mail adres
+      description: "Vraagt een email verificatie code aan. Let op, bij het aanmaken\
+        \ van een profiel wordt al een email verificatie code aangevraagd. Dit is\
+        \ voor het opnieuw aanvragen van een code."
+      tags:
+      - EmailVerificatie
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailVerificatieCodeAanvraagRequest"
+        required: true
+      responses:
+        "200":
+          description: Email verificatie code aanvraag succesvol
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Invalid request format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Partij of Contactgegeven niet gevonden
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: NotifyNL API onbereikbaar
+  /api/profielservice/v1/partij:
+    post:
+      summary: Ophalen profiel van een partij
+      description: Haalt het profiel op van een partij
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartijRequest"
+        required: true
+      responses:
+        "200":
+          description: Partij succesvol opgehaald
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartijResponse"
+        "404":
+          description: Partij niet gevonden of is verwijderd
+        "400":
+          description: Bad Request
+  /api/profielservice/v1/partijen/bulk:
+    post:
+      summary: Ophalen profielen van meerdere partijen
+      description: Haalt profielen op van meerdere partijen. Niet-gevonden partijen
+        worden stilzwijgend weggelaten.
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartijBulkRequest"
+        required: true
+      responses:
+        "200":
+          description: Alle profielen succesvol opgehaald
+          content:
+            application/json:
+              schema: {}
+        "206":
+          description: Profielen gedeeltelijk opgehaald
+        "400":
+          description: Request body mag niet leeg zijn
+        "404":
+          description: Geen enkel profiel gevonden
+  /api/profielservice/v1/voorkeur:
+    put:
+      summary: Update voorkeur van een partij
+      description: "Werk type, waarde en scope van een voorkeur bij. Identificatie\
+        \ kan niet aangepast worden."
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoorkeurUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: Voorkeur succesvol bijgewerkt
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Request body mag niet leeg zijn
+        "404":
+          description: Voorkeur of partij niet gevonden
+    post:
+      summary: Toevoegen nieuwe voorkeur voor een partij
+      description: Voegt een nieuwe voorkeur toe. Creëert automatisch ontbrekende
+        partijen.
+      tags:
+      - Profiel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoorkeurRequest"
+        required: true
+      responses:
+        "201":
+          description: Voorkeur succesvol toegevoegd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoorkeurResponse"
+        "200":
+          description: Voorkeur was al geregistreerd voor deze partij en scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoorkeurResponse"
+        "400":
+          description: Request body mag niet leeg zijn
+  /api/profielservice/v1/voorkeur/{voorkeurId}:
+    delete:
+      summary: Verwijder voorkeur van een partij
+      description: Verwijdert een voorkeur volledig
+      tags:
+      - Profiel
+      parameters:
+      - name: voorkeurId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartijIdentificatieRequest"
+        required: true
+      responses:
+        "204":
+          description: Voorkeur succesvol verwijderd
+        "404":
+          description: Voorkeur of partij niet gevonden
+info:
+  title: profiel-service API
+  version: 1.0.0-SNAPSHOT

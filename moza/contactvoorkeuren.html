@@ -23,13 +23,26 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 
 		<p>Uw contactgegevens bij organisaties waarmee u uw gegevens centraal deelt.</p>
 
-		<a class="icon-link" href="{{ '/moza/contactgegevens-wijzigen/' | url }}">{% include "icon-edit.njk" %} Contactgegevens wijzigen</a>
+		<nav aria-label="Contactvoorkeuren-tabs">
+			<ul class="tablist">
+				<li>
+					<a href="{{ '/moza/contactvoorkeuren/#hoofd-inhoud' | url }}" aria-current="page">Zakelijk</a>
+				</li>
+				<li>
+					<a href="{{ '/moza/contactvoorkeuren/prive/#hoofd-inhoud' | url }}">Privé</a>
+				</li>
+			</ul>
+		</nav>
+
+		{% island "contactgegevens", { type: "zakelijk" } %}
+
+		<!-- <a class="icon-link" href="{{ '/moza/contactgegevens-wijzigen/' | url }}">{% include "icon-edit.njk" %} Contactgegevens wijzigen</a>
 		<dl class="data-overview">
 			<dt>E-mailadres</dt>
 			<dd id="contact-email">info@bloombv.nl</dd>
 			<dt>Telefoonnummer</dt>
 			<dd>(+31) (0)6 12 34 56 78</dd>
-		</dl>
+		</dl> -->
 
 		<hgroup>
 			<h3 id="cv-orgs">Aangesloten organisaties</h3>
@@ -137,12 +150,12 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			const icon = data.type === "succes" ? iconSucces : iconInfo;
 			const cssClass = data.type === "succes" ? "feedback-success" : "feedback-info";
 			flashEl.innerHTML = `
-			<div class="feedback ${cssClass}">
-				${icon}
-				<div><p>${data.message}</p></div>
-				<button class="btn-close link-button"><i>Sluit notificatie</i></button>
-			</div>
-		`;
+		<div class="feedback ${cssClass}">
+			${icon}
+			<div><p>${data.message}</p></div>
+			<button class="btn-close link-button"><i>Sluit notificatie</i></button>
+		</div>
+	`;
 			flashEl.hidden = false;
 			// E-mailadres bijwerken als het in de flash-data staat
 			if (data.email) {
