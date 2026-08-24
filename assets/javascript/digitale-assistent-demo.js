@@ -90,6 +90,12 @@
 		return { wacht: wacht, event: event, data: data };
 	}
 
+	// Een antwoord zonder `bronnen` is een bewuste keuze, geen omissie. Een
+	// vervolgvraag ("Wilt u dat ik…?"), een weigering, een uitleg over het
+	// formulier en de foutmelding raadplegen geen enkele bron; er dan toch een
+	// bronvermelding onder zetten zou een herkomst suggereren die er niet is, en
+	// dat holt de bronvermelding uit waar die er wél toe doet. Voeg `bronnen`
+	// alleen toe aan een antwoord dat gegevens of regels uit een bron gebruikt.
 	function antwoord(wacht, message, extra) {
 		var data = { message: message, session_id: "demo-sessie" };
 		if (extra)

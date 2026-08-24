@@ -110,30 +110,6 @@
 		messages.scrollTop = messages.scrollHeight;
 	}
 
-	function addSuggestionButtons() {
-		var wrapper = document.createElement("div");
-		wrapper.className = "chat-suggestions";
-		var intro = document.createElement("p");
-		intro.className = "chat-suggestions-label";
-		intro.textContent = "Stel uw vraag of kies een voorbeeld:";
-		wrapper.appendChild(intro);
-		exampleQuestions.forEach(function (question) {
-			var button = document.createElement("button");
-			button.type = "button";
-			button.className = "chat-suggestion secondary";
-			button.textContent = question;
-			wrapper.appendChild(button);
-		});
-		if (wrapper.dataset.showReplay === "true") {
-			var replay = document.createElement("button");
-			replay.type = "button";
-			replay.className = "secondary chat-show-onboarding";
-			replay.textContent = "Toon de uitleg opnieuw";
-			wrapper.appendChild(replay);
-		}
-		messages.appendChild(wrapper);
-	}
-
 	function showSuggestionPrompt(includeReplayButton) {
 		var suggestions = document.createElement("div");
 		suggestions.className = "chat-suggestions";
