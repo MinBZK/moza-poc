@@ -279,8 +279,15 @@ function buildTogglePanel() {
 	demoToggle.checked = getSettingValue("demo-mode", "false") === "true";
 	demoToggle.addEventListener("change", () => setSettingValue("demo-mode", demoToggle.checked ? "true" : "false"));
 	demoField.appendChild(demoToggle);
-	demoField.appendChild(document.createTextNode(" Demo-modus: toon een werkend voorbeeld zonder echte API"));
+	demoField.appendChild(document.createTextNode(" Demo-modus: speel het draaiboek af zonder backend"));
 	panel.appendChild(demoField);
+
+	// Wat de demo-modus doet, staat niet in de schakelaar zelf: zonder deze uitleg
+	// blijft het een knop die "iets" doet, en dan blijven de scenario's onvindbaar.
+	const demoUitleg = document.createElement("p");
+	demoUitleg.className = "feature-flags-uitleg";
+	demoUitleg.textContent = "Stel in de chat een van de voorbeeldvragen (energiebesparing, bedrijfsgegevens, belastingaangifte) en beantwoord wat de assistent terugvraagt. U doorloopt dan het deelverzoek, de energiekaart uit de Business Wallet, de vraagformulieren en de zaak die bij de RVO wordt ingediend. Typ “fout” voor de foutmelding.";
+	panel.appendChild(demoUitleg);
 
 	// Freeze thinking element: houdt het denk-element zichtbaar voor animatie-aanpassingen
 	const freezeField = document.createElement("label");
@@ -320,14 +327,24 @@ function buildTogglePanel() {
 	// Testantwoord met bronvermelding: alleen zinvol op een pagina met een chat.
 	// digitale-assistent.js laadt na dit script, dus we controleren op het element
 	// en niet op window.MozaAssistent — die bestaat hier nog niet.
+	// Losse onderdelen los tonen, zonder een heel gesprek te hoeven voeren: handig
+	// om één kaart of formulier te beoordelen of om er een schermafdruk van te
+	// maken. Alleen zinvol op een pagina met een chat; digitale-assistent.js laadt
+	// na dit script, dus we controleren op het element en niet op window.Moza* —
+	// die bestaan hier nog niet.
 	if (document.getElementById("chat-messages")) {
-		const testAntwoordBtn = document.createElement("button");
-		testAntwoordBtn.className = "feature-flags-actie";
-		testAntwoordBtn.textContent = "Testantwoord met bronvermelding tonen";
-		testAntwoordBtn.addEventListener("click", () => {
-			if (window.MozaAssistent) window.MozaAssistent.testAntwoord();
+		[
+			["Testantwoord met bronvermelding tonen", () => window.MozaAssistent && window.MozaAssistent.testAntwoord()],
+			["Deelverzoek Business Wallet tonen", () => window.MozaWallet && window.MozaWallet.demo()],
+			["Formulier maatregelenlijst tonen", () => window.MozaVraag && window.MozaVraag.eml()],
+			["Formulier ja/nee-vraag tonen", () => window.MozaVraag && window.MozaVraag.jaNee()],
+		].forEach(([labelText, actie]) => {
+			const knop = document.createElement("button");
+			knop.className = "feature-flags-actie";
+			knop.textContent = labelText;
+			knop.addEventListener("click", actie);
+			panel.appendChild(knop);
 		});
-		panel.appendChild(testAntwoordBtn);
 	}
 
 	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit

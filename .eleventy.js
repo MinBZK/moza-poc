@@ -1,8 +1,17 @@
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
+// Dezelfde module die de browser laadt voor de kaarten van homepage-profiel.js,
+// zodat de detailpagina's en de overzichten dezelfde vraag stellen.
+const assistentVraag = require("./assets/javascript/assistent-vraag.js");
 
 module.exports = function (eleventyConfig) {
+	// De openingsvraag voor de digitale assistent bij een subsidie, regeling of
+	// buurtbericht. Gebruikt in _includes/action-group.njk.
+	eleventyConfig.addFilter("assistentVraag", function (item, soort) {
+		return assistentVraag.vraag(item, soort);
+	});
+
 	// Laatste wijzigingsdatum van het hele project: meest recente git-commit.
 	// Fallback: huidige datum als git niet beschikbaar is.
 	eleventyConfig.addGlobalData("laatsteWijziging", () => {

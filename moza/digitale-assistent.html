@@ -34,10 +34,12 @@ title: "MijnOverheid Zakelijk: Digitale assistent"
 			<div class="action-group">
 				<button type="submit">Vraag stellen</button>
 				<button id="chat-nieuw" class="secondary" type="button" aria-disabled="true">Nieuw gesprek starten</button>
+				<button id="chat-bewaar" class="secondary" type="button" aria-disabled="true">Bewaar gesprek</button>
 			</div>
+			<p id="chat-bewaar-melding" class="visually-hidden" role="status"></p>
 		</form>
 
-		<small class="disclaimer">{% icon "/assets/icons/icon-informatie.svg" %} De antwoorden van deze assistent worden door AI gegenereerd en kunnen fouten bevatten. Controleer belangrijke informatie altijd bij de oorspronkelijke bron.</small>
+		<small class="disclaimer">{% icon "/assets/icons/icon-informatie.svg" %} De antwoorden van deze assistent worden door AI gegenereerd en kunnen fouten bevatten. Er wordt gebruik gemaakt van onder meer het KvK Handelsregister, de KOOP Regelingenbank, RegelRecht en de RVO. Controleer belangrijke informatie altijd bij de oorspronkelijke bron. Raadpleeg een adviseur of de bevoegde instantie indien u juridisch advies nodig heeft.</small>
 
 		<div id="chat-status" class="chat-status" aria-live="polite" data-feature="Status van bronnen in de Digitale assistent" data-feature-type="functionaliteit" data-feature-default="off"></div>
 

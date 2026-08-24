@@ -364,6 +364,16 @@ pre {
 	}
 }
 
+/* Focus die de pagina zelf verzet na een muisklik: de gebruiker staat wel op de
+   juiste plek, maar krijgt geen ring te zien. De browser rekent zo'n sprong als
+   toetsenbordfocus zodra het vorige element een tekstveld was, en dat klopt hier
+   niet. JavaScript haalt het attribuut weg bij de eerste toetsaanslag, dus voor
+   wie daarna verder tabt is de ring er meteen weer. */
+[data-focus-stil]:focus-visible {
+	box-shadow: none;
+	outline: none;
+}
+
 /* Bevestigde opties (niet meer wijzigbaar, gemarkeerd met vinkje, wordt gebruikt voor Aangesloten organisaties onder Contactgegevens) */
 li.option--confirmed {
 	&::before {
@@ -1181,7 +1191,7 @@ caption {
 	container-type: inline-size;
 	display: flex;
 	flex-direction: column;
-	gap: var(--toepassing-space-layout-sm);
+	gap: var(--toepassing-space-layout-xs);
 	padding: var(--toepassing-space-card-padding);
 	section {
 		display: flex;
@@ -1721,6 +1731,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 
 .chat-container {
 	gap: var(--toepassing-space-padding-sm);
+	min-block-size: 36em;
 }
 .chat-header {
 	align-items: flex-start;
@@ -1810,23 +1821,27 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	font-style: italic;
 }
 .chat-messages {
-	block-size: 25em;
+	block-size: 22dvh;
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-sm);
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
 	gap: var(--toepassing-space-padding-md);
 	inline-size: 100%;
+	min-block-size: 0;
 	overflow-y: auto;
 	padding: var(--toepassing-space-padding-xs);
 }
 .chat-message,
 .chat-suggestions,
-.chat-suggestions button {
+.chat-suggestions button,
+.wallet-card {
 	border-radius: var(--toepassing-border-radius-lg);
 	display: flex;
 	flex-direction: column;
-	gap: var(--toepassing-space-margin-xs);
+	gap: var(--toepassing-space-margin-2xs);
 	margin-block-end: var(--toepassing-space-margin-xs);
 	max-inline-size: 80%;
 	padding: var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
@@ -1847,7 +1862,8 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 }
 .chat-message-assistant,
 .chat-suggestions,
-.chat-message-loading {
+.chat-message-loading,
+.wallet-card {
 	align-self: flex-start;
 	background: var(--toepassing-color-background-subtle-1);
 	filter: drop-shadow(1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(-1px 0 0 var(--toepassing-color-border-subtle)) drop-shadow(0 1px 0 var(--toepassing-color-border-subtle)) drop-shadow(0 -1px 0 var(--toepassing-color-border-subtle));
@@ -1877,6 +1893,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	button {
 		justify-self: end;
 		margin-block-end: var(--toepassing-space-margin-sm);
+		margin-inline: var(--toepassing-space-margin-lg);
 		&:nth-child(even) {
 			justify-self: start;
 		}
@@ -1920,49 +1937,67 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	margin-block-start: var(--toepassing-space-margin-3xs);
 }
 
+#gesprekken-groups li {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-2xs);
+	p {
+		color: var(--toepassing-color-text-subtle-2);
+	}
+}
+
 h1.icon-label {
 	gap: var(--toepassing-space-layout-2xs);
 	svg {
 		block-size: var(--toepassing-size-icon-md);
 	}
 }
+.vraag-form {
+	legend {
+		font: var(--toepassing-text-heading-h5);
+		margin-block-end: var(--toepassing-space-margin-2xs);
+	}
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		gap: var(--toepassing-space-margin-2xs);
+	}
+	ul {
+		margin-block: var(--toepassing-space-margin-2xs);
+	}
+}
 
 /* Wallet-kaarten in de chat: deelverzoek (consent) + gestructureerde energieweergave */
-.wallet-card {
-	background: var(--toepassing-color-background-default);
-	border: var(--toepassing-border-default);
-	border-radius: var(--toepassing-border-radius-md);
-	display: flex;
-	flex-direction: column;
-	gap: var(--toepassing-space-padding-sm);
-	padding: var(--toepassing-space-padding-md);
+.wallet-consent {
+	display: contents;
 }
-.wallet-acties {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--toepassing-space-padding-sm);
+.wallet-consent[hidden] {
+	display: none;
 }
 .wallet-uitgever {
-	align-items: center;
 	color: var(--toepassing-color-text-subtle-1);
 	display: flex;
-	flex-wrap: wrap;
-	font: var(--toepassing-text-smalltext);
+	flex-flow: column wrap;
 	gap: var(--toepassing-space-padding-2xs);
+	margin-block: var(--toepassing-space-margin-2xs);
 }
 .wallet-badge {
 	align-items: center;
 	background: var(--toepassing-color-feedback-success-subtle);
 	border-radius: var(--toepassing-border-radius-md);
-	color: var(--toepassing-color-feedback-success-border);
+	/* color: var(--toepassing-color-feedback-success-border); */
 	display: inline-flex;
+	font: var(--toepassing-text-smalltext);
 	gap: var(--toepassing-space-padding-2xs);
+	inline-size: fit-content;
+	margin-block-end: var(--toepassing-space-margin-xs);
 	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
 }
 .wallet-badge svg {
 	block-size: var(--toepassing-size-icon-sm);
 	color: var(--toepassing-color-feedback-success-icon);
 	inline-size: var(--toepassing-size-icon-sm);
+	margin-inline-end: var(--toepassing-space-margin-3xs);
 }
 .wallet-cijfers {
 	display: grid;
@@ -1980,7 +2015,7 @@ h1.icon-label {
 }
 .wallet-waarde {
 	display: block;
-	font: var(--toepassing-text-heading-h3);
+	font: var(--toepassing-text-heading-h5);
 }
 .wallet-grens {
 	align-items: center;
@@ -2008,20 +2043,14 @@ h1.icon-label {
 .wallet-grens-onder::before {
 	background: var(--toepassing-color-feedback-success-icon);
 }
-.wallet-bron {
-	align-self: flex-start;
-	background: var(--toepassing-color-background-subtle-2);
-	border-radius: var(--toepassing-border-radius-md);
-	color: var(--toepassing-color-text-subtle-1);
-	font: var(--toepassing-text-smalltext);
-	padding: var(--toepassing-space-padding-2xs) var(--toepassing-space-padding-sm);
-}
+
 /* Decoratief stap-icoon naast de kop van een Wallet-kaart */
 .stap-icoon {
 	block-size: var(--toepassing-size-icon-md);
 	inline-size: var(--toepassing-size-icon-md);
-	margin-inline-end: var(--toepassing-space-padding-2xs);
-	vertical-align: text-bottom;
+	margin-block-start: var(--toepassing-space-padding-3xs);
+	margin-inline-end: var(--toepassing-space-padding-xs);
+	vertical-align: text-top;
 }
 
 /* -- OVERIGE COMPONENTEN -- */
@@ -2291,7 +2320,8 @@ h1.icon-label {
 .share-topic,
 .hide-topic,
 .delete-topic,
-.restore-topic {
+.restore-topic,
+.ask-assistent {
 	align-items: center;
 	border-radius: var(--toepassing-border-radius-sm);
 	color: var(--toepassing-color-interactive-default-icon);
@@ -2300,6 +2330,7 @@ h1.icon-label {
 	font: var(--toepassing-text-smalltext);
 	font-weight: var(--toepassing-text-font-weight-semi-bold);
 	margin-inline-end: var(--toepassing-space-margin-3xs);
+	text-decoration: none;
 	&:has(input:focus-visible) {
 		outline: var(--toepassing-focus-outline);
 	}
@@ -2381,6 +2412,11 @@ h1.icon-label {
 			background-color: var(--toepassing-color-feedback-success-icon);
 			mask: url("../assets/icons/icon-feedback.svg") no-repeat center / contain;
 		}
+	}
+}
+.ask-assistent {
+	&::before {
+		mask: url("../assets/icons/icon-assistent.svg") no-repeat center / contain;
 	}
 }
 
