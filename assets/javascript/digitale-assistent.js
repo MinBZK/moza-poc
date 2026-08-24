@@ -1822,13 +1822,13 @@
 				if (err && err.name === "AbortError") {
 					reason = "De assistent reageerde te lang niet. Probeer het opnieuw.";
 				} else if (err && err.status === 401) {
-					reason = "Je API-sleutel ontbreekt of is onjuist. Controleer de sleutel in het instellingenpaneel.";
+					reason = "Er is nog geen toegangssleutel ingevuld, of de sleutel klopt niet. Controleer de sleutel bij Instellingen.";
 				} else if (err && err.status === 403) {
-					reason = "Je API-sleutel heeft geen toegang tot deze backend.";
+					reason = "Deze toegangssleutel geeft geen toegang tot de assistent.";
 				} else if (err && err.status >= 500) {
 					reason = "De assistent heeft een technisch probleem. Probeer het later opnieuw.";
 				} else {
-					reason = "De assistent is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.";
+					reason = "De assistent is niet bereikbaar. Controleer uw internetverbinding en probeer het opnieuw.";
 				}
 				voegVervolgstapToe(addMessage(reason, "error"), "Neem contact op", messages.dataset.urlContact);
 			}
