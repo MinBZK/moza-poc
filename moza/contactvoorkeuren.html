@@ -23,19 +23,6 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 
 		<p>Uw contactgegevens bij organisaties waarmee u uw gegevens centraal deelt.</p>
 
-		<nav aria-label="Contactvoorkeuren-tabs">
-			<ul class="tablist">
-				<li>
-					<a href="{{ '/moza/contactvoorkeuren/#hoofd-inhoud' | url }}" aria-current="page">Zakelijk</a>
-				</li>
-				<li>
-					<a href="{{ '/moza/contactvoorkeuren/prive/#hoofd-inhoud' | url }}">Privé</a>
-				</li>
-			</ul>
-		</nav>
-
-		{% island "contactgegevens", { text: "Contact me" } %}
-
 		<a class="icon-link" href="{{ '/moza/contactgegevens-wijzigen/' | url }}">{% include "icon-edit.njk" %} Contactgegevens wijzigen</a>
 		<dl class="data-overview">
 			<dt>E-mailadres</dt>
@@ -43,10 +30,99 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			<dt>Telefoonnummer</dt>
 			<dd>(+31) (0)6 12 34 56 78</dd>
 		</dl>
+
+		<hgroup>
+			<h3 id="cv-orgs">Aangesloten organisaties</h3>
+			<p>De geselecteerde organisaties gebruiken deze gegevens om contact met u op te nemen. Selecteert u een extra organisatie, dan gebruikt ook deze uw centrale contactgegevens.</p>
+		</hgroup>
+
+		<form>
+			<ul class="list-plain">
+				<li class="option--confirmed">Kamer van Koophandel (KVK)</li>
+				<li class="option--confirmed">Belastingdienst</li>
+			</ul>
+			<ul class="list-plain" role="group" aria-labelledby="cv-orgs">
+				<li>
+					<input id="moza-org-om" type="checkbox" />
+					<label for="moza-org-om">Openbaar Ministerie (OM)</label>
+				</li>
+				<li>
+					<input id="moza-org-rvo" type="checkbox" />
+					<label for="moza-org-rvo">Rijksdienst voor Ondernemend Nederland (RVO)</label>
+				</li>
+				<li>
+					<input id="moza-org-rdw" type="checkbox" />
+					<label for="moza-org-rdw">Rijksdienst voor het Wegverkeer (RDW)</label>
+				</li>
+				<li>
+					<input id="moza-org-svb" type="checkbox" />
+					<label for="moza-org-svb">Sociale Verzekeringsbank (SVB)</label>
+				</li>
+				<li>
+					<input id="moza-org-uwv" type="checkbox" />
+					<label for="moza-org-uwv">Uitvoeringsinstituut Werknemersverzekeringen (UWV)</label>
+				</li>
+			</ul>
+			<div class="action-group">
+				<button type="submit">Opslaan</button>
+				<a class="btn secondary" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">Annuleren</a>
+			</div>
+		</form>
 	</section>
 
-	{% include "../moza/contactvoorkeuren/_contactvoorkeuren-blocks.njk" %}
+	<section class="card">
+		<h2>Communicatiekanalen</h2>
 
+		<p>Hoe wilt u dat overheidsorganisaties standaard contact met u opnemen als dat nodig is?</p>
+
+		<a class="icon-link" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">{% include "icon-edit.njk" %} Communicatiekanalen wijzigen</a>
+		<dl class="data-overview">
+			<dt>Voorkeurskanaal</dt>
+			<dd>E-mail</dd>
+			<dt>Bellen</dt>
+			<dd>Ik wil niet gebeld worden</dd>
+		</dl>
+
+		<div class="feedback feedback-info">
+			{% include "icon-feedback-info.njk" %}
+			<div>
+				<p>De overheid stuurt automatisch een waarschuwing naar uw voorkeurskanaal indien een bericht 14 dagen ongelezen blijft.</p>
+			</div>
+			<button class="btn-close link-button"><i>Sluit notificatie</i></button>
+		</div>
+	</section>
+
+	<section class="card">
+		<h2>Berichtgevingen</h2>
+
+		<p>Zo ontvangt u berichten van de overheid.</p>
+
+		<a class="icon-link" href="{{ '/moza/berichtgevingen-wijzigen/' | url }}">{% include "icon-edit.njk" %} Berichtgevingen wijzigen</a>
+		<dl class="data-overview">
+			<dt>Ontvangstbevestiging</dt>
+			<dd>E-mail, Post</dd>
+			<dt>Statuswijzigingen</dt>
+			<dd>E-mail</dd>
+			<dt>Besluiten</dt>
+			<dd>E-mail, Post</dd>
+			<dt>Taken</dt>
+			<dd>E-mail</dd>
+		</dl>
+	</section>
+
+	<div class="tiles">
+		<section class="card">
+			<h3>Gegevensdeling en dataverwerking</h3>
+			<p>Beheer welke overheidsorganisaties uw bedrijfsgegevens mogen inzien en met welke partijen gegevens worden gedeeld.</p>
+			<a class="btn-cta" href="#">Ga naar Gegevensdeling</a>
+		</section>
+
+		<section class="card">
+			<h3>Contactgeschiedenis</h3>
+			<p>Overzicht van alle momenten waarop een overheidsorganisatie contact met u heeft opgenomen, inclusief datum en onderwerp.</p>
+			<a class="btn-cta" href="#">Ga naar Contactgeschiedenis</a>
+		</section>
+	</div>
 </article>
 
 <script>
@@ -61,12 +137,12 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			const icon = data.type === "succes" ? iconSucces : iconInfo;
 			const cssClass = data.type === "succes" ? "feedback-success" : "feedback-info";
 			flashEl.innerHTML = `
-	<div class="feedback ${cssClass}">
-		${icon}
-		<div><p>${data.message}</p></div>
-		<button class="btn-close link-button"><i>Sluit notificatie</i></button>
-	</div>
-`;
+			<div class="feedback ${cssClass}">
+				${icon}
+				<div><p>${data.message}</p></div>
+				<button class="btn-close link-button"><i>Sluit notificatie</i></button>
+			</div>
+		`;
 			flashEl.hidden = false;
 			// E-mailadres bijwerken als het in de flash-data staat
 			if (data.email) {
