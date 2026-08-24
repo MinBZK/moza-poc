@@ -1731,10 +1731,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 
 .chat-container {
 	gap: var(--toepassing-space-padding-sm);
-	/* Ondergrens voor de hele kaart: op een laag venster blijft het gesprek
-	   leesbaar in plaats van te krimpen tot een paar regels. Daarboven bepaalt
-	   .chat-messages de hoogte, en die groeit mee met het venster. */
-	min-block-size: 32em;
+	min-block-size: 36em;
 }
 .chat-header {
 	align-items: flex-start;
@@ -1824,12 +1821,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	font-style: italic;
 }
 .chat-messages {
-	/* Het berichtenvenster bepaalt de hoogte van de kaart: het groeit mee met het
-	   venster (dvh), maar de kaart blijft minstens 32em hoog (zie .chat-container).
-	   flex-grow vult wat er in die 32em overblijft als het venster laag is;
-	   min-block-size: 0 is nodig omdat een flex-item anders niet kleiner kan
-	   worden dan zijn inhoud en het venster dus nooit zou scrollen. */
-	block-size: 60dvh;
+	block-size: 22dvh;
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-sm);
 	display: flex;
@@ -1949,6 +1941,9 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	display: flex;
 	flex-direction: column;
 	gap: var(--toepassing-space-margin-2xs);
+	p {
+		color: var(--toepassing-color-text-subtle-2);
+	}
 }
 
 h1.icon-label {
