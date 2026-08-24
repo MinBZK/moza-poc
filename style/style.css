@@ -1837,7 +1837,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	border-radius: var(--toepassing-border-radius-lg);
 	display: flex;
 	flex-direction: column;
-	gap: var(--toepassing-space-margin-xs);
+	gap: var(--toepassing-space-margin-2xs);
 	margin-block-end: var(--toepassing-space-margin-xs);
 	max-inline-size: 80%;
 	padding: var(--toepassing-space-padding-sm) var(--toepassing-space-padding-md);
@@ -1889,6 +1889,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	button {
 		justify-self: end;
 		margin-block-end: var(--toepassing-space-margin-sm);
+		margin-inline: var(--toepassing-space-margin-lg);
 		&:nth-child(even) {
 			justify-self: start;
 		}
