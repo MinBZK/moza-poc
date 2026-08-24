@@ -102,12 +102,36 @@
 	var onboardingMessages = ["<p>Hallo, ik ben de digitale assistent van MijnOverheid Zakelijk. Voor hulp bij vragen of ondersteuning van taken raadpleeg ik een aantal betrouwbare overheidsbronnen.</p>", '<p>Ik kan bijvoorbeeld:</p><ul class="list-indent"><li>uw bedrijfsgegevens opzoeken</li><li>uitzoeken welke regels voor u gelden</li><li>uw belastingaangifte voorbereiden</li></ul>', "<p>Ik gebruik uw gegevens pas <strong>als u daar toestemming voor geeft</strong>. Bij elk antwoord ziet u welke bron ik heb geraadpleegd.</p>"];
 	var exampleQuestions = ["Geldt de energiebesparingsinformatieplicht voor mij?", "Hoe kan ik mijn bedrijfsgegevens bekijken?", "Hoe bereid ik mijn belastingaangifte voor?"];
 
+	// Een nieuw bericht in beeld brengen. Past het in het venster, dan schuiven we
+	// door naar onderen zoals in elke chat. Is het langer dan het venster, dan
+	// zetten we de bovenkant in beeld: naar onderen springen zet de gebruiker aan
+	// het slot van een antwoord dat die nog moet lezen, en dan moet die eerst
+	// terugscrollen om te zien wat er staat.
+	//
+	// Aanroepen als het bericht compleet is — dus ná de bronvermelding en een
+	// eventuele vervolgstap-knop, anders meet je een hoogte die nog groeit.
+	var RUIMTE_BOVEN = 8;
+	function toonBericht(el) {
+		if (!el) {
+			messages.scrollTop = messages.scrollHeight;
+			return;
+		}
+		if (el.offsetHeight < messages.clientHeight) {
+			messages.scrollTop = messages.scrollHeight;
+			return;
+		}
+		// Via getBoundingClientRect en niet offsetTop: dat laatste rekent vanaf de
+		// dichtstbijzijnde gepositioneerde voorouder, en dat is hier niet het
+		// berichtenvenster.
+		messages.scrollTop += el.getBoundingClientRect().top - messages.getBoundingClientRect().top - RUIMTE_BOVEN;
+	}
+
 	function addAssistantMessage(html) {
 		var div = document.createElement("div");
 		div.className = "chat-message chat-message-assistant";
 		div.innerHTML = html;
 		messages.appendChild(div);
-		messages.scrollTop = messages.scrollHeight;
+		toonBericht(div);
 	}
 
 	function showSuggestionPrompt(includeReplayButton) {
@@ -211,6 +235,7 @@
 		messages.scrollTop = 0;
 		input.value = "";
 		verwijderSuggestieIntro();
+		herstelBewaarKnop();
 		demoStand = { scenario: null, beurt: 0 };
 		heeftGesprek = false;
 		disableNieuwKnop();
@@ -783,10 +808,15 @@
 	);
 
 	// Focus verzetten, met de ring alleen voor wie met het toetsenbord werkt.
-	function zetFocus(el) {
+	//
+	// `zonderScroll` is nodig bij de kaarten: focus() schuift het element vanzelf
+	// in beeld, en dat zou de plaatsing van toonBericht meteen weer ongedaan maken.
+	// Het eerste veld staat vlak onder de kop, dus na het positioneren staat het
+	// alsnog in beeld.
+	function zetFocus(el, zonderScroll) {
 		if (!el) return null;
 		if (!laatsteInvoerWasToets) maakFocusStil(el);
-		el.focus();
+		el.focus(zonderScroll ? { preventScroll: true } : undefined);
 		return el;
 	}
 
@@ -806,7 +836,7 @@
 		if (document.activeElement === input && input.value.trim()) return null;
 		var eerste = card.querySelector("input:not([type=hidden]), select, textarea, button");
 		if (eerste && beschrijving) eerste.setAttribute("aria-describedby", beschrijving);
-		return zetFocus(eerste || card.querySelector("h3"));
+		return zetFocus(eerste || card.querySelector("h3"), true);
 	}
 
 	// Deelverzoek zonder gegevens: de backend vraagt om toestemming vóórdat er
@@ -845,10 +875,10 @@
 		card.appendChild(nietGedeeld);
 
 		messages.appendChild(card);
-		messages.scrollTop = messages.scrollHeight;
 		// Hier wordt een besluit gevraagd, geen tekst: de focus hoort op "Delen" te
 		// staan en niet in het invoerveld onderaan.
 		focusEersteVraag(card, kaartId + "-kop " + kaartId + "-uitleg");
+		toonBericht(card);
 		return card;
 	}
 
@@ -873,8 +903,8 @@
 		card.appendChild(nietGedeeld);
 
 		messages.appendChild(card);
-		messages.scrollTop = messages.scrollHeight;
 		focusEersteVraag(card, kaartId + "-kop " + kaartId + "-uitleg");
+		toonBericht(card);
 		return card;
 	}
 
@@ -1077,8 +1107,8 @@
 		var bronRegel = spec.bron ? bronnenHTML([maakBron(spec.bron)]) : "";
 		card.innerHTML = '<h3 id="' + kopId + '" tabindex="-1">' + escapeHTML(spec.titel) + "</h3>" + (intro || tekst ? '<div id="' + introId + '">' + intro + tekst + "</div>" : "") + '<form class="vraag-form">' + velden + '<div class="action-group"><button type="submit">Antwoord versturen</button><button type="button" class="secondary vraag-uitleg">Leg mij dit uit</button></div>' + "</form>" + bronRegel;
 		messages.appendChild(card);
-		messages.scrollTop = messages.scrollHeight;
 		focusEersteVraag(card, kopId + (intro || tekst ? " " + introId : ""));
+		toonBericht(card);
 		return card;
 	}
 
@@ -1183,13 +1213,74 @@
 			nieuwGesprek();
 		});
 
+	// "Bewaar gesprek" volgt dezelfde regel als "Nieuw gesprek starten": er valt
+	// pas iets te bewaren zodra er een vraag is gesteld. Aan staat de knop er ook
+	// voor die niet klikt — aria-disabled in plaats van disabled, zodat de knop
+	// bereikbaar blijft voor toetsenbord en schermlezer.
+	var bewaarKnop = document.getElementById("chat-bewaar");
+	var bewaarMelding = document.getElementById("chat-bewaar-melding");
+	var BEWAAR_LABEL = bewaarKnop ? bewaarKnop.textContent : "Bewaar gesprek";
+
 	function enableNieuwKnop() {
 		if (nieuwKnop) nieuwKnop.removeAttribute("aria-disabled");
+		if (bewaarKnop) bewaarKnop.removeAttribute("aria-disabled");
 	}
 
 	function disableNieuwKnop() {
 		if (nieuwKnop) nieuwKnop.setAttribute("aria-disabled", "true");
+		if (bewaarKnop) bewaarKnop.setAttribute("aria-disabled", "true");
 	}
+
+	// Terug naar de uitgangsstand: na een nieuwe vraag valt er weer wat te bewaren,
+	// ook als het gesprek net bewaard was.
+	function herstelBewaarKnop() {
+		if (!bewaarKnop) return;
+		bewaarKnop.textContent = BEWAAR_LABEL;
+		if (bewaarMelding) bewaarMelding.textContent = "";
+	}
+
+	// Het gesprek gaat in het bewaarde item zelf, niet in een losse sleutel. Zo
+	// verdwijnt het mee als iemand het item op Bewaarde items verwijdert, en
+	// blijven er geen losse gesprekken in localStorage achter.
+	var BEWAAR_CATEGORIE = "Digitale assistent";
+	var BEWAAR_TITEL_MAX = 80;
+
+	function bewaarTitel() {
+		var eerste = messages.querySelector(".chat-message-user p");
+		var vraag = eerste ? eerste.textContent.trim() : "";
+		if (vraag.length <= BEWAAR_TITEL_MAX) return vraag;
+		return vraag.slice(0, BEWAAR_TITEL_MAX).replace(/\s+\S*$/, "") + "…";
+	}
+
+	function bewaarGesprek() {
+		var titel = bewaarTitel();
+		if (!titel) return;
+		var vandaag = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+		var item = {
+			title: titel,
+			// Bewaarde items linkt hiernaartoe; de parameter zegt welk gesprek.
+			url: location.pathname + "?gesprek=" + encodeURIComponent(titel),
+			desc: "Gesprek van " + vandaag,
+			category: BEWAAR_CATEGORIE,
+			gesprek: messages.innerHTML,
+		};
+		try {
+			localStorage.setItem("favorite:" + titel, JSON.stringify(item));
+		} catch (e) {
+			// Vol of privémodus: zeggen dat het niet gelukt is, niet doen alsof wel.
+			if (bewaarMelding) bewaarMelding.textContent = "Het gesprek kon niet worden bewaard.";
+			return;
+		}
+		bewaarKnop.textContent = "Gesprek bewaard";
+		bewaarKnop.setAttribute("aria-disabled", "true");
+		if (bewaarMelding) bewaarMelding.textContent = "Het gesprek staat nu bij uw bewaarde items.";
+	}
+
+	if (bewaarKnop)
+		bewaarKnop.addEventListener("click", function () {
+			if (bewaarKnop.getAttribute("aria-disabled") === "true") return;
+			bewaarGesprek();
+		});
 
 	// Uitgeschakeld starten, tenzij er een gesprek is teruggezet uit deze sessie:
 	// dan valt er wél iets te wissen.
@@ -1290,12 +1381,14 @@
 			card.querySelector(".wallet-consent").hidden = true;
 			var energie = card.querySelector(".wallet-energie");
 			energie.hidden = false;
-			messages.scrollTop = messages.scrollHeight;
-			zetFocus(energie.querySelector("h3"));
+			// De kaart klapt open en wordt daarmee hoger dan het venster: bovenaan
+			// beginnen, anders staat de gebruiker onder de cijfers die die net deelde.
+			zetFocus(energie.querySelector("h3"), true);
+			toonBericht(card);
 		} else if (e.target.closest(".wallet-niet-delen")) {
 			card.querySelector(".wallet-consent").hidden = true;
 			card.querySelector(".wallet-niet-gedeeld").hidden = false;
-			messages.scrollTop = messages.scrollHeight;
+			toonBericht(card);
 			// Zonder beurt blijft de assistent wachten op een antwoord dat de
 			// respondent al gegeven heeft. Het weigeren gaat als bericht mee,
 			// niet als contractveld: toestemming wordt alleen vastgelegd, nooit
@@ -1546,10 +1639,15 @@
 				// Alleen bij een gestructureerde vraag: is het formulier
 				// uit de tekst zelf geparsed, dan zíjn tekst en formulier
 				// hetzelfde en zou alles dubbel staan.
+				var inleiding = null;
 				if (tekst && !spec.vanTekst) {
-					voegBronnenToe(addMessage(tekst, "assistant"), bronnen);
+					inleiding = addMessage(tekst, "assistant");
+					voegBronnenToe(inleiding, bronnen);
 				}
-				renderAssistentVraag(spec);
+				var kaart = renderAssistentVraag(spec);
+				// De tekst boven het formulier is de uitleg; die hoort als eerste in
+				// beeld te staan. Staat er geen tekst, dan de kaart zelf.
+				toonBericht(inleiding || kaart);
 			} else {
 				var role = eventType === "error" ? "error" : "assistant";
 				var bericht;
@@ -1576,6 +1674,8 @@
 				} else if (bericht && beurt.zaakGemaakt) {
 					voegVervolgstapToe(bericht, "Bekijk in Lopende zaken", messages.dataset.urlZaken);
 				}
+				// Pas nu positioneren: het bericht is compleet, dus de hoogte klopt.
+				toonBericht(bericht);
 			}
 		} else if (eventType === "done") {
 			hideThinking();
@@ -1622,6 +1722,8 @@
 		submitting = true;
 		heeftGesprek = true;
 		disableNieuwKnop();
+		// Het gesprek is met deze vraag veranderd, dus er valt weer wat te bewaren.
+		herstelBewaarKnop();
 		addMessage(message, "user");
 		input.value = "";
 		input.style.blockSize = "auto";
@@ -1830,11 +1932,47 @@
 		},
 	};
 
+	// Een bewaard gesprek terugzetten (?gesprek=…), vanaf Bewaarde items. Het
+	// gesprek staat in het bewaarde item zelf. De backend-sessie hoort er niet
+	// meer bij — die was van een ander moment en is daar allang opgeruimd — dus
+	// een vervolgvraag start een nieuw gesprek bij de host, met de oude beurten
+	// nog wel zichtbaar voor de gebruiker.
+	function herstelBewaardGesprek(titel) {
+		var raw;
+		try {
+			raw = localStorage.getItem("favorite:" + titel);
+		} catch (e) {
+			return false;
+		}
+		if (!raw) return false;
+		var data;
+		try {
+			data = JSON.parse(raw);
+		} catch (e) {
+			return false;
+		}
+		if (!data || !data.gesprek) return false;
+		var combo = getComboKey();
+		delete sessions[combo];
+		bewaarSessies();
+		messages.innerHTML = data.gesprek;
+		messages.scrollTop = 0;
+		heeftGesprek = true;
+		enableNieuwKnop();
+		bewaarKnop.textContent = "Gesprek bewaard";
+		bewaarKnop.setAttribute("aria-disabled", "true");
+		bewaarHistorie(combo);
+		return true;
+	}
+
 	// Startvraag via URL-parameter (?vraag=…), bijvoorbeeld vanuit de
 	// notificatie op het dashboard. Vult het invoerveld en verstuurt direct,
 	// zodat het gesprek zonder extra klik begint.
 	var startvraag = new URLSearchParams(location.search).get("vraag");
-	if (heeftOnboardingGezien()) {
+	var bewaardGesprek = new URLSearchParams(location.search).get("gesprek");
+	if (bewaardGesprek && herstelBewaardGesprek(bewaardGesprek)) {
+		// Niets meer doen: het gesprek staat er, onboarding zou eroverheen komen.
+	} else if (heeftOnboardingGezien()) {
 		naWachten(function () {
 			showSuggestionPrompt(true);
 			if (startvraag && startvraag.trim()) {

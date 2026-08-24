@@ -29,6 +29,11 @@ bodyClass: "moza page-saved-items"
 		<div id="saved-groups" class="dynamic-list"></div>
 	</section>
 
+	<section class="card" id="gesprekken-section" hidden>
+		<h2>Gesprekken met de digitale assistent</h2>
+		<div id="gesprekken-groups" class="dynamic-list"></div>
+	</section>
+
 	<section class="card" id="hidden-section">
 		<h2>Niet relevant gemarkeerd</h2>
 		<div class="feedback feedback-info" id="info-niet-relevant">
@@ -88,6 +93,13 @@ bodyClass: "moza page-saved-items"
 	const hiddenEmpty = document.getElementById("hidden-empty");
 	const hiddenSection = document.getElementById("hidden-section");
 	const savedHint = document.getElementById("saved-hint");
+	const gesprekkenGroups = document.getElementById("gesprekken-groups");
+	const gesprekkenSection = document.getElementById("gesprekken-section");
+	// Gesprekken met de digitale assistent worden op dezelfde manier bewaard als
+	// andere items (favorite:<titel>), maar krijgen een eigen kaart: het zijn geen
+	// items uit een overzicht maar een eigen gesprek, met een eigen manier om ze
+	// terug te lezen. digitale-assistent.js zet deze categorie.
+	const GESPREK_CATEGORIE = "Digitale assistent";
 	const favorites = [];
 	const hiddenTopics = [];
 
@@ -123,7 +135,12 @@ bodyClass: "moza page-saved-items"
 	const hiddenHint = document.getElementById("hidden-hint");
 	const savedClose = document.getElementById("saved-close");
 	const hiddenClose = document.getElementById("hidden-close");
-	if (favorites.length > 0) {
+	// De gesprekken uit de gewone bewaarde items lichten: ze horen in hun eigen
+	// kaart. De tip in de eerste kaart gaat over de andere items, dus die blijft
+	// staan zolang daar niets bewaard is — ook als er wel een gesprek staat.
+	const gesprekken = favorites.filter((item) => item.category === GESPREK_CATEGORIE);
+	const bewaardeItems = favorites.filter((item) => item.category !== GESPREK_CATEGORIE);
+	if (bewaardeItems.length > 0) {
 		if (savedHint) savedHint.hidden = true;
 		if (savedClose) savedClose.hidden = false;
 	}
@@ -147,7 +164,9 @@ bodyClass: "moza page-saved-items"
 		if (item.url) {
 			const a = document.createElement("a");
 			a.href = item.url;
-			a.rel = "external";
+			// Een bewaard gesprek blijft binnen deze site; rel="external" zou er een
+			// externe-link-icoon bij zetten en dat klopt dan niet.
+			if (!options?.intern) a.rel = "external";
 			a.className = "content-link";
 			a.innerHTML = `<h3>${item.title}</h3><span class="card-link"></span>`;
 			li.appendChild(a);
@@ -199,9 +218,13 @@ bodyClass: "moza page-saved-items"
 		const groups = groupByCategory(items);
 		Object.keys(groups).forEach((cat) => {
 			const section = document.createElement("section");
-			const heading = document.createElement("h2");
-			heading.textContent = cat;
-			section.appendChild(heading);
+			// Zonder kop als de kaart er zelf al een heeft: anders staat de categorie
+			// er twee keer, en dat leest als twee niveaus die er niet zijn.
+			if (!options?.zonderKop) {
+				const heading = document.createElement("h2");
+				heading.textContent = cat;
+				section.appendChild(heading);
+			}
 			const ul = document.createElement("ul");
 			ul.className = "list-content-links";
 			groups[cat].forEach((item) => {
@@ -240,7 +263,7 @@ bodyClass: "moza page-saved-items"
 	renderGroups(
 		savedGroups,
 		savedEmpty,
-		favorites,
+		bewaardeItems,
 		"delete-topic",
 		"Verwijder uit bewaarde items",
 		(li, item) => {
@@ -253,6 +276,28 @@ bodyClass: "moza page-saved-items"
 			});
 		},
 		{ share: true },
+	);
+
+	// Gesprekken: eigen kaart, geen categoriekop en geen Deel-knop. De link wijst
+	// naar ?gesprek=…, en het gesprek zelf staat in localStorage op dit apparaat —
+	// gedeeld met iemand anders zou het een lege chat openen.
+	if (gesprekkenSection) gesprekkenSection.hidden = gesprekken.length === 0;
+	renderGroups(
+		gesprekkenGroups,
+		null,
+		gesprekken,
+		"delete-topic",
+		"Verwijder bewaard gesprek",
+		(li, item) => {
+			localStorage.removeItem(item.key);
+			const ul = li.closest("ul");
+			const section = li.closest("section");
+			fadeOut(li, "down", () => {
+				if (ul && ul.children.length === 0 && section) section.remove();
+				if (gesprekkenSection && gesprekkenGroups.children.length === 0) gesprekkenSection.hidden = true;
+			});
+		},
+		{ zonderKop: true, intern: true },
 	);
 
 	renderGroups(hiddenGroups, hiddenEmpty, hiddenTopics, "restore-topic", "Toch relevant", (li, item) => {

@@ -1731,6 +1731,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 
 .chat-container {
 	gap: var(--toepassing-space-padding-sm);
+	min-block-size: 36em;
 }
 .chat-header {
 	align-items: flex-start;
@@ -1820,13 +1821,16 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	font-style: italic;
 }
 .chat-messages {
-	block-size: 25em;
+	block-size: 22dvh;
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-sm);
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
+	flex-shrink: 1;
 	gap: var(--toepassing-space-padding-md);
 	inline-size: 100%;
+	min-block-size: 0;
 	overflow-y: auto;
 	padding: var(--toepassing-space-padding-xs);
 }
@@ -1931,6 +1935,15 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 .chat-bron-datum {
 	color: var(--toepassing-color-text-subtle-2);
 	margin-block-start: var(--toepassing-space-margin-3xs);
+}
+
+#gesprekken-groups li {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-2xs);
+	p {
+		color: var(--toepassing-color-text-subtle-2);
+	}
 }
 
 h1.icon-label {
