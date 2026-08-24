@@ -1933,6 +1933,12 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	margin-block-start: var(--toepassing-space-margin-3xs);
 }
 
+#gesprekken-groups li {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-2xs);
+}
+
 h1.icon-label {
 	gap: var(--toepassing-space-layout-2xs);
 	svg {
