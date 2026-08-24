@@ -9,7 +9,7 @@ permalink: /mox/index.html
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 		<meta name="format-detection" content="telephone=no" />
 
-		<title>MijnOverheid</title>
+		<title>MijnOverheid Zakelijk</title>
 
 		<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
 		<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
@@ -25,7 +25,7 @@ permalink: /mox/index.html
 		<script src="js/activate-js.js"></script>
 		<script src="js/prototype-links.js" defer></script>
 	</head>
-	<body>
+	<body class="moza">
 		<!-- <div id="mo-preload" class="mo-preload">
 			<div class="mo-preload__block">
 				<div class="spinner"></div>
@@ -48,10 +48,10 @@ permalink: /mox/index.html
 							</a>
 							<ul class="mobu-moza-tabs">
 								<li>
-									<span aria-current="page">Privé</span>
+									<a href="/mox/index.html">Privé</a>
 								</li>
 								<li>
-									<a href="{{ '/mox/index-zakelijk.html' | url }}">Zakelijk</a>
+									<span aria-current="page">Zakelijk</span>
 								</li>
 							</ul>
 						</div>
@@ -71,8 +71,8 @@ permalink: /mox/index.html
 												</div>
 												<div class="lo-alert__main">
 													<div class="lo-alert__content">
-														<h5>08-12-2025 &nbsp;|&nbsp; Laat weten hoe u post van de Belastingdienst graag ontvangt</h5>
-														<p>Vanaf nu kunt u ons laten weten of u post van de Belastingdienst digitaal wilt ontvangen. Dit doet u via uw Instellingen - Organisaties Berichtenbox.</p>
+														<h5>12-02-2026 &nbsp;|&nbsp; Belastingdienst gebruikt een nieuw rekeningnummer</h5>
+														<p>De Belastingdienst wijzigt het rekeningnummer voor betalingen. Controleer het nieuwe rekeningnummer voordat u een betaling doet, zodat uw geld niet op een verkeerde rekening terechtkomt.</p>
 														…
 														<a class="lo-link" href="#">Lees meer</a>
 													</div>
@@ -87,22 +87,16 @@ permalink: /mox/index.html
 				</div>
 
 				<div id="skip-content" class="jumbotron">
-					<h1 class="jumbotron__title">MijnOverheid</h1>
+					<h1 class="jumbotron__title">MijnOverheid Zakelijk</h1>
 
 					<div class="jumbotron__intro">
-						Post van de overheid digitaal ontvangen
+						Zakelijke post van de overheid digitaal ontvangen
 						<br />
-						Uw persoonlijke gegevens op één plek
+						Uw zakelijke gegevens op één plek
 					</div>
 
 					<nav id="navigation-main" aria-labelledby="main-menu-title">
 						<span id="main-menu-title" class="sr-only">Hoofdmenu</span>
-
-						<form action="/auth/csrf-logout" method="POST">
-							<input type="hidden" name="_csrf_logout" value="b8f5e99b388a63ac32394c561.GL2kP7y0Dz4bjZlrbSWBdl3NczilPk2-A1U1DDNVN1I.L9neEuaDe2lz3qhZA2fiBCmOIm3XXTfERBdTbnIwQWNf-t0M2tVbRC7Z1A" />
-
-							<a class="lo-button-digid logout-button" href="#" title="Inloggen met DigiD"><span class="lo-button-digid__icon"><i class="lo-icon lo-icon--digid-logo lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span> <span class="lo-digid-button__label">Inloggen met DigiD</span></a>
-						</form>
 
 						<div class="container">
 							<div class="row">
@@ -110,11 +104,8 @@ permalink: /mox/index.html
 							</div>
 						</div>
 
-						<div class="mt-5 mb-5">
-							<a id="button-002" class="lo-button lo-button--link color-white color-hover-white link" href="/inloggen/" title="Bekijk alle inlogmogelijkheden"><span class="lo-button__label">Bekijk alle inlogmogelijkheden</span></a>
-						</div>
 						<div class="mt-5 mb-6">
-							<a id="button-003" class="lo-button lo-button--ghost shadow" href="#" title="Ik ben nieuw"><span class="lo-button__label">Ik ben nieuw</span></a>
+							<a id="button-003" class="lo-button lo-button--ghost shadow" href="/inloggen/zakelijk/" title="Inloggen bij MijnOverheid Zakelijk"><span class="lo-button__label">Inloggen bij MijnOverheid Zakelijk</span></a>
 						</div>
 					</nav>
 				</div>
@@ -127,7 +118,7 @@ permalink: /mox/index.html
 							<section>
 								<div class="lo-card">
 									<div class="lo-card__content">
-										<h1>Wat kunt u met MijnOverheid?</h1>
+										<h1>Wat kunt u met MijnOverheid Zakelijk?</h1>
 
 										<div class="row">
 											<div class="col-12 col-sm-6 pr-3">
@@ -136,13 +127,13 @@ permalink: /mox/index.html
 
 													<h2 class="mb-3">Berichtenbox</h2>
 
-													<p class="intro w-100">De Berichtenbox is uw persoonlijke digitale brievenbus voor post van de overheid. Bijvoorbeeld post over:</p>
+													<p class="intro w-100">De Berichtenbox is de digitale brievenbus van uw organisatie voor post van de overheid. Bijvoorbeeld post over:</p>
 
 													<div class="my-3">
 														<ul>
-															<li>Belastingaangifte</li>
-															<li>Kinderbijslag</li>
-															<li>Paspoortverlenging</li>
+															<li>Btw-aangifte</li>
+															<li>Loonheffingen</li>
+															<li>Vergunningen</li>
 														</ul>
 													</div>
 
@@ -156,58 +147,21 @@ permalink: /mox/index.html
 												<div class="d-flex align-items-start flex-column min-h-100">
 													<hr class="mt-4 w-100" />
 
-													<h2 class="mb-3">Uw gegevens</h2>
+													<h2 class="mb-3">Bedrijfsgegevens</h2>
 
-													<p class="intro w-100">Persoonlijke gegevens en informatie vindt u op één plek. Bijvoorbeeld:</p>
+													<p class="intro w-100">De gegevens van uw organisatie vindt u op één plek. Bijvoorbeeld:</p>
 
 													<div class="my-3">
 														<ul>
-															<li>Inschrijving bij de gemeente</li>
-															<li>Inkomen</li>
-															<li>Datum APK</li>
+															<li>Inschrijving bij de KVK</li>
+															<li>Vergunningen</li>
+															<li>Lopende subsidies</li>
 														</ul>
 													</div>
 
-													<a id="button-009" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right mt-auto" href="#" title="Lees meer over uw gegevens"><span class="lo-button__label">Lees meer over uw gegevens</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--chevron-right-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
+													<a id="button-009" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right mt-auto" href="#" title="Lees meer over uw bedrijfsgegevens"><span class="lo-button__label">Lees meer over uw bedrijfsgegevens</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--chevron-right-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
 
 													<hr class="mt-4 mb-2 w-100" />
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<div class="lo-card">
-									<div class="lo-card__pre-content">
-										<div class="row no-gutters">
-											<div class="col-12 col-sm-6">
-												<div class="lo-card mb-0 shadow-none">
-													<div class="lo-card__pre-content">
-														<div class="image--center-crop">
-															<img src="images/mg-app-promo-foto.jpg" alt="" />
-														</div>
-													</div>
-												</div>
-											</div>
-											<div class="col-12 col-sm-6">
-												<div class="lo-card mb-0 shadow-none ml-1">
-													<div class="lo-card__pre-content">
-														<div class="py-4 px-3 py-sm-3 px-sm-4 py-lg-7 px-lg-6">
-															<h2 class="mb-4">Download de MijnGegevens app</h2>
-															<ul>
-																<li>Download de MijnGegevens app</li>
-																<li>Zet belangrijke data direct in uw agenda</li>
-																<li>Snel en eenvoudig toegang met de DigiD app</li>
-															</ul>
-
-															<a class="d-inline-block mt-4" href="https://apps.apple.com/nl/app/id1504052262" target="_blank" rel="noopener" aria-label="Download de MijnGegevens app in de Apple App Store">
-																<img class="bb-cta__image-apple" alt="" src="images/app-store-badge.png" />
-															</a>
-															<a class="d-inline-block ml-3" href="https://play.google.com/store/apps/details?id=nl.rijksoverheid.mijngegevens.pub" target="_blank" rel="noopener" aria-label="Download de MijnGegevens app - ontdek het op Google Play">
-																<img class="bb-cta__image-google" alt="" src="images/google-play-badge.png" />
-															</a>
-														</div>
-													</div>
 												</div>
 											</div>
 										</div>
@@ -220,14 +174,14 @@ permalink: /mox/index.html
 
 										<div class="my-3 lo-table">
 											<div class="media border-bottom">
-												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/phone.svg" alt="" />
+												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/phone-zakelijk.svg" alt="" />
 												<div class="media-body pl-3 py-2 lo-table__cell">
 													<h3 class="intro color-lochmara mt-1">Telefoon</h3>
 													<p class="mt-0">+31 88 123 6500</p>
 												</div>
 											</div>
 											<div class="media border-bottom">
-												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/form.svg" alt="" />
+												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/form-zakelijk.svg" alt="" />
 												<div class="media-body pl-3 py-2 lo-table__cell">
 													<h3 class="intro color-lochmara mt-1">Contactformulier</h3>
 													<p class="mt-0">Heeft u een vraag, klacht of suggestie? Gebruik het <a href="#">contactformulier</a></p>
