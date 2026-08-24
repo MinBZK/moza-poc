@@ -1972,21 +1972,20 @@
 	var bewaardGesprek = new URLSearchParams(location.search).get("gesprek");
 	if (bewaardGesprek && herstelBewaardGesprek(bewaardGesprek)) {
 		// Niets meer doen: het gesprek staat er, onboarding zou eroverheen komen.
+	} else if (startvraag && startvraag.trim()) {
+		// Wie via "Vraag aan de digitale assistent" binnenkomt, heeft zijn vraag al
+		// gesteld. De onboarding — drie ballonnen met wachttijd ertussen — wringt
+		// zich dan tussen de klik en het antwoord. Die slaan we over, ook bij een
+		// eerste bezoek, en we markeren hem niet als gezien: wie later zonder vraag
+		// binnenkomt krijgt de uitleg alsnog, en via "Nieuw gesprek" staat de knop
+		// "Toon de uitleg opnieuw" er ook. Dat de assistent AI is, staat los van de
+		// onboarding onder het gesprek in de disclaimer.
+		input.value = startvraag.trim();
+		form.requestSubmit();
 	} else if (heeftOnboardingGezien()) {
 		naWachten(function () {
 			showSuggestionPrompt(true);
-			if (startvraag && startvraag.trim()) {
-				input.value = startvraag.trim();
-				form.requestSubmit();
-			}
 		}, WACHT_PAGINALAAD);
-	} else if (startvraag && startvraag.trim()) {
-		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
-		showOnboardingMessages().then(function () {
-			markeerOnboardingGezien();
-			input.value = startvraag.trim();
-			form.requestSubmit();
-		});
 	} else {
 		// Eerste bezoek: toon onboarding inclusief intro, zonder replay-knop
 		showOnboardingMessages().then(function () {
