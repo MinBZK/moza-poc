@@ -14,21 +14,21 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Parse JSON bodies only for methods that usually contain a body
-app.use((req, res, next) => {
-	if (["POST", "PUT", "PATCH"].includes(req.method)) {
-		return express.json({ limit: "1mb" })(req, res, next);
-	}
-	return next();
-});
-
 // CORS middleware: allow the dev front-end (and other origins) to call the proxy
 app.use((req, res, next) => {
-	const origin = req.headers.origin || "*";
-	res.setHeader("Access-Control-Allow-Origin", origin);
+	// If the browser sent an Origin, echo it back and allow credentials.
+	// Only use wildcard '*' when no Origin header is present.
+	const incomingOrigin = req.headers.origin;
+	if (incomingOrigin) {
+		res.setHeader("Access-Control-Allow-Origin", incomingOrigin);
+		res.setHeader("Access-Control-Allow-Credentials", "true");
+	} else {
+		res.setHeader("Access-Control-Allow-Origin", "*");
+		res.setHeader("Access-Control-Allow-Credentials", "false");
+	}
+
 	res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
 	res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"] || "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-	res.setHeader("Access-Control-Allow-Credentials", "true");
 
 	// Short-circuit preflight requests
 	if (req.method === "OPTIONS") {
@@ -47,6 +47,9 @@ app.use(
 		changeOrigin: true,
 		secure: true,
 		logLevel: "info",
+		// Fail faster if upstream doesn't respond
+		proxyTimeout: 15000,
+		timeout: 30000,
 		// Require x-proxy-target header or ?target= query parameter; otherwise reject
 		router: (req) => {
 			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
@@ -68,33 +71,48 @@ app.use(
 				return null;
 			}
 		},
-		// Resolve the upstream path dynamically: if a full URL was provided use its path,
-		// otherwise forward the incoming request path unchanged.
+		// Ensure the upstream path preserves the original requested path (including /api)
+		pathRewrite: (path, req) => {
+			// req.originalUrl includes the full path as requested by the client
+			console.log(`[proxy] pathRewrite: ${path} -> ${req.originalUrl}`);
+			return req.originalUrl;
+		},
 		proxyReqPathResolver: (req) => {
-			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
-			if (!perReq) return req.originalUrl;
-			try {
-				const u = new URL(perReq);
-				// ensure path portion exists
-				return u.pathname + u.search;
-			} catch (e) {
-				return req.originalUrl;
-			}
+			const upstreamPath = req.originalUrl;
+			console.log(`[proxy] forwarding incoming path for ${req.method} ${req.url} -> ${upstreamPath}`);
+			return upstreamPath;
 		},
 		onProxyReq(proxyReq, req, res) {
-			// If the request body was parsed by express.json(), we need to re-serialize it
-			// and explicitly write it to the proxy request. This prevents empty bodies
-			// for POST/PUT when middleware has already consumed the stream.
-			if (req.body && Object.keys(req.body).length) {
-				const bodyData = JSON.stringify(req.body);
-				// ensure correct headers
-				proxyReq.setHeader("Content-Type", "application/json");
-				proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-				proxyReq.write(bodyData);
-				proxyReq.end();
-				console.log(`[proxy] forwarded JSON body to target for ${req.method} ${req.url}:`, bodyData);
+			// For local proxying, strip Origin/Referer to present the request as
+			// a server-to-server call. Some backends reject unexpected browser
+			// origins; removing Origin often allows the request.
+			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
+			if (perReq) {
+				try {
+					const u = new URL(perReq);
+					// Present the request to the upstream as coming from the upstream origin
+					// so the backend's CORS allowlist accepts it.
+					proxyReq.setHeader("Origin", u.origin);
+					proxyReq.setHeader("Referer", u.origin);
+					// Ensure backend receives expected Host header (hostname[:port])
+					if (u.port) {
+						proxyReq.setHeader("Host", `${u.hostname}:${u.port}`);
+					} else {
+						proxyReq.setHeader("Host", u.hostname);
+					}
+					// Forward Authorization if the browser supplied it
+					if (req.headers["authorization"]) {
+						proxyReq.setHeader("Authorization", req.headers["authorization"]);
+					}
+				} catch (e) {
+					// Invalid perReq format: ensure no Origin is forwarded
+					proxyReq.removeHeader("Origin");
+					proxyReq.removeHeader("Referer");
+				}
 			} else {
-				// No parsed body available; nothing to forward here
+				// No explicit upstream target — ensure we don't forward the browser origin
+				proxyReq.removeHeader("Origin");
+				proxyReq.removeHeader("Referer");
 			}
 		},
 		onProxyRes(proxyRes, req, res) {
@@ -107,7 +125,32 @@ app.use(
 			// Ensure caches vary by Origin so responses for different origins don't get mixed
 			proxyRes.headers["vary"] = "Origin";
 
-			console.log(`[proxy] proxied response ${req.method} ${req.url} -> ${proxyRes.statusCode}`);
+			// Also ensure Express response headers include CORS so the browser sees them
+			try {
+				res.setHeader("Access-Control-Allow-Origin", origin);
+				res.setHeader("Access-Control-Allow-Credentials", "true");
+				res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+				res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"] || "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+				res.setHeader("Vary", "Origin");
+			} catch (e) {
+				// ignore if headers already sent
+			}
+
+			// Collect upstream response body for debugging if status >= 400
+			let body = "";
+			proxyRes.on("data", (chunk) => {
+				try {
+					body += chunk.toString();
+				} catch (e) {
+					// ignore
+				}
+			});
+			proxyRes.on("end", () => {
+				console.log(`[proxy] proxied response ${req.method} ${req.url} -> ${proxyRes.statusCode}`);
+				if (proxyRes.statusCode >= 400) {
+					console.error(`[proxy] upstream response body:`, body.slice(0, 2000));
+				}
+			});
 		},
 		onError(err, req, res) {
 			console.error("[proxy] error", err && err.message);
