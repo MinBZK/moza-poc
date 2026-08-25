@@ -11,19 +11,23 @@ export const pocFetch = async <T = unknown>({ path, baseUrl, params, method = "G
 		fetchUrl = `http://localhost:${proxyPort}${path}`;
 		headers["x-proxy-target"] = upstreamUrl;
 	} else {
-		// Production: call upstream directly from the browser (no server-side proxy)
-		console.log("fetchUrl:", path);
-		fetchUrl = path; //upstreamUrl;
-		headers["x-proxy-target"] = upstreamUrl;
-		headers["x-rerouting"] = "true";
+		// Production / preview: call the site-relative path so the site's nginx
+		// reverse-proxy performs the server-side call to the upstream. Do NOT
+		// set x-proxy-target in non-local environments.
+		fetchUrl = path;
 	}
 
-	const resp = await fetch(fetchUrl, {
+	const options: RequestInit = {
 		method,
 		headers,
-		body: JSON.stringify(params),
 		signal,
-	});
+	};
+
+	if (method !== "GET" && method !== "OPTIONS") {
+		options.body = JSON.stringify(params);
+	}
+
+	const resp = await fetch(fetchUrl, options);
 
 	const data = await resp.json().catch(() => null);
 	return { data, status: resp.status };

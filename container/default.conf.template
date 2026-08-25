@@ -59,8 +59,14 @@ server {
     location /api/profielservice/ {
        proxy_pass https://profiel.mijnoverheidzakelijk.nl$request_uri;
        proxy_http_version 1.1;
-       # Preserve target host for SNI and correct virtual-host handling
-       proxy_set_header Host $proxy_host;
+       # Present the request to the upstream as coming from the backend (server-to-server).
+       # Set Host to the target virtual host so SNI/virtual-hosting is correct and
+       # remove browser Origin/Referer headers so the backend doesn't apply CORS checks.
+       proxy_set_header Host profiel.mijnoverheidzakelijk.nl;
+       proxy_set_header Origin "";
+       proxy_set_header Referer "";
+       # Do not blindly forward all incoming headers (we control the headers above)
+       proxy_pass_request_headers off;
        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
        proxy_set_header X-Forwarded-Proto $scheme;
        # TLS and connection reuse
