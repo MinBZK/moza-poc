@@ -1731,7 +1731,7 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 
 .chat-container {
 	gap: var(--toepassing-space-padding-sm);
-	min-block-size: 36em;
+	min-block-size: 56em;
 }
 .chat-header {
 	align-items: flex-start;
