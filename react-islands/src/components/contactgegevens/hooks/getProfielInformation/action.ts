@@ -1,5 +1,5 @@
 import { API_URL_PROFIEL_SERVICE } from "../../../../config/config";
-import { pocFetch } from "../../../../helpers/fetcher";
+import { pocFetch } from "../../../../helpers/pocFetch";
 import { GetProfielInformationResponse, GetProfielInformationParams } from "../../types";
 
 export async function getProfielInformation(params: GetProfielInformationParams, signal?: AbortSignal) {

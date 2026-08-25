@@ -1,5 +1,5 @@
 import { API_URL_PROFIEL_SERVICE } from "../../../../config/config";
-import { pocFetch } from "../../../../helpers/fetcher";
+import { pocFetch } from "../../../../helpers/pocFetch";
 import { components } from "../../../../network/profiel/generated";
 
 export const updateEmail = async (

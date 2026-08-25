@@ -12,7 +12,10 @@ export const pocFetch = async <T = unknown>({ path, baseUrl, params, method = "G
 		headers["x-proxy-target"] = upstreamUrl;
 	} else {
 		// Production: call upstream directly from the browser (no server-side proxy)
-		fetchUrl = upstreamUrl;
+		console.log("fetchUrl:", path);
+		fetchUrl = path; //upstreamUrl;
+		headers["x-proxy-target"] = upstreamUrl;
+		headers["x-rerouting"] = "true";
 	}
 
 	const resp = await fetch(fetchUrl, {
