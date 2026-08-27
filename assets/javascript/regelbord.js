@@ -332,6 +332,96 @@
 		if (e.key === "Escape" && paneel && !paneel.hidden) sluitPaneel();
 	});
 
+	// Zoekbalk over het hele corpus. Het model (optioneel, /zoektermen) mag
+	// alleen zoektermen teruggeven; de frontend toont nooit modeltekst als
+	// resultaat. Zonder endpoint gewoon zonder extra termen zoeken.
+	var zoekForm = document.getElementById("regel-zoek-form");
+	var zoekInput = document.getElementById("regel-zoek-input");
+	var zoekUit = document.querySelector("[data-zoekresultaten]");
+	var slimZoeken = document.querySelector("[data-slim-zoeken]");
+
+	function chatApiBasis() {
+		var basis = window.MOZA_CHAT_API || (window.chatApi && window.chatApi.base) || "";
+		return String(basis).replace(/\/$/, "");
+	}
+
+	function extraTermen(vraag) {
+		var basis = chatApiBasis();
+		if (!slimZoeken || slimZoeken.hidden || !basis || typeof fetch !== "function") return Promise.resolve([]);
+		return fetch(basis + "/zoektermen", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ vraag: vraag }),
+			signal: AbortSignal.timeout(4000),
+		})
+			.then(function (r) {
+				return r.ok ? r.json() : { termen: [] };
+			})
+			.then(function (d) {
+				return Array.isArray(d.termen) ? d.termen.slice(0, 8) : [];
+			})
+			.catch(function () {
+				return [];
+			});
+	}
+
+	function toonResultaten(vraag, resultaten) {
+		if (!zoekUit) return;
+		while (zoekUit.firstChild) zoekUit.removeChild(zoekUit.firstChild);
+		zoekUit.appendChild(el("h3", null, resultaten.length ? resultaten.length + " gevonden voor “" + vraag + "”" : "Geen regel gevonden voor “" + vraag + "”"));
+		if (!resultaten.length) {
+			var p = el("p", null, "Probeer een ander woord, of kijk op ");
+			var a = el("a", null, "wetten.overheid.nl");
+			a.href = "https://wetten.overheid.nl/";
+			a.target = "_blank";
+			a.rel = "noopener";
+			p.appendChild(a);
+			p.appendChild(document.createTextNode("."));
+			zoekUit.appendChild(p);
+			return;
+		}
+		var ctx = context();
+		var bord = logica.leesBord(localStorage, kvk());
+		var eigen = kaartenVanBord(bord).map(function (k) {
+			return k.id;
+		});
+		var ul = el("ul");
+		resultaten.slice(0, 10).forEach(function (kaart) {
+			var opBord = eigen.indexOf(kaart.id) >= 0;
+			var stand = opBord ? logica.plaatsing(kaart, bord, ctx) : { kolom: "te-doen", door: "assistent" };
+			var li = maakKaart(kaart, stand, ctx);
+			var artikel = li.querySelector(".regelkaart");
+			var status = el("p", "regelkaart-herkomst");
+			if (opBord) {
+				status.textContent = "Staat op uw bord: " + kolomLabel(stand.kolom);
+			} else {
+				var voeg = el("button", "secondary", "Toevoegen aan bord");
+				voeg.type = "button";
+				voeg.addEventListener("click", function () {
+					bewaarPlaatsing(kaart, "te-doen", null);
+					render();
+					toonResultaten(vraag, resultaten);
+					zeg("“" + kaart.item.titel + "” toegevoegd aan Te doen.");
+				});
+				status.appendChild(voeg);
+			}
+			artikel.insertBefore(status, artikel.querySelector(".regelkaart-acties"));
+			ul.appendChild(li);
+		});
+		zoekUit.appendChild(ul);
+	}
+
+	if (zoekForm) {
+		zoekForm.addEventListener("submit", function (e) {
+			e.preventDefault();
+			var vraag = zoekInput.value.trim();
+			if (!vraag) return;
+			extraTermen(vraag).then(function (termen) {
+				toonResultaten(vraag, logica.zoek(vraag, window.regelgevingData || [], window.subsidiesData || [], termen));
+			});
+		});
+	}
+
 	window.MozaRegelbordUI = {
 		render: render,
 		open: openPaneel,
