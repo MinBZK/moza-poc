@@ -25,6 +25,9 @@ function metVlag(aan) {
 }
 
 afterEach(() => {
+	// Ook als een test halverwege omvalt: blijvende fake timers laten de volgende test vastlopen
+	// op setTimeout, en dan lijkt díe de schuldige.
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });

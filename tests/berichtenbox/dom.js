@@ -67,8 +67,16 @@ function serverRij(bericht) {
 				</tr>`;
 }
 
-function paginaHtml(berichten, view) {
+function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 	const inbox = view === "inbox";
+	// Server-gerenderd, met echte aantallen — net als in de templates. Op nul zetten zou verbergen
+	// dat een storing die getallen moet neutraliseren.
+	const bruikbaar = berichten.filter((b) => b && b.id);
+	const aantallen = {
+		totaal: bruikbaar.length,
+		bronnen: new Set(bruikbaar.map((b) => b.magazijnId)).size,
+		ongelezen: bruikbaar.filter((b) => b.isOngelezen).length,
+	};
 	// Alleen de inbox server-rendert rijen; archief en prullenbak worden altijd door JS gevuld.
 	const rijen = inbox ? berichten.filter((b) => b && b.id).map(serverRij).join("") : "";
 	const lijstAttr = inbox ? ' data-page-size="10"' : ` data-berichtenbox-view="${view}"`;
@@ -78,11 +86,12 @@ function paginaHtml(berichten, view) {
 <article class="berichtenbox">
 <div class="berichtenbox-content">
 	<p class="metadata">
-		<b data-berichtenbox-counter-total>0</b> berichten uit
-		<b data-berichtenbox-sources>0</b>
+		<b data-berichtenbox-counter-total>${aantallen.totaal}</b> berichten uit
+		<b data-berichtenbox-sources>${aantallen.bronnen}</b>
 		<span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>,
-		<b data-berichtenbox-counter-unread>0</b> ongelezen
+		<b data-berichtenbox-counter-unread>${aantallen.ongelezen}</b> ongelezen
 	</p>
+	<nav><a href="#"><span data-berichtenbox-count="inbox">${aantallen.ongelezen}</span></a></nav>
 ${inbox ? MELDINGEN_INBOX : ""}
 ${STORING}
 
@@ -90,6 +99,7 @@ ${STORING}
 		<label for="search-berichtenbox">Filter berichten</label>
 		<input id="search-berichtenbox" type="search" data-berichtenbox-search-input />
 	</div>
+	${orgSchakelaar ? '<label><input type="checkbox" data-berichtenbox-org-toggle /> Ook andere organisaties</label>' : ""}
 
 	<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">
 		<p class="metadata">
@@ -220,9 +230,9 @@ export function dataset(berichten) {
  * voortgangsanimatie van het eerste bezoek de lijst niet vier seconden verborgen houdt; een test
  * die juist dát gedrag wil, zet hem expliciet op false.
  */
-export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", view = "inbox", state = {} } = {}) {
+export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", view = "inbox", state = {}, orgSchakelaar = false } = {}) {
 	ruimDocumentListenersOp();
-	document.body.innerHTML = paginaHtml(berichten, view);
+	document.body.innerHTML = paginaHtml(berichten, view, { orgSchakelaar });
 	window.history.replaceState(null, "", pad);
 	window.berichtenboxData = dataset(berichten);
 	window.localStorage.clear();

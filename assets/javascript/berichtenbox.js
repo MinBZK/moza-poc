@@ -431,7 +431,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		if (stateModule.bewaar()) {
 			// Weer ruimte: de melding hoort niet te blijven staan. QuotaExceededError is van nature
 			// tijdelijk — bewaar() krimpt zelf de lijst met binnengekomen berichten.
-			if (opslagGemeld) verbergPaginaMelding('opslag');
+			if (staandeMeldingEigenaar === 'opslag') verbergPaginaMelding('opslag');
 			return true;
 		}
 
@@ -439,8 +439,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// voltooid, en spreekt het de melding eronder tegen.
 		if (typeof herstel === 'function') herstel();
 
-		if (!opslagGemeld) {
-			opslagGemeld = toonPaginaMelding(
+		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
+		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
+		if (staandeMeldingEigenaar !== 'opslag') {
+			toonPaginaMelding(
 				'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte voor.',
 				'storing',
 				'opslag'
@@ -489,8 +491,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// De lading zelf is mislukt. Blijft staan tot een herlaad: niets op deze pagina kan de berichten
 	// alsnog binnenhalen, dus geen enkele latere render mag doen alsof er wél iets te zien is.
 	let ladingMislukt = false;
-	// Eén melding over mislukt opslaan volstaat; bij elke klik opnieuw is geblaf.
-	let opslagGemeld = false;
 
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
@@ -1162,8 +1162,14 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
 			werkZoekPlaceholderBij();
 			orgToggle.addEventListener('change', () => {
+				const voorKeuze = state.toonAndereOrganisaties;
 				state.toonAndereOrganisaties = orgToggle.checked;
-				opslaan();
+
+				if (!opslaan(() => { state.toonAndereOrganisaties = voorKeuze; })) {
+					orgToggle.checked = voorKeuze;
+					return;
+				}
+
 				werkZoekPlaceholderBij();
 				huidigePagina = 1;
 				if (orgToggle.checked) {
@@ -1715,18 +1721,61 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		huidigePagina = 1;
 		toonBerichten();
 		// Ná render: die berekent state.aantalOngelezen, en zonder deze tweede opslag houden de
-		// badges op andere pagina's het aantal van vóór deze actie vast.
+		// badges op andere pagina's het aantal van vóór deze actie vast. Stil: de wijziging zelf is
+		// hierboven al bewaard, dus "uw wijziging is niet bewaard" zou hier onwaar zijn.
 		render(huidigeView());
-		opslaan();
+		opslaanStil();
 	});
 
 	// De server-gerenderde rijen zijn de basis voor bezoekers zonder JavaScript. Draait JS wél, dan
 	// is de datalaag de enige waarheid en bouwen we de rijen opnieuw op — ook voor de dataset. Eén
 	// render-pad, één bron; anders zijn de rijen een tweede waarheid naast de berichten.
+	// Welke rij en welk element de aandacht hadden, zodat een herbouw van de tbody die niet weggooit.
+	function legFocusVast() {
+		const actief = document.activeElement;
+		const rij = actief && typeof actief.closest === 'function' ? actief.closest('.berichtenbox-row') : null;
+		const open = document.querySelector('.row-actions-toggle[aria-expanded="true"]');
+		const openRij = open ? open.closest('.berichtenbox-row') : null;
+
+		return {
+			focusId: rij ? rij.dataset.berichtId : null,
+			focusRol: rij ? rolVan(actief) : null,
+			openId: openRij ? openRij.dataset.berichtId : null,
+		};
+	}
+
+	function rolVan(el) {
+		if (el.matches('[data-mark-toggle]')) return '[data-mark-toggle]';
+		if (el.matches('.row-actions-toggle')) return '.row-actions-toggle';
+		if (el.matches('[data-row-actie]')) return '[data-row-actie="' + el.dataset.rowActie + '"]';
+		if (el.matches('a')) return '.berichtenbox-row-subject a';
+		return null;
+	}
+
+	function herstelFocus(vastgelegd) {
+		if (vastgelegd.openId) {
+			const rij = document.querySelector('.berichtenbox-row[data-bericht-id="' + vastgelegd.openId + '"]');
+			const toggle = rij && rij.querySelector('.row-actions-toggle');
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', 'true');
+				if (toggle.nextElementSibling) toggle.nextElementSibling.hidden = false;
+			}
+		}
+
+		if (!vastgelegd.focusId || !vastgelegd.focusRol) return;
+		const rij = document.querySelector('.berichtenbox-row[data-bericht-id="' + vastgelegd.focusId + '"]');
+		const doel = rij && rij.querySelector(vastgelegd.focusRol);
+		if (doel) doel.focus();
+	}
+
 	function rendersLijst(lijstBerichten) {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const body = lijst && (lijst.querySelector('tbody') || lijst);
 		if (!body) return 0;
+
+		// De rijen worden vervangen, niet bijgewerkt. Zonder dit sluit een geopend rijmenu en valt
+		// de toetsenbordfocus terug naar de pagina, bij elk binnenkomend bericht en elke resize.
+		const vastgelegd = legFocusVast();
 
 		// Eén onbruikbaar bericht — zonder id is er geen sleutel voor de state en geen link naar de
 		// detailpagina — mag de rest van de lijst niet meenemen in zijn val. Overslaan en tellen;
@@ -1754,6 +1803,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 
 		body.replaceChildren(...rijen);
+		herstelFocus(vastgelegd);
 		return overgeslagen;
 	}
 
@@ -1818,7 +1868,8 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
 				voortgangsAnimatie(() => {
 					state.eersteBezoekGehad = true;
-					opslaan();
+					// Stil: dit is administratie van de animatie, niets wat de bezoeker vroeg.
+					opslaanStil();
 					// Binnen de animatie-callback: de try hierboven is dan allang teruggekeerd.
 					startDemoGedrag();
 				});
@@ -1890,6 +1941,17 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			data.mappen = vorige.mappen;
 			huidigePagina = vorige.pagina;
 			zojuistBinnengekomenId = null;
+
+			// De rijen zijn mogelijk al vervangen voordat het misging. Alleen `data` terugzetten laat
+			// het scherm iets tonen wat nergens meer bestaat.
+			try {
+				toonBerichten();
+				render(huidigeView());
+			} catch (herstelFout) {
+				console.error('[Berichtenbox] Ook de vorige weergave was niet te herstellen.', herstelFout);
+				toonLaadfout();
+			}
+
 			throw fout;
 		}
 
@@ -1951,9 +2013,22 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 
 		const slot = blok.querySelector('[data-berichtenbox-storing-tekst]');
+		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar && slot && slot.textContent) {
+			console.warn("[Berichtenbox] Melding van '" + staandeMeldingEigenaar + "' vervangen door die van '"
+				+ eigenaar + "': " + slot.textContent);
+		}
 		if (slot) slot.textContent = tekst;
 		blok.classList.toggle('feedback-error', soort === 'storing');
 		blok.classList.toggle('feedback-info', soort === 'info');
+
+		// Beide pictogrammen staan in het blok, in deze volgorde: eerst het storings-, dan het
+		// informatie-pictogram. Alleen de kleur wisselen liet een wit kruis op een blauwe schijf
+		// achter bij een mededeling.
+		const iconen = blok.querySelectorAll(':scope > svg');
+		if (iconen.length === 2) {
+			iconen[0].style.display = soort === 'info' ? 'none' : '';
+			iconen[1].style.display = soort === 'info' ? '' : 'none';
+		}
 		blok.hidden = false;
 		staandeMeldingZwaarte = zwaarte;
 		staandeMeldingEigenaar = eigenaar;
@@ -1969,7 +2044,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 		staandeMeldingZwaarte = 0;
 		staandeMeldingEigenaar = null;
-		if (eigenaar === 'opslag') opslagGemeld = false;
 
 		const blok = document.querySelector('[data-berichtenbox-storing]');
 		if (blok) blok.hidden = true;
@@ -1979,8 +2053,23 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
 	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
 	// aantoonbaar onwaar zolang we niet weten wát er is.
+	const TELLERS_OP_DE_PAGINA = [
+		'[data-berichtenbox-counter-total]',
+		'[data-berichtenbox-sources]',
+		'[data-berichtenbox-counter-unread]',
+		'[data-berichtenbox-count="inbox"]',
+	];
+
 	function toonLaadfout() {
 		laadfoutGetoond = true;
+
+		// De tellers komen server-gerenderd met echte aantallen. Ze laten staan naast "we konden
+		// niets ophalen" laat de bezoeker het getal geloven en de zin voor een detail aanzien.
+		// state.aantalOngelezen blijft ongemoeid: die stuurt de badges op andere pagina's.
+		TELLERS_OP_DE_PAGINA.forEach((kiezer) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.textContent = '–';
+		});
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		if (lijst) {
 			const body = lijst.querySelector('tbody') || lijst;

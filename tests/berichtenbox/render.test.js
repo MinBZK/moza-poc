@@ -10,6 +10,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	// Ook als een test halverwege omvalt: fake timers die blijven staan laten de volgende test
+	// vastlopen op setTimeout, en dan lijkt díe de schuldige.
+	vi.useRealTimers();
+	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
 
@@ -399,33 +403,30 @@ describe("berichtenbox.js — de bezoeker hoort het als bewaren niet lukt", () =
 	});
 });
 
-describe("berichtenbox.js — terugdraaien is echt terugdraaien", () => {
-	// Deze test bestond al in naam, maar was een implicatie met twee vervulbare takken: de hele
-	// rollback weghalen liet hem groen. Nu wordt de rollback zelf waargenomen.
-	it("zet data.berichten terug als het renderen van een nieuwe lijst mislukt", async () => {
+describe("berichtenbox.js — scherm en gegevens lopen niet uiteen", () => {
+	it("laat na een onrenderbare bronwijziging geen rijen staan die nergens meer bestaan", async () => {
 		vi.useFakeTimers();
 		bouwPagina([bericht({ onderwerp: "Blijft staan" })]);
 		window.localStorage.setItem("feature:Dynamische berichten", "true");
 		window.history.replaceState(null, "", "/moza/berichtenbox/?poll=5");
 		await laadBerichtenbox();
 		await vi.advanceTimersByTimeAsync(0);
+		expect(rijen()).toHaveLength(1);
 
-		const voor = window.Berichtenbox.state && rijen().length;
-		expect(voor).toBe(1);
-
-		// Laat createRij struikelen op élk bericht: de nieuwe lijst is dan niet te renderen.
-		window.berichtenboxData.magazijnen[0].naam = { kapot: true };
-		const stuk = Object.defineProperty({}, "id", {
+		// Eén bericht waarvan het id niet te lezen is. Met één renderpad raakt dat de hele lijst:
+		// filterBerichten struikelt erover, dus er valt niets meer te tonen.
+		window.berichtenboxData.berichten.push(Object.defineProperty({}, "id", {
 			get() { throw new Error("niet te lezen"); },
-		});
-		window.berichtenboxData.berichten.push(stuk);
+		}));
 
 		await vi.advanceTimersByTimeAsync(5000);
 
-		// De lijst die er stond hoort er nog te staan, niet half vervangen.
-		expect(rijen().length).toBeGreaterThanOrEqual(1);
-		expect(document.body.textContent).toContain("Blijft staan");
-		vi.useRealTimers();
+		// Dan hoort de pagina dat te zeggen en niets voor te spiegelen: geen rijen, geen "u heeft
+		// geen berichten", wél een melding.
+		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
 	});
 });
 
@@ -447,5 +448,25 @@ describe("berichtenbox.js — een storing blijft een storing", () => {
 
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+	});
+});
+
+describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
+	it("laat de server-gerenderde aantallen niet staan naast een storingsmelding", async () => {
+		bouwPagina([bericht(), bericht(), bericht()]);
+		// De tellers staan nu op 3; dat is wat Eleventy erin zette.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
+
+		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
+			get() { throw new Error("niet te lezen"); },
+		});
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		// "3 berichten uit 2 bronnen" naast "we konden niets ophalen" laat de bezoeker het getal
+		// geloven en de zin voor een detail aanzien.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("3");
+		expect(tekstVan("[data-berichtenbox-count=\"inbox\"]")).not.toBe("3");
 	});
 });

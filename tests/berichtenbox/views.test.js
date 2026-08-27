@@ -8,6 +8,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	vi.useRealTimers();
+	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
 
@@ -154,5 +156,32 @@ describe("meldingen horen bij de juiste weergave", () => {
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
 		expect(rijen()).toHaveLength(1);
 		document.cookie = "unhappy-flow=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+	});
+});
+
+describe("organisatie-schakelaar van het Belastingdienst-portaal", () => {
+	it("springt terug als de keuze niet bewaard kan worden", async () => {
+		bouwPagina([bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" })], {
+			pad: "/mijn-belastingdienst/berichtenbox/",
+			view: "inbox",
+			orgSchakelaar: true,
+		});
+		vi.stubGlobal("localStorage", {
+			getItem: (k) => (k === "feature:Berichten van andere organisaties" ? "true" : JSON.stringify({ eersteBezoekGehad: true })),
+			setItem: () => { throw new Error("QuotaExceededError"); },
+			removeItem: () => {},
+			clear: () => {},
+		});
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const schakelaar = document.querySelector("[data-berichtenbox-org-toggle]");
+		schakelaar.checked = true;
+		schakelaar.dispatchEvent(new window.Event("change", { bubbles: true }));
+
+		// Anders staan de berichten van andere organisaties op het scherm terwijl de melding
+		// eronder zegt dat er niets bewaard is, en zijn ze na het verversen weg.
+		expect(schakelaar.checked).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 	});
 });
