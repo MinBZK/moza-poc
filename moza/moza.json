@@ -38,7 +38,7 @@
 			"badgeId": "subsidies-count"
 		},
 		{
-			"label": "Wetten en regelgeving",
+			"label": "Wetten en regels",
 			"url": "/moza/regelgeving/",
 			"icon": "/assets/icons/icon-wet.svg",
 			"badgeId": "regelgeving-count"
@@ -52,12 +52,6 @@
 			"label": "Bewaarde items",
 			"url": "/moza/bewaard/",
 			"icon": "/assets/icons/icon-bewaar.svg"
-		},
-		{
-			"label": "Digitale assistent (AI)",
-			"url": "/moza/digitale-assistent/",
-			"icon": "/assets/icons/icon-assistent.svg",
-			"feature": "Digitale assistent"
 		},
 		{
 			"label": "Belastingen",

@@ -3008,3 +3008,123 @@ body.authorized {
 		}
 	}
 }
+
+/* Wetten en regels: zoekbalk, bord, kaarten, assistent-paneel */
+.regel-zoek form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-xs);
+}
+.regel-zoek-rij {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-margin-xs);
+}
+.regel-zoek-rij input {
+	flex: 1 1 20rem;
+	min-inline-size: 0;
+}
+.regelbord {
+	display: grid;
+	gap: var(--toepassing-space-layout-xs);
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+.regelbord-kolom {
+	background: var(--toepassing-color-background-subtle-1);
+	border-radius: var(--toepassing-border-radius-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-sm);
+	padding: var(--toepassing-space-padding-sm);
+}
+.regelbord-kolom h2 {
+	font: var(--toepassing-text-heading-h3);
+}
+.regelbord-kolom ul {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-sm);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.regelkaart {
+	background: var(--toepassing-color-background-default);
+	border-radius: var(--toepassing-border-radius-md);
+	box-shadow: var(--toepassing-border-card-default);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-xs);
+	padding: var(--toepassing-space-padding-sm);
+}
+.regelkaart h3 {
+	font: var(--toepassing-text-heading-h4);
+	margin: 0;
+}
+.regelkaart-label {
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+}
+.regelkaart-feiten {
+	border-inline-start: var(--toepassing-border-width-md) solid var(--toepassing-color-feedback-info-border);
+	font: var(--toepassing-text-smalltext);
+	margin: 0;
+	padding-inline-start: var(--toepassing-space-padding-xs);
+}
+.regelkaart-herkomst {
+	color: var(--toepassing-color-text-subtle-1);
+	font: var(--toepassing-text-smalltext);
+}
+.regelkaart-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-margin-xs);
+}
+.regelkaart-menu {
+	position: relative;
+}
+.regelkaart-menu ul {
+	background: var(--toepassing-color-background-default);
+	border-radius: var(--toepassing-border-radius-md);
+	box-shadow: var(--toepassing-border-card-default);
+	inset-block-start: 100%;
+	inset-inline-start: 0;
+	list-style: none;
+	margin: 0;
+	min-inline-size: 12rem;
+	padding: var(--toepassing-space-padding-2xs);
+	position: absolute;
+	z-index: 2;
+}
+.regelkaart-menu ul button {
+	inline-size: 100%;
+	text-align: start;
+}
+.regelkaart-reden {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-2xs);
+}
+.assistent-paneel {
+	background: var(--toepassing-color-background-default);
+	block-size: 100dvh;
+	box-shadow: var(--toepassing-border-card-default);
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-margin-sm);
+	inline-size: min(100%, 32rem);
+	inset-block-start: 0;
+	inset-inline-end: 0;
+	overflow: auto;
+	padding: var(--toepassing-space-card-padding);
+	position: fixed;
+	z-index: 10;
+}
+.assistent-paneel[hidden] {
+	display: none;
+}
+.assistent-paneel-kop {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+}

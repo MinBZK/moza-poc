@@ -1,34 +1,82 @@
 ---
-title: "MijnOverheid Zakelijk: Wetten en regelgeving"
+title: "MijnOverheid Zakelijk: Wetten en regels"
 permalink: "/moza/regelgeving/"
 subNavActive: "/moza/regelgeving/"
 ---
 
 {% include "side-nav-overheid.njk" %}
 
-<article id="hoofd-inhoud">
+<article id="hoofd-inhoud" class="regelbord-pagina">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li aria-current="page">Wetten en regelgeving</li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li aria-current="page">Wetten en regels</li>
 		</ol>
 	</nav>
 
-	<h1>Wetten en regelgeving</h1>
+	<h1>Wetten en regels</h1>
 
-	<section class="card" data-overzicht-regelgeving>
-		<h2 class="visually-hidden">Wetten en regelgeving</h2>
-		<div class="feedback feedback-info" id="info-actualiteiten">
-		{% icon "/assets/icons/icon-informatie.svg" %}
-		<div>
-			<p>Wetten en regelgeving die mogelijk betrekking hebben op uw bedrijf of branche, geselecteerd op basis van uw bedrijfsprofiel. Door items te bewaren of als niet relevant te markeren helpt u ons de aanbevelingen te verbeteren.</p>
-		</div>
-		<button class="btn-close link-button">
-			<i>Sluit notificatie</i>
-		</button>
-	</div>
-		<ul class="list-content-links" aria-busy="true"></ul>
-		<nav class="pagination" aria-label="Paginering" data-paginering hidden></nav>
+	<section class="card regel-zoek">
+		<h2 class="visually-hidden">Zoeken in alle wetten, regels en subsidies</h2>
+		<form id="regel-zoek-form" role="search">
+			<label for="regel-zoek-input">Waar zoekt u naar? Bijvoorbeeld “koelcel”, “personeel” of “verpakkingen”.</label>
+			<div class="regel-zoek-rij">
+				<input id="regel-zoek-input" type="search" autocomplete="off" />
+				<button type="submit">Zoeken</button>
+			</div>
+			<p class="klein" data-feature="Slim zoeken in wetten en regels" data-feature-type="functionaliteit" data-feature-default="off" data-slim-zoeken>De assistent vertaalt uw woorden naar zoektermen; de resultaten komen altijd uit de officiële bronnen.</p>
+		</form>
+		<div class="dynamic-list" data-zoekresultaten aria-live="polite"></div>
 	</section>
 
+	<p class="visually-hidden" role="status" data-bord-melding></p>
+
+	<section class="regelbord" data-regelbord aria-label="Uw wetten, regels en subsidies">
+		<section class="regelbord-kolom" data-kolom="te-doen">
+			<h2>Te doen</h2>
+			<ul class="dynamic-list"></ul>
+		</section>
+		<section class="regelbord-kolom" data-kolom="mee-bezig">
+			<h2>Mee bezig</h2>
+			<ul class="dynamic-list"></ul>
+		</section>
+		<section class="regelbord-kolom" data-kolom="komt-eraan">
+			<h2>Komt eraan</h2>
+			<ul class="dynamic-list"></ul>
+		</section>
+		<section class="regelbord-kolom" data-kolom="niet-beoordelen">
+			<h2>Niet beoordelen</h2>
+			<ul class="dynamic-list"></ul>
+		</section>
+		<section class="regelbord-kolom" data-kolom="afgerond">
+			<h2>Afgerond</h2>
+			<ul class="dynamic-list"></ul>
+		</section>
+	</section>
+
+	<aside id="assistent-paneel" class="assistent-paneel" role="complementary" aria-labelledby="assistent-paneel-titel" hidden>
+		<div class="assistent-paneel-kop">
+			<h2 id="assistent-paneel-titel">Digitale assistent (AI)</h2>
+			<button id="assistent-paneel-sluit" class="secondary" type="button">Sluit</button>
+		</div>
+		<p class="klein" data-paneel-scope></p>
+		<section class="chat-container">
+			<h3 class="visually-hidden">Gesprek</h3>
+			<div id="chat-messages" class="chat-messages" role="log" aria-live="polite" data-url-zaken="{{ '/moza/lopende-zaken/' | url }}" data-url-contact="{{ '/moza/contact/' | url }}"></div>
+			<form id="chat-form">
+				<label class="visually-hidden" for="chat-input">Uw vraag</label>
+				<textarea id="chat-input" placeholder="Stel uw vraag over deze regel" required></textarea>
+				<div class="action-group">
+					<button type="submit">Vraag stellen</button>
+					<button id="chat-nieuw" class="secondary" type="button" aria-disabled="true">Nieuw gesprek starten</button>
+					<button id="chat-bewaar" class="secondary" type="button" aria-disabled="true">Bewaar gesprek</button>
+				</div>
+				<p id="chat-bewaar-melding" class="visually-hidden" role="status"></p>
+			</form>
+			<small class="disclaimer">{% icon "/assets/icons/icon-informatie.svg" %} De antwoorden van deze assistent worden door AI gegenereerd en kunnen fouten bevatten. In dit gesprek gaat het alleen over de gekozen regel; controleer belangrijke informatie bij de bron.</small>
+			<div id="chat-status" class="chat-status" aria-live="polite" data-feature="Status van bronnen in de Digitale assistent" data-feature-type="functionaliteit" data-feature-default="off"></div>
+		</section>
+	</aside>
 </article>
