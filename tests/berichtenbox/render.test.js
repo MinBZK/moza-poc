@@ -244,3 +244,26 @@ describe("berichtenbox.js — details die de review ving", () => {
 		await laatLaden();
 	});
 });
+
+describe("berichtenbox.js — terugdraaien bij een mislukte render", () => {
+	it("laat de vorige lijst staan als een latere bronwijziging niet te renderen is", async () => {
+		vi.useFakeTimers();
+		bouwPagina([bericht({ onderwerp: "Eerste" })]);
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		window.history.replaceState(null, "", "/moza/berichtenbox/?poll=5");
+		await laadBerichtenbox();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(rijen()).toHaveLength(1);
+
+		// Sloop createRij van binnenuit: een magazijn zonder naam levert een bericht zonder
+		// afzender, en dat is nog te renderen. Een bericht zonder id niet.
+		window.berichtenboxData.magazijnen[0].id = undefined;
+		await vi.advanceTimersByTimeAsync(5000);
+
+		// Wat er ook misging: er staat nog steeds een leesbare lijst of een melding, nooit allebei niet.
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const melding = document.querySelector("[data-geen-bronnen]");
+		expect(rijen().length > 0 || !melding.hidden || lijst.hidden).toBe(true);
+		vi.useRealTimers();
+	});
+});

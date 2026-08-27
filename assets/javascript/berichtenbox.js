@@ -1647,14 +1647,20 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			zojuistBinnengekomenId = inhoud.nieuwBericht.id;
 		}
 
-		const vorige = data.berichten;
+		// Alles wat we straks moeten kunnen terugdraaien, in één keer vastgelegd. Een halve
+		// weergave naast een volledig bijgewerkte `data` is van een geslaagde render niet te
+		// onderscheiden, en dat is precies wat we willen voorkomen.
+		const vorige = {
+			berichten: data.berichten,
+			magazijnen: data.magazijnen,
+			mappen: data.mappen,
+			pagina: huidigePagina,
+		};
+
 		data.berichten = volgende;
 		if (!inhoud.nieuwBericht) {
 			data.magazijnen = inhoud.magazijnen;
 			data.mappen = inhoud.mappen;
-			// De state is ingelezen voordat bekend was welke bron het zou worden; nu die vaststaat,
-			// horen bewaarde berichten van onbekende magazijnen alsnog af te vallen.
-			stateModule.beperkTot(data.magazijnen.map((m) => m.id));
 		}
 
 		try {
@@ -1662,8 +1668,19 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			toonBerichten();
 			render(huidigeView());
 		} catch (fout) {
-			data.berichten = vorige;
+			data.berichten = vorige.berichten;
+			data.magazijnen = vorige.magazijnen;
+			data.mappen = vorige.mappen;
+			huidigePagina = vorige.pagina;
+			zojuistBinnengekomenId = null;
 			throw fout;
+		}
+
+		// Pas ná een geslaagde render: de state hoort bij wat er op het scherm staat. De state is
+		// ingelezen voordat bekend was welke bron het zou worden, dus nu die vaststaat vallen
+		// bewaarde berichten van onbekende magazijnen alsnog af.
+		if (!inhoud.nieuwBericht) {
+			stateModule.beperkTot(data.magazijnen.map((m) => m.id));
 		}
 
 		// Eén render lang nieuw; daarna is het een gewone rij.
@@ -1714,12 +1731,12 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			if (mislukt.length) throw mislukt[0];
 
 			// Een bron die onderweg omviel betekent dat deze lijst van een andere bron komt dan
-			// bedoeld. Dat is geen storing die de lijst wegneemt, maar wel iets om te melden.
-			const storingen = register.storingen();
-			if (storingen.length) {
-				const melding = document.querySelector('[data-bron-onbereikbaar]');
-				if (melding) melding.hidden = false;
-			}
+			// bedoeld. Er is nu maar één bron, dus dit kan nog niet gebeuren; zodra er een tweede
+			// bij komt hoort hier een eigen melding. Het bestaande waarschuwingsblok hergebruiken
+			// kan niet: dat noemt bij naam een organisatie die er niets mee te maken heeft.
+			register.storingen().forEach((storing) => {
+				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
+			});
 		})
 		.catch((fout) => {
 			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
