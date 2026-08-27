@@ -1564,6 +1564,12 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		body.replaceChildren(...lijstBerichten.map((bericht) => createRij(bericht)));
 	}
 
+	// De lege staat staat in de HTML zichtbaar, want zonder JavaScript is archief en prullenbak
+	// werkelijk leeg. Draait JS wél, dan volgt er zo een lijst; hem tot die tijd laten staan zou
+	// "u heeft nog geen berichten" tonen vlak voordat de berichten verschijnen.
+	const legeStaat = document.querySelector('[data-berichtenbox-empty]');
+	if (legeStaat) legeStaat.hidden = true;
+
 	// Luisteraars staan bewust vóór het laden van de bron. Een trage of hangende bron mag nooit
 	// betekenen dat sorteren, het kebab-menu of de rij-acties dood zijn.
 	bindSortering();

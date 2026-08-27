@@ -1,0 +1,74 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { bouwPagina, bericht, laadBerichtenbox, laatLaden, rijen } from "./dom.js";
+
+beforeEach(() => {
+	vi.spyOn(console, "error").mockImplementation(() => {});
+	vi.spyOn(console, "warn").mockImplementation(() => {});
+});
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
+
+async function laad(berichten, opties) {
+	bouwPagina(berichten, opties);
+	document.querySelector("[data-berichtenbox-list]").setAttribute("data-berichtenbox-view", opties.view);
+	await laadBerichtenbox();
+	await laatLaden();
+}
+
+describe("archief", () => {
+	it("toont alleen gearchiveerde berichten", async () => {
+		const a = bericht({ onderwerp: "Gearchiveerd" });
+		const b = bericht({ onderwerp: "In de inbox" });
+		await laad([a, b], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		expect(rijen()).toHaveLength(1);
+		expect(rijen()[0].textContent).toContain("Gearchiveerd");
+	});
+
+	it("verbergt de tabel en toont de lege staat als het archief leeg is", async () => {
+		await laad([bericht()], { pad: "/moza/berichtenbox/berichtenbox-archief/", view: "archief" });
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(false);
+	});
+});
+
+describe("prullenbak", () => {
+	it("toont alleen verwijderde berichten", async () => {
+		const a = bericht({ onderwerp: "Weggegooid" });
+		const b = bericht({ onderwerp: "In de inbox" });
+		await laad([a, b], {
+			pad: "/moza/berichtenbox/berichtenbox-prullenbak/",
+			view: "prullenbak",
+			state: { eersteBezoekGehad: true, verwijderd: { [a.id]: true } },
+		});
+		expect(rijen()).toHaveLength(1);
+		expect(rijen()[0].textContent).toContain("Weggegooid");
+	});
+
+	it("laat een gearchiveerd bericht niet in de prullenbak zien", async () => {
+		const a = bericht();
+		await laad([a], {
+			pad: "/moza/berichtenbox/berichtenbox-prullenbak/",
+			view: "prullenbak",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		expect(rijen()).toHaveLength(0);
+	});
+});
+
+describe("Belastingdienst-portaal", () => {
+	it("toont standaard alleen berichten van de Belastingdienst", async () => {
+		await laad([
+			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
+			bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }),
+		], { pad: "/mijn-belastingdienst/berichtenbox/", view: "inbox" });
+		expect(rijen()).toHaveLength(1);
+		expect(rijen()[0].textContent).toContain("Belastingdienst");
+	});
+});
