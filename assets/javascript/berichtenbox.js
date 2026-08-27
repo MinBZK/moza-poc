@@ -10,6 +10,8 @@
 
 import { datumNL } from "./berichtenbox/datum.js";
 import { maakState, NIEUWE_BERICHTEN_LIMIET } from "./berichtenbox/state.js";
+import { maakRegister } from "./berichtenbox/bron.js";
+import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 (function() {
 	"use strict";
@@ -1742,35 +1744,76 @@ import { maakState, NIEUWE_BERICHTEN_LIMIET } from "./berichtenbox/state.js";
 		}
 	});
 
-	pasStateToeOpRijen();
-	werkMappenZichtbaarheidBij();
-	renderLijstVoorView(huidigeView());
-	render(huidigeView());
-	vulDemoDetailPagina();
-	bindDetailPaginaActies();
+	// De server-gerenderde rijen zijn de basis voor bezoekers zonder JavaScript. Draait JS wél, dan
+	// is de datalaag de enige waarheid en bouwen we de rijen opnieuw op — ook voor de dataset. Eén
+	// render-pad, één bron; anders zijn de rijen een tweede waarheid naast de berichten.
+	function rendersLijst(lijstBerichten) {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const body = lijst && (lijst.querySelector('tbody') || lijst);
+		if (!body) return;
+		body.replaceChildren(...lijstBerichten.map((bericht) => createRij(bericht)));
+	}
+
+	// Luisteraars staan bewust vóór het laden van de bron. Een trage of hangende bron mag nooit
+	// betekenen dat sorteren, het kebab-menu of de rij-acties dood zijn.
 	bindSortering();
 	bindBronOnbereikbaar();
 	bindBerichtBeschikbaarheid();
 
 	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
 
-	if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
-		voortgangsAnimatie(() => {
-			state.eersteBezoekGehad = true;
-			opslaan();
-			toonMappenZijbalk();
-			bindInboxFilters();
-			startPolling();
-			werkBronWaarschuwingBij();
-			plannBronUitval();
-		});
-	} else {
+	function startDemoGedrag() {
 		toonMappenZijbalk();
 		bindInboxFilters();
 		startPolling();
 		werkBronWaarschuwingBij();
 		plannBronUitval();
 	}
+
+	function naEersteLading() {
+		vulDemoDetailPagina();
+		bindDetailPaginaActies();
+
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
+			voortgangsAnimatie(() => {
+				state.eersteBezoekGehad = true;
+				opslaan();
+				startDemoGedrag();
+			});
+		} else {
+			startDemoGedrag();
+		}
+	}
+
+	// De datalaag bepaalt welke bron de berichten levert; de render-laag hieronder weet niet welke
+	// dat is. Nu is dat altijd de dataset; een tweede bron registreert zich hier straks vóór die.
+	const register = maakRegister();
+	register.registreer(datasetBron(window.berichtenboxData));
+
+	register.opWijziging((inhoud) => {
+		data.berichten = inhoud.berichten;
+		data.magazijnen = inhoud.magazijnen;
+		data.mappen = inhoud.mappen;
+
+		rendersLijst(data.berichten);
+		pasStateToeOpRijen();
+		werkMappenZichtbaarheidBij();
+		renderLijstVoorView(huidigeView());
+		render(huidigeView());
+	});
+
+	register.kies(window.Personas && typeof window.Personas.actief === 'function' ? window.Personas.actief() : null)
+		.then((bron) => (bron ? bron.laad() : null))
+		.then((inhoud) => {
+			if (inhoud) register.meld(inhoud);
+			naEersteLading();
+		})
+		.catch((fout) => {
+			// De bron liet het afweten. De server-gerenderde rijen staan er nog, dus de bezoeker
+			// houdt een werkende lijst; alleen komt er niets nieuws bij.
+			console.error('[Berichtenbox] Laden van de berichten mislukte.', fout);
+			naEersteLading();
+		});
 
 	// Debug-handle; niet bedoeld voor productiegebruik.
 	window.Berichtenbox = {

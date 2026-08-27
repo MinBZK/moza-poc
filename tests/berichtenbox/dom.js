@@ -9,6 +9,7 @@ import { vi } from "vitest";
  */
 
 export const BERICHTENBOX_HTML = `
+<article class="berichtenbox">
 <div class="berichtenbox-content">
 	<p class="metadata">
 		<b data-berichtenbox-counter-total>0</b> berichten uit
@@ -67,6 +68,7 @@ export const BERICHTENBOX_HTML = `
 
 	<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>
 </div>
+</article>
 `;
 
 let teller = 0;
@@ -138,4 +140,10 @@ export function zichtbareRijen() {
 export function tekstVan(kiezer) {
 	const el = document.querySelector(kiezer);
 	return el ? el.textContent.trim() : null;
+}
+
+/** Laat de microtask-wachtrij leeglopen, zodat het laden van de bron afgerond is. */
+export async function laatLaden() {
+	for (let i = 0; i < 10; i += 1) await Promise.resolve();
+	await new Promise((klaar) => setTimeout(klaar, 0));
 }
