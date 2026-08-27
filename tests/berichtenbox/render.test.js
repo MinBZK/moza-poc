@@ -139,3 +139,51 @@ describe("berichtenbox.js — filteren en pagineren via de datalaag", () => {
 		expect(rijen()[0].querySelector("[data-mark-toggle]").classList.contains("is-marked")).toBe(true);
 	});
 });
+
+describe("berichtenbox.js — sorteren via de datalaag", () => {
+	function afzenders() {
+		return rijen().map((r) => r.querySelector(".berichtenbox-row-sender").textContent.trim().replace(/^Ongelezen\.\s*/, ""));
+	}
+
+	it("sorteert oplopend op afzender en zet aria-sort", async () => {
+		await laad([
+			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
+			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
+		]);
+		const knop = document.querySelector('button[data-sort="afzender"]');
+		knop.click();
+		expect(afzenders()).toEqual(["Belastingdienst", "Zorginstituut"]);
+		expect(knop.closest("th").getAttribute("aria-sort")).toBe("ascending");
+	});
+
+	it("draait de volgorde om bij een tweede klik", async () => {
+		await laad([
+			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
+			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
+		]);
+		const knop = document.querySelector('button[data-sort="afzender"]');
+		knop.click();
+		knop.click();
+		expect(afzenders()).toEqual(["Zorginstituut", "Belastingdienst"]);
+		expect(knop.closest("th").getAttribute("aria-sort")).toBe("descending");
+	});
+
+	it("sorteert de gefilterde lijst, niet de hele lijst", async () => {
+		await laad([
+			bericht({ afzender: "Zorginstituut", magazijnId: "zorg", onderwerp: "Aanslag" }),
+			bericht({ afzender: "Belastingdienst", magazijnId: "bd", onderwerp: "Aanslag" }),
+			bericht({ afzender: "Gemeente", magazijnId: "gem", onderwerp: "Subsidie" }),
+		]);
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "aanslag";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+		document.querySelector('button[data-sort="afzender"]').click();
+		expect(afzenders()).toEqual(["Belastingdienst", "Zorginstituut"]);
+	});
+
+	it("gaat na sorteren terug naar pagina 1", async () => {
+		await laad(Array.from({ length: 25 }, (_, i) => bericht({ onderwerp: "Bericht " + i })));
+		document.querySelector('button[data-sort="onderwerp"]').click();
+		expect(rijen()).toHaveLength(10);
+	});
+});

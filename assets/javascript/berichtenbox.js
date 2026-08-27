@@ -865,24 +865,17 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		lijst.tHead.addEventListener('click', (e) => {
 			const btn = e.target.closest('button[data-sort]');
 			if (!btn) return;
-			const key = btn.dataset.sort;
 			const th = btn.closest('th');
 			const oplopend = th.getAttribute('aria-sort') !== 'ascending';
 			lijst.tHead.querySelectorAll('th[aria-sort]').forEach((t) => t.setAttribute('aria-sort', 'none'));
 			th.setAttribute('aria-sort', oplopend ? 'ascending' : 'descending');
-			const richting = oplopend ? 1 : -1;
-			data.berichten.sort((a, b) =>
-				richting * String(a[key] || '').localeCompare(String(b[key] || ''), 'nl', { numeric: true })
-			);
-			const volgorde = new Map(data.berichten.map((b, i) => [b.id, i]));
-			const tbody = lijst.tBodies[0];
-			if (tbody) {
-				Array.from(tbody.rows)
-					.sort((a, b) => (volgorde.get(a.dataset.berichtId) ?? 0) - (volgorde.get(b.dataset.berichtId) ?? 0))
-					.forEach((r) => tbody.appendChild(r));
-			}
+
+			// Sorteer de berichten; de rijen volgen bij het renderen. Voorheen werd de DOM apart
+			// herordend op berichtId, wat alleen klopte zolang de rijen en de berichten in de pas
+			// liepen.
+			data.berichten = sorteerBerichten(data.berichten, btn.dataset.sort, oplopend);
 			huidigePagina = 1;
-			herpagineerHuidigeView();
+			toonBerichten();
 		});
 	}
 
