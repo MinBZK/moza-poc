@@ -861,7 +861,15 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
 		huidigePagina = venster.pagina;
 
-		rendersLijst(venster.items);
+		const overgeslagen = rendersLijst(venster.items);
+		laadfoutGetoond = false;
+
+		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
+		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan.
+		if (venster.items.length > 0 && overgeslagen === venster.items.length) {
+			toonLaadfout();
+			return;
+		}
 
 		const leeg = document.querySelector('[data-berichtenbox-empty]');
 		if (leeg) leeg.hidden = gevonden.length > 0;
@@ -911,6 +919,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// progress-animatie tonen); berichtenbox.js stuurt de zichtbaarheid zelf,
 	// zodat de melding pas ná het ophalen bij de bronnen verschijnt.
 	function werkBronWaarschuwingBij() {
+		if (laadfoutGetoond) return;
 		const een = document.querySelector('[data-bron-onbereikbaar]');
 		const geen = document.querySelector('[data-geen-bronnen]');
 		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
@@ -1581,8 +1590,25 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function rendersLijst(lijstBerichten) {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const body = lijst && (lijst.querySelector('tbody') || lijst);
-		if (!body) return;
-		body.replaceChildren(...lijstBerichten.map((bericht) => createRij(bericht)));
+		if (!body) return 0;
+
+		// Eén onbruikbaar bericht — zonder id is er geen sleutel voor de state en geen link naar de
+		// detailpagina — mag de rest van de lijst niet meenemen in zijn val. Overslaan en tellen;
+		// toonBerichten beslist of de bezoeker er iets van hoort te merken.
+		const rijen = [];
+		let overgeslagen = 0;
+
+		lijstBerichten.forEach((bericht) => {
+			try {
+				rijen.push(createRij(bericht));
+			} catch (fout) {
+				overgeslagen += 1;
+				console.error('[Berichtenbox] Bericht kon niet worden getoond.', bericht, fout);
+			}
+		});
+
+		body.replaceChildren(...rijen);
+		return overgeslagen;
 	}
 
 	// De lege staat staat in de HTML zichtbaar, want zonder JavaScript is archief en prullenbak
@@ -1607,7 +1633,17 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		plannBronUitval();
 	}
 
+	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
+	// zijn het enige wat de bezoeker nog heeft als het renderen hapert.
 	function naEersteLading() {
+		try {
+			naEersteLadingBinnen();
+		} catch (fout) {
+			console.error('[Berichtenbox] Opstarten na het laden is niet volledig gelukt.', fout);
+		}
+	}
+
+	function naEersteLadingBinnen() {
 		vulDemoDetailPagina();
 		bindDetailPaginaActies();
 
@@ -1699,7 +1735,13 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
 	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
 	// aantoonbaar onwaar zolang we niet weten wát er is.
+	// Staat er een echte storingsmelding? Dan mag de gesimuleerde unhappy flow die niet wegpoetsen:
+	// die gaat over een nagebootste bron, en de bezoeker zou de gegenereerde dataset voor zijn post
+	// aanzien.
+	let laadfoutGetoond = false;
+
 	function toonLaadfout() {
+		laadfoutGetoond = true;
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		if (lijst) {
 			const body = lijst.querySelector('tbody') || lijst;

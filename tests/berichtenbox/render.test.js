@@ -189,22 +189,36 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 });
 
 describe("berichtenbox.js — als er niets te tonen valt", () => {
-	it("laat geen server-gerenderde rijen staan wanneer het renderen mislukt", async () => {
-		// Een bericht zonder id laat createRij struikelen; dat is precies het geval waarin de
-		// bezoeker anders naar rijen kijkt die de state negeren.
-		await laad([bericht(), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
-		expect(rijen()).toHaveLength(0);
-		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
+	it("laat één onbruikbaar bericht de rest niet meeslepen", async () => {
+		// Een bericht zonder id laat createRij struikelen: geen sleutel voor de state, geen link
+		// naar een detailpagina. Dat ene bericht valt af, de rest blijft gewoon staan.
+		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		expect(rijen()).toHaveLength(1);
+		expect(rijen()[0].textContent).toContain("Gewoon bericht");
+		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
 	});
 
-	it("toont de melding wanneer het renderen mislukt", async () => {
+	it("toont de melding als er niets van de lijst overeind blijft", async () => {
 		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
 		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(false);
 	});
 
 	it("zegt niet 'geen berichten' terwijl er een storing is", async () => {
 		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+	});
+
+	it("laat geen onafgevangen fout ontsnappen als het renderen mislukt", async () => {
+		const ontsnapt = [];
+		const vangnet = (e) => ontsnapt.push(e);
+		window.addEventListener("unhandledrejection", vangnet);
+		window.addEventListener("error", vangnet);
+		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		window.removeEventListener("unhandledrejection", vangnet);
+		window.removeEventListener("error", vangnet);
+		expect(ontsnapt).toHaveLength(0);
 	});
 
 	it("toont de melding niet bij een geslaagde lading", async () => {
