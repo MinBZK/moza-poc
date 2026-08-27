@@ -403,9 +403,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 	let huidigePagina = huidigePaginaUitUrl();
 
-	// Hook die de huidige weergave opnieuw filtert/pagineert; gezet door de
-	// actieve view (inbox-filter of archief/prullenbak/map-render).
-	let herpagineerHuidigeView = function () {};
+	// Elke weergave loopt via dezelfde weg naar het scherm; de resize-handler en de paginanavigatie
+	// hebben genoeg aan deze verwijzing. Functiedeclaraties zijn gehesen, dus dit mag hier al.
+	const herpagineerHuidigeView = toonBerichten;
 
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
@@ -849,10 +849,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
 	}
 
-	function renderLijstVoorView() {
-		herpagineerHuidigeView = toonBerichten;
-		toonBerichten();
-	}
+
 
 	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
 	// databron (zodat herbouwde views mee-sorteren) en herordent de DOM-rijen op
@@ -885,7 +882,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function herrenderInbox() {
 		if (huidigeView() !== 'inbox') return;
 		huidigePagina = 1;
-		if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
+		toonBerichten();
 		render('inbox');
 	}
 	// Toon de waarschuwing alleen als de bron onbereikbaar is. De waarschuwing
@@ -1032,14 +1029,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			return params.get('map');
 		}
 
-		// Alle berichten staan in de DOM; het map-filter in pasFilterToe verbergt de
-		// niet-passende rijen en de paginering toont het juiste venster.
-
-		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het scherm.
+		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het
+		// scherm, en toonBerichten leest het zoekveld en de vinkjes zelf uit.
 		const pasFilterToe = toonBerichten;
-
-		// Bij inbox stuurt het filter de paginering aan.
-		herpagineerHuidigeView = toonBerichten;
 
 		// Een nieuw filter zet de weergave terug naar pagina 1.
 		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
@@ -1556,8 +1548,8 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
 		if (soort === 'archiveren' || soort === 'verwijderen') {
-				huidigePagina = 1;
-			if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
+			huidigePagina = 1;
+			toonBerichten();
 			render(huidigeView());
 		}
 	});
@@ -1634,7 +1626,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 
 		werkMappenZichtbaarheidBij();
-		renderLijstVoorView(huidigeView());
+		toonBerichten();
 		render(huidigeView());
 	});
 
