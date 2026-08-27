@@ -2,6 +2,7 @@
 	"name": "mox",
 	"private": true,
 	"scripts": {
+		"test": "node --test tests/*.test.mjs",
 		"build": "vite build && npm run build:tokens && npx @11ty/eleventy",
 		"build:tokens": "node style-dictionary/config.mjs",
 		"dev": "concurrently --names \"eleventy,tokens,vite\" -c \"cyan,magenta,green\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"npm run build:tokens && chokidar 'tokens/tokens.json' -c 'npm run build:tokens'\" \"vite build --watch\"",
