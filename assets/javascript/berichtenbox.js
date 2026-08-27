@@ -1592,10 +1592,15 @@
 
 		const bodyEl = detail.querySelector('[data-demo-body]');
 		if (bodyEl) {
-			// Berichten uit de keten komen zonder inhoud binnen: de uitvraag levert alleen de
-			// kopgegevens. Benoem dat, in plaats van een lege alinea te tonen.
 			const alineas = (bericht.inhoud || '').split('\n\n').filter((a) => a.trim() !== '');
-			if (!alineas.length) alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. Log in bij de afzender om het volledige bericht te lezen.');
+			if (!alineas.length) {
+				// Voor een bericht uit de keten is dit de normale toestand: de berichtenuitvraag
+				// levert alleen de kopgegevens, de inhoud zit er niet bij. Benoem dat, in plaats van
+				// een lege pagina te tonen. Voor een bericht uit de dataset is een lege inhoud geen
+				// toestand maar een fout in de gegevens; die hoort in de console.
+				if (!bericht.uitKeten) console.error('[Berichtenbox] Bericht zonder inhoud in de dataset.', bericht.id);
+				alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.');
+			}
 			alineas.forEach((alinea) => {
 				const p = document.createElement('p');
 				p.textContent = alinea;
