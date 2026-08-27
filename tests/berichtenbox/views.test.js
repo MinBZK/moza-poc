@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { bouwPagina, bericht, laadBerichtenbox, laatLaden, rijen } from "./dom.js";
+import { bouwPagina, bericht, laadBerichtenbox, laatLaden, rijen, kolommen } from "./dom.js";
 
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -13,7 +13,6 @@ afterEach(() => {
 
 async function laad(berichten, opties) {
 	bouwPagina(berichten, opties);
-	document.querySelector("[data-berichtenbox-list]").setAttribute("data-berichtenbox-view", opties.view);
 	await laadBerichtenbox();
 	await laatLaden();
 }
@@ -117,5 +116,24 @@ describe("tellers en lijst horen hetzelfde te zeggen", () => {
 	it("laat het RDW-waarschuwingsblok met rust bij een gewone lading", async () => {
 		await laad([bericht()], { pad: "/moza/berichtenbox/", view: "inbox" });
 		expect(document.querySelector("[data-bron-onbereikbaar]").hidden).toBe(true);
+	});
+});
+
+describe("kolommen", () => {
+	it("bouwt in de inbox evenveel cellen als er koppen zijn", async () => {
+		await laad([bericht()], { pad: "/moza/berichtenbox/", view: "inbox" });
+		const { koppen, cellen } = kolommen();
+		expect(cellen).toBe(koppen);
+	});
+
+	it("bouwt in het archief evenveel cellen als er koppen zijn", async () => {
+		const a = bericht();
+		await laad([a], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		const { koppen, cellen } = kolommen();
+		expect(cellen).toBe(koppen);
 	});
 });

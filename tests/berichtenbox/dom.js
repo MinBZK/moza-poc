@@ -3,21 +3,35 @@ import { vi } from "vitest";
 /**
  * Minimale berichtenbox-pagina voor de render-tests.
  *
- * Bevat alleen wat berichtenbox.js daadwerkelijk opzoekt: de lijst, de tellers, de meldingsblokken,
- * het voortgangsblok, het zoekveld en de paginanavigatie. De echte pagina staat in
- * `moza/berichtenbox.html`; wijkt die af, dan valt dat hier om als de selectors veranderen.
+ * Volgt de echte templates zo precies als de tests nodig hebben. Waar die van elkaar verschillen —
+ * de inbox pagineert en heeft een acties-kolom, archief en prullenbak niet — verschilt deze
+ * fixture mee: een test die op de inbox slaagt maar op archief zou breken, hoort hier ook te breken.
+ *
+ * De tbody wordt server-gerenderd gevuld, net als in `moza/berichtenbox.html`. Dat is de basis voor
+ * bezoekers zonder JavaScript, en het is precies wat de render-laag hoort te vervangen. Een lege
+ * tbody zou elke test over "de rijen komen uit de datalaag" vanzelf laten slagen.
  */
 
-export const BERICHTENBOX_HTML = `
-<article class="berichtenbox">
-<div class="berichtenbox-content">
-	<p class="metadata">
-		<b data-berichtenbox-counter-total>0</b> berichten uit
-		<b data-berichtenbox-sources>0</b>
-		<span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>,
-		<b data-berichtenbox-counter-unread>0</b> ongelezen
-	</p>
+const KOPPEN_INBOX = `
+			<tr>
+				<th class="berichtenbox-row-mark" scope="col"><span class="visually-hidden">Gemarkeerd</span></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="afzender">Afzender</button></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="onderwerp">Onderwerp</button></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="datum">Datum</button></th>
+				<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+				<th class="berichtenbox-actions-th" scope="col"><span class="visually-hidden">Acties</span></th>
+			</tr>`;
 
+const KOPPEN_OVERIG = `
+			<tr>
+				<th scope="col"><span class="visually-hidden">Gemarkeerd</span></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="afzender">Afzender</button></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="onderwerp">Onderwerp</button></th>
+				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="datum">Datum</button></th>
+				<th scope="col"><span class="visually-hidden">Bijlage</span></th>
+			</tr>`;
+
+const MELDINGEN = `
 	<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
 		<div>
 			<p>De <b>RDW</b> is momenteel niet bereikbaar. Berichten van overige overheidsorganisaties staan hieronder.</p>
@@ -27,17 +41,42 @@ export const BERICHTENBOX_HTML = `
 
 	<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 		<div>
-			<p data-geen-bronnen-tekst>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
+			<p>Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina of probeer het later opnieuw.</p>
 			<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 		</div>
-	</div>
+	</div>`;
 
-	<div class="feedback feedback-warning" hidden data-bron-uitval role="status">
-		<div>
-			<p data-bron-uitval-tekst><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden.</p>
-			<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
-		</div>
-	</div>
+/** Eén server-gerenderde rij, zoals `_includes/berichtenbox-row.njk` die opbouwt. */
+function serverRij(bericht) {
+	const ongelezen = bericht.isOngelezen ? " is-unread" : "";
+	return `
+				<tr class="berichtenbox-row${ongelezen}" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}">
+					<td class="berichtenbox-row-mark"><button type="button" class="mark-toggle" data-mark-toggle aria-pressed="false"><span class="visually-hidden">Markeren</span></button></td>
+					<td class="berichtenbox-row-sender">${bericht.afzender}</td>
+					<td class="berichtenbox-row-subject"><a href="/moza/berichtenbox/bericht/${bericht.id}/">${bericht.onderwerp}</a></td>
+					<td class="berichtenbox-row-date">${bericht.datum}</td>
+					<td class="berichtenbox-row-attachment"></td>
+					<td class="berichtenbox-row-actions"></td>
+				</tr>`;
+}
+
+function paginaHtml(berichten, view) {
+	const inbox = view === "inbox";
+	// Alleen de inbox server-rendert rijen; archief en prullenbak worden altijd door JS gevuld.
+	const rijen = inbox ? berichten.filter((b) => b && b.id).map(serverRij).join("") : "";
+	const lijstAttr = inbox ? ' data-page-size="10"' : ` data-berichtenbox-view="${view}"`;
+	const pagnav = inbox ? '\n\t<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>' : "";
+
+	return `
+<article class="berichtenbox">
+<div class="berichtenbox-content">
+	<p class="metadata">
+		<b data-berichtenbox-counter-total>0</b> berichten uit
+		<b data-berichtenbox-sources>0</b>
+		<span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>,
+		<b data-berichtenbox-counter-unread>0</b> ongelezen
+	</p>
+${MELDINGEN}
 
 	<div class="berichtenbox-search">
 		<label for="search-berichtenbox">Filter berichten</label>
@@ -57,27 +96,38 @@ export const BERICHTENBOX_HTML = `
 
 	<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
-	<!-- Zichtbaar in de HTML, net als in de echte templates: zonder JavaScript is archief werkelijk leeg. -->
-	<div class="feedback" data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
+	<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
 
-	<table data-berichtenbox-list data-page-size="10">
-		<thead>
-			<tr>
-				<th class="berichtenbox-row-mark" scope="col"><span class="visually-hidden">Gemarkeerd</span></th>
-				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="afzender">Afzender</button></th>
-				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="onderwerp">Onderwerp</button></th>
-				<th scope="col" aria-sort="none"><button class="berichtenbox-sort" type="button" data-sort="datum">Datum</button></th>
-				<th scope="col"><span class="visually-hidden">Bijlage</span></th>
-				<th class="berichtenbox-actions-th" scope="col"><span class="visually-hidden">Acties</span></th>
-			</tr>
+	<table data-berichtenbox-list${lijstAttr}>
+		<thead>${inbox ? KOPPEN_INBOX : KOPPEN_OVERIG}
 		</thead>
-		<tbody></tbody>
+		<tbody>${rijen}
+		</tbody>
 	</table>
-
-	<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>
+${pagnav}
 </div>
 </article>
 `;
+}
+
+// berichtenbox.js bindt gedelegeerde handlers op `document`. Die overleven het vervangen van
+// document.body, dus zonder opruimen stapelen ze zich op over herladingen heen: één klik werd dan
+// twee keer afgehandeld en een markering sloeg meteen weer om. Alleen zichtbaar in de tests —
+// een echte pagina laadt het script één keer — maar het maakt elke test na de eerste onbetrouwbaar.
+const documentListeners = [];
+const echteAddEventListener = document.addEventListener.bind(document);
+
+document.addEventListener = (type, handler, opties) => {
+	documentListeners.push([type, handler, opties]);
+	echteAddEventListener(type, handler, opties);
+};
+
+function ruimDocumentListenersOp() {
+	while (documentListeners.length) {
+		const [type, handler, opties] = documentListeners.pop();
+		document.removeEventListener(type, handler, opties);
+	}
+}
 
 let teller = 0;
 
@@ -99,12 +149,14 @@ export function bericht(over = {}) {
 }
 
 export function dataset(berichten) {
-	const magazijnIds = [...new Set(berichten.map((b) => b.magazijnId))];
+	const bruikbaar = berichten.filter((b) => b && b.magazijnId);
+	const magazijnIds = [...new Set(bruikbaar.map((b) => b.magazijnId))];
+
 	return {
 		berichten,
 		magazijnen: magazijnIds.map((id) => ({
 			id,
-			naam: berichten.find((b) => b.magazijnId === id).afzender,
+			naam: bruikbaar.find((b) => b.magazijnId === id).afzender,
 			type: "instantie",
 		})),
 		mappen: [{ naam: "Belastingen 2025", slug: "belastingen-2025" }],
@@ -119,14 +171,17 @@ export function dataset(berichten) {
  * voortgangsanimatie van het eerste bezoek de lijst niet vier seconden verborgen houdt; een test
  * die juist dát gedrag wil, zet hem expliciet op false.
  */
-export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", state = {} } = {}) {
-	document.body.innerHTML = BERICHTENBOX_HTML;
+export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", view = "inbox", state = {} } = {}) {
+	ruimDocumentListenersOp();
+	document.body.innerHTML = paginaHtml(berichten, view);
 	window.history.replaceState(null, "", pad);
 	window.berichtenboxData = dataset(berichten);
 	window.localStorage.clear();
 	window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true, ...state }));
 	return document;
 }
+
+let laadTeller = 0;
 
 /** Laadt berichtenbox.js opnieuw, zodat de IIFE tegen de zojuist gebouwde pagina draait. */
 export async function laadBerichtenbox() {
@@ -135,14 +190,14 @@ export async function laadBerichtenbox() {
 	await import("../../assets/javascript/berichtenbox.js?n=" + (laadTeller += 1));
 }
 
-let laadTeller = 0;
+/** Laat de microtask-wachtrij leeglopen, zodat het laden van de bron afgerond is. */
+export async function laatLaden() {
+	for (let i = 0; i < 10; i += 1) await Promise.resolve();
+	await new Promise((klaar) => setTimeout(klaar, 0));
+}
 
 export function rijen() {
 	return [...document.querySelectorAll(".berichtenbox-row")];
-}
-
-export function zichtbareRijen() {
-	return rijen().filter((rij) => !rij.hidden);
 }
 
 export function tekstVan(kiezer) {
@@ -150,8 +205,12 @@ export function tekstVan(kiezer) {
 	return el ? el.textContent.trim() : null;
 }
 
-/** Laat de microtask-wachtrij leeglopen, zodat het laden van de bron afgerond is. */
-export async function laatLaden() {
-	for (let i = 0; i < 10; i += 1) await Promise.resolve();
-	await new Promise((klaar) => setTimeout(klaar, 0));
+/** Koppen tegenover cellen, om te controleren dat een rij niet scheef staat. */
+export function kolommen() {
+	const lijst = document.querySelector("[data-berichtenbox-list]");
+	const eersteRij = document.querySelector(".berichtenbox-row");
+	return {
+		koppen: lijst.tHead.querySelectorAll("th").length,
+		cellen: eersteRij ? eersteRij.querySelectorAll("td").length : 0,
+	};
 }

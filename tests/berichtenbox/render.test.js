@@ -25,12 +25,25 @@ describe("berichtenbox.js — laden", () => {
 		expect(fouten).not.toHaveBeenCalled();
 	});
 
-	it("stopt netjes als de dataset ontbreekt", async () => {
-		bouwPagina([bericht()]);
+	it("stopt netjes als de dataset ontbreekt en laat de server-rijen staan", async () => {
+		// Ontbrekende dataset is een bouwfout, geen bezoekersfout. Het script stopt en laat staan wat
+		// Eleventy heeft gerenderd — precies wat een bezoeker zonder JavaScript ook ziet.
+		bouwPagina([bericht(), bericht()]);
 		delete window.berichtenboxData;
 		await laadBerichtenbox();
 		await laatLaden();
-		expect(rijen()).toHaveLength(0);
+		expect(rijen()).toHaveLength(2);
+		expect(fouten).toHaveBeenCalled();
+	});
+
+	it("vervangt de server-gerenderde rijen door die uit de datalaag", async () => {
+		bouwPagina([bericht({ onderwerp: "Van de server" })]);
+		const voor = rijen()[0];
+		await laadBerichtenbox();
+		await laatLaden();
+		// Zelfde bericht, andere rij: de datalaag heeft hem opnieuw opgebouwd.
+		expect(rijen()).toHaveLength(1);
+		expect(rijen()[0]).not.toBe(voor);
 	});
 });
 
