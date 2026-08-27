@@ -26,17 +26,45 @@ describe("maakState — inlezen", () => {
 		expect(state.ruw.eersteBezoekGehad).toBe(false);
 	});
 
-	it("valt terug op de default-state bij corrupte JSON, met een waarschuwing", () => {
-		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const state = maakState(nepOpslag({ [LS_KEY]: "{niet json" }));
+	it("meldt zich onleesbaar bij corrupte JSON, en weigert erover te schrijven", () => {
+		// Doorgaan met een lege state mag; hem wegschrijven niet. Dan is wat de bezoeker had
+		// gearchiveerd, weggegooid of in mappen gezet onherstelbaar weg in plaats van tijdelijk
+		// onbereikbaar.
+		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
+		const opslag = nepOpslag({ [LS_KEY]: "{niet json" });
+		const state = maakState(opslag);
+
 		expect(state.statusVan("msg-1")).toBe("inbox");
-		expect(waarschuwing).toHaveBeenCalled();
+		expect(state.onleesbaar).toBe(true);
+		expect(state.bewaar()).toBe(false);
+		expect(opslag._kluis[LS_KEY]).toBe("{niet json");
+		expect(fout).toHaveBeenCalled();
 	});
 
-	it("weigert een bewaarde array als state", () => {
-		vi.spyOn(console, "warn").mockImplementation(() => {});
-		const state = maakState(nepOpslag({ [LS_KEY]: "[1,2,3]" }));
+	it("weigert een bewaarde array als state, en schrijft er niet overheen", () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const opslag = nepOpslag({ [LS_KEY]: "[1,2,3]" });
+		const state = maakState(opslag);
+
 		expect(state.ruw.gelezen).toEqual({});
+		expect(state.onleesbaar).toBe(true);
+		state.bewaar();
+		expect(opslag._kluis[LS_KEY]).toBe("[1,2,3]");
+	});
+
+	it("noemt de reden waarom er niet bewaard kon worden", () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const vol = nepOpslag();
+		vol.setItem = () => { const e = new Error("vol"); e.name = "QuotaExceededError"; throw e; };
+		const state = maakState(vol);
+		state.bewaar();
+		expect(state.waaromNietBewaard()).toBe("vol");
+
+		const geweigerd = nepOpslag();
+		geweigerd.setItem = () => { const e = new Error("nee"); e.name = "SecurityError"; throw e; };
+		const tweede = maakState(geweigerd);
+		tweede.bewaar();
+		expect(tweede.waaromNietBewaard()).toBe("geweigerd");
 	});
 
 	it("normaliseert een sleutel die geen object is", () => {

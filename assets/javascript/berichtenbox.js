@@ -124,10 +124,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				}
 
 				// Er is niets bewaard. De knop mag dan niet doen alsof van wel: deze pagina heeft geen
-				// meldingsblok, dus de knop zelf is het enige dat de waarheid kan vertellen.
+				// meldingsblok, dus de knop zelf is het enige dat de waarheid kan vertellen. Niet
+				// blijvend uitschakelen — een volgende poging kan wel lukken.
 				toonMarkering(!aan);
-				knop.setAttribute('aria-disabled', 'true');
-				knop.title = 'Markeren werkt op dit moment niet.';
+				knop.title = 'Markeren lukte niet; uw browser bewaart op dit moment niets.';
 			});
 		});
 		return;
@@ -352,9 +352,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
 	function render(view) {
-		// Na een mislukte lading weten we niets. Nullen tonen zou de storingsmelding tegenspreken en
-		// via state.aantalOngelezen ook de badges op andere pagina's op nul zetten.
-		if (ladingMislukt) return;
+		// Staat er een storingsmelding, dan weten we niets over de aantallen. Ze alsnog schrijven
+		// zou die melding tegenspreken, en via state.aantalOngelezen ook de badges op andere
+		// pagina's een getal geven voor berichten die niemand kon zien.
+		if (ladingMislukt || laadfoutGetoond) return;
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
 		if (view === 'inbox') {
@@ -442,8 +443,11 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
 		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
 		if (staandeMeldingEigenaar !== 'opslag') {
+			const reden = stateModule.waaromNietBewaard();
 			toonPaginaMelding(
-				'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte voor.',
+				reden === 'vol'
+					? 'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.'
+					: 'Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.',
 				'storing',
 				'opslag'
 			);
@@ -958,7 +962,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
 		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan. Een eerder
 		// mislukte lading telt net zo hard: die lijst is leeg omdat er niets binnenkwam.
-		if (ladingMislukt || (gevonden.length > 0 && overgeslagen === gevonden.length)) {
+		if (ladingMislukt || (venster.items.length > 0 && overgeslagen === venster.items.length)) {
 			toonLaadfout();
 			return;
 		}
@@ -972,8 +976,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// demo-simulatie hem daarna alsnog verbergen, met een leeg scherm en geen woord tot gevolg.
 		herstelNaLaadfout();
 
+		// Niet naast de gesimuleerde "geen bronnen"-melding: die verklaart de lege lijst al, en twee
+		// verklaringen naast elkaar spreken elkaar tegen.
 		const leeg = document.querySelector('[data-berichtenbox-empty]');
-		if (leeg) leeg.hidden = gevonden.length > 0;
+		if (leeg) leeg.hidden = gevonden.length > 0 || bronOnbereikbaar();
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== 'inbox') lijst.hidden = gevonden.length === 0;
 
@@ -1319,6 +1325,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 					// dan de melding eronder.
 					if (opslaan(herstelLees)) werkOngelezenKnopBij(btn, wordtOngelezen);
 					render(huidigeView());
+					// Ná render: die berekent state.aantalOngelezen. Stil, want de wijziging zelf is
+					// hierboven al bewaard of al teruggedraaid.
+					opslaanStil();
 				} else if (actie === 'markeren') {
 					// Toggle markering; geen navigatie, blijf op het bericht.
 					const nu = !isGemarkeerd(berichtId, false);
@@ -1823,7 +1832,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll('th').length : 1;
 		td.colSpan = koppen || 1;
-		td.textContent = 'Dit bericht is niet te tonen. Ververs de pagina om het opnieuw te proberen.';
+		td.textContent = 'Wij kunnen dit bericht niet tonen. Ververs de pagina om het opnieuw te proberen.';
 		tr.appendChild(td);
 
 		return tr;
@@ -1861,7 +1870,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function naEersteLading() {
 		// Apart afgeschermd: op een detailpagina hangen hier de knoppen Archiveren en Verwijderen
 		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
-		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Dit bericht kan niet volledig worden getoond.' }, vulDemoDetailPagina);
+		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
 		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
 
 		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt) {
@@ -1988,6 +1997,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		if (lijst && huidigeView() === 'inbox') lijst.hidden = false;
 
 		verbergPaginaMelding('lading');
+
+		// De gesimuleerde meldingen mogen weer meedoen nu er een lijst staat.
+		werkBronWaarschuwingBij();
+		werkBronUitvalBij();
 	}
 
 	// Er is één meldingsslot per pagina. Een lichtere melding mag een zwaardere niet overschrijven:
@@ -2053,11 +2066,18 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
 	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
 	// aantoonbaar onwaar zolang we niet weten wát er is.
+	const SIMULATIE_MELDINGEN = [
+		'[data-bron-onbereikbaar]',
+		'[data-geen-bronnen]',
+		'[data-bron-uitval]',
+	];
+
 	const TELLERS_OP_DE_PAGINA = [
 		'[data-berichtenbox-counter-total]',
 		'[data-berichtenbox-sources]',
 		'[data-berichtenbox-counter-unread]',
 		'[data-berichtenbox-count="inbox"]',
+		'[data-berichtenbox-count="ongelezen"]',
 	];
 
 	function toonLaadfout() {
@@ -2069,6 +2089,13 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		TELLERS_OP_DE_PAGINA.forEach((kiezer) => {
 			const el = document.querySelector(kiezer);
 			if (el) el.textContent = '–';
+		});
+
+		// De gesimuleerde bronmeldingen gaan over een nagebootste situatie. "Berichten van overige
+		// organisaties staan hieronder" boven een lege tabel is onzin, en hun retry-knop lost niets op.
+		SIMULATIE_MELDINGEN.forEach((kiezer) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.hidden = true;
 		});
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		if (lijst) {
@@ -2084,6 +2111,14 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		if (pagnav) pagnav.hidden = true;
 
 		toonPaginaMelding('Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.', 'storing', 'lading');
+	}
+
+	if (stateModule.onleesbaar) {
+		toonPaginaMelding(
+			'Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.',
+			'storing',
+			'opslag'
+		);
 	}
 
 	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
@@ -2115,7 +2150,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
 			});
 			if (storingen.length) {
-				toonPaginaMelding('Niet alle bronnen konden worden bereikt. Er ontbreken mogelijk berichten.');
+				toonPaginaMelding('Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.');
 			}
 		})
 		.catch((fout) => {

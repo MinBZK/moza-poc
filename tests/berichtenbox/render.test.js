@@ -224,7 +224,7 @@ describe("berichtenbox.js — als er niets te tonen valt", () => {
 		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		const gat = document.querySelector(".is-unreadable");
 		expect(gat).not.toBe(null);
-		expect(gat.textContent).toContain("niet te tonen");
+		expect(gat.textContent).toContain("kunnen dit bericht niet tonen");
 		// Twee berichten geteld, twee rijen op het scherm: de een is een gat, maar geen leugen.
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("2");
 		expect(rijen()).toHaveLength(2);
@@ -468,5 +468,61 @@ describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
 		// geloven en de zin voor een detail aanzien.
 		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("3");
 		expect(tekstVan("[data-berichtenbox-count=\"inbox\"]")).not.toBe("3");
+	});
+});
+
+describe("berichtenbox.js — het pictogram past bij de melding", () => {
+	function icoon(soort) {
+		return document.querySelector('[data-berichtenbox-storing] [data-icoon="' + soort + '"]');
+	}
+
+	it("toont het storingspictogram bij een storing", async () => {
+		bouwPagina([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(icoon("storing").style.display).not.toBe("none");
+		expect(icoon("info").style.display).toBe("none");
+	});
+
+	it("toont het informatiepictogram bij een mededeling", async () => {
+		vi.useFakeTimers();
+		bouwPagina([bericht()]);
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		window.history.replaceState(null, "", "/moza/berichtenbox/?poll=5");
+		await laadBerichtenbox();
+		await vi.advanceTimersByTimeAsync(0);
+
+		// Tikken tot de limiet bereikt is; dan meldt de bron dat de demo klaar is.
+		await vi.advanceTimersByTimeAsync(5000 * 8);
+
+		const melding = document.querySelector("[data-berichtenbox-storing]");
+		expect(melding.hidden).toBe(false);
+		expect(melding.textContent).toContain("demo-berichten");
+		// Een wit kruis op een blauwe schijf is wat je krijgt als alleen de kleur wisselt.
+		expect(icoon("info").style.display).not.toBe("none");
+		expect(icoon("storing").style.display).toBe("none");
+	});
+});
+
+describe("berichtenbox.js — de storingsdrempel geldt per pagina", () => {
+	it("meldt een storing ook als de lijst langer is dan één pagina", async () => {
+		// data-page-size is 10. Met 25 onrenderbare berichten paste de oude vergelijking
+		// (overgeslagen === gevonden.length) nooit, dus kreeg de bezoeker tien gat-rijen,
+		// een teller van 25 en werkende paginanavigatie — zonder één woord over de storing.
+		const kapot = Array.from({ length: 25 }, () =>
+			Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
+				get() { throw new Error("niet te lezen"); },
+			})
+		);
+		bouwPagina([bericht()]);
+		window.berichtenboxData.berichten = kapot;
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-pagination]").hidden).toBe(true);
 	});
 });

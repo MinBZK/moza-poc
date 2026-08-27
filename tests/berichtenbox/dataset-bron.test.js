@@ -114,7 +114,7 @@ describe("datasetBron — binnendruppelende berichten", () => {
 		const meldStoring = vi.fn();
 		datasetBron(DATA, { state: nepState(), limiet: 5, meldStoring }).start(() => [new Error("niet te tonen")]);
 		vi.advanceTimersByTime(5000);
-		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden getoond"));
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet tonen"));
 		vi.useRealTimers();
 	});
 
@@ -224,7 +224,7 @@ describe("datasetBron — als er niets bewaard kan worden", () => {
 
 		expect(meld).not.toHaveBeenCalled();
 		expect(state.ruw.nieuweBerichten).toHaveLength(0);
-		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden bewaard"));
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet bewaren"));
 		vi.useRealTimers();
 	});
 
@@ -237,6 +237,6 @@ describe("datasetBron — als er niets bewaard kan worden", () => {
 		await datasetBron(DATA, { state, meldStoring }).laad();
 
 		expect(state.ruw.nieuweBerichten).toHaveLength(1);
-		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden opgeruimd"), "info");
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet opruimen"), "info");
 	});
 });

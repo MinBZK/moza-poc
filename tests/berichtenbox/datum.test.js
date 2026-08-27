@@ -14,9 +14,13 @@ describe("datumNL", () => {
 		expect(datumNL("2026-03-01")).toBe("1 maart 2026");
 	});
 
-	it("verschuift niet over een tijdzonegrens", () => {
-		// Met new Date("2026-03-01") zou dit in een westelijke tijdzone 28 februari worden.
+	it("leest dag, maand en jaar uit de tekst", () => {
+		// new Date("2026-03-01") leest een kale datum als UTC; in een westelijke tijdzone wordt dat
+		// 28 februari. Deze test kan dat op een Europese machine niet aantonen — hij legt vast dat
+		// de uitvoer letterlijk de invoer volgt, ook op de randen van het jaar.
+		expect(datumNL("2026-01-01")).toBe("1 januari 2026");
 		expect(datumNL("2026-03-01")).toBe("1 maart 2026");
+		expect(datumNL("2026-12-31")).toBe("31 december 2026");
 	});
 
 	it("laat een lege datum leeg", () => {

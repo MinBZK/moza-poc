@@ -66,7 +66,7 @@ function opschonen(berichten) {
 function lees(opslag) {
 	try {
 		const rauw = opslag.getItem(LS_KEY);
-		if (!rauw) return defaults();
+		if (!rauw) return { waarden: defaults(), onleesbaar: false };
 
 		const ontleed = JSON.parse(rauw);
 		if (!ontleed || typeof ontleed !== "object" || Array.isArray(ontleed)) {
@@ -86,10 +86,13 @@ function lees(opslag) {
 			if (!waarde || typeof waarde !== "object" || Array.isArray(waarde)) samen[sleutel] = {};
 		});
 
-		return samen;
+		return { waarden: samen, onleesbaar: false };
 	} catch (fout) {
-		console.warn("[Berichtenbox] State corrupt of niet toegankelijk; terugvallen op default.", fout);
-		return defaults();
+		// Onleesbaar is iets anders dan leeg. Doorgaan met een lege state mag, maar hem wegschrijven
+		// niet: dan is wat de bezoeker had gearchiveerd, weggegooid of in mappen gezet onherstelbaar
+		// verdwenen in plaats van tijdelijk onbereikbaar.
+		console.error("[Berichtenbox] Bewaarde state onleesbaar; er wordt niets overheen geschreven.", fout);
+		return { waarden: defaults(), onleesbaar: true };
 	}
 }
 
@@ -101,10 +104,21 @@ function lees(opslag) {
  * bron vaststaat.
  */
 export function maakState(opslag) {
-	const ruw = lees(opslag);
+	// Waarom het bewaren de laatste keer misging: "vol" of "geweigerd" (privénavigatie, opslag uit).
+	let laatsteFout = null;
+
+	const { waarden: ruw, onleesbaar } = lees(opslag);
 
 	return {
 		ruw,
+
+		/** Er stond iets, maar het was niet te lezen. De aanroeper hoort dat te melden. */
+		onleesbaar,
+
+		/** "vol" of "geweigerd", of null als bewaren nog niet misging. */
+		waaromNietBewaard() {
+			return onleesbaar ? "onleesbaar" : laatsteFout;
+		},
 
 		statusVan(berichtId) {
 			if (ruw.verwijderd[berichtId]) return "prullenbak";
@@ -147,6 +161,9 @@ export function maakState(opslag) {
 
 		/** Geeft terug of het bewaren lukte. */
 		bewaar() {
+			// Overschrijven maakt van "niet te lezen" onherstelbaar "weg".
+			if (onleesbaar) return false;
+
 			if (ruw.nieuweBerichten.length > NIEUWE_BERICHTEN_LIMIET) {
 				ruw.nieuweBerichten = ruw.nieuweBerichten.slice(-NIEUWE_BERICHTEN_LIMIET);
 			}
@@ -154,10 +171,12 @@ export function maakState(opslag) {
 				opslag.setItem(LS_KEY, JSON.stringify(ruw));
 				return true;
 			} catch (fout) {
-				// QuotaExceededError of SecurityError (Safari private mode). De demo draait door, maar
-				// de aanroeper moet weten dat er niets bewaard is: anders ziet de bezoeker een rij
-				// verdwijnen die na het verversen gewoon weer terugstaat.
+				// De aanroeper moet weten dat er niets bewaard is: anders ziet de bezoeker een rij
+				// verdwijnen die na het verversen gewoon weer terugstaat. En wát er misging scheelt
+				// voor wat hij eraan kan doen — ruimte vrijmaken kan, privénavigatie uitzetten ook,
+				// maar het advies moet wel bij de oorzaak passen.
 				console.error("[Berichtenbox] Kon state niet opslaan.", fout);
+				laatsteFout = fout && fout.name === "QuotaExceededError" ? "vol" : "geweigerd";
 				return false;
 			}
 		},

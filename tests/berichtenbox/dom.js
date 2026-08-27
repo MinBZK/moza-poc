@@ -48,8 +48,11 @@ const MELDINGEN_INBOX = `
 	</div>`;
 
 // Het blok voor een echte storing staat op elke berichtenbox-pagina.
+// Twee pictogrammen, in dezelfde volgorde als de templates: berichtenbox.js wisselt ze om.
 const STORING = `
 	<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+		<svg data-icoon="storing"><circle cx="12" cy="12" r="10.5" /></svg>
+		<svg data-icoon="info"><path d="M0 0h1v1H0z" /></svg>
 		<div><p data-berichtenbox-storing-tekst></p></div>
 	</div>`;
 

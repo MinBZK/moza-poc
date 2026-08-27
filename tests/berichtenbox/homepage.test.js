@@ -87,6 +87,8 @@ describe("markeren buiten de berichtenbox", () => {
 		knop.click();
 		// Deze pagina heeft geen meldingsblok; de knop zelf is het enige dat de waarheid kan vertellen.
 		expect(knop.classList.contains("is-marked")).toBe(false);
-		expect(knop.getAttribute("aria-disabled")).toBe("true");
+		// Niet blijvend uitschakelen: een volgende poging kan wel lukken.
+		expect(knop.getAttribute("aria-disabled")).toBe(null);
+		expect(knop.title).toContain("bewaart op dit moment niets");
 	});
 });

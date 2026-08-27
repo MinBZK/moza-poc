@@ -141,7 +141,7 @@ describe("kolommen", () => {
 });
 
 describe("meldingen horen bij de juiste weergave", () => {
-	it("toont de gesimuleerde bronwaarschuwing niet op het archief", async () => {
+	it("toont op het archief geen storing van de gesimuleerde bronuitval", async () => {
 		// unhappy-flow aan: op de inbox mag die melding, op het archief niet — dat toont wat de
 		// bezoeker zelf heeft weggezet en heeft niets met ophalen te maken.
 		const a = bericht();
@@ -151,6 +151,9 @@ describe("meldingen horen bij de juiste weergave", () => {
 			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
 		});
 		document.cookie = "unhappy-flow=true";
+		// Het scenario wordt willekeurig gekozen; alleen "geen" blokkeert élk magazijn en zou de
+		// regressie zichtbaar maken. Zonder vastzetten vangt deze test hem in één op de drie runs.
+		vi.spyOn(Math, "random").mockReturnValue(0);
 		await laadBerichtenbox();
 		await laatLaden();
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
