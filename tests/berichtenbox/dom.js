@@ -31,7 +31,8 @@ const KOPPEN_OVERIG = `
 				<th scope="col"><span class="visually-hidden">Bijlage</span></th>
 			</tr>`;
 
-const MELDINGEN = `
+// Alleen de inbox heeft de blokken van de gesimuleerde bronuitval; archief en prullenbak niet.
+const MELDINGEN_INBOX = `
 	<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
 		<div>
 			<p>De <b>RDW</b> is momenteel niet bereikbaar. Berichten van overige overheidsorganisaties staan hieronder.</p>
@@ -41,9 +42,15 @@ const MELDINGEN = `
 
 	<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 		<div>
-			<p>Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina of probeer het later opnieuw.</p>
+			<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
 			<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 		</div>
+	</div>`;
+
+// Het blok voor een echte storing staat op elke berichtenbox-pagina.
+const STORING = `
+	<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+		<div><p data-berichtenbox-storing-tekst></p></div>
 	</div>`;
 
 /** Eén server-gerenderde rij, zoals `_includes/berichtenbox-row.njk` die opbouwt. */
@@ -76,7 +83,8 @@ function paginaHtml(berichten, view) {
 		<span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>,
 		<b data-berichtenbox-counter-unread>0</b> ongelezen
 	</p>
-${MELDINGEN}
+${inbox ? MELDINGEN_INBOX : ""}
+${STORING}
 
 	<div class="berichtenbox-search">
 		<label for="search-berichtenbox">Filter berichten</label>
@@ -94,7 +102,7 @@ ${MELDINGEN}
 		<div class="progress-bar"><div class="progress-bar-fill" data-berichtenbox-progress-bar></div></div>
 	</div>
 
-	<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
+	${inbox ? '<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>' : ""}
 
 	<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
 

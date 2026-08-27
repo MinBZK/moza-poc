@@ -35,6 +35,24 @@ describe("maakRegister — kiezen", () => {
 		expect(fout).toHaveBeenCalled();
 	});
 
+	it("bewaart welke bron omviel, zodat de aanroeper het kan tonen", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const register = maakRegister();
+		register.registreer({ naam: "stuk", geldtVoor: async () => { throw new Error("plat"); }, laad: async () => LEEG });
+		register.registreer(nepBron("dataset", true));
+		await register.kies(null);
+		expect(register.storingen()).toEqual([
+			{ bron: "stuk", fase: "geldtVoor", fout: expect.any(Error) },
+		]);
+	});
+
+	it("heeft geen storingen te melden als alles goed gaat", async () => {
+		const register = maakRegister();
+		register.registreer(nepBron("dataset", true));
+		await register.kies(null);
+		expect(register.storingen()).toEqual([]);
+	});
+
 	it("geeft null als geen enkele bron van toepassing is", async () => {
 		const register = maakRegister();
 		register.registreer(nepBron("keten", false));

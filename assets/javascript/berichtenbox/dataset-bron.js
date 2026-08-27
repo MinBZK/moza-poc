@@ -47,7 +47,7 @@ function tussenpoos() {
  * @param opties { state, limiet, magOphalen } — `state` om binnengekomen berichten te bewaren,
  *               `magOphalen` om te bepalen of polling op deze pagina zinnig is.
  */
-export function datasetBron(data, { state, limiet = 5, magOphalen = () => true } = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = () => {} } = {}) {
 	let teller = 0;
 
 	function nieuwBericht(magazijnen) {
@@ -115,13 +115,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 		start(meld) {
 			// De vlag staat aan omdat iemand wil zien dat er berichten binnenkomen. Gebeurt dat niet
 			// meer, dan hoort dat gezegd te worden en niet alleen in de console te staan.
-			// Buiten een pagina — een test, een script — is er geen live-regio; dan is de console het
-			// enige kanaal en dat is hier voldoende.
-			const meldStilstand = (tekst) => {
-				if (typeof document === "undefined") return;
-				const live = document.querySelector("[data-berichtenbox-live]");
-				if (live) live.textContent = tekst;
-			};
+			// De render-laag beslist waar dit terechtkomt; deze module kent de pagina niet.
+			const meldStilstand = meldStoring;
 
 			if (!dynamischeBerichtenAan()) return;
 			if (!magOphalen()) return;

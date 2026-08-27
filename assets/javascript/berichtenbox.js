@@ -9,7 +9,7 @@
  */
 
 import { datumNL } from "./berichtenbox/datum.js";
-import { maakState, NIEUWE_BERICHTEN_LIMIET } from "./berichtenbox/state.js";
+import { maakState, NIEUWE_BERICHTEN_LIMIET, LS_KEY as STATE_SLEUTEL } from "./berichtenbox/state.js";
 import { maakRegister } from "./berichtenbox/bron.js";
 import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lijst.js";
 import { datasetBron } from "./berichtenbox/dataset-bron.js";
@@ -144,12 +144,14 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			: '/moza/berichtenbox/';
 	}
 
-	const LS_KEY = "berichtenbox";
+	// Dezelfde sleutel als de state-module. Het pre-guard-blok hierboven draait vóór `data` bestaat
+	// en houdt daarom zijn eigen letterlijke sleutel.
+	const LS_KEY = STATE_SLEUTEL;
 
 	// De state komt uit berichtenbox/state.js: één plek voor wat de bezoeker met zijn berichten
 	// heeft gedaan. `state` blijft de rauwe vorm, want er wordt op tientallen plekken rechtstreeks
 	// in geschreven; die schrijfacties lopen nog steeds via opslaan().
-	const stateModule = maakState(localStorage, data.magazijnen.map((m) => m.id));
+	const stateModule = maakState(localStorage);
 	const state = stateModule.ruw;
 	const statusVan = (berichtId) => stateModule.statusVan(berichtId);
 	const isOngelezen = (id, origineel) => stateModule.isOngelezen(id, origineel);
@@ -362,7 +364,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			if (!el) return;
 			const n = data.berichten.filter((b) => {
 				if (statusVan(b.id) !== 'inbox') return false;
-				const effMap = (b.id in state.mapOverride) ? state.mapOverride[b.id] : b.map;
+				const effMap = mapVan(b.id, b.map);
 				return effMap === m.slug;
 			}).length;
 			el.textContent = n;
@@ -386,7 +388,13 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 
 	function opslaan() {
-		stateModule.bewaar();
+		if (stateModule.bewaar()) return true;
+
+		if (!opslagGemeld) {
+			opslagGemeld = true;
+			toonPaginaMelding('Uw wijziging is niet bewaard; uw browser heeft er geen ruimte voor. Na het verversen van de pagina staat het bericht er weer.');
+		}
+		return false;
 	}
 
 	// ---- Client-side paginering ----
@@ -412,6 +420,14 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// De rij die bij de laatste bronwijziging binnenkwam, zodat createRij die kan laten invaden.
 	let zojuistBinnengekomenId = null;
+
+	// Er staat een storingsmelding op het scherm; de gesimuleerde unhappy flow mag die niet wegpoetsen.
+	let laadfoutGetoond = false;
+	// De lading zelf is mislukt. Blijft staan tot een herlaad: niets op deze pagina kan de berichten
+	// alsnog binnenhalen, dus geen enkele latere render mag doen alsof er wél iets te zien is.
+	let ladingMislukt = false;
+	// Eén melding over mislukt opslaan volstaat; bij elke klik opnieuw is geblaf.
+	let opslagGemeld = false;
 
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
@@ -725,7 +741,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function createRij(bericht) {
 		const ongelezen = isOngelezen(bericht.id, bericht.isOngelezen);
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
-		const effMap = mapVan(bericht.id, bericht.map);
 		const dynamisch = bericht.id.startsWith('msg-live-');
 		// Alleen de rij die zojuist binnenkwam krijgt de fade-in; bij een volgende render is het
 		// geen nieuw bericht meer.
@@ -738,7 +753,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			+ (zojuistBinnen ? ' is-new' : '');
 		tr.dataset.berichtId = bericht.id;
 		tr.dataset.afzenderId = bericht.magazijnId;
-		if (effMap) tr.dataset.map = effMap;
 
 		const tdMark = document.createElement('td');
 		tdMark.className = 'berichtenbox-row-mark';
@@ -859,8 +873,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const overgeslagen = rendersLijst(venster.items);
 
 		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
-		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan.
-		if (venster.items.length > 0 && overgeslagen === venster.items.length) {
+		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan. Een eerder
+		// mislukte lading telt net zo hard: die lijst is leeg omdat er niets binnenkwam.
+		if (ladingMislukt || (venster.items.length > 0 && overgeslagen === venster.items.length)) {
 			toonLaadfout();
 			return;
 		}
@@ -917,6 +932,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// progress-animatie tonen); berichtenbox.js stuurt de zichtbaarheid zelf,
 	// zodat de melding pas ná het ophalen bij de bronnen verschijnt.
 	function werkBronWaarschuwingBij() {
+		// De gesimuleerde uitval gaat over wat er binnenkomt; archief en prullenbak tonen wat de
+		// bezoeker zelf heeft weggezet en hebben er niets mee te maken.
+		if (huidigeView() !== 'inbox') return;
 		if (laadfoutGetoond) return;
 		const een = document.querySelector('[data-bron-onbereikbaar]');
 		const geen = document.querySelector('[data-geen-bronnen]');
@@ -1038,7 +1056,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 
 		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het
-		// scherm, en toonBerichten leest het zoekveld en de vinkjes zelf uit.
+		// scherm, en toonBerichten leest het zoekveld zelf uit.
 		const pasFilterToe = toonBerichten;
 
 		// Een nieuw filter zet de weergave terug naar pagina 1.
@@ -1614,7 +1632,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll('th').length : 1;
 		td.colSpan = koppen || 1;
-		td.textContent = 'Dit bericht kon niet worden getoond.';
+		td.textContent = 'Dit bericht is niet te tonen. Ververs de pagina om het opnieuw te proberen.';
 		tr.appendChild(td);
 
 		return tr;
@@ -1630,12 +1648,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
 	function startDemoGedrag() {
-		veilig('Opstarten van de lijstfuncties', () => {
-			toonMappenZijbalk();
-			bindInboxFilters();
-			werkBronWaarschuwingBij();
-			plannBronUitval();
-		});
+		veilig('De mappen-zijbalk', toonMappenZijbalk);
+		veilig('Het filteren van de lijst', bindInboxFilters);
+		veilig('De bronwaarschuwing', werkBronWaarschuwingBij);
+		veilig('De gesimuleerde bronuitval', plannBronUitval);
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
@@ -1647,8 +1663,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			doen();
 		} catch (fout) {
 			console.error('[Berichtenbox] ' + wat + ' mislukte.', fout);
-			const live = document.querySelector('[data-berichtenbox-live]');
-			if (live) live.textContent = 'Niet alles op deze pagina werkt. Ververs de pagina.';
+			toonPaginaMelding(wat + ' is mislukt. Ververs de pagina om het opnieuw te proberen.');
 		}
 	}
 
@@ -1658,7 +1673,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		veilig('Vullen van de detailpagina', vulDemoDetailPagina);
 		veilig('Binden van de acties op de detailpagina', bindDetailPaginaActies);
 
-		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt) {
 			veilig('De voortgangsanimatie', () => {
 				voortgangsAnimatie(() => {
 					state.eersteBezoekGehad = true;
@@ -1678,6 +1693,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	register.registreer(datasetBron(window.berichtenboxData, {
 		state: stateModule,
 		limiet: NIEUWE_BERICHTEN_LIMIET,
+		meldStoring: toonPaginaMelding,
 		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 		// onzichtbaar of misleidend.
 		magOphalen: () => huidigeView() === 'inbox'
@@ -1689,9 +1705,17 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// bericht, dan blijft de vorige weergave staan in plaats van een halve nieuwe — en de melding
 	// hieronder vertelt de bezoeker dat er iets misging.
 	register.opWijziging((inhoud) => {
-		const volgende = inhoud.nieuwBericht
+		// Lege plekken er hier uit, één keer: filterBerichten en state houden er rekening mee dat ze
+		// voorkomen, render() niet — en één null zou anders alle andere berichten meenemen. Alleen
+		// écht lege plekken; een bericht met een onbruikbaar id gaat door naar createRij, die er een
+		// zichtbaar gat van maakt in plaats van het stil te laten verdwijnen.
+		const rauw = inhoud.nieuwBericht
 			? [inhoud.nieuwBericht, ...data.berichten]
 			: inhoud.berichten;
+		const volgende = rauw.filter((bericht) => !!bericht);
+		if (volgende.length < rauw.length) {
+			console.error('[Berichtenbox] ' + (rauw.length - volgende.length) + ' lege plek(ken) in de berichtenlijst overgeslagen.');
+		}
 
 		// Alles wat we straks moeten kunnen terugdraaien, in één keer vastgelegd — vóór er iets
 		// verandert. Een halve weergave naast een volledig bijgewerkte `data` is van een geslaagde
@@ -1751,10 +1775,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// Staat er een echte storingsmelding? Dan mag de gesimuleerde unhappy flow die niet wegpoetsen:
 	// die gaat over een nagebootste bron, en de bezoeker zou de gegenereerde dataset voor zijn post
 	// aanzien.
-	let laadfoutGetoond = false;
-	// Blijft staan tot een nieuwe lading slaagt. Zonder dit haalde de eerstvolgende render met een
-	// lege lijst de melding weg, en stond de bezoeker voor een leeg scherm zonder uitleg.
-	let ladingMislukt = false;
 
 	// Draait toonLaadfout terug zodra er weer iets te zien is. Zonder dit bleef de tabel verborgen
 	// achter een melding die niemand meer weghaalde.
@@ -1766,11 +1786,27 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		if (lijst && huidigeView() === 'inbox') lijst.hidden = false;
 
-		const melding = document.querySelector('[data-geen-bronnen]');
-		if (melding) melding.hidden = true;
+		verbergPaginaMelding();
+	}
 
-		// De gesimuleerde unhappy flow mag dit blok weer sturen.
-		werkBronWaarschuwingBij();
+	function toonPaginaMelding(tekst) {
+		const live = document.querySelector('[data-berichtenbox-live]');
+		if (live) live.textContent = tekst;
+
+		const blok = document.querySelector('[data-berichtenbox-storing]');
+		if (!blok) {
+			if (!live) console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
+			return;
+		}
+
+		const slot = blok.querySelector('[data-berichtenbox-storing-tekst]');
+		if (slot) slot.textContent = tekst;
+		blok.hidden = false;
+	}
+
+	function verbergPaginaMelding() {
+		const blok = document.querySelector('[data-berichtenbox-storing]');
+		if (blok) blok.hidden = true;
 	}
 
 	function toonLaadfout() {
@@ -1788,18 +1824,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
 		if (pagnav) pagnav.hidden = true;
 
-		const melding = document.querySelector('[data-geen-bronnen]');
-		if (!melding) {
-			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; de storing blijft onzichtbaar.');
-			return;
-		}
-
-		melding.hidden = false;
-
-		// De knop in dit blok hoort bij de gesimuleerde bronuitval en zet die terug; een echte
-		// lading probeert hij niet opnieuw. Hem tonen zou een herstel beloven dat niet komt.
-		const retry = melding.querySelector('[data-bron-retry]');
-		if (retry && retry.parentElement) retry.parentElement.hidden = true;
+		toonPaginaMelding('Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.');
 	}
 
 	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
@@ -1826,9 +1851,13 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			// bedoeld. Er is nu maar één bron, dus dit kan nog niet gebeuren; zodra er een tweede
 			// bij komt hoort hier een eigen melding. Het bestaande waarschuwingsblok hergebruiken
 			// kan niet: dat noemt bij naam een organisatie die er niets mee te maken heeft.
-			register.storingen().forEach((storing) => {
+			const storingen = register.storingen();
+			storingen.forEach((storing) => {
 				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
 			});
+			if (storingen.length) {
+				toonPaginaMelding('Niet alle bronnen konden worden bereikt. Er ontbreken mogelijk berichten.');
+			}
 		})
 		.catch((fout) => {
 			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
@@ -1853,11 +1882,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 					const mislukt = register.meld(wijziging);
 					// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
 					// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
-					// vorige weergave al hersteld; hier alleen nog zeggen wat er misging.
-					if (mislukt.length) {
-						const live = document.querySelector('[data-berichtenbox-live]');
-						if (live) live.textContent = 'Een nieuw bericht kon niet worden getoond.';
-					}
+					// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
 					return mislukt;
 				});
 			}

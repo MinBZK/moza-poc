@@ -20,10 +20,12 @@ title: "MijnOverheid Zakelijk: Berichtenbox — Prullenbak"
 		<section role="tabpanel" id="berichtenbox-prullebak" aria-labelledby="tab-berichtenbox-prullebak">
 			<section class="berichtenbox-content">
 				<p class="metadata"><span data-berichtenbox-counter-total>0</span> verwijderde berichten</p>
-				<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
+				</div>
+
+				<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
 					{% include "icon-feedback-error.njk" %}
 					<div>
-						<p>Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina of probeer het later opnieuw.</p>
+						<p data-berichtenbox-storing-tekst></p>
 					</div>
 				</div>
 

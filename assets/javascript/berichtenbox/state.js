@@ -49,28 +49,17 @@ function defaults() {
  * Houdt alleen bewaarde berichten over waarvan het magazijn nog bestaat. Stil weggooien zou een
  * berichtenbox opleveren die er compleet uitziet terwijl er berichten missen.
  */
-function beperk(berichten, bekendeMagazijnIds) {
-	const bekend = new Set(bekendeMagazijnIds);
-
-	// Drie oorzaken, drie meldingen. Ze op één hoop gooien stuurt wie de console leest achter een
-	// ontbrekend magazijn aan terwijl het om een afkapping ging.
+/** Vorm en aantal: wat er sowieso niet in hoort, ongeacht welke bron er straks gekozen wordt. */
+function opschonen(berichten) {
 	const bruikbaar = berichten.filter((bericht) => !!bericht);
 	if (bruikbaar.length < berichten.length) {
 		console.warn("[Berichtenbox] " + (berichten.length - bruikbaar.length) + " lege plek(ken) in de bewaarde berichten overgeslagen.");
 	}
 
-	const vanBekendMagazijn = bruikbaar.filter((bericht) => bekend.has(bericht.magazijnId));
-	if (vanBekendMagazijn.length < bruikbaar.length) {
+	const over = bruikbaar.slice(-NIEUWE_BERICHTEN_LIMIET);
+	if (over.length < bruikbaar.length) {
 		console.warn(
-			"[Berichtenbox] " + (bruikbaar.length - vanBekendMagazijn.length) +
-			" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
-		);
-	}
-
-	const over = vanBekendMagazijn.slice(-NIEUWE_BERICHTEN_LIMIET);
-	if (over.length < vanBekendMagazijn.length) {
-		console.warn(
-			"[Berichtenbox] " + (vanBekendMagazijn.length - over.length) +
+			"[Berichtenbox] " + (bruikbaar.length - over.length) +
 			" bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten."
 		);
 	}
@@ -78,7 +67,7 @@ function beperk(berichten, bekendeMagazijnIds) {
 	return over;
 }
 
-function lees(opslag, bekendeMagazijnIds) {
+function lees(opslag) {
 	try {
 		const rauw = opslag.getItem(LS_KEY);
 		if (!rauw) return defaults();
@@ -93,7 +82,7 @@ function lees(opslag, bekendeMagazijnIds) {
 		// Normaliseer types, zodat opslaan en renderen niet kunnen struikelen over een sleutel die
 		// door een oudere versie of met de hand een andere vorm heeft gekregen.
 		if (!Array.isArray(samen.nieuweBerichten)) samen.nieuweBerichten = [];
-		samen.nieuweBerichten = beperk(samen.nieuweBerichten, bekendeMagazijnIds);
+		samen.nieuweBerichten = opschonen(samen.nieuweBerichten);
 
 		if (!Array.isArray(samen.eigenMappen)) samen.eigenMappen = [];
 		SLEUTELS_MET_OBJECT.forEach((sleutel) => {
@@ -110,11 +99,13 @@ function lees(opslag, bekendeMagazijnIds) {
 
 /**
  * @param opslag  Iets met getItem/setItem — in de browser `localStorage`.
- * @param bekendeMagazijnIds  De magazijnen die de actieve bron kent. Berichten van een magazijn
- *        dat er niet meer is, horen niet uit de opslag terug te komen.
+ *
+ * Filtert bewust nog niet op magazijn: bij het inlezen is nog niet bekend welke bron gekozen wordt,
+ * en wegfilteren tegen de verkeerde lijst is onomkeerbaar. Dat gebeurt in `beperkTot`, zodra de
+ * bron vaststaat.
  */
-export function maakState(opslag, bekendeMagazijnIds = []) {
-	const ruw = lees(opslag, bekendeMagazijnIds);
+export function maakState(opslag) {
+	const ruw = lees(opslag);
 
 	return {
 		ruw,
@@ -142,23 +133,36 @@ export function maakState(opslag, bekendeMagazijnIds = []) {
 		},
 
 		/**
-		 * De magazijnen van de actieve bron. Bij het inlezen is nog niet bekend welke bron het wordt,
-		 * dus zodra dat vaststaat wordt de lijst met bewaarde berichten hier opnieuw beperkt.
+		 * De magazijnen van de actieve bron. Berichten van een magazijn dat die bron niet kent,
+		 * horen niet op het scherm en dus ook niet in de bewaarde lijst.
 		 */
 		beperkTot(bekendeMagazijnIds) {
-			ruw.nieuweBerichten = beperk(ruw.nieuweBerichten, bekendeMagazijnIds);
+			const bekend = new Set(bekendeMagazijnIds);
+			const voor = ruw.nieuweBerichten.length;
+			ruw.nieuweBerichten = ruw.nieuweBerichten.filter((bericht) => bekend.has(bericht.magazijnId));
+
+			if (ruw.nieuweBerichten.length < voor) {
+				console.warn(
+					"[Berichtenbox] " + (voor - ruw.nieuweBerichten.length) +
+					" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
+				);
+			}
 		},
 
+		/** Geeft terug of het bewaren lukte. */
 		bewaar() {
 			if (ruw.nieuweBerichten.length > NIEUWE_BERICHTEN_LIMIET) {
 				ruw.nieuweBerichten = ruw.nieuweBerichten.slice(-NIEUWE_BERICHTEN_LIMIET);
 			}
 			try {
 				opslag.setItem(LS_KEY, JSON.stringify(ruw));
+				return true;
 			} catch (fout) {
-				// QuotaExceededError of SecurityError (Safari private mode): de demo mag doordraaien,
-				// alleen onthoudt hij deze sessie niets.
+				// QuotaExceededError of SecurityError (Safari private mode). De demo draait door, maar
+				// de aanroeper moet weten dat er niets bewaard is: anders ziet de bezoeker een rij
+				// verdwijnen die na het verversen gewoon weer terugstaat.
 				console.error("[Berichtenbox] Kon state niet opslaan.", fout);
+				return false;
 			}
 		},
 	};

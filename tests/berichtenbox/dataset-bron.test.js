@@ -84,9 +84,33 @@ describe("datasetBron — binnendruppelende berichten", () => {
 
 	it("meldt het als er geen magazijnen zijn om van te ontvangen", () => {
 		metVlag(true);
-		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
-		datasetBron({ berichten: [], magazijnen: [], mappen: [] }, { state: nepState() }).start(vi.fn());
-		expect(waarschuwing).toHaveBeenCalled();
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		const meldStoring = vi.fn();
+		datasetBron({ berichten: [], magazijnen: [], mappen: [] }, { state: nepState(), meldStoring }).start(vi.fn());
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("geen bronnen"));
+	});
+
+	it("zegt het als de demo uitgespeeld is", () => {
+		metVlag(true);
+		vi.useFakeTimers();
+		vi.stubGlobal("location", { search: "?poll=5" });
+		const meldStoring = vi.fn();
+		datasetBron(DATA, { state: nepState(), limiet: 1, meldStoring }).start(vi.fn());
+		vi.advanceTimersByTime(5000 * 3);
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("Alle demo-berichten"));
+		vi.useRealTimers();
+	});
+
+	it("zegt het als een binnengekomen bericht niet getoond kon worden", () => {
+		metVlag(true);
+		vi.useFakeTimers();
+		vi.stubGlobal("location", { search: "?poll=5" });
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const meldStoring = vi.fn();
+		datasetBron(DATA, { state: nepState(), limiet: 5, meldStoring }).start(() => [new Error("niet te tonen")]);
+		vi.advanceTimersByTime(5000);
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden getoond"));
+		vi.useRealTimers();
 	});
 
 	it("herstelt geen bericht van een magazijn dat de bron niet kent", async () => {

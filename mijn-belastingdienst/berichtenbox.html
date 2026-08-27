@@ -63,14 +63,16 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
-				<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
-					{% include "icon-feedback-error.njk" %}
-					<div>
-						<p>Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina of probeer het later opnieuw.</p>
-					</div>
 				</div>
 
-				<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat; anders verschijnt hier uw eerste bericht zodra een organisatie u schrijft.</div>
+				<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat. Anders verschijnt hier uw eerste bericht zodra een organisatie u schrijft.</div>
+
+				<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+					{% include "icon-feedback-error.njk" %}
+					<div>
+						<p data-berichtenbox-storing-tekst></p>
+					</div>
+				</div>
 
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>

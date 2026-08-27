@@ -137,3 +137,22 @@ describe("kolommen", () => {
 		expect(cellen).toBe(koppen);
 	});
 });
+
+describe("meldingen horen bij de juiste weergave", () => {
+	it("toont de gesimuleerde bronwaarschuwing niet op het archief", async () => {
+		// unhappy-flow aan: op de inbox mag die melding, op het archief niet — dat toont wat de
+		// bezoeker zelf heeft weggezet en heeft niets met ophalen te maken.
+		const a = bericht();
+		bouwPagina([a], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		document.cookie = "unhappy-flow=true";
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
+		expect(rijen()).toHaveLength(1);
+		document.cookie = "unhappy-flow=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+	});
+});

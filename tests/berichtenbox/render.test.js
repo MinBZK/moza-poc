@@ -207,14 +207,14 @@ describe("berichtenbox.js — als er niets te tonen valt", () => {
 		// naar een detailpagina. De rest blijft staan.
 		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		expect(rijen()[0].textContent).toContain("Gewoon bericht");
-		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
 	});
 
 	it("laat een zichtbaar gat achter zodat de teller niet liegt", async () => {
 		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		const gat = document.querySelector(".is-unreadable");
 		expect(gat).not.toBe(null);
-		expect(gat.textContent).toContain("kon niet worden getoond");
+		expect(gat.textContent).toContain("niet te tonen");
 		// Twee berichten geteld, twee rijen op het scherm: de een is een gat, maar geen leugen.
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("2");
 		expect(rijen()).toHaveLength(2);
@@ -224,7 +224,7 @@ describe("berichtenbox.js — als er niets te tonen valt", () => {
 		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		expect(rijen()).toHaveLength(0);
 		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
-		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 	});
 
 	it("zegt niet 'geen berichten' terwijl er een storing is", async () => {
@@ -245,7 +245,7 @@ describe("berichtenbox.js — als er niets te tonen valt", () => {
 
 	it("toont de melding niet bij een geslaagde lading", async () => {
 		await laad([bericht()]);
-		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
 	});
 });
 
@@ -299,7 +299,7 @@ describe("berichtenbox.js — terugdraaien bij een mislukte render", () => {
 		// Er staat een zichtbare lijst, óf een melding. Een verborgen tabel zonder melding is
 		// precies de lege witte pagina die dit moet uitsluiten.
 		const lijst = document.querySelector("[data-berichtenbox-list]");
-		const melding = document.querySelector("[data-geen-bronnen]");
+		const melding = document.querySelector("[data-berichtenbox-storing]");
 		const lijstZichtbaar = !lijst.hidden && rijen().length > 0;
 		expect(lijstZichtbaar || !melding.hidden).toBe(true);
 		vi.useRealTimers();
@@ -312,7 +312,7 @@ describe("berichtenbox.js — herstel na een storing", () => {
 		// niet een verborgen tabel zonder uitleg.
 		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
 		const lijst = document.querySelector("[data-berichtenbox-list]");
-		const melding = document.querySelector("[data-geen-bronnen]");
+		const melding = document.querySelector("[data-berichtenbox-storing]");
 		expect(lijst.hidden).toBe(true);
 		expect(melding.hidden).toBe(false);
 	});
@@ -323,7 +323,67 @@ describe("berichtenbox.js — herstel na een storing", () => {
 		const zoek = document.querySelector("[data-berichtenbox-search-input]");
 		zoek.value = "werkt";
 		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
-		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
 		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(false);
+	});
+});
+
+describe("berichtenbox.js — een mislukte lading blijft een mislukte lading", () => {
+	// Een null in de lijst laat render() struikelen; dat rolt terug, wordt doorgegooid en komt in
+	// de .catch terecht. Dat is het pad waar de lading zelf mislukt, niet één rij.
+	async function metMislukteLading() {
+		bouwPagina([bericht(), bericht()]);
+		window.berichtenboxData.berichten.push(null);
+		await laadBerichtenbox();
+		await laatLaden();
+	}
+
+	it("zegt niet 'u heeft geen berichten' onder de storingsmelding", async () => {
+		await metMislukteLading();
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+	});
+
+	it("laat een latere filteractie de melding niet wegpoetsen", async () => {
+		await metMislukteLading();
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "wat dan ook";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+	});
+
+	it("speelt geen ophaalanimatie voor een lading die al mislukt is", async () => {
+		bouwPagina([bericht()], { state: { eersteBezoekGehad: false } });
+		window.berichtenboxData.berichten.push(null);
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(document.querySelector("[data-berichtenbox-progress]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
+	});
+});
+
+describe("berichtenbox.js — de bezoeker hoort het als bewaren niet lukt", () => {
+	it("meldt zichtbaar dat een archivering niet bewaard is", async () => {
+		bouwPagina([bericht(), bericht()]);
+
+		// Opslag die niet schrijft, zoals in Safari-privémodus of bij een volle quota. Vóór het
+		// laden gezet: berichtenbox.js pakt de opslag één keer, bij het opzetten van de state.
+		vi.stubGlobal("localStorage", {
+			getItem: () => JSON.stringify({ eersteBezoekGehad: true }),
+			setItem: () => { throw new Error("QuotaExceededError"); },
+			removeItem: () => {},
+			clear: () => {},
+		});
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		rijen()[0].querySelector('[data-row-actie="archiveren"]').click();
+
+		const melding = document.querySelector("[data-berichtenbox-storing]");
+		expect(melding.hidden).toBe(false);
+		expect(melding.textContent).toContain("niet bewaard");
+		vi.unstubAllGlobals();
 	});
 });

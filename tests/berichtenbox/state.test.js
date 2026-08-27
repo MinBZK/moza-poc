@@ -20,7 +20,7 @@ afterEach(() => {
 
 describe("maakState — inlezen", () => {
 	it("valt terug op de default-state als er niets bewaard is", () => {
-		const state = maakState(nepOpslag(), []);
+		const state = maakState(nepOpslag());
 		expect(state.statusVan("msg-1")).toBe("inbox");
 		expect(state.ruw.eigenMappen).toEqual([]);
 		expect(state.ruw.eersteBezoekGehad).toBe(false);
@@ -28,25 +28,25 @@ describe("maakState — inlezen", () => {
 
 	it("valt terug op de default-state bij corrupte JSON, met een waarschuwing", () => {
 		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const state = maakState(nepOpslag({ [LS_KEY]: "{niet json" }), []);
+		const state = maakState(nepOpslag({ [LS_KEY]: "{niet json" }));
 		expect(state.statusVan("msg-1")).toBe("inbox");
 		expect(waarschuwing).toHaveBeenCalled();
 	});
 
 	it("weigert een bewaarde array als state", () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
-		const state = maakState(nepOpslag({ [LS_KEY]: "[1,2,3]" }), []);
+		const state = maakState(nepOpslag({ [LS_KEY]: "[1,2,3]" }));
 		expect(state.ruw.gelezen).toEqual({});
 	});
 
 	it("normaliseert een sleutel die geen object is", () => {
-		const state = maakState(metState({ gearchiveerd: "kapot", mapOverride: [] }), []);
+		const state = maakState(metState({ gearchiveerd: "kapot", mapOverride: [] }));
 		expect(state.ruw.gearchiveerd).toEqual({});
 		expect(state.ruw.mapOverride).toEqual({});
 	});
 
 	it("normaliseert eigenMappen dat geen array is", () => {
-		const state = maakState(metState({ eigenMappen: "Belastingen" }), []);
+		const state = maakState(metState({ eigenMappen: "Belastingen" }));
 		expect(state.ruw.eigenMappen).toEqual([]);
 	});
 });
@@ -56,12 +56,12 @@ describe("maakState — vragen over een bericht", () => {
 		const state = maakState(metState({
 			gearchiveerd: { "msg-1": true },
 			verwijderd: { "msg-1": true },
-		}), []);
+		}));
 		expect(state.statusVan("msg-1")).toBe("prullenbak");
 	});
 
 	it("laat een gelezen bericht niet meer als ongelezen tellen", () => {
-		const state = maakState(metState({ gelezen: { "msg-1": true } }), []);
+		const state = maakState(metState({ gelezen: { "msg-1": true } }));
 		expect(state.isOngelezen("msg-1", true)).toBe(false);
 	});
 
@@ -69,37 +69,52 @@ describe("maakState — vragen over een bericht", () => {
 		const state = maakState(metState({
 			gelezen: { "msg-1": true },
 			ongelezenToegevoegd: { "msg-1": true },
-		}), []);
+		}));
 		expect(state.isOngelezen("msg-1", false)).toBe(true);
 	});
 
 	it("valt zonder uitspraak terug op de waarde uit het bericht", () => {
-		const state = maakState(nepOpslag(), []);
+		const state = maakState(nepOpslag());
 		expect(state.isOngelezen("msg-1", true)).toBe(true);
 		expect(state.mapVan("msg-1", "Subsidies")).toBe("Subsidies");
 		expect(state.isGemarkeerd("msg-1", true)).toBe(true);
 	});
 
 	it("laat een map-override van null de map van het bericht wissen", () => {
-		const state = maakState(metState({ mapOverride: { "msg-1": null } }), []);
+		const state = maakState(metState({ mapOverride: { "msg-1": null } }));
 		expect(state.mapVan("msg-1", "Subsidies")).toBe(null);
 	});
 
 	it("laat een markering expliciet uitzetten", () => {
-		const state = maakState(metState({ gemarkeerd: { "msg-1": false } }), []);
+		const state = maakState(metState({ gemarkeerd: { "msg-1": false } }));
 		expect(state.isGemarkeerd("msg-1", true)).toBe(false);
 	});
 });
 
 describe("maakState — binnengedruppelde berichten", () => {
-	it("gooit berichten van onbekende magazijnen weg", () => {
+	it("houdt bij het inlezen nog alle magazijnen aan", () => {
+		// Bij het inlezen is nog niet bekend welke bron gekozen wordt. Hier al wegfilteren tegen de
+		// verkeerde lijst is onomkeerbaar: beperkTot kan alleen verder inperken, nooit herstellen.
+		const state = maakState(metState({
+			nieuweBerichten: [
+				{ id: "a", magazijnId: "van-een-andere-bron" },
+				{ id: "b", magazijnId: "blijft" },
+			],
+		}));
+		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["a", "b"]);
+	});
+
+	it("gooit berichten van onbekende magazijnen weg zodra de bron bekend is", () => {
+		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const state = maakState(metState({
 			nieuweBerichten: [
 				{ id: "a", magazijnId: "weg" },
 				{ id: "b", magazijnId: "blijft" },
 			],
-		}), ["blijft"]);
+		}));
+		state.beperkTot(["blijft"]);
 		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["b"]);
+		expect(waarschuwing).toHaveBeenCalled();
 	});
 
 	it("kapt af op de limiet en houdt de nieuwste", () => {
@@ -107,7 +122,7 @@ describe("maakState — binnengedruppelde berichten", () => {
 			id: "m" + i,
 			magazijnId: "blijft",
 		}));
-		const state = maakState(metState({ nieuweBerichten: teveel }), ["blijft"]);
+		const state = maakState(metState({ nieuweBerichten: teveel }));
 		expect(state.ruw.nieuweBerichten).toHaveLength(NIEUWE_BERICHTEN_LIMIET);
 		expect(state.ruw.nieuweBerichten.at(-1).id).toBe("m" + (NIEUWE_BERICHTEN_LIMIET + 2));
 	});
@@ -115,7 +130,7 @@ describe("maakState — binnengedruppelde berichten", () => {
 	it("overleeft een null tussen de bewaarde berichten", () => {
 		const state = maakState(metState({
 			nieuweBerichten: [null, { id: "b", magazijnId: "blijft" }],
-		}), ["blijft"]);
+		}));
 		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["b"]);
 	});
 });
@@ -123,24 +138,30 @@ describe("maakState — binnengedruppelde berichten", () => {
 describe("maakState — bewaren", () => {
 	it("schrijft de state terug naar de opslag", () => {
 		const opslag = nepOpslag();
-		const state = maakState(opslag, []);
+		const state = maakState(opslag);
 		state.ruw.gearchiveerd["msg-1"] = true;
 		state.bewaar();
 		expect(JSON.parse(opslag._kluis[LS_KEY]).gearchiveerd).toEqual({ "msg-1": true });
 	});
 
-	it("laat de demo doordraaien als de opslag weigert", () => {
+	it("zegt dat het bewaren niet lukte, in plaats van het stil te slikken", () => {
+		// De aanroeper moet dit kunnen weten: anders ziet de bezoeker zijn bericht verdwijnen en
+		// staat het na het verversen gewoon weer in de inbox.
 		const opslag = nepOpslag();
 		opslag.setItem = () => { throw new Error("QuotaExceededError"); };
 		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
-		const state = maakState(opslag, []);
-		expect(() => state.bewaar()).not.toThrow();
+		const state = maakState(opslag);
+		expect(state.bewaar()).toBe(false);
 		expect(fout).toHaveBeenCalled();
+	});
+
+	it("bevestigt een geslaagde schrijfactie", () => {
+		expect(maakState(nepOpslag()).bewaar()).toBe(true);
 	});
 
 	it("kapt bij het bewaren opnieuw af op de limiet", () => {
 		const opslag = nepOpslag();
-		const state = maakState(opslag, []);
+		const state = maakState(opslag);
 		state.ruw.nieuweBerichten = Array.from({ length: NIEUWE_BERICHTEN_LIMIET + 2 }, (_, i) => ({ id: "m" + i }));
 		state.bewaar();
 		expect(JSON.parse(opslag._kluis[LS_KEY]).nieuweBerichten).toHaveLength(NIEUWE_BERICHTEN_LIMIET);
