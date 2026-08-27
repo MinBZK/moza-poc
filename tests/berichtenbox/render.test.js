@@ -296,12 +296,17 @@ describe("berichtenbox.js — terugdraaien bij een mislukte render", () => {
 		window.berichtenboxData.magazijnen[0].id = undefined;
 		await vi.advanceTimersByTimeAsync(5000);
 
-		// Er staat een zichtbare lijst, óf een melding. Een verborgen tabel zonder melding is
-		// precies de lege witte pagina die dit moet uitsluiten.
+		// Precies één van beide: een zichtbare lijst, of een melding. Als disjunctie geschreven zou
+		// deze test blijven slagen terwijl de helft ervan wegviel.
 		const lijst = document.querySelector("[data-berichtenbox-list]");
 		const melding = document.querySelector("[data-berichtenbox-storing]");
 		const lijstZichtbaar = !lijst.hidden && rijen().length > 0;
-		expect(lijstZichtbaar || !melding.hidden).toBe(true);
+
+		if (lijstZichtbaar) {
+			expect(melding.hidden).toBe(true);
+		} else {
+			expect(melding.hidden).toBe(false);
+		}
 		vi.useRealTimers();
 	});
 });

@@ -87,7 +87,7 @@ describe("datasetBron — binnendruppelende berichten", () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
 		const meldStoring = vi.fn();
 		datasetBron({ berichten: [], magazijnen: [], mappen: [] }, { state: nepState(), meldStoring }).start(vi.fn());
-		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("geen bronnen"));
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("geen bronnen"), "info");
 	});
 
 	it("zegt het als de demo uitgespeeld is", () => {
@@ -97,7 +97,7 @@ describe("datasetBron — binnendruppelende berichten", () => {
 		const meldStoring = vi.fn();
 		datasetBron(DATA, { state: nepState(), limiet: 1, meldStoring }).start(vi.fn());
 		vi.advanceTimersByTime(5000 * 3);
-		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("Alle demo-berichten"));
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("Alle demo-berichten"), "info");
 		vi.useRealTimers();
 	});
 

@@ -137,6 +137,45 @@ function ruimDocumentListenersOp() {
 	}
 }
 
+/**
+ * Een berichtdetailpagina, zoals `moza/berichtenbox/bericht.njk` die rendert.
+ *
+ * Zonder deze fixture bleven twee kritieke fouten drie reviewrondes lang onzichtbaar: de
+ * detailpagina had helemaal geen meldingsblok, en archiveren navigeerde over zijn eigen
+ * mislukking heen weg.
+ */
+function detailHtml(bericht, { metStoringsblok = true } = {}) {
+	const storing = metStoringsblok ? STORING + '\n\t<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>' : "";
+
+	return `
+<article class="berichtenbox">
+	<section class="berichtenbox-content" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}" data-afzender-naam="${bericht.afzender}">
+		<h1 class="h3">${bericht.onderwerp}</h1>
+${storing}
+		<p class="berichtenbox-detail-meta">${bericht.afzender}</p>
+		<div class="berichtenbox-detail-body"><p>${bericht.inhoud}</p></div>
+		<div class="action-options">
+			<button class="icon-button" data-actie="markeren" aria-pressed="false">Markeren</button>
+			<button class="icon-button" data-actie="markeer-ongelezen"><svg></svg>Markeer als ongelezen</button>
+			<button class="icon-button" data-actie="archiveren">Archiveren</button>
+			<button class="icon-button" data-actie="verwijderen">Verwijderen</button>
+		</div>
+	</section>
+</article>
+`;
+}
+
+/** Zet een detailpagina neer voor dit bericht. */
+export function bouwDetailPagina(bericht, opties = {}) {
+	ruimDocumentListenersOp();
+	document.body.innerHTML = detailHtml(bericht, opties);
+	window.history.replaceState(null, "", "/moza/berichtenbox/bericht/" + bericht.id + "/");
+	window.berichtenboxData = dataset([bericht]);
+	window.localStorage.clear();
+	window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true, ...(opties.state || {}) }));
+	return document;
+}
+
 let teller = 0;
 
 /** Eén bericht in de vorm die window.berichtenboxData levert. */

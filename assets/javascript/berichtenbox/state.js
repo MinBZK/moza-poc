@@ -45,10 +45,6 @@ function defaults() {
 	};
 }
 
-/**
- * Houdt alleen bewaarde berichten over waarvan het magazijn nog bestaat. Stil weggooien zou een
- * berichtenbox opleveren die er compleet uitziet terwijl er berichten missen.
- */
 /** Vorm en aantal: wat er sowieso niet in hoort, ongeacht welke bron er straks gekozen wordt. */
 function opschonen(berichten) {
 	const bruikbaar = berichten.filter((bericht) => !!bericht);

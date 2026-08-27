@@ -307,6 +307,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
 	function render(view) {
+		// Na een mislukte lading weten we niets. Nullen tonen zou de storingsmelding tegenspreken en
+		// via state.aantalOngelezen ook de badges op andere pagina's op nul zetten.
+		if (ladingMislukt) return;
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
 		if (view === 'inbox') {
@@ -330,23 +333,15 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			tellerBronnen.textContent = bronnen.size;
 		}
 
-		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
-		if (tellerOngelezen) {
-			const n = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
-			).length;
-			tellerOngelezen.textContent = n;
-		}
-
-		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
-		if (navInbox) {
-			navInbox.textContent = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
-			).length;
-		}
 		const ongelezenAantal = data.berichten.filter((b) =>
 			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
 		).length;
+
+		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
+		if (tellerOngelezen) tellerOngelezen.textContent = ongelezenAantal;
+
+		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
+		if (navInbox) navInbox.textContent = ongelezenAantal;
 		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
 			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : '';
 		});
@@ -391,8 +386,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		if (stateModule.bewaar()) return true;
 
 		if (!opslagGemeld) {
-			opslagGemeld = true;
-			toonPaginaMelding('Uw wijziging is niet bewaard; uw browser heeft er geen ruimte voor. Na het verversen van de pagina staat het bericht er weer.');
+			opslagGemeld = toonPaginaMelding('Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte voor; wat u zojuist deed is na het verversen van de pagina weer ongedaan.');
 		}
 		return false;
 	}
@@ -439,6 +433,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			// opbouwen zou een geopend kebab-menu sluiten en de toetsenbordfocus naar body gooien.
 			const gevonden = filterBerichten(data.berichten, huidigeCriteria());
 			const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+			huidigePagina = venster.pagina;
 			bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
 		}, 150);
 	});
@@ -875,7 +870,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
 		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan. Een eerder
 		// mislukte lading telt net zo hard: die lijst is leeg omdat er niets binnenkwam.
-		if (ladingMislukt || (venster.items.length > 0 && overgeslagen === venster.items.length)) {
+		if (ladingMislukt || (gevonden.length > 0 && overgeslagen === gevonden.length)) {
 			toonLaadfout();
 			return;
 		}
@@ -1575,7 +1570,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		if (soort === 'archiveren' || soort === 'verwijderen') {
 			huidigePagina = 1;
 			toonBerichten();
+			// Ná render: die berekent state.aantalOngelezen, en zonder deze tweede opslag houden de
+			// badges op andere pagina's het aantal van vóór deze actie vast.
 			render(huidigeView());
+			opslaan();
 		}
 	});
 
@@ -1648,10 +1646,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
 	function startDemoGedrag() {
-		veilig('De mappen-zijbalk', toonMappenZijbalk);
-		veilig('Het filteren van de lijst', bindInboxFilters);
-		veilig('De bronwaarschuwing', werkBronWaarschuwingBij);
-		veilig('De gesimuleerde bronuitval', plannBronUitval);
+		veilig({ log: 'De mappen-zijbalk', bezoeker: 'De mappen in de zijbalk zijn niet beschikbaar.' }, toonMappenZijbalk);
+		veilig({ log: 'Het filteren van de lijst', bezoeker: 'Zoeken en filteren werkt op dit moment niet.' }, bindInboxFilters);
+		veilig({ log: 'De bronwaarschuwing', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, werkBronWaarschuwingBij);
+		veilig({ log: 'De gesimuleerde bronuitval', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, plannBronUitval);
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
@@ -1662,19 +1660,19 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		try {
 			doen();
 		} catch (fout) {
-			console.error('[Berichtenbox] ' + wat + ' mislukte.', fout);
-			toonPaginaMelding(wat + ' is mislukt. Ververs de pagina om het opnieuw te proberen.');
+			console.error('[Berichtenbox] ' + wat.log + ' mislukte.', fout);
+			toonPaginaMelding(wat.bezoeker);
 		}
 	}
 
 	function naEersteLading() {
 		// Apart afgeschermd: op een detailpagina hangen hier de knoppen Archiveren en Verwijderen
 		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
-		veilig('Vullen van de detailpagina', vulDemoDetailPagina);
-		veilig('Binden van de acties op de detailpagina', bindDetailPaginaActies);
+		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Dit bericht kan niet volledig worden getoond.' }, vulDemoDetailPagina);
+		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
 
 		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt) {
-			veilig('De voortgangsanimatie', () => {
+			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
 				voortgangsAnimatie(() => {
 					state.eersteBezoekGehad = true;
 					opslaan();
@@ -1721,7 +1719,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// verandert. Een halve weergave naast een volledig bijgewerkte `data` is van een geslaagde
 		// render niet te onderscheiden, en dat is precies wat we willen voorkomen.
 		const vorige = {
-			berichten: data.berichten,
+			// De al gefilterde lijst: terugdraaien mag geen lege plekken terugzetten waar render()
+			// niet tegen kan.
+			berichten: data.berichten.filter((bericht) => !!bericht),
 			magazijnen: data.magazijnen,
 			mappen: data.mappen,
 			pagina: huidigePagina,
@@ -1768,10 +1768,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 	});
 
-	// Er is geen lijst te tonen. De server-gerenderde rijen laten staan zou erger zijn dan niets:
-	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
-	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
-	// aantoonbaar onwaar zolang we niet weten wát er is.
 	// Staat er een echte storingsmelding? Dan mag de gesimuleerde unhappy flow die niet wegpoetsen:
 	// die gaat over een nagebootste bron, en de bezoeker zou de gegenereerde dataset voor zijn post
 	// aanzien.
@@ -1789,26 +1785,43 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		verbergPaginaMelding();
 	}
 
-	function toonPaginaMelding(tekst) {
-		const live = document.querySelector('[data-berichtenbox-live]');
-		if (live) live.textContent = tekst;
+	// Er is één meldingsslot per pagina. Een lichtere melding mag een zwaardere niet overschrijven:
+	// "de demo is uitgespeeld" over "uw wijziging is niet bewaard" heen zou de bezoeker doen denken
+	// dat zijn actie gelukt is.
+	const MELDING_ZWAARTE = { info: 1, storing: 2 };
+	let staandeMeldingZwaarte = 0;
+
+	/** Geeft terug of de melding ook echt ergens terechtkwam. */
+	function toonPaginaMelding(tekst, soort = 'storing') {
+		const zwaarte = MELDING_ZWAARTE[soort] || MELDING_ZWAARTE.storing;
+		if (zwaarte < staandeMeldingZwaarte) return true;
 
 		const blok = document.querySelector('[data-berichtenbox-storing]');
 		if (!blok) {
-			if (!live) console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
-			return;
+			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
+			return false;
 		}
 
 		const slot = blok.querySelector('[data-berichtenbox-storing-tekst]');
 		if (slot) slot.textContent = tekst;
+		blok.classList.toggle('feedback-error', soort === 'storing');
+		blok.classList.toggle('feedback-info', soort === 'info');
 		blok.hidden = false;
+		staandeMeldingZwaarte = zwaarte;
+		return true;
 	}
 
 	function verbergPaginaMelding() {
+		staandeMeldingZwaarte = 0;
+		opslagGemeld = false;
 		const blok = document.querySelector('[data-berichtenbox-storing]');
 		if (blok) blok.hidden = true;
 	}
 
+	// Er is geen lijst te tonen. De server-gerenderde rijen laten staan zou erger zijn dan niets:
+	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
+	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
+	// aantoonbaar onwaar zolang we niet weten wát er is.
 	function toonLaadfout() {
 		laadfoutGetoond = true;
 		const lijst = document.querySelector('[data-berichtenbox-list]');

@@ -115,7 +115,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		start(meld) {
 			// De vlag staat aan omdat iemand wil zien dat er berichten binnenkomen. Gebeurt dat niet
 			// meer, dan hoort dat gezegd te worden en niet alleen in de console te staan.
-			// De render-laag beslist waar dit terechtkomt; deze module kent de pagina niet.
+			// De render-laag beslist waar dit terechtkomt; deze module kent de pagina niet. `soort`
+			// scheidt een mededeling van een storing: de demo die uitgespeeld raakt is geen fout.
 			const meldStilstand = meldStoring;
 
 			if (!dynamischeBerichtenAan()) return;
@@ -124,7 +125,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			const magazijnen = (data.magazijnen || []);
 			if (!magazijnen.length) {
 				console.warn("[Berichtenbox] Geen magazijnen; er kunnen geen demo-berichten binnenkomen.");
-				meldStilstand("Er zijn geen bronnen om berichten van te ontvangen.");
+				meldStilstand("Er zijn geen bronnen om berichten van te ontvangen.", "info");
 				return;
 			}
 
@@ -140,7 +141,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 					// het ongewisse of er nog iets komt.
 					if (state.ruw.nieuweBerichten.length >= limiet) {
 						clearInterval(klok);
-						meldStilstand("Alle demo-berichten zijn binnen.");
+						meldStilstand("Alle demo-berichten zijn binnengekomen.", "info");
 						return;
 					}
 
