@@ -8,6 +8,9 @@
  * zichtbaarheid en klassen op basis van state.
  */
 
+import { datumNL } from "./berichtenbox/datum.js";
+import { maakState, NIEUWE_BERICHTEN_LIMIET } from "./berichtenbox/state.js";
+
 (function() {
 	"use strict";
 
@@ -138,86 +141,18 @@
 			: '/moza/berichtenbox/';
 	}
 	const POLL_MIN_SEC = 5;
-	const NIEUWE_BERICHTEN_LIMIET = 5;
 
 	const LS_KEY = "berichtenbox";
 
-	const defaultState = {
-		eersteBezoekGehad: false,
-		gelezen: {},
-		ongelezenToegevoegd: {},
-		gearchiveerd: {},
-		verwijderd: {},
-		gemarkeerd: {},
-		mapOverride: {},
-		eigenMappen: [],
-		// Via polling binnengekomen berichten; bewaard zodat ze na reload zichtbaar blijven.
-		nieuweBerichten: [],
-		// A/B-test Belastingdienst-berichtenbox: ook berichten van andere organisaties tonen.
-		toonAndereOrganisaties: false,
-	};
-
-	function readState() {
-		try {
-			const raw = localStorage.getItem(LS_KEY);
-			if (!raw) return { ...defaultState };
-			const parsed = JSON.parse(raw);
-			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-				throw new Error('state is geen object');
-			}
-			const merged = { ...defaultState, ...parsed };
-			// Normaliseer types zodat writeState/render niet kunnen crashen op corrupte keys.
-			if (!Array.isArray(merged.nieuweBerichten)) merged.nieuweBerichten = [];
-			const bekendeMagazijnen = new Set(data.magazijnen.map((m) => m.id));
-			merged.nieuweBerichten = merged.nieuweBerichten
-				.filter((b) => bekendeMagazijnen.has(b.magazijnId))
-				.slice(-NIEUWE_BERICHTEN_LIMIET);
-			if (!Array.isArray(merged.eigenMappen)) merged.eigenMappen = [];
-			['gelezen','ongelezenToegevoegd','gearchiveerd','verwijderd','gemarkeerd','mapOverride'].forEach((k) => {
-				if (!merged[k] || typeof merged[k] !== 'object' || Array.isArray(merged[k])) merged[k] = {};
-			});
-			return merged;
-		} catch (e) {
-			console.warn('[Berichtenbox] State corrupt of niet toegankelijk; terugvallen op default.', e);
-			return { ...defaultState };
-		}
-	}
-
-	function writeState(state) {
-		if (state.nieuweBerichten.length > NIEUWE_BERICHTEN_LIMIET) {
-			state.nieuweBerichten = state.nieuweBerichten.slice(-NIEUWE_BERICHTEN_LIMIET);
-		}
-		try {
-			localStorage.setItem(LS_KEY, JSON.stringify(state));
-		} catch (e) {
-			// QuotaExceededError of SecurityError (Safari private mode) — laat demo verder draaien.
-			console.error('[Berichtenbox] Kon state niet opslaan.', e);
-		}
-	}
-
-	const state = readState();
-
-	function statusVan(berichtId) {
-		if (state.verwijderd[berichtId]) return "prullenbak";
-		if (state.gearchiveerd[berichtId]) return "archief";
-		return "inbox";
-	}
-
-	function isOngelezen(berichtId, origineelOngelezen) {
-		if (state.ongelezenToegevoegd[berichtId]) return true;
-		if (state.gelezen[berichtId]) return false;
-		return origineelOngelezen;
-	}
-
-	function mapVan(berichtId, origineleMap) {
-		if (berichtId in state.mapOverride) return state.mapOverride[berichtId];
-		return origineleMap;
-	}
-
-	function isGemarkeerd(berichtId, origineelGemarkeerd) {
-		if (berichtId in state.gemarkeerd) return !!state.gemarkeerd[berichtId];
-		return !!origineelGemarkeerd;
-	}
+	// De state komt uit berichtenbox/state.js: één plek voor wat de bezoeker met zijn berichten
+	// heeft gedaan. `state` blijft de rauwe vorm, want er wordt op tientallen plekken rechtstreeks
+	// in geschreven; die schrijfacties lopen nog steeds via opslaan().
+	const stateModule = maakState(localStorage, data.magazijnen.map((m) => m.id));
+	const state = stateModule.ruw;
+	const statusVan = (berichtId) => stateModule.statusVan(berichtId);
+	const isOngelezen = (id, origineel) => stateModule.isOngelezen(id, origineel);
+	const mapVan = (id, origineel) => stateModule.mapVan(id, origineel);
+	const isGemarkeerd = (id, origineel) => stateModule.isGemarkeerd(id, origineel);
 
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
 	// doorgestreept oog (ongelezen) = "maak ongelezen". Icoon volgt het label/actie.
@@ -366,18 +301,6 @@
 		return 'inbox';
 	}
 
-	const MAANDEN = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-
-	// Parse "YYYY-MM-DD" direct om timezone-drift te voorkomen (new Date() interpreteert UTC).
-	function datumNL(datumStr) {
-		if (!datumStr) return '';
-		const m = datumStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-		if (!m) return 'Onbekende datum';
-		const mnd = parseInt(m[2], 10);
-		if (mnd < 1 || mnd > 12) return 'Onbekende datum';
-		return parseInt(m[3], 10) + ' ' + MAANDEN[mnd - 1] + ' ' + parseInt(m[1], 10);
-	}
-
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
 	function pasStateToeOpRijen() {
 		const view = huidigeView();
@@ -482,7 +405,7 @@
 	}
 
 	function opslaan() {
-		writeState(state);
+		stateModule.bewaar();
 	}
 
 	// ---- Client-side paginering ----
@@ -1852,8 +1775,7 @@
 	// Debug-handle; niet bedoeld voor productiegebruik.
 	window.Berichtenbox = {
 		state,
-		readState,
-		writeState,
+		bewaar: () => stateModule.bewaar(),
 		statusVan,
 		isOngelezen,
 		mapVan,
