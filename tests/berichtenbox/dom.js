@@ -50,7 +50,8 @@ export const BERICHTENBOX_HTML = `
 
 	<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
-	<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
+	<!-- Zichtbaar in de HTML, net als in de echte templates: zonder JavaScript is archief werkelijk leeg. -->
+	<div class="feedback" data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
 
 	<table data-berichtenbox-list data-page-size="10">
 		<thead>

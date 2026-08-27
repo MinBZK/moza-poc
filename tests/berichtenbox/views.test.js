@@ -72,3 +72,26 @@ describe("Belastingdienst-portaal", () => {
 		expect(rijen()[0].textContent).toContain("Belastingdienst");
 	});
 });
+
+describe("regressies uit de review", () => {
+	it("filtert het archief niet op het organisatiefilter van het portaal", async () => {
+		const a = bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" });
+		await laad([a], {
+			pad: "/mijn-belastingdienst/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		// Het org-filter hoort alleen over de inbox te gaan; wat je archiveert blijft je archief.
+		expect(rijen()).toHaveLength(1);
+	});
+
+	it("filtert het archief niet op persona-relevantie", async () => {
+		const a = bericht({ relevantVoor: ["iemand-anders"] });
+		await laad([a], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		expect(rijen()).toHaveLength(1);
+	});
+});

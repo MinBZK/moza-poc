@@ -212,3 +212,35 @@ describe("berichtenbox.js — als er niets te tonen valt", () => {
 		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
 	});
 });
+
+describe("berichtenbox.js — details die de review ving", () => {
+	it("laat een zojuist binnengekomen bericht invaden, en alleen dat bericht", async () => {
+		vi.useFakeTimers();
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		bouwPagina([bericht(), bericht()]);
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		window.history.replaceState(null, "", "/moza/berichtenbox/?poll=5");
+		await laadBerichtenbox();
+		await vi.advanceTimersByTimeAsync(0);
+		await vi.advanceTimersByTimeAsync(5000);
+		const nieuw = rijen().filter((r) => r.classList.contains("is-new"));
+		expect(nieuw).toHaveLength(1);
+		expect(nieuw[0]).toBe(rijen()[0]);
+		vi.useRealTimers();
+	});
+
+	it("bouwt de rijen niet opnieuw bij een resize", async () => {
+		await laad([bericht(), bericht()]);
+		const eerste = rijen()[0];
+		window.dispatchEvent(new window.Event("resize"));
+		await new Promise((klaar) => setTimeout(klaar, 200));
+		expect(rijen()[0]).toBe(eerste);
+	});
+
+	it("verbergt de lege staat meteen, nog voor de bron geladen is", async () => {
+		bouwPagina([bericht()]);
+		await laadBerichtenbox();
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+		await laatLaden();
+	});
+});

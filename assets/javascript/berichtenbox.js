@@ -403,16 +403,25 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 	let huidigePagina = huidigePaginaUitUrl();
 
-	// Elke weergave loopt via dezelfde weg naar het scherm; de resize-handler en de paginanavigatie
-	// hebben genoeg aan deze verwijzing. Functiedeclaraties zijn gehesen, dus dit mag hier al.
+	// Elke weergave loopt via dezelfde weg naar het scherm; de paginanavigatie heeft genoeg aan
+	// deze verwijzing. Functiedeclaraties zijn gehesen, dus dit mag hier al.
 	const herpagineerHuidigeView = toonBerichten;
+
+	// De rij die bij de laatste bronwijziging binnenkwam, zodat createRij die kan laten invaden.
+	let zojuistBinnengekomenId = null;
 
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
 	let resizeTimer = null;
 	window.addEventListener('resize', () => {
 		clearTimeout(resizeTimer);
-		resizeTimer = setTimeout(() => { herpagineerHuidigeView(); }, 150);
+		resizeTimer = setTimeout(() => {
+			// Alleen de ellipsis-truncatie van de paginanavigatie schaalt mee. De rijen opnieuw
+			// opbouwen zou een geopend kebab-menu sluiten en de toetsenbordfocus naar body gooien.
+			const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+			const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+			bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+		}, 150);
 	});
 
 	// Toon alleen het venster van de huidige pagina uit `rijen` (al gefilterde,
@@ -715,9 +724,15 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
 		const effMap = mapVan(bericht.id, bericht.map);
 		const dynamisch = bericht.id.startsWith('msg-live-');
+		// Alleen de rij die zojuist binnenkwam krijgt de fade-in; bij een volgende render is het
+		// geen nieuw bericht meer.
+		const zojuistBinnen = bericht.id === zojuistBinnengekomenId;
 
 		const tr = document.createElement('tr');
-		tr.className = 'berichtenbox-row' + (ongelezen ? ' is-unread' : '') + (dynamisch ? ' is-dynamic' : '');
+		tr.className = 'berichtenbox-row'
+			+ (ongelezen ? ' is-unread' : '')
+			+ (dynamisch ? ' is-dynamic' : '')
+			+ (zojuistBinnen ? ' is-new' : '');
 		tr.dataset.berichtId = bericht.id;
 		tr.dataset.afzenderId = bericht.magazijnId;
 		if (effMap) tr.dataset.map = effMap;
@@ -815,15 +830,21 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// de DOM omdat de bezoeker ze daar invult; de rest komt uit de state en de URL.
 	function huidigeCriteria() {
 		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
+		const view = huidigeView();
+		// Het organisatiefilter, de persona-relevantie en de gesimuleerde bronuitval gaan over wat
+		// er bij dít portaal binnenkomt. Wat de bezoeker eenmaal gearchiveerd of weggegooid heeft,
+		// blijft van hem: die weergaven filteren alleen op waar het bericht staat.
+		const inbox = view === 'inbox';
+
 		return {
-			view: huidigeView(),
+			view,
 			zoek: zoekInput ? zoekInput.value : '',
 			afzenders: new Set(
 				[...document.querySelectorAll('[data-afzender-check]:checked')].map((c) => c.value)
 			),
-			map: new URLSearchParams(location.search).get('map'),
-			magazijnToegestaan,
-			persoonRelevant,
+			map: inbox ? new URLSearchParams(location.search).get('map') : null,
+			magazijnToegestaan: inbox ? magazijnToegestaan : () => true,
+			persoonRelevant: inbox ? persoonRelevant : () => true,
 			state: stateModule,
 		};
 	}
@@ -848,7 +869,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 		bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
 	}
-
 
 
 	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
@@ -1576,7 +1596,8 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	bindBronOnbereikbaar();
 	bindBerichtBeschikbaarheid();
 
-	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
+	// De berichtenbox pagineert via ?pagina=; /pagina-N/ bestaat hier niet als route.
+	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
 	function startDemoGedrag() {
 		toonMappenZijbalk();
@@ -1609,7 +1630,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 		// onzichtbaar of misleidend.
 		magOphalen: () => huidigeView() === 'inbox'
-			&& !/\/pagina-\d+\/$/.test(location.pathname)
+			&& huidigePaginaUitUrl() === 1
 			&& !!document.querySelector('[data-berichtenbox-list]'),
 	}));
 
@@ -1621,7 +1642,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			? [inhoud.nieuwBericht, ...data.berichten]
 			: inhoud.berichten;
 
-		if (inhoud.nieuwBericht) huidigePagina = 1;
+		if (inhoud.nieuwBericht) {
+			huidigePagina = 1;
+			zojuistBinnengekomenId = inhoud.nieuwBericht.id;
+		}
 
 		const vorige = data.berichten;
 		data.berichten = volgende;
@@ -1641,6 +1665,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			data.berichten = vorige;
 			throw fout;
 		}
+
+		// Eén render lang nieuw; daarna is het een gewone rij.
+		zojuistBinnengekomenId = null;
 
 		if (inhoud.nieuwBericht) {
 			const live = document.querySelector('[data-berichtenbox-live]');
