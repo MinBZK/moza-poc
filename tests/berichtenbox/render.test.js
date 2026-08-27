@@ -284,7 +284,16 @@ describe("berichtenbox.js — details die de review ving", () => {
 	});
 
 	it("verbergt de lege staat meteen, nog voor de bron geladen is", async () => {
-		bouwPagina([bericht()]);
+		// Op archief, want daar staat de lege staat zichtbaar in de template — zonder JavaScript is
+		// die pagina werkelijk leeg. Op de inbox testte dit de standaardwaarde van de fixture.
+		const a = bericht();
+		bouwPagina([a], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			state: { eersteBezoekGehad: true, gearchiveerd: { [a.id]: true } },
+		});
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(false);
+
 		await laadBerichtenbox();
 		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
 		await laatLaden();
@@ -414,7 +423,8 @@ describe("berichtenbox.js — scherm en gegevens lopen niet uiteen", () => {
 		expect(rijen()).toHaveLength(1);
 
 		// Eén bericht waarvan het id niet te lezen is. Met één renderpad raakt dat de hele lijst:
-		// filterBerichten struikelt erover, dus er valt niets meer te tonen.
+		// filterBerichten struikelt erover, dus er valt niets meer te tonen. Een sabotage die
+		// createRij ongemoeid laat bereikt de rollback nooit — dat was de vorige versie van deze test.
 		window.berichtenboxData.berichten.push(Object.defineProperty({}, "id", {
 			get() { throw new Error("niet te lezen"); },
 		}));

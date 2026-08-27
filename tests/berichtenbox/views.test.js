@@ -188,3 +188,23 @@ describe("organisatie-schakelaar van het Belastingdienst-portaal", () => {
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 	});
 });
+
+describe("lege staat op archief en prullenbak", () => {
+	it("blijft staan als de unhappy-flow-vlag aan staat", async () => {
+		// Die vlag gaat over het ophalen bij bronnen; archief en prullenbak hebben er niets mee, en
+		// hebben ook geen blok dat een lege lijst zou verklaren. Onderdrukken laat daar een lege
+		// pagina zonder woorden achter.
+		document.cookie = "unhappy-flow=true";
+		bouwPagina([bericht()], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+		});
+		vi.spyOn(Math, "random").mockReturnValue(0);
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(false);
+		document.cookie = "unhappy-flow=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+	});
+});

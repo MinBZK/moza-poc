@@ -977,9 +977,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		herstelNaLaadfout();
 
 		// Niet naast de gesimuleerde "geen bronnen"-melding: die verklaart de lege lijst al, en twee
-		// verklaringen naast elkaar spreken elkaar tegen.
+		// verklaringen naast elkaar spreken elkaar tegen. Alleen op de inbox: archief en prullenbak
+		// hebben dat blok niet, dus daar zou onderdrukken een lege pagina zonder woorden opleveren.
 		const leeg = document.querySelector('[data-berichtenbox-empty]');
-		if (leeg) leeg.hidden = gevonden.length > 0 || bronOnbereikbaar();
+		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === 'inbox' && bronOnbereikbaar());
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== 'inbox') lijst.hidden = gevonden.length === 0;
 
@@ -1873,7 +1874,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
 		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
 
-		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt) {
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond) {
 			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
 				voortgangsAnimatie(() => {
 					state.eersteBezoekGehad = true;
