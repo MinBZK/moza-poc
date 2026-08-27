@@ -9,6 +9,8 @@
 		"build-storybook": "storybook build -o _site/storybook",
 		"lint:css": "stylelint 'style/**/*.css'",
 		"lint:css:fix": "stylelint 'style/**/*.css' --fix",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"vite:build": "vite build",
 		"format": "prettier --write .",
 		"proxy": "node server/proxy.js"
