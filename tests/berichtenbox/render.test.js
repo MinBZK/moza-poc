@@ -187,3 +187,28 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 		expect(rijen()).toHaveLength(10);
 	});
 });
+
+describe("berichtenbox.js — als er niets te tonen valt", () => {
+	it("laat geen server-gerenderde rijen staan wanneer het renderen mislukt", async () => {
+		// Een bericht zonder id laat createRij struikelen; dat is precies het geval waarin de
+		// bezoeker anders naar rijen kijkt die de state negeren.
+		await laad([bericht(), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(true);
+	});
+
+	it("toont de melding wanneer het renderen mislukt", async () => {
+		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(false);
+	});
+
+	it("zegt niet 'geen berichten' terwijl er een storing is", async () => {
+		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
+	});
+
+	it("toont de melding niet bij een geslaagde lading", async () => {
+		await laad([bericht()]);
+		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+	});
+});

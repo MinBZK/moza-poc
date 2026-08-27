@@ -1613,44 +1613,105 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			&& !!document.querySelector('[data-berichtenbox-list]'),
 	}));
 
+	// De weergave wordt pas bijgewerkt als álle rijen gebouwd zijn. Struikelt createRij over één
+	// bericht, dan blijft de vorige weergave staan in plaats van een halve nieuwe — en de melding
+	// hieronder vertelt de bezoeker dat er iets misging.
 	register.opWijziging((inhoud) => {
-		if (inhoud.nieuwBericht) {
-			// Eén bericht erbij: bovenaan, zodat het onderste bericht echt doorschuift naar de
-			// volgende pagina. De rest van de lijst blijft staan zoals hij stond, inclusief een
-			// sortering die de bezoeker heeft gekozen.
-			data.berichten = [inhoud.nieuwBericht, ...data.berichten];
-			huidigePagina = 1;
+		const volgende = inhoud.nieuwBericht
+			? [inhoud.nieuwBericht, ...data.berichten]
+			: inhoud.berichten;
 
+		if (inhoud.nieuwBericht) huidigePagina = 1;
+
+		const vorige = data.berichten;
+		data.berichten = volgende;
+		if (!inhoud.nieuwBericht) {
+			data.magazijnen = inhoud.magazijnen;
+			data.mappen = inhoud.mappen;
+			// De state is ingelezen voordat bekend was welke bron het zou worden; nu die vaststaat,
+			// horen bewaarde berichten van onbekende magazijnen alsnog af te vallen.
+			stateModule.beperkTot(data.magazijnen.map((m) => m.id));
+		}
+
+		try {
+			werkMappenZichtbaarheidBij();
+			toonBerichten();
+			render(huidigeView());
+		} catch (fout) {
+			data.berichten = vorige;
+			throw fout;
+		}
+
+		if (inhoud.nieuwBericht) {
 			const live = document.querySelector('[data-berichtenbox-live]');
 			if (live) {
 				live.textContent = 'Nieuw bericht van ' + inhoud.nieuwBericht.afzender + ': ' + inhoud.nieuwBericht.onderwerp;
 			}
-		} else {
-			data.berichten = inhoud.berichten;
-			data.magazijnen = inhoud.magazijnen;
-			data.mappen = inhoud.mappen;
 		}
-
-		werkMappenZichtbaarheidBij();
-		toonBerichten();
-		render(huidigeView());
 	});
 
-	register.kies(window.Personas && typeof window.Personas.actief === 'function' ? window.Personas.actief() : null)
-		.then((bron) => (bron ? bron.laad() : null))
+	// Er is geen lijst te tonen. De server-gerenderde rijen laten staan zou erger zijn dan niets:
+	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
+	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
+	// aantoonbaar onwaar zolang we niet weten wát er is.
+	function toonLaadfout() {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (lijst) {
+			const body = lijst.querySelector('tbody') || lijst;
+			body.replaceChildren();
+			lijst.hidden = true;
+		}
+
+		const leeg = document.querySelector('[data-berichtenbox-empty]');
+		if (leeg) leeg.hidden = true;
+
+		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
+		if (pagnav) pagnav.hidden = true;
+
+		const melding = document.querySelector('[data-geen-bronnen]');
+		if (melding) melding.hidden = false;
+		else console.error('[Berichtenbox] Geen meldingsblok op deze pagina; de storing blijft onzichtbaar.');
+	}
+
+	const persona = window.Personas && typeof window.Personas.actief === 'function' ? window.Personas.actief() : null;
+
+	register.kies(persona)
+		.then((bron) => {
+			// Geen enkele bron van toepassing is geen stille uitkomst: dan is er niets te tonen en
+			// hoort de bezoeker dat te weten in plaats van naar oude rijen te kijken.
+			if (!bron) throw new Error('geen enkele bron kon de berichten leveren');
+			return bron.laad();
+		})
 		.then((inhoud) => {
-			if (inhoud) register.meld(inhoud);
+			const mislukt = register.meld(inhoud);
+			if (mislukt.length) throw mislukt[0];
+
+			// Een bron die onderweg omviel betekent dat deze lijst van een andere bron komt dan
+			// bedoeld. Dat is geen storing die de lijst wegneemt, maar wel iets om te melden.
+			const storingen = register.storingen();
+			if (storingen.length) {
+				const melding = document.querySelector('[data-bron-onbereikbaar]');
+				if (melding) melding.hidden = false;
+			}
+		})
+		.catch((fout) => {
+			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
+			toonLaadfout();
+		})
+		.finally(() => {
+			// Precies één keer, wat er ook gebeurd is: dit bindt luisteraars die niet twee keer
+			// gebonden mogen worden.
 			naEersteLading();
 
 			// Brongedrag start pas als er iets op het scherm staat.
 			const bron = register.actief();
-			if (bron && typeof bron.start === 'function') bron.start((wijziging) => register.meld(wijziging));
-		})
-		.catch((fout) => {
-			// De bron liet het afweten. De server-gerenderde rijen staan er nog, dus de bezoeker
-			// houdt een werkende lijst; alleen komt er niets nieuws bij.
-			console.error('[Berichtenbox] Laden van de berichten mislukte.', fout);
-			naEersteLading();
+			if (bron && typeof bron.start === 'function') {
+				bron.start((wijziging) => {
+					const mislukt = register.meld(wijziging);
+					if (mislukt.length) toonLaadfout();
+					return mislukt;
+				});
+			}
 		});
 
 	// Debug-handle; niet bedoeld voor productiegebruik.

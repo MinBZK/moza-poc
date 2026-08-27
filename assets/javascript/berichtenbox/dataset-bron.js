@@ -31,6 +31,7 @@ function dynamischeBerichtenAan() {
 	try {
 		return localStorage.getItem("feature:Dynamische berichten") === "true";
 	} catch (fout) {
+		console.warn("[Berichtenbox] Vlag 'Dynamische berichten' niet leesbaar; behandeld als uit.", fout);
 		return false;
 	}
 }
@@ -106,6 +107,13 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 		 * render-laag ziet dat als een gewone bronwijziging en hoeft niets van polling te weten.
 		 */
 		start(meld) {
+			// De vlag staat aan omdat iemand wil zien dat er berichten binnenkomen. Gebeurt dat niet
+			// meer, dan hoort dat gezegd te worden en niet alleen in de console te staan.
+			const meldStilstand = () => {
+				const live = document.querySelector("[data-berichtenbox-live]");
+				if (live) live.textContent = "Er komen geen nieuwe berichten meer binnen. Ververs de pagina.";
+			};
+
 			if (!dynamischeBerichtenAan()) return;
 			if (!magOphalen()) return;
 
@@ -122,11 +130,19 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 
 					// Alleen het nieuwe bericht melden, niet de hele lijst: de render-laag heeft de
 					// zijne misschien gesorteerd, en die volgorde hoort niet verloren te gaan.
-					meld({ nieuwBericht: bericht });
+					const mislukt = meld({ nieuwBericht: bericht });
+
+					// Komt het bericht niet op het scherm, dan heeft doorgaan geen zin: dan stapelt
+					// zich in stilte een voorraad op die de bezoeker pas na herladen ineens ziet.
+					if (mislukt && mislukt.length) {
+						console.error("[Berichtenbox] Nieuw bericht kon niet getoond worden; er komen er geen meer bij.");
+						clearInterval(klok);
+					}
 				} catch (fout) {
 					// Bij corrupte state zou elke tick opnieuw gooien; stoppen scheelt console-spam.
 					console.error("[Berichtenbox] Binnenkomende demo-berichten gestopt door een fout.", fout);
 					clearInterval(klok);
+					meldStilstand();
 				}
 			}, tussenpoos());
 		},

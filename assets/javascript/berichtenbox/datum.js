@@ -15,7 +15,12 @@ export function datumNL(datumStr) {
 	if (!datumStr) return "";
 
 	const m = String(datumStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-	if (!m) return "Onbekende datum";
+	if (!m) {
+		// Een bron die tijdstempels levert in plaats van datums zou anders elke rij "Onbekende
+		// datum" geven zonder één spoor in de console.
+		console.warn("[Berichtenbox] Datum '" + datumStr + "' heeft niet de vorm JJJJ-MM-DD.");
+		return "Onbekende datum";
+	}
 
 	const maand = parseInt(m[2], 10);
 	if (maand < 1 || maand > 12) return "Onbekende datum";

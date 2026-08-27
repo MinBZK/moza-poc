@@ -45,6 +45,26 @@ function defaults() {
 	};
 }
 
+/**
+ * Houdt alleen bewaarde berichten over waarvan het magazijn nog bestaat. Stil weggooien zou een
+ * berichtenbox opleveren die er compleet uitziet terwijl er berichten missen.
+ */
+function beperk(berichten, bekendeMagazijnIds) {
+	const bekend = new Set(bekendeMagazijnIds);
+	const over = berichten
+		.filter((bericht) => bericht && bekend.has(bericht.magazijnId))
+		.slice(-NIEUWE_BERICHTEN_LIMIET);
+
+	if (over.length < berichten.length) {
+		console.warn(
+			"[Berichtenbox] " + (berichten.length - over.length) +
+			" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
+		);
+	}
+
+	return over;
+}
+
 function lees(opslag, bekendeMagazijnIds) {
 	try {
 		const rauw = opslag.getItem(LS_KEY);
@@ -60,10 +80,7 @@ function lees(opslag, bekendeMagazijnIds) {
 		// Normaliseer types, zodat opslaan en renderen niet kunnen struikelen over een sleutel die
 		// door een oudere versie of met de hand een andere vorm heeft gekregen.
 		if (!Array.isArray(samen.nieuweBerichten)) samen.nieuweBerichten = [];
-		const bekend = new Set(bekendeMagazijnIds);
-		samen.nieuweBerichten = samen.nieuweBerichten
-			.filter((bericht) => bericht && bekend.has(bericht.magazijnId))
-			.slice(-NIEUWE_BERICHTEN_LIMIET);
+		samen.nieuweBerichten = beperk(samen.nieuweBerichten, bekendeMagazijnIds);
 
 		if (!Array.isArray(samen.eigenMappen)) samen.eigenMappen = [];
 		SLEUTELS_MET_OBJECT.forEach((sleutel) => {
@@ -109,6 +126,14 @@ export function maakState(opslag, bekendeMagazijnIds = []) {
 		isGemarkeerd(berichtId, origineelGemarkeerd) {
 			if (berichtId in ruw.gemarkeerd) return !!ruw.gemarkeerd[berichtId];
 			return !!origineelGemarkeerd;
+		},
+
+		/**
+		 * De magazijnen van de actieve bron. Bij het inlezen is nog niet bekend welke bron het wordt,
+		 * dus zodra dat vaststaat wordt de lijst met bewaarde berichten hier opnieuw beperkt.
+		 */
+		beperkTot(bekendeMagazijnIds) {
+			ruw.nieuweBerichten = beperk(ruw.nieuweBerichten, bekendeMagazijnIds);
 		},
 
 		bewaar() {

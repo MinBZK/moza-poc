@@ -21,6 +21,7 @@
 export function maakRegister() {
 	const bronnen = [];
 	const luisteraars = [];
+	const storingen = [];
 	let gekozen = null;
 
 	return {
@@ -39,8 +40,10 @@ export function maakRegister() {
 				} catch (fout) {
 					// Nooit stil overslaan: een kapotte bron is anders niet te onderscheiden van een
 					// bron die simpelweg niet van toepassing is, en dan valt de bezoeker ongemerkt
-					// terug op de bron erachter.
+					// terug op de bron erachter. De console alleen is niet genoeg — dat ziet niemand
+					// zonder ontwikkelaarsvenster — dus wordt de storing ook bewaard.
 					console.error("[Berichtenbox] Bron '" + bron.naam + "' kon niet bepalen of hij van toepassing is.", fout);
+					storingen.push({ bron: bron.naam, fase: "geldtVoor", fout });
 				}
 			}
 			gekozen = null;
@@ -51,19 +54,35 @@ export function maakRegister() {
 			return gekozen;
 		},
 
+		/** Bronnen die onderweg omvielen. Leeg betekent: de keuze is te vertrouwen. */
+		storingen() {
+			return storingen.slice();
+		},
+
 		opWijziging(callback) {
 			luisteraars.push(callback);
 		},
 
-		/** Een bron meldt hiermee dat zijn berichten veranderd zijn. */
+		/**
+		 * Een bron meldt hiermee dat zijn berichten veranderd zijn.
+		 *
+		 * Eén luisteraar die omvalt mag de rest niet meesleuren, maar de aanroeper moet het wél
+		 * weten: anders staat er een halve weergave op het scherm die van een geslaagde niet te
+		 * onderscheiden is. Geeft de fouten terug in plaats van ze op te eten.
+		 */
 		meld(inhoud) {
+			const mislukt = [];
+
 			luisteraars.forEach((callback) => {
 				try {
 					callback(inhoud);
 				} catch (fout) {
 					console.error("[Berichtenbox] Verwerken van een bronwijziging mislukte.", fout);
+					mislukt.push(fout);
 				}
 			});
+
+			return mislukt;
 		},
 	};
 }
