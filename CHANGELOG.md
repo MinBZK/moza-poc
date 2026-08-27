@@ -1,5 +1,12 @@
 # MijnOverheid Zakelijk POC prototype changelog
 
+## Augustus 2026: Wetten en regels als bord
+
+- ➕ **Wetten en regels** als bord: kolommen Te doen / Mee bezig / Komt eraan / Niet beoordelen / Afgerond, voorgesteld door de assistent en te verplaatsen door de ondernemer (knopmenu, geen slepen), stand per persona in localStorage.
+- ➕ Zoekbalk over alle wetten, regels en subsidies, met "Toevoegen aan bord"; optioneel slim zoeken via zoektermen van de assistent (feature flag), nooit een gegenereerd antwoord.
+- ➕ Assistent per kaart in een zijpaneel, gesprek per regel; "Geldt dit voor mij?" start de toets voor regels met een rekenregel.
+- ❌ Menu-item Digitale assistent (AI); de pagina blijft bereikbaar voor `?vraag=`-links.
+
 ## Juni 2026: Rollen en lopende zaken
 
 - **Lopende zaken** met statusoverzicht en een detailpagina per zaak, tab-interface Overzicht / Afgehandeld, sub-stappen.

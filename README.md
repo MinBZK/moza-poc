@@ -114,6 +114,8 @@ Bij het gebruik van `npm run dev` worden design tokens automatisch opnieuw gebou
 
 ## Digitale Assistent
 
+**Wetten en regels** (`/moza/regelgeving/`) is een bord met de regels en subsidies van de actieve persona in vijf kolommen (Te doen, Mee bezig, Komt eraan, Niet beoordelen, Afgerond), een zoekbalk over het hele corpus en per kaart een assistent in een zijpaneel. Rendering in `assets/javascript/regelbord.js`, de logica zonder DOM in `regelbord-logica.js` (tests: `npm test`). Het menu-item Digitale assistent is vervallen; `moza/digitale-assistent.html` blijft bestaan voor links met `?vraag=`.
+
 De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assistent.html` + `assets/javascript/digitale-assistent.js`). De **backend** — een FastAPI-host die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI — leeft in een eigen repo en draait standalone:
 
 [![backend: moza-poc-digitale-assistent](https://img.shields.io/badge/backend-moza--poc--digitale--assistent-blue?logo=github)](https://github.com/MinBZK/moza-poc-digitale-assistent)
