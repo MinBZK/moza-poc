@@ -143,7 +143,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			? '/mijn-belastingdienst/berichtenbox/'
 			: '/moza/berichtenbox/';
 	}
-	const POLL_MIN_SEC = 5;
 
 	const LS_KEY = "berichtenbox";
 
@@ -1508,111 +1507,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		requestAnimationFrame(stap);
 	}
 
-	let nieuwBerichtTeller = 0;
-
-	function voegNieuwBerichtToe() {
-		if (huidigeView() !== 'inbox') return;
-		if (!data.magazijnen.length) return;
-		if (state.nieuweBerichten.length >= NIEUWE_BERICHTEN_LIMIET) return;
-		nieuwBerichtTeller++;
-		const mag = data.magazijnen[Math.floor(Math.random() * data.magazijnen.length)];
-		const nu = new Date().toISOString().slice(0, 10);
-		const id = 'msg-live-' + Date.now() + '-' + nieuwBerichtTeller;
-		const onderwerpen = [
-			'Nieuw bericht ontvangen',
-			'Bevestiging ontvangst',
-			'Bericht beschikbaar',
-			'Actie mogelijk vereist',
-		];
-		const bericht = {
-			id,
-			magazijnId: mag.id,
-			afzender: mag.naam,
-			onderwerp: onderwerpen[Math.floor(Math.random() * onderwerpen.length)],
-			inhoud: 'Dit is een demo-bericht van ' + mag.naam + '.',
-			datum: nu,
-			isOngelezen: true,
-			map: null,
-			heeftBijlage: Math.random() < 0.3,
-		};
-		state.nieuweBerichten.push(bericht);
-		opslaan();
-
-		// Synchroniseer window-data zodat render/filter het nieuwe bericht meenemen.
-		data.berichten.unshift(bericht);
-
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst) {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			const tr = createRij(bericht);
-			tr.classList.add('is-new');
-			tbody.prepend(tr);
-
-			// Her-filter en -pagineer: het nieuwe bericht komt bovenaan pagina 1 en het
-			// onderste bericht schuift door naar de volgende pagina (echte reflow).
-			herpagineerHuidigeView();
-		}
-		render('inbox');
-
-		const live = document.querySelector('[data-berichtenbox-live]');
-		if (live) live.textContent = 'Nieuw bericht van ' + bericht.afzender + ': ' + bericht.onderwerp;
-	}
-
-	// Feature flag "Dynamische berichten": staat standaard uit (default-off). Alleen
-	// als de flag expliciet aan staat, druppelen er willekeurig nieuwe berichten binnen.
-	function dynamischeBerichtenAan() {
-		try {
-			return localStorage.getItem('feature:Dynamische berichten') === 'true';
-		} catch (e) {
-			return false;
-		}
-	}
-	function startPolling() {
-		if (!dynamischeBerichtenAan()) return;
-		if (huidigeView() !== 'inbox') return;
-		// Alleen op pagina 1 — nieuwe berichten landen bovenaan, op pagina 2+ zouden ze onzichtbaar zijn.
-		if (/\/pagina-\d+\/$/.test(location.pathname)) return;
-		// Niet op detail-pagina's (geen inbox-lijst om aan te prepender).
-		if (!document.querySelector('[data-berichtenbox-list]')) return;
-		const params = new URLSearchParams(location.search);
-		const pollParam = parseInt(params.get('poll'), 10);
-		let intervalSec = Number.isFinite(pollParam) && pollParam > 0 ? pollParam : 60;
-		if (intervalSec < POLL_MIN_SEC) intervalSec = POLL_MIN_SEC;
-		const intervalId = setInterval(() => {
-			try {
-				voegNieuwBerichtToe();
-			} catch (e) {
-				// Bij corrupte state zou polling elke tick opnieuw gooien; stop om console-spam te voorkomen.
-				console.error('[Berichtenbox] Polling gestopt door fout.', e);
-				clearInterval(intervalId);
-			}
-		}, intervalSec * 1000);
-	}
-
-	// Herstel eerder via polling binnengekomen berichten na reload. Staat de flag
-	// "Dynamische berichten" uit (standaard), dan worden ze niet hersteld maar juist
-	// opgeruimd — zo verdwijnen eerder binnengedruppelde "Dit is een demo-bericht".
-	if (!dynamischeBerichtenAan()) {
-		if (state.nieuweBerichten.length > 0) {
-			state.nieuweBerichten = [];
-			opslaan();
-		}
-	} else if (state.nieuweBerichten.length > 0) {
-		state.nieuweBerichten.forEach((b) => {
-			if (!data.berichten.some((x) => x.id === b.id)) {
-				data.berichten.unshift(b);
-			}
-		});
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst && huidigeView() === 'inbox' && !(/\/pagina-\d+\/$/.test(location.pathname))) {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			state.nieuweBerichten.forEach((b) => {
-				if (lijst.querySelector('[data-bericht-id="' + b.id + '"]')) return;
-				tbody.prepend(createRij(b));
-			});
-		}
-	}
-
 	document.querySelectorAll('[data-berichtenbox-reset]').forEach((link) => {
 		link.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -1689,7 +1583,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function startDemoGedrag() {
 		toonMappenZijbalk();
 		bindInboxFilters();
-		startPolling();
 		werkBronWaarschuwingBij();
 		plannBronUitval();
 	}
@@ -1712,14 +1605,34 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// De datalaag bepaalt welke bron de berichten levert; de render-laag hieronder weet niet welke
 	// dat is. Nu is dat altijd de dataset; een tweede bron registreert zich hier straks vóór die.
 	const register = maakRegister();
-	register.registreer(datasetBron(window.berichtenboxData));
+	register.registreer(datasetBron(window.berichtenboxData, {
+		state: stateModule,
+		limiet: NIEUWE_BERICHTEN_LIMIET,
+		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
+		// onzichtbaar of misleidend.
+		magOphalen: () => huidigeView() === 'inbox'
+			&& !/\/pagina-\d+\/$/.test(location.pathname)
+			&& !!document.querySelector('[data-berichtenbox-list]'),
+	}));
 
 	register.opWijziging((inhoud) => {
-		data.berichten = inhoud.berichten;
-		data.magazijnen = inhoud.magazijnen;
-		data.mappen = inhoud.mappen;
+		if (inhoud.nieuwBericht) {
+			// Eén bericht erbij: bovenaan, zodat het onderste bericht echt doorschuift naar de
+			// volgende pagina. De rest van de lijst blijft staan zoals hij stond, inclusief een
+			// sortering die de bezoeker heeft gekozen.
+			data.berichten = [inhoud.nieuwBericht, ...data.berichten];
+			huidigePagina = 1;
 
-		rendersLijst(data.berichten);
+			const live = document.querySelector('[data-berichtenbox-live]');
+			if (live) {
+				live.textContent = 'Nieuw bericht van ' + inhoud.nieuwBericht.afzender + ': ' + inhoud.nieuwBericht.onderwerp;
+			}
+		} else {
+			data.berichten = inhoud.berichten;
+			data.magazijnen = inhoud.magazijnen;
+			data.mappen = inhoud.mappen;
+		}
+
 		werkMappenZichtbaarheidBij();
 		renderLijstVoorView(huidigeView());
 		render(huidigeView());
@@ -1730,6 +1643,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		.then((inhoud) => {
 			if (inhoud) register.meld(inhoud);
 			naEersteLading();
+
+			// Brongedrag start pas als er iets op het scherm staat.
+			const bron = register.actief();
+			if (bron && typeof bron.start === 'function') bron.start((wijziging) => register.meld(wijziging));
 		})
 		.catch((fout) => {
 			// De bron liet het afweten. De server-gerenderde rijen staan er nog, dus de bezoeker
