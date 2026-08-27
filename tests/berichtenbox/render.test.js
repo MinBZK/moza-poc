@@ -341,14 +341,35 @@ describe("berichtenbox.js — herstel na een storing", () => {
 		expect(melding.hidden).toBe(false);
 	});
 
-	it("haalt de melding weg zodra er weer een lijst staat", async () => {
-		await laad([bericht({ onderwerp: "Werkt" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+	it("haalt de melding weg en zet de tellers terug zodra er weer een lijst staat", async () => {
+		// Het hele paginavenster moet onrenderbaar zijn, anders slaat de drempel niet aan en test
+		// dit niets: de vorige versie bleef groen ook zonder herstelNaLaadfout.
+		// Zonder id: filterBerichten kan er nog mee overweg, createRij niet. Een gooiende getter zou
+		// ook het filteren zelf laten struikelen, en dan is herstel per definitie onbereikbaar.
+		const kapot = Array.from({ length: 10 }, (_, i) => ({
+			magazijnId: "gem",
+			afzender: "Gemeente",
+			onderwerp: "Kapot " + i,
+			datum: "2026-02-12",
+		}));
+		bouwPagina([bericht({ onderwerp: "Werkt", magazijnId: "werkt", afzender: "Werkende bron" })]);
+		const goed = window.berichtenboxData.berichten[0];
+		window.berichtenboxData.berichten = [...kapot, goed];
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("–");
+
 		// Filter op het bericht dat wél te renderen is: dan is er weer een volledige lijst.
 		const zoek = document.querySelector("[data-berichtenbox-search-input]");
-		zoek.value = "werkt";
+		zoek.value = "werkende";
 		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(true);
 		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(false);
+		// "– berichten uit – bronnen" boven een werkende lijst is net zo onwaar als andersom.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("–");
 	});
 });
 
@@ -533,6 +554,28 @@ describe("berichtenbox.js — de storingsdrempel geldt per pagina", () => {
 
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 		expect(rijen()).toHaveLength(0);
+		expect(document.querySelector("[data-berichtenbox-pagination]").hidden).toBe(true);
+	});
+});
+
+describe("berichtenbox.js — een resize tijdens een storing", () => {
+	it("zet geen paginanavigatie terug onder de melding", async () => {
+		const kapot = Array.from({ length: 25 }, (_, i) => ({
+			magazijnId: "gem",
+			afzender: "Gemeente",
+			onderwerp: "Kapot " + i,
+			datum: "2026-02-12",
+		}));
+		bouwPagina([bericht()]);
+		window.berichtenboxData.berichten = kapot;
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(document.querySelector("[data-berichtenbox-pagination]").hidden).toBe(true);
+
+		window.dispatchEvent(new window.Event("resize"));
+		await new Promise((klaar) => setTimeout(klaar, 200));
+
+		// Bladerknoppen onder "we konden niets ophalen" suggereren een lijst die er niet is.
 		expect(document.querySelector("[data-berichtenbox-pagination]").hidden).toBe(true);
 	});
 });

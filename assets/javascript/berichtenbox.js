@@ -27,7 +27,11 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				navBadges.forEach((badge) => { badge.textContent = opgeslagen.aantalOngelezen > 0 ? opgeslagen.aantalOngelezen : ''; });
 			}
 		}
-	} catch (e) { /* localStorage niet toegankelijk */ }
+	} catch (e) {
+		// De badge houdt dan het server-gerenderde aantal; beter dan geen badge, maar het hoort
+		// niet spoorloos te gebeuren.
+		console.warn('[Berichtenbox] Ongelezen-badge niet bij te werken uit de bewaarde state.', e);
+	}
 
 	// Kebab-menu's in berichtenbox-rijen: openen/sluiten. Bewust vóór de data-guard,
 	// zodat het ook werkt op demo-berichtenboxen (mobu/belang) die geen volledige
@@ -72,6 +76,8 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Geeft null als de bewaarde state er wel is maar onleesbaar. Dat is iets anders dan "er staat
 		// nog niets": bij onleesbaar mag er niet overheen geschreven worden, want dan zijn ook het
 		// archief, de prullenbak en de eigen mappen weg.
+		let gedeeldeStateOnleesbaar = false;
+
 		function leesGedeeldeState() {
 			let rauw;
 			try {
@@ -90,6 +96,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				return ontleed;
 			} catch (e) {
 				console.error('[Berichtenbox] Bewaarde state onleesbaar; markering wordt niet bewaard.', e);
+				gedeeldeStateOnleesbaar = true;
 				return null;
 			}
 		}
@@ -127,7 +134,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				// meldingsblok, dus de knop zelf is het enige dat de waarheid kan vertellen. Niet
 				// blijvend uitschakelen — een volgende poging kan wel lukken.
 				toonMarkering(!aan);
-				knop.title = 'Markeren lukte niet; uw browser bewaart op dit moment niets.';
+				knop.title = gedeeldeStateOnleesbaar
+					? 'Markeren lukte niet; uw eerder bewaarde berichtenbox is niet te lezen.'
+					: 'Markeren lukte niet; uw browser bewaart op dit moment niets.';
 			});
 		});
 		return;
@@ -155,7 +164,11 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		try {
 			const opgeslagen = localStorage.getItem('persona');
 			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
-		} catch (e) { /* localStorage niet toegankelijk */ }
+		} catch (e) {
+			// Zonder de bewaarde keuze valt de berichtenbox terug op de standaardpersona; dat is een
+			// andere postbus dan de bezoeker koos, dus het hoort in de console te staan.
+			console.warn('[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.', e);
+		}
 		const actief = personas.find((p) => p.actief);
 		return actief ? actief.id : personas[0].id;
 	})();
@@ -246,6 +259,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		try {
 			return localStorage.getItem('feature:' + ORG_FEATURE) === 'true';
 		} catch (e) {
+			console.warn('[Berichtenbox] Vlag "Berichten van andere organisaties" niet leesbaar; behandeld als uit.', e);
 			return false;
 		}
 	}
@@ -444,13 +458,17 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
 		if (staandeMeldingEigenaar !== 'opslag') {
 			const reden = stateModule.waaromNietBewaard();
-			toonPaginaMelding(
-				reden === 'vol'
-					? 'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.'
-					: 'Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.',
-				'storing',
-				'opslag'
-			);
+			let tekst;
+			if (reden === 'vol') {
+				tekst = 'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.';
+			} else if (reden === 'onleesbaar') {
+				// Overschrijven zou het archief, de prullenbak en de eigen mappen wissen; dat doen we
+				// bewust niet, en dan is "zet privénavigatie uit" een advies dat nergens op slaat.
+				tekst = 'Uw wijziging is niet bewaard. Uw eerder bewaarde berichtenbox is niet te lezen, en wij schrijven daar niet overheen.';
+			} else {
+				tekst = 'Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.';
+			}
+			toonPaginaMelding(tekst, 'storing', 'opslag');
 		}
 		return false;
 	}
@@ -502,12 +520,18 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	window.addEventListener('resize', () => {
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(() => {
+			// Tijdens een storing staat er geen lijst; paginanavigatie eronder zou werkende
+			// bladerknoppen suggereren voor iets wat niet te tonen is.
+			if (ladingMislukt || laadfoutGetoond) return;
+
 			// Alleen de ellipsis-truncatie van de paginanavigatie schaalt mee. De rijen opnieuw
 			// opbouwen zou een geopend kebab-menu sluiten en de toetsenbordfocus naar body gooien.
-			const gevonden = filterBerichten(data.berichten, huidigeCriteria());
-			const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
-			huidigePagina = venster.pagina;
-			bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+			veilig({ log: 'Herberekenen van de paginanavigatie', bezoeker: 'De paginanavigatie klopt mogelijk niet meer. Ververs de pagina.' }, () => {
+				const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+				const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+				huidigePagina = venster.pagina;
+				bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+			});
 		}, 150);
 	});
 
@@ -2002,6 +2026,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// De gesimuleerde meldingen mogen weer meedoen nu er een lijst staat.
 		werkBronWaarschuwingBij();
 		werkBronUitvalBij();
+
+		// De tellers stonden op "–" zolang er niets te tonen was. toonBerichten rekent ze niet uit,
+		// dus zonder dit blijft "– berichten uit – bronnen" boven een werkende lijst staan.
+		render(huidigeView());
 	}
 
 	// Er is één meldingsslot per pagina. Een lichtere melding mag een zwaardere niet overschrijven:
