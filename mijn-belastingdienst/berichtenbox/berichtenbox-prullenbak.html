@@ -34,6 +34,13 @@ subNav:
 		<section role="tabpanel" id="berichtenbox-prullebak" aria-labelledby="tab-berichtenbox-prullebak">
 			<section class="berichtenbox-content">
 				<p class="metadata"><span data-berichtenbox-counter-total>0</span> verwijderde berichten</p>
+				<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
+					{% include "icon-feedback-error.njk" %}
+					<div>
+						<p>Uw berichten konden niet worden opgehaald. Probeer het opnieuw of kom later terug.</p>
+					</div>
+				</div>
+
 				<table class="berichtenbox-list" data-berichtenbox-list data-berichtenbox-view="prullenbak">
 					<thead>
 						<tr>

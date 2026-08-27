@@ -93,11 +93,17 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 			}
 
 			const uitDataset = (data.berichten || []);
-			const bekend = new Set(uitDataset.map((bericht) => bericht.id));
+			const magazijnen = (data.magazijnen || []).slice();
+			const bekendeIds = new Set(uitDataset.map((bericht) => bericht.id));
+			const bekendeMagazijnen = new Set(magazijnen.map((magazijn) => magazijn.id));
+
+			const terug = eerderBinnengekomen.filter(
+				(bericht) => !bekendeIds.has(bericht.id) && bekendeMagazijnen.has(bericht.magazijnId)
+			);
 
 			return {
-				berichten: [...eerderBinnengekomen.filter((b) => !bekend.has(b.id)), ...uitDataset],
-				magazijnen: (data.magazijnen || []).slice(),
+				berichten: [...terug, ...uitDataset],
+				magazijnen,
 				mappen: (data.mappen || []).slice(),
 			};
 		},
@@ -109,20 +115,39 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 		start(meld) {
 			// De vlag staat aan omdat iemand wil zien dat er berichten binnenkomen. Gebeurt dat niet
 			// meer, dan hoort dat gezegd te worden en niet alleen in de console te staan.
-			const meldStilstand = () => {
+			// Buiten een pagina — een test, een script — is er geen live-regio; dan is de console het
+			// enige kanaal en dat is hier voldoende.
+			const meldStilstand = (tekst) => {
+				if (typeof document === "undefined") return;
 				const live = document.querySelector("[data-berichtenbox-live]");
-				if (live) live.textContent = "Er komen geen nieuwe berichten meer binnen. Ververs de pagina.";
+				if (live) live.textContent = tekst;
 			};
 
 			if (!dynamischeBerichtenAan()) return;
 			if (!magOphalen()) return;
 
 			const magazijnen = (data.magazijnen || []);
-			if (!magazijnen.length) return;
+			if (!magazijnen.length) {
+				console.warn("[Berichtenbox] Geen magazijnen; er kunnen geen demo-berichten binnenkomen.");
+				meldStilstand("Er zijn geen bronnen om berichten van te ontvangen.");
+				return;
+			}
 
 			const klok = setInterval(() => {
 				try {
-					if (!state || state.ruw.nieuweBerichten.length >= limiet) return;
+					if (!state) {
+						console.warn("[Berichtenbox] Geen state; binnenkomende demo-berichten gestopt.");
+						clearInterval(klok);
+						return;
+					}
+
+					// De demo is uitgespeeld. Blijven tikken zonder iets te doen laat de bezoeker in
+					// het ongewisse of er nog iets komt.
+					if (state.ruw.nieuweBerichten.length >= limiet) {
+						clearInterval(klok);
+						meldStilstand("Alle demo-berichten zijn binnen.");
+						return;
+					}
 
 					const bericht = nieuwBericht(magazijnen);
 					state.ruw.nieuweBerichten.push(bericht);
@@ -137,12 +162,13 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true }
 					if (mislukt && mislukt.length) {
 						console.error("[Berichtenbox] Nieuw bericht kon niet getoond worden; er komen er geen meer bij.");
 						clearInterval(klok);
+						meldStilstand("Een nieuw bericht kon niet worden getoond. Ververs de pagina.");
 					}
 				} catch (fout) {
 					// Bij corrupte state zou elke tick opnieuw gooien; stoppen scheelt console-spam.
 					console.error("[Berichtenbox] Binnenkomende demo-berichten gestopt door een fout.", fout);
 					clearInterval(klok);
-					meldStilstand();
+					meldStilstand("Er komen geen nieuwe berichten meer binnen. Ververs de pagina.");
 				}
 			}, tussenpoos());
 		},

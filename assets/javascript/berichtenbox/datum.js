@@ -11,6 +11,11 @@ const MAANDEN = [
 	"juli", "augustus", "september", "oktober", "november", "december",
 ];
 
+function dagenIn(jaar, maand) {
+	// Maand 2 is februari; new Date(jaar, maand, 0) geeft de laatste dag van die maand.
+	return new Date(jaar, maand, 0).getDate();
+}
+
 export function datumNL(datumStr) {
 	if (!datumStr) return "";
 
@@ -22,8 +27,15 @@ export function datumNL(datumStr) {
 		return "Onbekende datum";
 	}
 
+	const jaar = parseInt(m[1], 10);
 	const maand = parseInt(m[2], 10);
-	if (maand < 1 || maand > 12) return "Onbekende datum";
+	const dag = parseInt(m[3], 10);
 
-	return parseInt(m[3], 10) + " " + MAANDEN[maand - 1] + " " + parseInt(m[1], 10);
+	if (maand < 1 || maand > 12 || dag < 1 || dag > dagenIn(jaar, maand)) {
+		// Ook hier melden: "31 februari 2026" doorlaten zou een verzonnen datum als feit tonen.
+		console.warn("[Berichtenbox] Datum '" + datumStr + "' bestaat niet.");
+		return "Onbekende datum";
+	}
+
+	return dag + " " + MAANDEN[maand - 1] + " " + jaar;
 }

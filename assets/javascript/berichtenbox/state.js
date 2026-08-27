@@ -51,14 +51,27 @@ function defaults() {
  */
 function beperk(berichten, bekendeMagazijnIds) {
 	const bekend = new Set(bekendeMagazijnIds);
-	const over = berichten
-		.filter((bericht) => bericht && bekend.has(bericht.magazijnId))
-		.slice(-NIEUWE_BERICHTEN_LIMIET);
 
-	if (over.length < berichten.length) {
+	// Drie oorzaken, drie meldingen. Ze op één hoop gooien stuurt wie de console leest achter een
+	// ontbrekend magazijn aan terwijl het om een afkapping ging.
+	const bruikbaar = berichten.filter((bericht) => !!bericht);
+	if (bruikbaar.length < berichten.length) {
+		console.warn("[Berichtenbox] " + (berichten.length - bruikbaar.length) + " lege plek(ken) in de bewaarde berichten overgeslagen.");
+	}
+
+	const vanBekendMagazijn = bruikbaar.filter((bericht) => bekend.has(bericht.magazijnId));
+	if (vanBekendMagazijn.length < bruikbaar.length) {
 		console.warn(
-			"[Berichtenbox] " + (berichten.length - over.length) +
+			"[Berichtenbox] " + (bruikbaar.length - vanBekendMagazijn.length) +
 			" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
+		);
+	}
+
+	const over = vanBekendMagazijn.slice(-NIEUWE_BERICHTEN_LIMIET);
+	if (over.length < vanBekendMagazijn.length) {
+		console.warn(
+			"[Berichtenbox] " + (vanBekendMagazijn.length - over.length) +
+			" bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten."
 		);
 	}
 

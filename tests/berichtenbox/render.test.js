@@ -191,11 +191,20 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 describe("berichtenbox.js — als er niets te tonen valt", () => {
 	it("laat één onbruikbaar bericht de rest niet meeslepen", async () => {
 		// Een bericht zonder id laat createRij struikelen: geen sleutel voor de state, geen link
-		// naar een detailpagina. Dat ene bericht valt af, de rest blijft gewoon staan.
+		// naar een detailpagina. De rest blijft staan.
 		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
-		expect(rijen()).toHaveLength(1);
 		expect(rijen()[0].textContent).toContain("Gewoon bericht");
 		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+	});
+
+	it("laat een zichtbaar gat achter zodat de teller niet liegt", async () => {
+		await laad([bericht({ onderwerp: "Gewoon bericht" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		const gat = document.querySelector(".is-unreadable");
+		expect(gat).not.toBe(null);
+		expect(gat.textContent).toContain("kon niet worden getoond");
+		// Twee berichten geteld, twee rijen op het scherm: de een is een gat, maar geen leugen.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("2");
+		expect(rijen()).toHaveLength(2);
 	});
 
 	it("toont de melding als er niets van de lijst overeind blijft", async () => {
@@ -274,10 +283,34 @@ describe("berichtenbox.js — terugdraaien bij een mislukte render", () => {
 		window.berichtenboxData.magazijnen[0].id = undefined;
 		await vi.advanceTimersByTimeAsync(5000);
 
-		// Wat er ook misging: er staat nog steeds een leesbare lijst of een melding, nooit allebei niet.
+		// Er staat een zichtbare lijst, óf een melding. Een verborgen tabel zonder melding is
+		// precies de lege witte pagina die dit moet uitsluiten.
 		const lijst = document.querySelector("[data-berichtenbox-list]");
 		const melding = document.querySelector("[data-geen-bronnen]");
-		expect(rijen().length > 0 || !melding.hidden || lijst.hidden).toBe(true);
+		const lijstZichtbaar = !lijst.hidden && rijen().length > 0;
+		expect(lijstZichtbaar || !melding.hidden).toBe(true);
 		vi.useRealTimers();
+	});
+});
+
+describe("berichtenbox.js — herstel na een storing", () => {
+	it("laat na een mislukte lading geen lege witte pagina achter", async () => {
+		// Alle berichten onbruikbaar: er valt niets te tonen. Dan hoort er een melding te staan,
+		// niet een verborgen tabel zonder uitleg.
+		await laad([{ magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const melding = document.querySelector("[data-geen-bronnen]");
+		expect(lijst.hidden).toBe(true);
+		expect(melding.hidden).toBe(false);
+	});
+
+	it("haalt de melding weg zodra er weer een lijst staat", async () => {
+		await laad([bericht({ onderwerp: "Werkt" }), { magazijnId: "gem", afzender: "Gemeente", onderwerp: "Kapot" }]);
+		// Filter op het bericht dat wél te renderen is: dan is er weer een volledige lijst.
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "werkt";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+		expect(document.querySelector("[data-geen-bronnen]").hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-list]").hidden).toBe(false);
 	});
 });

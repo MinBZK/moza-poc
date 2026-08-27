@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { datumNL } from "../../assets/javascript/berichtenbox/datum.js";
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 describe("datumNL", () => {
 	it("schrijft de maand voluit, zoals de schrijfwijzer vraagt", () => {
@@ -23,8 +27,19 @@ describe("datumNL", () => {
 		expect(datumNL("geen datum")).toBe("Onbekende datum");
 	});
 
-	it("weigert een maand buiten 1-12", () => {
+	it("weigert een maand buiten 1-12 en meldt dat", () => {
+		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
 		expect(datumNL("2026-13-01")).toBe("Onbekende datum");
+		expect(waarschuwing).toHaveBeenCalled();
+	});
+
+	it("verzint geen 31 februari", () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		expect(datumNL("2026-02-31")).toBe("Onbekende datum");
+	});
+
+	it("laat 29 februari in een schrikkeljaar staan", () => {
+		expect(datumNL("2028-02-29")).toBe("29 februari 2028");
 	});
 
 	it("weigert een tijdstempel; de aanroeper kapt zelf af op tien tekens", () => {

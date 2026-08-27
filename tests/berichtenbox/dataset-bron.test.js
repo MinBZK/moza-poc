@@ -69,6 +69,33 @@ describe("datasetBron — laden", () => {
 });
 
 describe("datasetBron — binnendruppelende berichten", () => {
+	it("meldt dat de demo uitgespeeld is in plaats van door te blijven tikken", () => {
+		metVlag(true);
+		vi.useFakeTimers();
+		vi.stubGlobal("location", { search: "?poll=5" });
+		const stoppen = vi.spyOn(globalThis, "clearInterval");
+		const state = nepState();
+		datasetBron(DATA, { state, limiet: 1 }).start(vi.fn());
+		vi.advanceTimersByTime(5000 * 3);
+		expect(state.ruw.nieuweBerichten).toHaveLength(1);
+		expect(stoppen).toHaveBeenCalled();
+		vi.useRealTimers();
+	});
+
+	it("meldt het als er geen magazijnen zijn om van te ontvangen", () => {
+		metVlag(true);
+		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
+		datasetBron({ berichten: [], magazijnen: [], mappen: [] }, { state: nepState() }).start(vi.fn());
+		expect(waarschuwing).toHaveBeenCalled();
+	});
+
+	it("herstelt geen bericht van een magazijn dat de bron niet kent", async () => {
+		metVlag(true);
+		const state = nepState([{ id: "msg-live-1", magazijnId: "verdwenen" }]);
+		const uit = await datasetBron(DATA, { state }).laad();
+		expect(uit.berichten.map((b) => b.id)).toEqual(["msg-1"]);
+	});
+
 	it("start niet als de vlag uit staat", () => {
 		metVlag(false);
 		vi.useFakeTimers();
@@ -115,6 +142,18 @@ describe("datasetBron — binnendruppelende berichten", () => {
 		vi.useRealTimers();
 	});
 
+	it("stopt als een nieuw bericht niet getoond kon worden", () => {
+		metVlag(true);
+		vi.useFakeTimers();
+		vi.stubGlobal("location", { search: "?poll=5" });
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const meld = vi.fn(() => [new Error("niet te tonen")]);
+		datasetBron(DATA, { state: nepState(), limiet: 5 }).start(meld);
+		vi.advanceTimersByTime(5000 * 4);
+		expect(meld).toHaveBeenCalledOnce();
+		vi.useRealTimers();
+	});
+
 	it("houdt een ondergrens aan voor de tussenpoos", () => {
 		metVlag(true);
 		vi.useFakeTimers();
@@ -130,6 +169,7 @@ describe("datasetBron — binnendruppelende berichten", () => {
 
 	it("start niet zonder magazijnen", () => {
 		metVlag(true);
+		vi.spyOn(console, "warn").mockImplementation(() => {});
 		vi.useFakeTimers();
 		const meld = vi.fn();
 		datasetBron({ berichten: [], magazijnen: [], mappen: [] }, { state: nepState() }).start(meld);

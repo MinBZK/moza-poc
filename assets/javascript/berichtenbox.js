@@ -862,7 +862,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		huidigePagina = venster.pagina;
 
 		const overgeslagen = rendersLijst(venster.items);
-		laadfoutGetoond = false;
 
 		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
 		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan.
@@ -870,6 +869,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			toonLaadfout();
 			return;
 		}
+
+		// Er staat weer een lijst. Pas nú mag de storingsmelding weg — hem bovenaan wissen liet de
+		// demo-simulatie hem daarna alsnog verbergen, met een leeg scherm en geen woord tot gevolg.
+		herstelNaLaadfout();
 
 		const leeg = document.querySelector('[data-berichtenbox-empty]');
 		if (leeg) leeg.hidden = gevonden.length > 0;
@@ -1603,6 +1606,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				rijen.push(createRij(bericht));
 			} catch (fout) {
 				overgeslagen += 1;
+				// Een gat op de plek waar het bericht hoorde te staan. Stil overslaan zou een teller
+				// van "12 berichten" boven elf rijen opleveren, zonder dat iets dat verschil uitlegt.
+				rijen.push(maakOnleesbaarRij());
 				console.error('[Berichtenbox] Bericht kon niet worden getoond.', bericht, fout);
 			}
 		});
@@ -1617,6 +1623,22 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const legeStaat = document.querySelector('[data-berichtenbox-empty]');
 	if (legeStaat) legeStaat.hidden = true;
 
+	// Plaatsvervanger voor een bericht dat niet te renderen is. Kolommenaantal volgt de kop, zodat
+	// de tabel niet scheef trekt.
+	function maakOnleesbaarRij() {
+		const tr = document.createElement('tr');
+		tr.className = 'berichtenbox-row is-unreadable';
+
+		const td = document.createElement('td');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll('th').length : 1;
+		td.colSpan = koppen || 1;
+		td.textContent = 'Dit bericht kon niet worden getoond.';
+		tr.appendChild(td);
+
+		return tr;
+	}
+
 	// Luisteraars staan bewust vóór het laden van de bron. Een trage of hangende bron mag nooit
 	// betekenen dat sorteren, het kebab-menu of de rij-acties dood zijn.
 	bindSortering();
@@ -1627,31 +1649,42 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
 	function startDemoGedrag() {
-		toonMappenZijbalk();
-		bindInboxFilters();
-		werkBronWaarschuwingBij();
-		plannBronUitval();
+		veilig('Opstarten van de lijstfuncties', () => {
+			toonMappenZijbalk();
+			bindInboxFilters();
+			werkBronWaarschuwingBij();
+			plannBronUitval();
+		});
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
 	// zijn het enige wat de bezoeker nog heeft als het renderen hapert.
-	function naEersteLading() {
+	// Eén onderdeel dat omvalt mag de rest niet meenemen, en de bezoeker hoort te merken dat er
+	// iets niet werkt in plaats van op een dode knop te blijven klikken.
+	function veilig(wat, doen) {
 		try {
-			naEersteLadingBinnen();
+			doen();
 		} catch (fout) {
-			console.error('[Berichtenbox] Opstarten na het laden is niet volledig gelukt.', fout);
+			console.error('[Berichtenbox] ' + wat + ' mislukte.', fout);
+			const live = document.querySelector('[data-berichtenbox-live]');
+			if (live) live.textContent = 'Niet alles op deze pagina werkt. Ververs de pagina.';
 		}
 	}
 
-	function naEersteLadingBinnen() {
-		vulDemoDetailPagina();
-		bindDetailPaginaActies();
+	function naEersteLading() {
+		// Apart afgeschermd: op een detailpagina hangen hier de knoppen Archiveren en Verwijderen
+		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
+		veilig('Vullen van de detailpagina', vulDemoDetailPagina);
+		veilig('Binden van de acties op de detailpagina', bindDetailPaginaActies);
 
 		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
-			voortgangsAnimatie(() => {
-				state.eersteBezoekGehad = true;
-				opslaan();
-				startDemoGedrag();
+			veilig('De voortgangsanimatie', () => {
+				voortgangsAnimatie(() => {
+					state.eersteBezoekGehad = true;
+					opslaan();
+					// Binnen de animatie-callback: de try hierboven is dan allang teruggekeerd.
+					startDemoGedrag();
+				});
 			});
 		} else {
 			startDemoGedrag();
@@ -1740,6 +1773,22 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	// aanzien.
 	let laadfoutGetoond = false;
 
+	// Draait toonLaadfout terug zodra er weer iets te zien is. Zonder dit bleef de tabel verborgen
+	// achter een melding die niemand meer weghaalde.
+	function herstelNaLaadfout() {
+		if (!laadfoutGetoond) return;
+		laadfoutGetoond = false;
+
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (lijst && huidigeView() === 'inbox') lijst.hidden = false;
+
+		const melding = document.querySelector('[data-geen-bronnen]');
+		if (melding) melding.hidden = true;
+
+		// De gesimuleerde unhappy flow mag dit blok weer sturen.
+		werkBronWaarschuwingBij();
+	}
+
 	function toonLaadfout() {
 		laadfoutGetoond = true;
 		const lijst = document.querySelector('[data-berichtenbox-list]');
@@ -1760,7 +1809,14 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		else console.error('[Berichtenbox] Geen meldingsblok op deze pagina; de storing blijft onzichtbaar.');
 	}
 
-	const persona = window.Personas && typeof window.Personas.actief === 'function' ? window.Personas.actief() : null;
+	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
+	// laten staan, inclusief berichten die de bezoeker allang gearchiveerd heeft.
+	let persona = null;
+	try {
+		if (window.Personas && typeof window.Personas.actief === 'function') persona = window.Personas.actief();
+	} catch (fout) {
+		console.error('[Berichtenbox] Actieve persona niet op te vragen; verder zonder.', fout);
+	}
 
 	register.kies(persona)
 		.then((bron) => {
@@ -1783,6 +1839,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		})
 		.catch((fout) => {
 			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
+			// Leeg maken vóór de melding: anders bouwt een latere render de server-gerenderde
+			// dataset terug op onder een verborgen tabel, en die negeert de state.
+			data.berichten = [];
 			toonLaadfout();
 		})
 		.finally(() => {
@@ -1795,7 +1854,13 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			if (bron && typeof bron.start === 'function') {
 				bron.start((wijziging) => {
 					const mislukt = register.meld(wijziging);
-					if (mislukt.length) toonLaadfout();
+					// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
+					// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
+					// vorige weergave al hersteld; hier alleen nog zeggen wat er misging.
+					if (mislukt.length) {
+						const live = document.querySelector('[data-berichtenbox-live]');
+						if (live) live.textContent = 'Een nieuw bericht kon niet worden getoond.';
+					}
 					return mislukt;
 				});
 			}
