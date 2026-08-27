@@ -11,6 +11,7 @@
 import { datumNL } from "./berichtenbox/datum.js";
 import { maakState, NIEUWE_BERICHTEN_LIMIET } from "./berichtenbox/state.js";
 import { maakRegister } from "./berichtenbox/bron.js";
+import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lijst.js";
 import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 (function() {
@@ -304,30 +305,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
-	function pasStateToeOpRijen() {
-		const view = huidigeView();
-		const rijen = document.querySelectorAll('.berichtenbox-row');
-		rijen.forEach((rij) => {
-			const id = rij.dataset.berichtId;
-			const status = statusVan(id);
-			// Markeer-staat uit localStorage spiegelen naar de knop in de statische rij.
-			const markKnop = rij.querySelector('[data-mark-toggle]');
-			const gemarkeerd = isGemarkeerd(id, markKnop ? markKnop.classList.contains('is-marked') : false);
-			if (markKnop) {
-				markKnop.classList.toggle('is-marked', gemarkeerd);
-				markKnop.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
-			}
-			if (view === 'inbox') {
-				rij.hidden = status !== 'inbox';
-				const origineel = rij.classList.contains('is-unread');
-				const nu = isOngelezen(id, origineel);
-				rij.classList.toggle('is-unread', nu);
-			} else {
-				rij.hidden = true;
-			}
-		});
-	}
-
 	function render(view) {
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
@@ -411,10 +388,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 
 	// ---- Client-side paginering ----
-	// Eleventy rendert alle berichten in één lijst; JS toont per pagina een venster
-	// zodat een dynamisch toegevoegd bericht echt naar de volgende pagina reflowt.
-	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan geen
-	// paginering (alles op één pagina).
+	// De datalaag levert alle berichten; toonBerichten rendert alleen het venster van de huidige
+	// pagina, zodat een nieuw binnengekomen bericht echt naar de volgende pagina doorschuift.
+	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan staat alles op één
+	// pagina.
 	const PAGINA_GROOTTE = (function () {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const n = parseInt(lijst && lijst.dataset.pageSize, 10);
@@ -441,23 +418,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// Toon alleen het venster van de huidige pagina uit `rijen` (al gefilterde,
 	// in volgorde staande rijen die zichtbaar horen te zijn) en bouw de paginanav.
-	function paginer(rijen) {
-		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
-		if (!Number.isFinite(PAGINA_GROOTTE)) {
-			if (pagnav) { pagnav.hidden = true; }
-			return;
-		}
-		const totaalPaginas = Math.max(1, Math.ceil(rijen.length / PAGINA_GROOTTE));
-		if (huidigePagina > totaalPaginas) huidigePagina = totaalPaginas;
-		if (huidigePagina < 1) huidigePagina = 1;
-		const start = (huidigePagina - 1) * PAGINA_GROOTTE;
-		const eind = start + PAGINA_GROOTTE;
-		rijen.forEach((rij, i) => {
-			rij.hidden = i < start || i >= eind;
-		});
-		bouwPaginaNav(totaalPaginas, pagnav);
-	}
-
 	function gaNaarPagina(nr) {
 		huidigePagina = nr;
 		const params = new URLSearchParams(location.search);
@@ -852,30 +812,47 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		return td;
 	}
 
-	function renderLijstVoorView(view) {
+	// De criteria waarop de huidige weergave filtert. Het zoekveld en de afzendervinkjes staan in
+	// de DOM omdat de bezoeker ze daar invult; de rest komt uit de state en de URL.
+	function huidigeCriteria() {
+		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
+		return {
+			view: huidigeView(),
+			zoek: zoekInput ? zoekInput.value : '',
+			afzenders: new Set(
+				[...document.querySelectorAll('[data-afzender-check]:checked')].map((c) => c.value)
+			),
+			map: new URLSearchParams(location.search).get('map'),
+			magazijnToegestaan,
+			persoonRelevant,
+			state: stateModule,
+		};
+	}
+
+	// Eén weg naar het scherm, voor élke weergave: filter de berichten, neem het venster van de
+	// huidige pagina, bouw die rijen. Voorheen liep dit door de DOM-rijen en zocht per rij het
+	// bericht terug — daardoor waren de rijen een tweede waarheid naast de berichten.
+	function toonBerichten() {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const leeg = document.querySelector('[data-berichtenbox-empty]');
 		if (!lijst) return;
-		let items = [];
-		if (view === 'archief') {
-			items = data.berichten.filter((b) => state.gearchiveerd[b.id]);
-		} else if (view === 'prullenbak') {
-			items = data.berichten.filter((b) => state.verwijderd[b.id]);
-		}
-		if (view === 'archief' || view === 'prullenbak') {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-			const rijen = items.map((b) => {
-				const rij = createRij(b);
-				tbody.appendChild(rij);
-				return rij;
-			});
-			lijst.hidden = items.length === 0;
-			if (leeg) leeg.hidden = items.length > 0;
-			// Deze views worden volledig uit data herbouwd; paginering werkt op die rijen.
-			herpagineerHuidigeView = function () { renderLijstVoorView(view); };
-			paginer(rijen);
-		}
+
+		const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+		const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+		huidigePagina = venster.pagina;
+
+		rendersLijst(venster.items);
+
+		const leeg = document.querySelector('[data-berichtenbox-empty]');
+		if (leeg) leeg.hidden = gevonden.length > 0;
+		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
+		if (huidigeView() !== 'inbox') lijst.hidden = gevonden.length === 0;
+
+		bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+	}
+
+	function renderLijstVoorView() {
+		herpagineerHuidigeView = toonBerichten;
+		toonBerichten();
 	}
 
 	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
@@ -1066,56 +1043,11 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		// Alle berichten staan in de DOM; het map-filter in pasFilterToe verbergt de
 		// niet-passende rijen en de paginering toont het juiste venster.
 
-		function pasFilterToe() {
-			const zoek = (zoekInput ? zoekInput.value : '').trim().toLowerCase();
-			const gekozenAfzenders = new Set(
-				[...document.querySelectorAll('[data-afzender-check]:checked')].map((c) => c.value)
-			);
-			const mapFilter = mapUitUrl();
-			const zichtbareRijen = [];
-			document.querySelectorAll('.berichtenbox-row').forEach((rij) => {
-				if (statusVan(rij.dataset.berichtId) !== 'inbox') {
-					rij.hidden = true;
-					return;
-				}
-				if (!magazijnToegestaan(rij.dataset.afzenderId)) {
-					rij.hidden = true;
-					return;
-				}
-				// Persona-relevantie: verberg berichten met een relevantVoor-tag die
-				// niet bij de actieve persona hoort.
-				const bericht = data.berichten.find((b) => b.id === rij.dataset.berichtId);
-				if (bericht && !persoonRelevant(bericht)) {
-					rij.hidden = true;
-					return;
-				}
-				let match = true;
-				if (zoek) {
-					const afzEl = rij.querySelector('.berichtenbox-row-sender');
-					const ondEl = rij.querySelector('.berichtenbox-row-subject');
-					const tekst = ((afzEl ? afzEl.textContent : '') + ' ' + (ondEl ? ondEl.textContent : '')).toLowerCase();
-					if (!tekst.includes(zoek)) match = false;
-				}
-				if (gekozenAfzenders.size > 0) {
-					if (!gekozenAfzenders.has(rij.dataset.afzenderId)) match = false;
-				}
-				if (mapFilter) {
-					const dataMap = rij.dataset.map;
-					const overrideMap = state.mapOverride[rij.dataset.berichtId];
-					const effectieveMap = (rij.dataset.berichtId in state.mapOverride) ? overrideMap : dataMap;
-					if (effectieveMap !== mapFilter) match = false;
-				}
-				rij.hidden = !match;
-				if (match) zichtbareRijen.push(rij);
-			});
-			const leeg = document.querySelector('[data-berichtenbox-empty]');
-			if (leeg) leeg.hidden = zichtbareRijen.length > 0;
-			// Toon alleen het venster van de huidige pagina van de gematchte rijen.
-			paginer(zichtbareRijen);
-		}
+		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het scherm.
+		const pasFilterToe = toonBerichten;
 
 		// Bij inbox stuurt het filter de paginering aan.
-		herpagineerHuidigeView = pasFilterToe;
+		herpagineerHuidigeView = toonBerichten;
 
 		// Een nieuw filter zet de weergave terug naar pagina 1.
 		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
@@ -1737,8 +1669,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		}
 		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
 		if (soort === 'archiveren' || soort === 'verwijderen') {
-			pasStateToeOpRijen();
-			huidigePagina = 1;
+				huidigePagina = 1;
 			if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
 			render(huidigeView());
 		}
@@ -1796,7 +1727,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		data.mappen = inhoud.mappen;
 
 		rendersLijst(data.berichten);
-		pasStateToeOpRijen();
 		werkMappenZichtbaarheidBij();
 		renderLijstVoorView(huidigeView());
 		render(huidigeView());
@@ -1823,7 +1753,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		isOngelezen,
 		mapVan,
 		huidigeView,
-		pasStateToeOpRijen,
 		render,
 	};
 })();
