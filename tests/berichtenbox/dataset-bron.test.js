@@ -10,7 +10,9 @@ const DATA = {
 function nepState(nieuweBerichten = []) {
 	return {
 		ruw: { nieuweBerichten },
-		bewaar: vi.fn(),
+		// Standaard geslaagd: een fake die `undefined` teruggeeft laat elke test draaien tegen een
+		// opslag die zegt dat hij faalde, en dat zou niemand opvallen.
+		bewaar: vi.fn(() => true),
 	};
 }
 
@@ -200,5 +202,38 @@ describe("datasetBron — binnendruppelende berichten", () => {
 		vi.advanceTimersByTime(120000);
 		expect(meld).not.toHaveBeenCalled();
 		vi.useRealTimers();
+	});
+});
+
+describe("datasetBron — als er niets bewaard kan worden", () => {
+	it("stopt met binnendruppelen en zegt dat", () => {
+		metVlag(true);
+		vi.useFakeTimers();
+		vi.stubGlobal("location", { search: "?poll=5" });
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = nepState();
+		state.bewaar = vi.fn(() => false);
+		const meldStoring = vi.fn();
+		const meld = vi.fn(() => []);
+
+		datasetBron(DATA, { state, limiet: 5, meldStoring }).start(meld);
+		vi.advanceTimersByTime(5000 * 4);
+
+		expect(meld).not.toHaveBeenCalled();
+		expect(state.ruw.nieuweBerichten).toHaveLength(0);
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden bewaard"));
+		vi.useRealTimers();
+	});
+
+	it("zet eerder ontvangen berichten terug als opruimen niet bewaard kan worden", async () => {
+		metVlag(false);
+		const state = nepState([{ id: "msg-live-1", magazijnId: "gem" }]);
+		state.bewaar = vi.fn(() => false);
+		const meldStoring = vi.fn();
+
+		await datasetBron(DATA, { state, meldStoring }).laad();
+
+		expect(state.ruw.nieuweBerichten).toHaveLength(1);
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet worden opgeruimd"), "info");
 	});
 });

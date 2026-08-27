@@ -1371,21 +1371,24 @@ caption {
 .feedback-info {
 	background: var(--toepassing-color-feedback-info-subtle);
 	border-color: var(--toepassing-color-feedback-info-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-info-icon);
 	}
 }
 .feedback-success {
 	background: var(--toepassing-color-feedback-success-subtle);
 	border-color: var(--toepassing-color-feedback-success-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-success-icon);
 	}
 }
 .feedback-warning {
 	background: var(--toepassing-color-feedback-warning-subtle);
 	border-color: var(--toepassing-color-feedback-warning-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-warning-icon);
 	}
 }

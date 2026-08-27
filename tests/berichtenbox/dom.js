@@ -104,7 +104,9 @@ ${STORING}
 
 	${inbox ? '<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>' : ""}
 
-	<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
+	<!-- Zoals de echte templates: op de inbox verborgen, op archief en prullenbak zichtbaar,
+	     want zonder JavaScript zijn die pagina's werkelijk leeg. -->
+	<div class="feedback"${inbox ? " hidden" : ""} data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
 
 	<table data-berichtenbox-list${lijstAttr}>
 		<thead>${inbox ? KOPPEN_INBOX : KOPPEN_OVERIG}

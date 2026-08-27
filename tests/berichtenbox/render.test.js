@@ -142,11 +142,17 @@ describe("berichtenbox.js — filteren en pagineren via de datalaag", () => {
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("1");
 	});
 
-	it("onthoudt een markering over een herrender heen", async () => {
+	it("onthoudt een markering over een herrender heen, en bewaart hem ook echt", async () => {
 		await laad([bericht(), bericht()]);
 		const knop = rijen()[0].querySelector("[data-mark-toggle]");
+		const id = rijen()[0].dataset.berichtId;
 		knop.click();
 		expect(knop.classList.contains("is-marked")).toBe(true);
+
+		// Niet alleen de klasse: alleen de DOM controleren zou een markering die nergens landt
+		// laten passeren.
+		expect(JSON.parse(window.localStorage.getItem("berichtenbox")).gemarkeerd[id]).toBe(true);
+
 		const zoek = document.querySelector("[data-berichtenbox-search-input]");
 		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
 		expect(rijen()[0].querySelector("[data-mark-toggle]").classList.contains("is-marked")).toBe(true);
@@ -390,5 +396,56 @@ describe("berichtenbox.js — de bezoeker hoort het als bewaren niet lukt", () =
 		expect(melding.hidden).toBe(false);
 		expect(melding.textContent).toContain("niet bewaard");
 		vi.unstubAllGlobals();
+	});
+});
+
+describe("berichtenbox.js — terugdraaien is echt terugdraaien", () => {
+	// Deze test bestond al in naam, maar was een implicatie met twee vervulbare takken: de hele
+	// rollback weghalen liet hem groen. Nu wordt de rollback zelf waargenomen.
+	it("zet data.berichten terug als het renderen van een nieuwe lijst mislukt", async () => {
+		vi.useFakeTimers();
+		bouwPagina([bericht({ onderwerp: "Blijft staan" })]);
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		window.history.replaceState(null, "", "/moza/berichtenbox/?poll=5");
+		await laadBerichtenbox();
+		await vi.advanceTimersByTimeAsync(0);
+
+		const voor = window.Berichtenbox.state && rijen().length;
+		expect(voor).toBe(1);
+
+		// Laat createRij struikelen op élk bericht: de nieuwe lijst is dan niet te renderen.
+		window.berichtenboxData.magazijnen[0].naam = { kapot: true };
+		const stuk = Object.defineProperty({}, "id", {
+			get() { throw new Error("niet te lezen"); },
+		});
+		window.berichtenboxData.berichten.push(stuk);
+
+		await vi.advanceTimersByTimeAsync(5000);
+
+		// De lijst die er stond hoort er nog te staan, niet half vervangen.
+		expect(rijen().length).toBeGreaterThanOrEqual(1);
+		expect(document.body.textContent).toContain("Blijft staan");
+		vi.useRealTimers();
+	});
+});
+
+describe("berichtenbox.js — een storing blijft een storing", () => {
+	it("laat een filter zonder resultaat de melding niet vervangen door 'geen berichten'", async () => {
+		// Alle berichten onrenderbaar: dat is een storing, geen lege berichtenbox.
+		bouwPagina([bericht({ onderwerp: "Kapot" })]);
+		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
+			get() { throw new Error("niet te lezen"); },
+		});
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+
+		// Typen levert nul resultaten op. Dat zegt niets over de storing.
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "bestaat niet";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(true);
 	});
 });

@@ -84,8 +84,14 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			if (state) {
 				if (!dynamischeBerichtenAan()) {
 					if (state.ruw.nieuweBerichten.length > 0) {
+						const bewaard = state.ruw.nieuweBerichten;
 						state.ruw.nieuweBerichten = [];
-						state.bewaar();
+						if (!state.bewaar()) {
+							// Alleen uit het geheugen halen terwijl de opslag ze houdt, laat ze na het
+							// verversen onaangekondigd terugkomen.
+							state.ruw.nieuweBerichten = bewaard;
+							meldStoring("Eerder ontvangen demo-berichten konden niet worden opgeruimd. Ze staan er na het verversen van de pagina weer.", "info");
+						}
 					}
 				} else {
 					eerderBinnengekomen = state.ruw.nieuweBerichten.slice().reverse();
@@ -147,7 +153,16 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 
 					const bericht = nieuwBericht(magazijnen);
 					state.ruw.nieuweBerichten.push(bericht);
-					state.bewaar();
+
+					// Een bericht tonen dat nergens bewaard is, is erger dan er geen meer laten komen:
+					// na het verversen is het spoorloos en niemand weet waarom.
+					if (!state.bewaar()) {
+						state.ruw.nieuweBerichten.pop();
+						console.error("[Berichtenbox] Binnengekomen bericht kon niet bewaard worden; gestopt.");
+						clearInterval(klok);
+						meldStilstand("Nieuwe berichten kunnen niet worden bewaard; er komen er geen meer bij.");
+						return;
+					}
 
 					// Alleen het nieuwe bericht melden, niet de hele lijst: de render-laag heeft de
 					// zijne misschien gesorteerd, en die volgorde hoort niet verloren te gaan.

@@ -25,17 +25,17 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 	<section class="card">
 		{% include "berichtenbox-tabs.njk" %}
 
+		<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+			{% include "icon-feedback-error.njk" %}
+			<div>
+				<p data-berichtenbox-storing-tekst></p>
+			</div>
+		</div>
+
+		<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
+
 		<section class="berichtenbox-content" data-demo-detail>
 			<h1 data-demo-onderwerp class="h3"></h1>
-
-			<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
-				{% include "icon-feedback-error.njk" %}
-				<div>
-					<p data-berichtenbox-storing-tekst></p>
-				</div>
-			</div>
-
-			<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
 			<p class="metadata" data-demo-meta></p>
 
