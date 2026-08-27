@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const bord = require("../assets/javascript/regelbord-logica.js");
+const vraagModule = require("../assets/javascript/assistent-vraag.js");
 
 const REGELS = [
 	{ id: "milieubeheer", titel: "Wet milieubeheer: rapportageplicht energiebesparing", beschrijving: "Energie", inhoud: ["kWh aardgas koelinstallatie"], geldtVoor: "Ondernemingen met hoog energieverbruik", bron: "Rijksoverheid", inwerkingtreding: "1 juli 2023", regelrechtRegel: "omgevingswet/energiebesparing/informatieplicht" },
@@ -78,4 +79,11 @@ test("zoek: titel weegt zwaarder dan inhoud, en extra termen tellen mee", () => 
 test("zoek: hoofdletters en diakrieten doen er niet toe", () => {
 	assert.equal(bord.zoek("RI&E", REGELS, SUBSIDIES, [])[0].id, "arbowet");
 	assert.equal(bord.zoek("Duurzame Énergie", REGELS, SUBSIDIES, [])[0].id, "isde");
+});
+
+test("scopeVraag: toets gebruikt de redactionele vraag, vraag opent met de regel", () => {
+	const item = { titel: "Wet milieubeheer: rapportageplicht energiebesparing", assistentVraag: "Help mij met de informatieplicht energiebesparing voor mijn bedrijf" };
+	assert.equal(vraagModule.scopeVraag(item, "regeling", "toets"), "Help mij met de informatieplicht energiebesparing voor mijn bedrijf");
+	assert.equal(vraagModule.scopeVraag({ titel: "Arbowet: RI&E" }, "regeling", "toets"), "Geldt “Arbowet: RI&E” voor mijn bedrijf?");
+	assert.equal(vraagModule.scopeVraag({ titel: "Arbowet: RI&E" }, "regeling", "vraag"), "Ik heb een vraag over “Arbowet: RI&E”.");
 });

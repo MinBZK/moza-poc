@@ -295,12 +295,47 @@
 		});
 	}
 
+	// Zijpaneel: dezelfde chat-elementen als /moza/digitale-assistent/, dus
+	// digitale-assistent.js werkt ongewijzigd. De scope (welke regel) gaat via
+	// window.MozaRegelScope (gesprekssleutel) en de openingsvraag.
+	var paneel = document.getElementById("assistent-paneel");
+	var paneelScope = document.querySelector("[data-paneel-scope]");
+	var paneelSluit = document.getElementById("assistent-paneel-sluit");
+	var laatsteKnop = null;
+
+	function sluitPaneel() {
+		if (!paneel || paneel.hidden) return;
+		paneel.hidden = true;
+		window.MozaRegelScope = { id: null };
+		if (laatsteKnop && document.contains(laatsteKnop)) laatsteKnop.focus();
+	}
+
+	function openPaneel(kaart, modus) {
+		if (!paneel) return;
+		laatsteKnop = document.activeElement;
+		window.MozaRegelScope = { id: kaart.id };
+		if (paneelScope) paneelScope.textContent = "Dit gesprek gaat over: " + kaart.item.titel;
+		paneel.hidden = false;
+		if (window.MozaChat && window.MozaAssistentVraag) {
+			window.MozaChat.herlaad();
+			var vraag = window.MozaAssistentVraag.scopeVraag(kaart.item, kaart.soort, modus);
+			var berichten = document.getElementById("chat-messages");
+			// Een gesprek dat al liep gaat gewoon verder; alleen een toets start
+			// altijd opnieuw met de toetsvraag.
+			if (modus === "toets" || !berichten || !berichten.childElementCount) window.MozaChat.stel(vraag);
+		}
+		if (paneelSluit) paneelSluit.focus();
+	}
+
+	if (paneelSluit) paneelSluit.addEventListener("click", sluitPaneel);
+	document.addEventListener("keydown", function (e) {
+		if (e.key === "Escape" && paneel && !paneel.hidden) sluitPaneel();
+	});
+
 	window.MozaRegelbordUI = {
 		render: render,
-		open: function (kaart, modus) {
-			/* Het zijpaneel volgt in een volgende stap. */
-			if (window.console) console.log("assistent openen", modus, kaart.id);
-		},
+		open: openPaneel,
+		sluit: sluitPaneel,
 		bewaarPlaatsing: bewaarPlaatsing,
 	};
 

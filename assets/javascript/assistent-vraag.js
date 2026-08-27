@@ -48,5 +48,17 @@
 		return "Geldt " + titel + " voor mijn bedrijf?";
 	}
 
-	return { vraag: vraag };
+	/**
+	 * De openingszin vanuit een kaart op het bord. "toets" start de bestaande
+	 * flow (dezelfde vraag als de knop op de detailpagina); "vraag" opent het
+	 * gesprek met de regel als onderwerp, zodat de assistent weet waar het
+	 * over gaat zonder dat de ondernemer dat zelf hoeft te typen.
+	 */
+	function scopeVraag(item, soort, modus) {
+		if (!item) return "";
+		if (modus === "toets") return vraag(item, soort);
+		return "Ik heb een vraag over " + tussenAanhalingstekens(item.titel) + ".";
+	}
+
+	return { vraag: vraag, scopeVraag: scopeVraag };
 });
