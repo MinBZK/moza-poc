@@ -309,10 +309,11 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		let getoond = 0;
 		if (view === 'inbox') {
 			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
-		} else if (view === 'archief') {
-			getoond = Object.keys(state.gearchiveerd).length;
-		} else if (view === 'prullenbak') {
-			getoond = Object.keys(state.verwijderd).length;
+		} else {
+			// Tellen op dezelfde manier waarop de lijst gevuld wordt. Rechtstreeks de sleutels van
+			// state.gearchiveerd tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd
+			// is: statusVan geeft de prullenbak voorrang, de teller zou het dubbel meenemen.
+			getoond = data.berichten.filter((b) => statusVan(b.id) === view).length;
 		}
 		if (tellerTotaal) tellerTotaal.textContent = getoond;
 

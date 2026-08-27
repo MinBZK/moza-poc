@@ -18,6 +18,13 @@ export const BERICHTENBOX_HTML = `
 		<b data-berichtenbox-counter-unread>0</b> ongelezen
 	</p>
 
+	<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
+		<div>
+			<p>De <b>RDW</b> is momenteel niet bereikbaar. Berichten van overige overheidsorganisaties staan hieronder.</p>
+			<p><button class="link-button" type="button" data-bron-retry>RDW opnieuw proberen</button></p>
+		</div>
+	</div>
+
 	<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 		<div>
 			<p data-geen-bronnen-tekst>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>

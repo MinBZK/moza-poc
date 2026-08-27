@@ -95,3 +95,27 @@ describe("regressies uit de review", () => {
 		expect(rijen()).toHaveLength(1);
 	});
 });
+
+describe("tellers en lijst horen hetzelfde te zeggen", () => {
+	it("telt in het archief wat er ook echt staat", async () => {
+		const a = bericht();
+		const b = bericht();
+		await laad([a, b], {
+			pad: "/moza/berichtenbox/berichtenbox-archief/",
+			view: "archief",
+			// Zowel gearchiveerd als verwijderd: de prullenbak wint, dus dit hoort níet mee te tellen.
+			state: {
+				eersteBezoekGehad: true,
+				gearchiveerd: { [a.id]: true, [b.id]: true },
+				verwijderd: { [b.id]: true },
+			},
+		});
+		expect(rijen()).toHaveLength(1);
+		expect(document.querySelector("[data-berichtenbox-counter-total]").textContent).toBe("1");
+	});
+
+	it("laat het RDW-waarschuwingsblok met rust bij een gewone lading", async () => {
+		await laad([bericht()], { pad: "/moza/berichtenbox/", view: "inbox" });
+		expect(document.querySelector("[data-bron-onbereikbaar]").hidden).toBe(true);
+	});
+});
