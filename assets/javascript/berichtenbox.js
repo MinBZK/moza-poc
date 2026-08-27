@@ -116,6 +116,13 @@
 		const actief = personas.find((p) => p.actief);
 		return actief ? actief.id : personas[0].id;
 	})();
+	// Aangesloten persona's lezen hun berichten uit het Federatief Berichtenstelsel in plaats van
+	// uit de gegenereerde dataset. berichtenbox-keten.js draait vóór dit bestand: een eerder
+	// opgehaalde ronde staat op dit moment al in `data`, een nieuwe ronde loopt asynchroon en meldt
+	// zich later via ketenOvername(). Zolang de keten de lijst bepaalt blijft de demo-simulatie uit
+	// — verzonnen berichten tussen echte zou de bezoeker niet kunnen onderscheiden.
+	let ketenActief = !!(window.BerichtenboxKeten && window.BerichtenboxKeten.aangesloten);
+
 	function persoonRelevant(bericht) {
 		if (!bericht || !Array.isArray(bericht.relevantVoor) || !bericht.relevantVoor.length) return true;
 		return actievePersonaId != null && bericht.relevantVoor.indexOf(actievePersonaId) !== -1;
@@ -294,6 +301,9 @@
 		return unhappyScenario;
 	}
 	function bronOnbereikbaar() {
+		// Op de keten zijn de bronnen echt: een gesimuleerde storing zou dan echte berichten
+		// wegfilteren (scenario "geen" blokkeert élk magazijn) zonder dat er iets over te zeggen valt.
+		if (ketenActief) return false;
 		if (bronHandmatigHersteld) return false;
 		return unhappyFlowAan();
 	}
@@ -831,6 +841,10 @@
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
 		const effMap = mapVan(bericht.id, bericht.map);
 		const dynamisch = bericht.id.startsWith('msg-live-');
+		// Detailpagina's worden bij de build uit de dataset gegenereerd. Berichten uit de keten
+		// staan daar niet bij, dus die gaan naar dezelfde client-gevulde pagina als de dynamisch
+		// binnengekomen berichten; een link naar bericht/<id>/ zou een 404 opleveren.
+		const zonderEigenPagina = dynamisch || bericht.uitKeten === true;
 
 		const tr = document.createElement('tr');
 		tr.className = 'berichtenbox-row' + (ongelezen ? ' is-unread' : '') + (dynamisch ? ' is-dynamic' : '');
@@ -856,7 +870,7 @@
 
 		const tdOnd = document.createElement('td');
 		tdOnd.className = 'berichtenbox-row-subject';
-		if (dynamisch) {
+		if (zonderEigenPagina) {
 			const a = document.createElement('a');
 			a.href = url(berichtenboxBasis() + 'bericht-demo/?id=' + encodeURIComponent(bericht.id));
 			a.textContent = bericht.onderwerp;
@@ -999,6 +1013,9 @@
 	// progress-animatie tonen); berichtenbox.js stuurt de zichtbaarheid zelf,
 	// zodat de melding pas ná het ophalen bij de bronnen verschijnt.
 	function werkBronWaarschuwingBij() {
+		// Zegt de keten iets over de bronnen, dan gaat dat over de echte uitvraag; de gesimuleerde
+		// unhappy flow zou die melding wegpoetsen en de dataset als echte post laten doorgaan.
+		if (ketenActief || (window.BerichtenboxKeten && window.BerichtenboxKeten.meldingActief)) return;
 		const een = document.querySelector('[data-bron-onbereikbaar]');
 		const geen = document.querySelector('[data-geen-bronnen]');
 		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
@@ -1008,6 +1025,7 @@
 	// "later"-scenario: toon de uitval-melding op de inbox zodra een bron is
 	// uitgevallen (geregistreerd in sessionStorage) en vul de naam in.
 	function werkBronUitvalBij() {
+		if (ketenActief || (window.BerichtenboxKeten && window.BerichtenboxKeten.meldingActief)) return;
 		const melding = document.querySelector('[data-bron-uitval]');
 		if (!melding) return;
 		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === 'later';
@@ -1022,6 +1040,8 @@
 	// succesvolle load. Is het al gebeurd (sessionStorage), dan alleen tonen.
 	let uitvalGepland = false;
 	function plannBronUitval() {
+		// Een gesimuleerde uitval bovenop echte keten-berichten is niet van echt te onderscheiden.
+		if (ketenActief) return;
 		if (huidigeView() !== 'inbox') return;
 		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later') return;
 		if (leesBronUitval()) { werkBronUitvalBij(); return; }
@@ -1047,6 +1067,14 @@
 			const retry = w.querySelector('[data-bron-retry]');
 			if (retry) {
 				retry.addEventListener('click', () => {
+					// Staat er een melding van de keten, dan valt er in de simulatie niets te
+					// herstellen: de knop hoort de ophaalronde opnieuw te starten. Lukt zelfs dat
+					// niet, dan blijft de melding staan — de gegenereerde dataset opdienen als
+					// "hersteld" zou een storing als succes laten lijken.
+					if (window.BerichtenboxKeten && window.BerichtenboxKeten.meldingActief) {
+						window.BerichtenboxKeten.opnieuw();
+						return;
+					}
 					bronHandmatigHersteld = true;
 					schrijfBronUitval(null);
 					uitvalGepland = false;
@@ -1062,6 +1090,8 @@
 		// en wordt bij een volgende keer opnieuw een scenario gekozen. Na de eerste
 		// progress-animatie mag de melding meteen mee-togglen.
 		document.addEventListener('feature-flags-applied', () => {
+			// Op de keten heeft de unhappy-flow-vlag geen betekenis: de bronnen zijn echt.
+			if (ketenActief) return;
 			if (!unhappyFlowAan()) {
 				bronHandmatigHersteld = false;
 				scenarioGekozen = false;
@@ -1107,31 +1137,44 @@
 		}
 	}
 
+	// Het afzenderfilter volgt de berichten; levert de keten later een andere lijst, dan hoort dit
+	// paneel opnieuw gevuld te worden.
+	function bouwAfzenderFilter() {
+		const afzenderPaneel = document.querySelector('[data-berichtenbox-sender-panel]');
+		if (!afzenderPaneel) return;
+
+		while (afzenderPaneel.firstChild) afzenderPaneel.removeChild(afzenderPaneel.firstChild);
+		const uniek = new Map();
+		data.berichten.forEach((b) => uniek.set(b.magazijnId, b.afzender));
+		[...uniek.entries()]
+			.sort((a, b) => String(a[1]).localeCompare(String(b[1])))
+			.forEach(([id, naam]) => {
+				const label = document.createElement('label');
+				const cb = document.createElement('input');
+				cb.type = 'checkbox';
+				cb.value = id;
+				cb.dataset.afzenderCheck = '';
+				label.appendChild(cb);
+				label.appendChild(document.createTextNode(' ' + naam));
+				afzenderPaneel.appendChild(label);
+			});
+	}
+
+	let filtersGebonden = false;
 	function bindInboxFilters() {
 		if (huidigeView() !== 'inbox') return;
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		if (!lijst) return;
 
+		bouwAfzenderFilter();
+
+		// Een tweede ophaalronde vult het paneel opnieuw; de luisteraars op het zoekveld en op het
+		// paneel horen daar niet nog een keer bij.
+		if (filtersGebonden) { herpagineerHuidigeView(); return; }
+		filtersGebonden = true;
+
 		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
 		const afzenderPaneel = document.querySelector('[data-berichtenbox-sender-panel]');
-
-		if (afzenderPaneel) {
-			while (afzenderPaneel.firstChild) afzenderPaneel.removeChild(afzenderPaneel.firstChild);
-			const uniek = new Map();
-			data.berichten.forEach((b) => uniek.set(b.magazijnId, b.afzender));
-			[...uniek.entries()]
-				.sort((a, b) => a[1].localeCompare(b[1]))
-				.forEach(([id, naam]) => {
-					const label = document.createElement('label');
-					const cb = document.createElement('input');
-					cb.type = 'checkbox';
-					cb.value = id;
-					cb.dataset.afzenderCheck = '';
-					label.appendChild(cb);
-					label.appendChild(document.createTextNode(' ' + naam));
-					afzenderPaneel.appendChild(label);
-				});
-		}
 
 		function mapUitUrl() {
 			const params = new URLSearchParams(location.search);
@@ -1549,7 +1592,11 @@
 
 		const bodyEl = detail.querySelector('[data-demo-body]');
 		if (bodyEl) {
-			bericht.inhoud.split('\n\n').forEach((alinea) => {
+			// Berichten uit de keten komen zonder inhoud binnen: de uitvraag levert alleen de
+			// kopgegevens. Benoem dat, in plaats van een lege alinea te tonen.
+			const alineas = (bericht.inhoud || '').split('\n\n').filter((a) => a.trim() !== '');
+			if (!alineas.length) alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. Log in bij de afzender om het volledige bericht te lezen.');
+			alineas.forEach((alinea) => {
 				const p = document.createElement('p');
 				p.textContent = alinea;
 				bodyEl.appendChild(p);
@@ -1661,6 +1708,9 @@
 	let nieuwBerichtTeller = 0;
 
 	function voegNieuwBerichtToe() {
+		// De lus kan zijn gestart voordat de keten de lijst overnam; dan hoort hij vanaf nu stil te
+		// liggen in plaats van demo-berichten tussen echte te prependen.
+		if (ketenActief) return;
 		if (huidigeView() !== 'inbox') return;
 		if (!data.magazijnen.length) return;
 		if (state.nieuweBerichten.length >= NIEUWE_BERICHTEN_LIMIET) return;
@@ -1719,6 +1769,9 @@
 	}
 	function startPolling() {
 		if (!dynamischeBerichtenAan()) return;
+		// Binnendruppelende demo-berichten tussen echte keten-berichten zijn voor de bezoeker niet
+		// te onderscheiden; op de keten staat het polling-gedrag daarom uit.
+		if (ketenActief) return;
 		if (huidigeView() !== 'inbox') return;
 		// Alleen op pagina 1 — nieuwe berichten landen bovenaan, op pagina 2+ zouden ze onzichtbaar zijn.
 		if (/\/pagina-\d+\/$/.test(location.pathname)) return;
@@ -1819,6 +1872,53 @@
 		}
 	});
 
+	// De lijst komt uit de server-gerenderde HTML, gebouwd uit de dataset. Levert de keten later
+	// andere berichten, dan bouwen we de rijen opnieuw op met dezelfde createRij die ook een los
+	// binnengekomen bericht toevoegt. Dit staat hier, ná de rest: createRij leunt op state, datumNL
+	// en de mappen, die alle drie eerder in dit bestand worden opgezet.
+	function ketenOvername(berichten, magazijnen) {
+		ketenActief = true;
+		data.berichten = berichten;
+		data.magazijnen = magazijnen;
+		// Eerder binnengedruppelde demo-berichten horen niet bij deze bronnen.
+		state.nieuweBerichten = [];
+		opslaan();
+		// De lijst is een andere; pagina 3 van de dataset zegt niets over deze berichten. Ook de
+		// adresbalk moet mee, anders wijst ?pagina=3 naar een pagina die er niet meer is.
+		huidigePagina = 1;
+		const params = new URLSearchParams(location.search);
+		if (params.has('pagina')) {
+			params.delete('pagina');
+			const query = params.toString();
+			history.replaceState(null, '', location.pathname + (query ? '?' + query : ''));
+		}
+
+		const ketenLijst = document.querySelector('[data-berichtenbox-list]');
+		const ketenBody = ketenLijst && (ketenLijst.querySelector('tbody') || ketenLijst);
+		if (ketenBody) ketenBody.replaceChildren(...data.berichten.map((b) => createRij(b)));
+
+		pasStateToeOpRijen();
+		werkMappenZichtbaarheidBij();
+		renderLijstVoorView(huidigeView());
+		render(huidigeView());
+		toonMappenZijbalk();
+		// Een eerdere storing kan het filterveld hebben verborgen; er staat nu weer een lijst.
+		const zoekblok = document.querySelector('.berichtenbox-search');
+		if (zoekblok) zoekblok.hidden = false;
+		// Bouwt het afzenderfilter opnieuw op uit data.berichten en paginert; precies één keer, want
+		// het bindt luisteraars op het zoekveld en het afzenderpaneel.
+		bindInboxFilters();
+	}
+
+	// 2/3. Na een keten-ronde die niets overneemt hoort de weergave weer te kloppen met de rijen die
+	// er nú staan: het paginavenster, de lege-staat, de paginanavigatie en de demo-meldingen. Vóór
+	// de eerste render is dit een no-op, dus het is veilig op elk pad.
+	function herstelLijstWeergave() {
+		werkBronWaarschuwingBij();
+		werkBronUitvalBij();
+		if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
+	}
+
 	pasStateToeOpRijen();
 	werkMappenZichtbaarheidBij();
 	renderLijstVoorView(huidigeView());
@@ -1831,22 +1931,60 @@
 
 	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
 
-	if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
-		voortgangsAnimatie(() => {
-			state.eersteBezoekGehad = true;
-			opslaan();
-			toonMappenZijbalk();
-			bindInboxFilters();
-			startPolling();
-			werkBronWaarschuwingBij();
-			plannBronUitval();
-		});
-	} else {
+	function startDemoGedrag() {
 		toonMappenZijbalk();
 		bindInboxFilters();
 		startPolling();
 		werkBronWaarschuwingBij();
 		plannBronUitval();
+	}
+
+	function startEersteWeergave() {
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
+			voortgangsAnimatie(() => {
+				state.eersteBezoekGehad = true;
+				opslaan();
+				startDemoGedrag();
+			});
+		} else {
+			startDemoGedrag();
+		}
+	}
+
+	// Loopt er een ophaalronde bij het Federatief Berichtenstelsel, dan blijft de demo-simulatie
+	// stil tot die ronde iets zegt: bij een overname vervangen de opgehaalde berichten de lijst,
+	// anders start het demo-gedrag alsnog. Dat `bezig` is synchroon bekend, dus de gesimuleerde
+	// voortgangsanimatie begint niet om meteen door de echte te worden overruled.
+	if (window.BerichtenboxKeten && window.BerichtenboxKeten.bezig) {
+		window.BerichtenboxKeten.dan((uitkomst) => {
+			if (uitkomst) {
+				try {
+					ketenOvername(uitkomst.berichten, uitkomst.magazijnen);
+				} catch (e) {
+					console.error('[Berichtenbox] Opgehaalde berichten niet te tonen.', e);
+					window.BerichtenboxKeten.meldStoring();
+				}
+				return;
+			}
+			// Is de persona wél aangesloten maar mislukte de ronde, dan staat de melding er en heeft
+			// de keten de dataset-lijst verborgen: die is aantoonbaar niet zijn post. De simulatie
+			// blijft dan uit, anders zou de voortgangsanimatie hem alsnog in beeld brengen. De
+			// tellers en de lege-staat mogen dan ook geen aantallen uit die dataset meer tonen.
+			if (window.BerichtenboxKeten.aangesloten) {
+				ketenActief = true;
+				data.berichten = [];
+				data.magazijnen = [];
+				render(huidigeView());
+				const leeg = document.querySelector('[data-berichtenbox-empty]');
+				if (leeg) leeg.hidden = true;
+				const zoekblok = document.querySelector('.berichtenbox-search');
+				if (zoekblok) zoekblok.hidden = true;
+				return;
+			}
+			startEersteWeergave();
+		});
+	} else {
+		startEersteWeergave();
 	}
 
 	// Debug-handle; niet bedoeld voor productiegebruik.
@@ -1860,5 +1998,8 @@
 		huidigeView,
 		pasStateToeOpRijen,
 		render,
+		werkMeervoudBij,
+		ketenOvername,
+		herstelLijstWeergave,
 	};
 })();

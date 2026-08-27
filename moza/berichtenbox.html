@@ -41,7 +41,7 @@ permalink: "/moza/berichtenbox/"
 					<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 						{% include "icon-feedback-error.njk" %}
 						<div>
-							<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
+							<p data-geen-bronnen-tekst>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
 							<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 						</div>
 					</div>
@@ -49,7 +49,7 @@ permalink: "/moza/berichtenbox/"
 					<div class="feedback feedback-warning" hidden data-bron-uitval role="status">
 						{% include "icon-feedback-warning.njk" %}
 						<div>
-							<p><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden. Berichten van deze organisatie zijn nu mogelijk niet beschikbaar.</p>
+							<p data-bron-uitval-tekst><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden. Berichten van deze organisatie zijn nu mogelijk niet beschikbaar.</p>
 							<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
 						</div>
 					</div>
@@ -69,6 +69,8 @@ permalink: "/moza/berichtenbox/"
 				</div>
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
+
+				<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat; anders verschijnt hier uw eerste bericht zodra een organisatie u schrijft.</div>
 
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>

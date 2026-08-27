@@ -1430,5 +1430,221 @@
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["mkb-cyberweerbaarheid-voucher"],
 		"homepageRegelgeving": ["wwft-verscherpt-clientenonderzoek"]
+	},
+	{
+		"id": "proeftuin-een",
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 1",
+		"persoon": {
+			"voornaam": "Sam",
+			"achternaam": "Bakker"
+		},
+		"bedrijf": {
+			"handelsnaam": "Demo-onderneming 1",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000011",
+			"rsinNummer": "90000011",
+			"btwNummer": "NL00090000011",
+			"omzetbelastingnummer": "090000011B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Eenmanszaak",
+			"branche": "Overige dienstverlening",
+			"vestigingsadres": "Coolsingel 40, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000011",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "96099",
+					"omschrijving": "Overige dienstverlening (rest)"
+				}
+			],
+			"vestigingsadresVolledig": "Coolsingel 40, 3011 AD Rotterdam",
+			"postadres": "Coolsingel 40, 3011 AD Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000011",
+					"type": "Hoofdvestiging",
+					"adres": "Coolsingel 40, 3011 AD Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-twee",
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 2",
+		"persoon": {
+			"voornaam": "Kim",
+			"achternaam": "de Wit"
+		},
+		"bedrijf": {
+			"handelsnaam": "Demo-onderneming 2",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000012",
+			"rsinNummer": "90000012",
+			"btwNummer": "NL00090000012",
+			"omzetbelastingnummer": "090000012B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Vennootschap onder firma",
+			"branche": "Advies en consultancy",
+			"vestigingsadres": "Weena 200, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000012",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "70221",
+					"omschrijving": "Organisatie-adviesbureaus"
+				}
+			],
+			"vestigingsadresVolledig": "Weena 200, 3012 NJ Rotterdam",
+			"postadres": "Weena 200, 3012 NJ Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000012",
+					"type": "Hoofdvestiging",
+					"adres": "Weena 200, 3012 NJ Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-drie",
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 3",
+		"persoon": {
+			"voornaam": "Noor",
+			"achternaam": "Jansen"
+		},
+		"bedrijf": {
+			"handelsnaam": "Demo-onderneming 3",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000013",
+			"rsinNummer": "90000013",
+			"btwNummer": "NL00090000013",
+			"omzetbelastingnummer": "090000013B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Groothandel",
+			"vestigingsadres": "Blaak 16, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000013",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "46900",
+					"omschrijving": "Niet-gespecialiseerde groothandel"
+				}
+			],
+			"vestigingsadresVolledig": "Blaak 16, 3011 TA Rotterdam",
+			"postadres": "Blaak 16, 3011 TA Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000013",
+					"type": "Hoofdvestiging",
+					"adres": "Blaak 16, 3011 TA Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-veel",
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming, veel organisaties",
+		"persoon": {
+			"voornaam": "Ties",
+			"achternaam": "Molenaar"
+		},
+		"bedrijf": {
+			"handelsnaam": "Grootbedrijf B.V.",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000001",
+			"rsinNummer": "90000001",
+			"btwNummer": "NL00090000001",
+			"omzetbelastingnummer": "090000001B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Zakelijke dienstverlening",
+			"vestigingsadres": "Wilhelminakade 1, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000001",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "46900",
+					"omschrijving": "Niet-gespecialiseerde groothandel"
+				}
+			],
+			"vestigingsadresVolledig": "Wilhelminakade 1, 3072 AP Rotterdam",
+			"postadres": "Wilhelminakade 1, 3072 AP Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000001",
+					"type": "Hoofdvestiging",
+					"adres": "Wilhelminakade 1, 3072 AP Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
 	}
 ]
