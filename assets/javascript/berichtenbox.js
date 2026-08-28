@@ -25,6 +25,18 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 (function() {
 	"use strict";
 
+	// berichtenbox-voortgang-vooraf.njk zet vóór het parsen van de tabel een vlag op <html>, zodat de
+	// server-gerenderde rijen nooit te zien zijn geweest. Vanaf hier is die vlag van ons, en dus ook
+	// de plicht hem weer weg te halen — óók langs de uitgangen hieronder, want een vlag die blijft
+	// staan houdt de lijst voorgoed verborgen.
+	const vroegeVlag = window.__berichtenboxVoortgang;
+	if (vroegeVlag) vroegeVlag.overgenomen = true;
+
+	function geefLijstVrij() {
+		if (vroegeVlag) vroegeVlag.vrijgeven();
+		else delete document.documentElement.dataset.berichtenboxVoortgang;
+	}
+
 	// Werk de badges voor ongelezen berichten bij op alle pagina's vanuit
 	// localStorage (side-nav én hoofdnavigatie kunnen allebei een badge tonen).
 	try {
@@ -153,6 +165,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const data = window.berichtenboxData;
 	if (!data || !Array.isArray(data.berichten) || !Array.isArray(data.mappen) || !Array.isArray(data.magazijnen)) {
 		console.error('[Berichtenbox] window.berichtenboxData ontbreekt of is incompleet; script gestopt.');
+		geefLijstVrij();
 		return;
 	}
 
@@ -247,6 +260,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	/** De lijst weer tonen als de animatie tóch niet komt: een mislukte lading, of een andere pagina. */
 	function toonNaVoortgang() {
+		geefLijstVrij();
 		if (!voortgangKlaargezet) return;
 		voortgangKlaargezet = false;
 
@@ -260,7 +274,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
 	if (huidigeView() === 'inbox' && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
-		verbergVoorVoortgang();
+		if (!verbergVoorVoortgang()) geefLijstVrij();
+	} else {
+		// De vlag stond er misschien wel; komt de animatie niet, dan hoort de lijst er meteen te zijn.
+		geefLijstVrij();
 	}
 
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
@@ -1719,6 +1736,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				requestAnimationFrame(stap);
 			} else {
 				voortgangKlaargezet = false;
+				geefLijstVrij();
 				wrap.hidden = true;
 				lijst.hidden = false;
 				if (pagnav) pagnav.hidden = false;

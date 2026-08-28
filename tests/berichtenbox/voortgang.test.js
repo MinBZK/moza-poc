@@ -116,6 +116,72 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 	}, 20000);
 });
 
+/**
+ * De vlag die berichtenbox-voortgang-vooraf.njk vóór het parsen op <html> zet. Blijft die staan,
+ * dan houdt de CSS de lijst verborgen — ook nadat de animatie klaar is.
+ */
+function zetVroegeVlag() {
+	document.documentElement.dataset.berichtenboxVoortgang = "wacht";
+	window.__berichtenboxVoortgang = {
+		overgenomen: false,
+		vrijgeven: () => { delete document.documentElement.dataset.berichtenboxVoortgang; },
+	};
+}
+
+const vlag = () => document.documentElement.dataset.berichtenboxVoortgang;
+
+describe("de vlag van vóór het parsen", () => {
+	it("wordt overgenomen, zodat het vangnet bij load niets meer doet", async () => {
+		bouwPagina(BERICHTEN);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		zetVroegeVlag();
+		await laad();
+
+		expect(window.__berichtenboxVoortgang.overgenomen).toBe(true);
+	});
+
+	it("gaat weg zodra de animatie klaar is", async () => {
+		// Blijft hij staan, dan houdt de CSS de lijst verborgen en ziet de bezoeker nooit iets.
+		bouwPagina(BERICHTEN);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		zetVroegeVlag();
+		await laad();
+
+		expect(vlag()).toBe("wacht");
+		for (let i = 0; i < 400 && !voortgang().hidden; i += 1) await new Promise((r) => setTimeout(r, 25));
+
+		expect(vlag()).toBe(undefined);
+	}, 20000);
+
+	it("gaat meteen weg bij een tweede bezoek", async () => {
+		bouwPagina(BERICHTEN);
+		zetVroegeVlag();
+		await laad();
+
+		expect(vlag()).toBe(undefined);
+	});
+
+	it("gaat weg als de lading mislukt", async () => {
+		bouwPagina(BERICHTEN);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		window.berichtenboxData = { berichten: null, magazijnen: [], mappen: [] };
+		zetVroegeVlag();
+		await laad();
+
+		expect(vlag()).toBe(undefined);
+	});
+
+	it("gaat weg op een pagina zonder voortgangsblok", async () => {
+		bouwPagina(BERICHTEN);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		voortgang().remove();
+		zetVroegeVlag();
+		await laad();
+
+		expect(vlag()).toBe(undefined);
+	});
+});
+
 describe("als de animatie tóch niet komt", () => {
 	it("laat de lijst gewoon staan bij een tweede bezoek", async () => {
 		bouwPagina(BERICHTEN); // bouwPagina zet eersteBezoekGehad standaard aan
