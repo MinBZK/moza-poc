@@ -82,17 +82,22 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 		expect(nav.hidden).toBe(true);
 	});
 
-	it("laat de lijst ná het laden verborgen tot de animatie klaar is", async () => {
+	it("laat de lijst ná het laden verborgen tot de ronde klaar is", async () => {
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
 
 		expect(lijst().hidden).toBe(true);
-		expect(voortgang().hidden).toBe(false);
 		expect(pagnav().hidden).toBe(true);
+
+		// De balk zelf komt pas als de ronde na de drempel nog loopt; een ronde die meteen klaar
+		// is, hoort niemand te zien. De nagebootste duurt ruim langer dan dat.
+		await new Promise((r) => setTimeout(r, 400));
+		expect(voortgang().hidden).toBe(false);
+		expect(lijst().hidden).toBe(true);
 	});
 
-	it("zet lijst en navigatie terug zodra de animatie klaar is", async () => {
+	it("zet lijst en navigatie terug zodra de ronde klaar is", async () => {
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
@@ -107,12 +112,16 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 	}, 20000);
 
 	it("bewaart dat het eerste bezoek gehad is", async () => {
+		// De bron bewaart dat zelf, aan het eind van de ronde. Wachten tot het er staat, niet tot de
+		// balk weg is: die is er misschien nooit geweest.
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
-		for (let i = 0; i < 400 && !voortgang().hidden; i += 1) await new Promise((r) => setTimeout(r, 25));
 
-		expect(JSON.parse(window.localStorage.getItem("berichtenbox")).eersteBezoekGehad).toBe(true);
+		const bewaard = () => JSON.parse(window.localStorage.getItem("berichtenbox") || "{}").eersteBezoekGehad;
+		for (let i = 0; i < 400 && !bewaard(); i += 1) await new Promise((r) => setTimeout(r, 25));
+
+		expect(bewaard()).toBe(true);
 	}, 20000);
 });
 

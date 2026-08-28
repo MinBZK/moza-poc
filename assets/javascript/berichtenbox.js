@@ -1195,9 +1195,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					uitvalGepland = false;
 					werkBronWaarschuwingBij();
 					werkBronUitvalBij();
-					// Toon de progress-animatie opnieuw (bronnen worden opnieuw
-					// bevraagd) voordat de volledige lijst verschijnt.
-					voortgangsAnimatie(() => herrenderInbox());
+					// Opnieuw ophalen bij de bronnen voordat de volledige lijst verschijnt.
+					speelOphalenOpnieuw(() => herrenderInbox());
 				});
 			}
 		});
@@ -1289,7 +1288,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (orgToggle.checked) {
 					// Simuleer het ophalen van berichten bij de andere organisaties; de
 					// eigen mappen verschijnen pas als die berichten binnen zijn.
-					voortgangsAnimatie(() => { werkMappenZichtbaarheidBij(); pasFilterToe(); render('inbox'); });
+					speelOphalenOpnieuw(() => { werkMappenZichtbaarheidBij(); pasFilterToe(); render('inbox'); });
 				} else {
 					werkMappenZichtbaarheidBij();
 					pasFilterToe();
@@ -1728,6 +1727,22 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// het langer, dan hoort de bezoeker te zien dat er gewacht wordt.
 	const VOORTGANG_DREMPEL_MS = 300;
 
+	// Meldt een bron op dit moment voortgang? Dan hoort naEersteLading de lijst niet terug te zetten.
+	let voortgangLoopt = false;
+
+	/**
+	 * Vraagt de actieve bron opnieuw op te halen. Kan zij dat niet — het stelsel heeft zijn eigen
+	 * knop — dan gebeurt er niets bijzonders en gaat het vervolg meteen door.
+	 */
+	function speelOphalenOpnieuw(opKlaar) {
+		const bron = register.actief();
+		if (bron && typeof bron.herhaalOphalen === 'function') {
+			bron.herhaalOphalen(opKlaar);
+			return;
+		}
+		opKlaar();
+	}
+
 	function volgEchteVoortgang(bronnen) {
 		bronnen.forEach((bron) => {
 			if (typeof bron.volgVoortgang !== 'function') return;
@@ -1739,11 +1754,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			bron.volgVoortgang((voortgang) => {
 				laatste = voortgang;
 
-				// Geen voortgang meer: de ronde is klaar of afgebroken.
+				// Geen voortgang meer: de ronde is klaar of afgebroken. Wat we voor haar verborgen
+				// hebben, hoort dan weer op het scherm.
 				if (!voortgang) {
 					if (wachter) { clearTimeout(wachter); wachter = null; }
+					voortgangLoopt = false;
+					if (getoond) { getoond = false; toonNaVoortgang(); }
 					return;
 				}
+
+				voortgangLoopt = true;
 
 				if (getoond) {
 					vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
@@ -1764,79 +1784,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		});
 	}
 
-	function voortgangsAnimatie(opKlaar) {
-		const wrap = document.querySelector('[data-berichtenbox-progress]');
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const pagnav = document.querySelector('.berichtenbox-content .pagination');
-		if (!verbergVoorVoortgang()) { opKlaar(); return; }
-
-		// Respecteer het org-filter: bij alleen Belastingdienst is er 1 bron en het
-		// juiste aantal Belastingdienst-berichten; met andere organisaties alle bronnen.
-		// We bevragen álle bronnen die het org-filter toelaat (totaalBronnen), ook een
-		// onbereikbare. Alleen de bereikbare bronnen leveren berichten en "arriveren"
-		// in de animatie; de onbereikbare blijft hangen, dus de teller stopt bij 11/12.
-		const gezochteBronnen = new Set(
-			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnDoorOrgFilter(b.magazijnId)).map((b) => b.magazijnId)
-		);
-		const bereikteBerichten = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b));
-		const bereikteBronnen = new Set(bereikteBerichten.map((b) => b.magazijnId));
-		const totaalBronnen = gezochteBronnen.size || 1;
-		// Aantal bronnen dat daadwerkelijk antwoordt. Bij het "geen"-scenario is dit 0
-		// (niets arriveert); bij "een" is het totaal - 1; normaal gelijk aan totaal.
-		const aankomendeBronnen = bereikteBronnen.size;
-		const totaalBerichten = bereikteBerichten.length;
-
-		vulVoortgang(totaalBronnen, 0, 0);
-
-		// Simuleer SSE-gedrag: elke bereikbare bron arriveert op eigen moment. Trekken
-		// uit een zware-staart-verdeling (x^4) zodat de meeste bronnen snel antwoorden
-		// maar de trage magazijnen tot laat in de rit nog binnendruppelen. Alleen de
-		// bereikbare bronnen krijgen een aankomsttijd; de onbereikbare arriveert nooit.
-		const bronTijden = [];
-		for (let i = 0; i < aankomendeBronnen; i++) {
-			const r = Math.random();
-			bronTijden.push(Math.pow(r, 4));
-		}
-		bronTijden.sort((a, b) => a - b);
-
-		const berichtTijden = [];
-		for (let i = 0; i < totaalBerichten; i++) {
-			const r = Math.random();
-			berichtTijden.push(Math.pow(r, 4));
-		}
-		berichtTijden.sort((a, b) => a - b);
-
-		// Bij één bron is er weinig op te halen: korte animatie. Meer bronnen = langer.
-		const duur = totaalBronnen <= 1 ? 1200 : 4000;
-		const start = performance.now();
-
-		function aantalVoor(tijden, t) {
-			// Binary-search lookup: hoeveel tijden <= t?
-			let lo = 0, hi = tijden.length;
-			while (lo < hi) {
-				const mid = (lo + hi) >>> 1;
-				if (tijden[mid] <= t) lo = mid + 1; else hi = mid;
-			}
-			return lo;
-		}
-
-		function stap(nu) {
-			const t = Math.min(1, (nu - start) / duur);
-			const bronnenBinnen = aantalVoor(bronTijden, t);
-			const berichtenBinnen = aantalVoor(berichtTijden, t);
-			vulVoortgang(totaalBronnen, bronnenBinnen, berichtenBinnen);
-			if (t < 1) {
-				requestAnimationFrame(stap);
-			} else {
-				voortgangKlaargezet = false;
-				wrap.hidden = true;
-				lijst.hidden = false;
-				if (pagnav) pagnav.hidden = false;
-				opKlaar();
-			}
-		}
-		requestAnimationFrame(stap);
-	}
 
 	document.querySelectorAll('[data-berichtenbox-reset]').forEach((link) => {
 		link.addEventListener('click', (e) => {
@@ -2065,24 +2012,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
 		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
 
-		// Ook de ophaalanimatie is een nabootsing: zij verzint aankomsttijden per bron. Draait de
-		// keten, dan is er echte voortgang en hoort die nabootsing niet over het scherm te lopen.
-		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond && simulatieMag()) {
-			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
-				voortgangsAnimatie(() => {
-					state.eersteBezoekGehad = true;
-					// Stil: dit is administratie van de animatie, niets wat de bezoeker vroeg.
-					opslaanStil();
-					// Binnen de animatie-callback: de try hierboven is dan allang teruggekeerd.
-					startDemoGedrag();
-				});
-			});
-		} else {
-			// De animatie komt niet: een mislukte lading, een andere weergave, of niet het eerste
-			// bezoek. Wat we vooruitlopend verborgen hebben, hoort dan gewoon zichtbaar te zijn.
-			toonNaVoortgang();
-			startDemoGedrag();
-		}
+		// Meldt de bron voortgang, dan blijft de lijst weg tot die klaar is; de luisteraar hierboven
+		// zet hem dan terug. Anders hoort wat we vooruitlopend verborgen hebben er gewoon te staan.
+		if (!voortgangLoopt) toonNaVoortgang();
+		startDemoGedrag();
 	}
 
 	// De datalaag bepaalt welke bron de berichten levert; de render-laag hieronder weet niet welke
@@ -2094,6 +2027,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		state: stateModule,
 		limiet: NIEUWE_BERICHTEN_LIMIET,
 		meldStoring: toonPaginaMelding,
+		// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
+		zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
+		// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
+		magAnimeren: () => huidigeView() === 'inbox'
+			&& isEerstePagina
+			&& !state.eersteBezoekGehad
+			&& !ladingMislukt
+			&& !laadfoutGetoond,
 		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 		// onzichtbaar of misleidend.
 		magOphalen: () => huidigeView() === 'inbox'
@@ -2369,24 +2310,28 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			toonLaadfout();
 		})
 		.finally(() => {
+			// Eerst het gedrag van de bron, dan pas de rest. De bron kan een ophaalronde beginnen —
+			// nagebootst of echt — en naEersteLading zet de lijst terug zodra er géén voortgang
+			// loopt. Andersom onthult die de lijst een tel voordat de ronde hem weer wegneemt.
+			//
+			// Brongedrag start alleen als de lading gelukt is. Na een storing zou één binnendruppelend
+			// demo-bericht zich voordoen als de hele berichtenbox.
+			if (!ladingMislukt) {
+				const bron = register.actief();
+				if (bron && typeof bron.start === 'function') {
+					veilig({ log: 'Het gedrag van de bron', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => bron.start((wijziging) => {
+						const mislukt = register.meld(wijziging);
+						// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
+						// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
+						// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
+						return mislukt;
+					}));
+				}
+			}
+
 			// Precies één keer, wat er ook gebeurd is: dit bindt luisteraars die niet twee keer
 			// gebonden mogen worden.
 			naEersteLading();
-
-			// Brongedrag start alleen als de lading gelukt is. Na een storing zou één binnendruppelend
-			// demo-bericht zich voordoen als de hele berichtenbox.
-			if (ladingMislukt) return;
-
-			const bron = register.actief();
-			if (bron && typeof bron.start === 'function') {
-				bron.start((wijziging) => {
-					const mislukt = register.meld(wijziging);
-					// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
-					// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
-					// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
-					return mislukt;
-				});
-			}
 		});
 
 	// Debug-handle; niet bedoeld voor productiegebruik.
