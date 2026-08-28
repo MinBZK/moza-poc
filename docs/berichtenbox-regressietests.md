@@ -10,14 +10,17 @@ Deze lijst beschrijft wat er vóór de refactor werkte. Alles hieronder hoort er
 ## Hoe u dit uitvoert
 
 1. `npm test` — de geautomatiseerde tests (deel A). Alles hoort groen te zijn.
-2. `npm run dev` — het prototype op `http://localhost:8080`, voor deel B en C.
-3. Twee portalen doorlopen, want ze delen de code maar niet de instellingen:
+2. `npm run test:vergelijk` — main en deze branch naast elkaar op de gebouwde pagina's (deel A2).
+   Vraagt om een tweede werkmap; zie `tests-vergelijking/README.md`. De scenario's die uiteenlopen
+   staan in deel C, met de reden erbij.
+3. `npm run dev` — het prototype op `http://localhost:8080`, voor deel B en C.
+4. Twee portalen doorlopen, want ze delen de code maar niet de instellingen:
    `/moza/berichtenbox/` en `/mijn-belastingdienst/berichtenbox/`.
-4. Vlaggen zet u aan in het Flags-paneel. Relevant zijn “Berichtenbox unhappy flow” (bewaard in een
+5. Vlaggen zet u aan in het Flags-paneel. Relevant zijn “Berichtenbox unhappy flow” (bewaard in een
    cookie, overleeft het wissen van localStorage), “Dynamische berichten”, “Zakelijk postvak”,
    “Delen” en “Accountwisselaar”.
-5. Persona wisselt u via het Flags-paneel of via `?persona=`.
-6. Begin elk blok met een schone opslag: klik “Reset” in de berichtenbox, of wis de localStorage-key
+6. Persona wisselt u via het Flags-paneel of via `?persona=`.
+7. Begin elk blok met een schone opslag: klik “Reset” in de berichtenbox, of wis de localStorage-key
    `berichtenbox`.
 
 ## A. Wat de geautomatiseerde tests afdekken
@@ -36,6 +39,21 @@ opbouw van de HTML, en niets over opmaak, animatie of echte browsers.
 | Archief en prullenbak | `views.test.js` | Eigen filters per weergave, kolomaantallen, meldingen per weergave |
 | Detailpagina | `detail.test.js` | Archiveren, markeren, terugdraaien en navigeren bij mislukt bewaren |
 | Markeren buiten de berichtenbox | `homepage.test.js` | Gedeelde state, geen overschrijving van onleesbare state |
+
+## A2. De vergelijking met main
+
+`npm run test:vergelijk` draait de berichtenbox van `main` en die van deze branch op **dezelfde,
+echt gebouwde pagina's uit `_site`** en meldt elk verschil. 41 scenario's: de eerste weergave van
+vijf pagina's, zeven bewaarde staten, elf keer zoeken, filteren en sorteren, zeven acties op een
+bericht, de voortgangsanimatie, de paginering, de organisatie-schakelaar, de detailpagina en de vijf
+demo-pagina's die de berichtenbox alleen als markup hebben.
+
+Zie `tests-vergelijking/README.md` voor het opzetten. Dit draait in jsdom: het ziet de opbouw van de
+HTML, de tekst, de klassen, de tellers en wat er in localStorage terechtkomt, en het ziet geen
+opmaak, geen echte animatie en geen echte browser. Deel B blijft daarom nodig.
+
+**Uitkomst:** 32 scenario's leveren een identiek beeld op. Negen lopen uiteen, in zes soorten, en
+alle zes zijn verklaard — zie deel C.
 
 ## B. Handmatig te controleren
 
@@ -170,21 +188,49 @@ Deze pagina's delen het script maar hebben geen volledige dataset. Ze horen onge
 - [ ] Markeren vanaf de homepage van MOZa werkt en deelt de state met de berichtenbox.
 - [ ] Op pagina's zonder berichtenbox staan geen nieuwe fouten in de console.
 
-## C. Bewust gewijzigd gedrag
+## C. Verschillen met main, en waarom
 
-Dit is geen regressie maar gevolg van de opzet. Bevestig dat het aanvaardbaar is.
+Gemeten met `npm run test:vergelijk`, niet geredeneerd. Vier ervan zijn fouten op `main` die deze
+branch oplost; twee zijn gevolg van de opzet en vragen om een akkoord.
 
-- [ ] **Zoeken kijkt naar de brongegevens.** Op `main` liep het zoeken over de tekst in de rijen, dus
-      typen van “ongelezen” filterde op de verborgen tekst “Ongelezen”. Nu zoekt u in de afzender en
-      het onderwerp, en levert “ongelezen” niets op.
+### Wat deze branch rechtzet
+
+- [ ] **Het archief en de prullenbak bouwden een cel te veel.** Die pagina's hebben vijf
+      kolomkoppen; `main` bouwt er rijen van zes cellen in. Voor wie de tabel met een screenreader
+      doorloopt, klopt de kolomindeling daar niet. De branch bouwt vijf cellen.
+- [ ] **“Ongelezen.” bleef in de rij staan.** Zet u een bericht op gelezen, dan haalt `main` wel de
+      opmaak weg maar niet de verborgen tekst “Ongelezen.” in de afzenderkolom. Een screenreader
+      blijft het bericht dus als ongelezen aankondigen. De branch bouwt de rij opnieuw en laat die
+      tekst weg.
+- [ ] **De badge werd verkeerd bewaard.** Archiveert of verwijdert u een ongelezen bericht, dan
+      toont `main` op het scherm 15 en schrijft het 16 naar localStorage. Op de volgende pagina
+      staat de badge daardoor één te hoog. De branch bewaart wat u ziet.
+- [ ] **Een bericht kon in het archief én in de prullenbak staan.** Archiveert u een bericht en
+      gooit u het daarna weg, dan blijft het op `main` ook in het archief staan. De branch geeft de
+      prullenbak voorrang, zoals de bewaarde staat het al beschreef.
+
+### Wat bewust verandert
+
+- [ ] **Zoeken kijkt naar de brongegevens.** Op `main` liep het zoeken over de tekst in de rijen,
+      inclusief de verborgen “Ongelezen.”. Zoeken op “ongelezen” gaf daar tien resultaten; hier
+      geeft het er nul en verschijnt de lege staat. U zoekt nu in de afzender en het onderwerp.
 - [ ] **Alleen de zichtbare pagina staat in de HTML.** Zoeken in de pagina met Ctrl+F vindt daardoor
       alleen berichten op de huidige pagina, niet op alle pagina's.
 - [ ] **Het script is een ES-module.** Modulescripts draaien ná alle klassieke `defer`-scripts, dus
       de berichtenbox komt later op gang dan de andere scripts op de pagina.
 
+### Al eerder toegevoegd op deze branch
+
+- [ ] **De lege staat op de inbox.** `main` heeft daar geen `[data-berichtenbox-empty]`, dus een
+      zoekopdracht zonder resultaat laat een lege tabel achter zonder uitleg. Deze branch voegt het
+      blok toe aan beide inboxen.
+
 ## D. Nog niet geautomatiseerd
 
-De onderdelen die alleen handmatig te controleren zijn, zitten grotendeels in de render-laag: de
-voortgangsanimatie, de gesimuleerde bronuitval, het mappenpaneel, de bijlagen en de responsieve
-paginanavigatie. Ze horen in een volgende stap naar de datalaag of achter testbare functies, zodat
-deze lijst korter wordt in plaats van langer.
+Wat noch `npm test` noch de vergelijking raakt: de gesimuleerde bronuitval en haar drie scenario's,
+het mappenpaneel, de bijlagen met hun voorvertoning en downloads, de responsieve paginanavigatie
+(jsdom kent geen breedte), en alles wat met opmaak, kleur, focusrand en beweging te maken heeft.
+
+Die eerste vier zitten in de render-laag. Ze horen in een volgende stap naar de datalaag of achter
+testbare functies, zodat deel B korter wordt in plaats van langer. Voor de laatste groep is een
+echte browser nodig; in deze omgeving was er geen te installeren.

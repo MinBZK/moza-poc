@@ -1,53 +1,54 @@
 {
-	"name": "mox",
-	"private": true,
-	"scripts": {
-		"build": "vite build && npm run build:tokens && npx @11ty/eleventy",
-		"build:tokens": "node style-dictionary/config.mjs",
-		"dev": "concurrently --names \"eleventy,tokens,vite\" -c \"cyan,magenta,green\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"npm run build:tokens && chokidar 'tokens/tokens.json' -c 'npm run build:tokens'\" \"vite build --watch\"",
-		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build -o _site/storybook",
-		"lint:css": "stylelint 'style/**/*.css'",
-		"lint:css:fix": "stylelint 'style/**/*.css' --fix",
-		"test": "vitest run",
-		"test:watch": "vitest",
-		"vite:build": "vite build",
-		"format": "prettier --write .",
-		"proxy": "node server/proxy.js"
-	},
-	"devDependencies": {
-		"@11ty/eleventy": "^3.1.2",
-		"@markuplint/nunjucks-parser": "^4.6.21",
-		"@storybook/addon-a11y": "^10.3.5",
-		"@storybook/addon-docs": "^10.3.5",
-		"@storybook/html-vite": "^10.3.5",
-		"@stylistic/stylelint-plugin": "^5.1.0",
-		"@tokens-studio/sd-transforms": "^2.0.3",
-		"@vitejs/plugin-react": "^6.0.3",
-		"chokidar-cli": "^3.0.0",
-		"chromatic": "^15.2.0",
-		"concurrently": "^9.1.2",
-		"express": "^4.18.4",
-		"http-proxy-middleware": "^2.0.6",
-		"jsdom": "^30.0.1",
-		"markuplint": "^4.18.3",
-		"prettier": "^3.0.0",
-		"prettier-plugin-nunjucks": "^0.1.5",
-		"storybook": "^10.3.5",
-		"style-dictionary": "^5.2.0",
-		"stylelint": "^17.4.0",
-		"stylelint-config-standard": "^40.0.0",
-		"stylelint-order": "^8.1.1",
-		"stylelint-use-logical": "^2.1.3",
-		"vite": "^8.1.3",
-		"vitest": "^4.1.11"
-	},
-	"overrides": {
-		"uuid": "^14.0.0"
-	},
-	"dependencies": {
-		"@tanstack/react-query": "^5.101.4",
-		"react": "^19.2.7",
-		"react-dom": "^19.2.7"
-	}
+  "name": "mox",
+  "private": true,
+  "scripts": {
+    "build": "vite build && npm run build:tokens && npx @11ty/eleventy",
+    "build:tokens": "node style-dictionary/config.mjs",
+    "dev": "concurrently --names \"eleventy,tokens,vite\" -c \"cyan,magenta,green\" \"MOZA_CHAT_API=http://localhost:8000 npx @11ty/eleventy --serve\" \"npm run build:tokens && chokidar 'tokens/tokens.json' -c 'npm run build:tokens'\" \"vite build --watch\"",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o _site/storybook",
+    "lint:css": "stylelint 'style/**/*.css'",
+    "lint:css:fix": "stylelint 'style/**/*.css' --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "vite:build": "vite build",
+    "format": "prettier --write .",
+    "proxy": "node server/proxy.js",
+    "test:vergelijk": "vitest run --config tests-vergelijking/vitest.config.js"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@markuplint/nunjucks-parser": "^4.6.21",
+    "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/html-vite": "^10.3.5",
+    "@stylistic/stylelint-plugin": "^5.1.0",
+    "@tokens-studio/sd-transforms": "^2.0.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "chokidar-cli": "^3.0.0",
+    "chromatic": "^15.2.0",
+    "concurrently": "^9.1.2",
+    "express": "^4.18.4",
+    "http-proxy-middleware": "^2.0.6",
+    "jsdom": "^30.0.1",
+    "markuplint": "^4.18.3",
+    "prettier": "^3.0.0",
+    "prettier-plugin-nunjucks": "^0.1.5",
+    "storybook": "^10.3.5",
+    "style-dictionary": "^5.2.0",
+    "stylelint": "^17.4.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.1.1",
+    "stylelint-use-logical": "^2.1.3",
+    "vite": "^8.1.3",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "uuid": "^14.0.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  }
 }
