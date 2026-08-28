@@ -25,18 +25,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 (function() {
 	"use strict";
 
-	// berichtenbox-voortgang-vooraf.njk zet vóór het parsen van de tabel een vlag op <html>, zodat de
-	// server-gerenderde rijen nooit te zien zijn geweest. Vanaf hier is die vlag van ons, en dus ook
-	// de plicht hem weer weg te halen — óók langs de uitgangen hieronder, want een vlag die blijft
-	// staan houdt de lijst voorgoed verborgen.
-	const vroegeVlag = window.__berichtenboxVoortgang;
-	if (vroegeVlag) vroegeVlag.overgenomen = true;
-
-	function geefLijstVrij() {
-		if (vroegeVlag) vroegeVlag.vrijgeven();
-		else delete document.documentElement.dataset.berichtenboxVoortgang;
-	}
-
 	// Werk de badges voor ongelezen berichten bij op alle pagina's vanuit
 	// localStorage (side-nav én hoofdnavigatie kunnen allebei een badge tonen).
 	try {
@@ -165,7 +153,22 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const data = window.berichtenboxData;
 	if (!data || !Array.isArray(data.berichten) || !Array.isArray(data.mappen) || !Array.isArray(data.magazijnen)) {
 		console.error('[Berichtenbox] window.berichtenboxData ontbreekt of is incompleet; script gestopt.');
-		geefLijstVrij();
+
+		// Toen de rijen nog server-gerenderd waren, bleef er iets staan als dit misging. Nu komen ze
+		// uit de datalaag en houdt de bezoeker een lege tabel over waar niets bij staat. De melding
+		// hier niet via toonPaginaMelding: die leunt op variabelen die verderop pas bestaan.
+		// Alleen op een echte berichtenbox-pagina; de demo-postvakken hebben geen lijst en geen data,
+		// en daar is niets aan de hand.
+		if (document.querySelector('[data-berichtenbox-list]')) {
+			const blok = document.querySelector('[data-berichtenbox-storing]');
+			const slot = blok && blok.querySelector('[data-berichtenbox-storing-tekst]');
+			if (slot) slot.textContent = 'Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.';
+			if (blok) blok.hidden = false;
+
+			// "U heeft nog geen berichten" is aantoonbaar onwaar zolang we niet weten wát er is.
+			const leeg = document.querySelector('[data-berichtenbox-empty]');
+			if (leeg) leeg.hidden = true;
+		}
 		return;
 	}
 
@@ -260,7 +263,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	/** De lijst weer tonen als de animatie tóch niet komt: een mislukte lading, of een andere pagina. */
 	function toonNaVoortgang() {
-		geefLijstVrij();
 		if (!voortgangKlaargezet) return;
 		voortgangKlaargezet = false;
 
@@ -274,10 +276,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
 	if (huidigeView() === 'inbox' && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
-		if (!verbergVoorVoortgang()) geefLijstVrij();
-	} else {
-		// De vlag stond er misschien wel; komt de animatie niet, dan hoort de lijst er meteen te zijn.
-		geefLijstVrij();
+		verbergVoorVoortgang();
 	}
 
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
@@ -1736,7 +1735,6 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				requestAnimationFrame(stap);
 			} else {
 				voortgangKlaargezet = false;
-				geefLijstVrij();
 				wrap.hidden = true;
 				lijst.hidden = false;
 				if (pagnav) pagnav.hidden = false;

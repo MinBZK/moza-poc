@@ -29,25 +29,29 @@ describe("berichtenbox.js — laden", () => {
 		expect(fouten).not.toHaveBeenCalled();
 	});
 
-	it("stopt netjes als de dataset ontbreekt en laat de server-rijen staan", async () => {
-		// Ontbrekende dataset is een bouwfout, geen bezoekersfout. Het script stopt en laat staan wat
-		// Eleventy heeft gerenderd — precies wat een bezoeker zonder JavaScript ook ziet.
+	it("zegt het als de dataset ontbreekt, in plaats van een lege tabel achter te laten", async () => {
+		// Ontbrekende dataset is een bouwfout, geen bezoekersfout. Toen de rijen nog uit de HTML
+		// kwamen bleef er iets staan; nu komt alles uit de datalaag en is er zonder melding niets.
 		bouwPagina([bericht(), bericht()]);
 		delete window.berichtenboxData;
 		await laadBerichtenbox();
 		await laatLaden();
-		expect(rijen()).toHaveLength(2);
+
+		expect(rijen()).toHaveLength(0);
 		expect(fouten).toHaveBeenCalled();
+		const blok = document.querySelector("[data-berichtenbox-storing]");
+		expect(blok.hidden).toBe(false);
+		expect(blok.textContent).toContain("ophalen van uw berichten");
 	});
 
-	it("vervangt de server-gerenderde rijen door die uit de datalaag", async () => {
-		bouwPagina([bericht({ onderwerp: "Van de server" })]);
-		const voor = rijen()[0];
+	it("begint met een lege tabel en vult die uit de datalaag", async () => {
+		bouwPagina([bericht({ onderwerp: "Uit de bron" })]);
+		expect(rijen()).toHaveLength(0);
+
 		await laadBerichtenbox();
 		await laatLaden();
-		// Zelfde bericht, andere rij: de datalaag heeft hem opnieuw opgebouwd.
+
 		expect(rijen()).toHaveLength(1);
-		expect(rijen()[0]).not.toBe(voor);
 	});
 });
 

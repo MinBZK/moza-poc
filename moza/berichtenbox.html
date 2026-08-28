@@ -4,7 +4,6 @@ permalink: "/moza/berichtenbox/"
 ---
 
 {% include "berichtenbox-data.njk" %}
-{% include "berichtenbox-voortgang-vooraf.njk" %}
 {% include "side-nav-overheid.njk" %}
 
 <article id="hoofd-inhoud" class="berichtenbox">
@@ -81,6 +80,15 @@ permalink: "/moza/berichtenbox/"
 					</div>
 				</div>
 
+				<noscript>
+					<div class="feedback feedback-info">
+						{% include "icon-feedback-info.njk" %}
+						<div>
+							<p>Deze berichtenbox haalt uw berichten op bij verschillende overheidsorganisaties. Daarvoor is JavaScript nodig. Zet JavaScript aan en ververs deze pagina, of open een bericht rechtstreeks via de link die u heeft gekregen.</p>
+						</div>
+					</div>
+				</noscript>
+
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>
 						<tr>
@@ -106,12 +114,7 @@ permalink: "/moza/berichtenbox/"
 							</th>
 						</tr>
 					</thead>
-					<tbody>
-						{% set rijActies = true %}
-						{% for bericht in berichtenboxData.berichten %}
-							{% include "berichtenbox-row.njk" %}
-						{% endfor %}
-					</tbody>
+					<tbody></tbody>
 				</table>
 
 				<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>

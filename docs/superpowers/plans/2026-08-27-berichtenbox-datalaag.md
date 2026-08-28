@@ -1123,11 +1123,13 @@ eigenaar, dus dit hoort daar rechtgezet te worden — meld het bij het FBS-team.
 |---|---|
 | Eén geïntegreerde inbox | ongewijzigd |
 | Federatie = gedrag (voortgang, polling, bijlagen, mappen) | Taak 5, verhuisd naar de dataset-bron |
-| Zonder JS werkt de lijst | Taak 6 stap 5, expliciete controle |
+| Zonder JS werkt de lijst | **bewust losgelaten**, zie hieronder |
 | Detailpagina's via Eleventy-pagination | blijft, zie Beslissing 3 |
 | Semantische HTML, tokens, logical properties | Global Constraints |
 | Schrijfwijzer-afwijking (Archiveren/Verwijderen) | Global Constraints |
 | Toegankelijkheid: `role="status"`, `aria-live`, toetsenbord | ongewijzigd; `aria-sort` gecontroleerd in Taak 8 stap 2 |
+
+De eis "zonder JS werkt de lijst" is tijdens de review losgelaten. Reden: dit prototype simuleert een federatief stelsel dat berichten ophaalt bij verschillende organisaties, en die data is er niet synchroon. Een vooraf gerenderde inbox van 141 berichten uit 14 bronnen beweert dus iets wat het stelsel juist niet doet, en spreekt de voortgangsanimatie ernaast tegen. Het archief en de prullenbak renderden al geen rijen. Wie geen JavaScript heeft krijgt een `<noscript>`-blok met uitleg; de detailpagina's blijven statisch en werken wel. Vastgelegd in `CLAUDE.md`.
 
 Eén spec-eis raakt dit plan bewust aan: sectie "Data" noemt `_data/berichtenbox.json` als enige databestand. Dat is inmiddels `_data/berichtenboxData.js` en met de keten komt er een tweede bron bij. De spec loopt daarop achter; Taak 10 stap 3 werkt `CLAUDE.md` bij, en de spec zelf hoort een korte aanvulling te krijgen.
 

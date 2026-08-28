@@ -23,7 +23,6 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 	<h1>Berichtenbox</h1>
 
 	{% set berichtenboxData = belastingdienstBerichtenboxAB %} {% set berichtenboxBasis = "/mijn-belastingdienst/berichtenbox/" %} {% include "berichtenbox-data.njk" %}
-{% include "berichtenbox-voortgang-vooraf.njk" %}
 
 	<section class="card tabs berichtenbox">
 		{% include "berichtenbox-tabs.njk" %}
@@ -74,6 +73,15 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 					</div>
 				</div>
 
+				<noscript>
+					<div class="feedback feedback-info">
+						{% include "icon-feedback-info.njk" %}
+						<div>
+							<p>Deze berichtenbox haalt uw berichten op bij verschillende overheidsorganisaties. Daarvoor is JavaScript nodig. Zet JavaScript aan en ververs deze pagina, of open een bericht rechtstreeks via de link die u heeft gekregen.</p>
+						</div>
+					</div>
+				</noscript>
+
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>
 						<tr>
@@ -85,9 +93,7 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 							<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
 						</tr>
 					</thead>
-					<tbody>
-						{% set rijActies = true %} {% for bericht in berichtenboxData.berichten %} {% include "berichtenbox-row.njk" %} {% endfor %}
-					</tbody>
+					<tbody></tbody>
 				</table>
 
 				<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>

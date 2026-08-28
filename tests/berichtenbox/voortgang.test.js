@@ -5,10 +5,10 @@ import { bericht, bouwPagina, laadBerichtenbox, laatLaden } from "./dom.js";
 /**
  * De voortgangsanimatie bij het eerste bezoek.
  *
- * Het punt van deze tests is niet de animatie zelf, maar het gat ervóór: tussen het uitvoeren van
- * het script en het moment dat de animatie de lijst verbergt, stonden de server-gerenderde rijen op
- * het scherm. Dit script is een module en draait dus ná alle klassieke defer-scripts, en de
- * animatie begon pas als de bron geladen was — samen lang genoeg om de berichten te zien flitsen.
+ * Het punt van deze tests is niet de animatie zelf, maar het moment waarop de lijst verdwijnt. Die
+ * verborg zichzelf pas als de bron geladen was, en tot dat moment stond de tabel op het scherm. De
+ * rijen komen nu uit de datalaag, dus er staat geen inhoud meer in — maar de tabelkoppen wel, en
+ * die horen ook niet even te verschijnen om meteen weer weg te gaan.
  */
 
 const BERICHTEN = Array.from({ length: 12 }, (_, i) =>
@@ -114,72 +114,6 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 
 		expect(JSON.parse(window.localStorage.getItem("berichtenbox")).eersteBezoekGehad).toBe(true);
 	}, 20000);
-});
-
-/**
- * De vlag die berichtenbox-voortgang-vooraf.njk vóór het parsen op <html> zet. Blijft die staan,
- * dan houdt de CSS de lijst verborgen — ook nadat de animatie klaar is.
- */
-function zetVroegeVlag() {
-	document.documentElement.dataset.berichtenboxVoortgang = "wacht";
-	window.__berichtenboxVoortgang = {
-		overgenomen: false,
-		vrijgeven: () => { delete document.documentElement.dataset.berichtenboxVoortgang; },
-	};
-}
-
-const vlag = () => document.documentElement.dataset.berichtenboxVoortgang;
-
-describe("de vlag van vóór het parsen", () => {
-	it("wordt overgenomen, zodat het vangnet bij load niets meer doet", async () => {
-		bouwPagina(BERICHTEN);
-		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
-		zetVroegeVlag();
-		await laad();
-
-		expect(window.__berichtenboxVoortgang.overgenomen).toBe(true);
-	});
-
-	it("gaat weg zodra de animatie klaar is", async () => {
-		// Blijft hij staan, dan houdt de CSS de lijst verborgen en ziet de bezoeker nooit iets.
-		bouwPagina(BERICHTEN);
-		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
-		zetVroegeVlag();
-		await laad();
-
-		expect(vlag()).toBe("wacht");
-		for (let i = 0; i < 400 && !voortgang().hidden; i += 1) await new Promise((r) => setTimeout(r, 25));
-
-		expect(vlag()).toBe(undefined);
-	}, 20000);
-
-	it("gaat meteen weg bij een tweede bezoek", async () => {
-		bouwPagina(BERICHTEN);
-		zetVroegeVlag();
-		await laad();
-
-		expect(vlag()).toBe(undefined);
-	});
-
-	it("gaat weg als de lading mislukt", async () => {
-		bouwPagina(BERICHTEN);
-		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
-		window.berichtenboxData = { berichten: null, magazijnen: [], mappen: [] };
-		zetVroegeVlag();
-		await laad();
-
-		expect(vlag()).toBe(undefined);
-	});
-
-	it("gaat weg op een pagina zonder voortgangsblok", async () => {
-		bouwPagina(BERICHTEN);
-		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
-		voortgang().remove();
-		zetVroegeVlag();
-		await laad();
-
-		expect(vlag()).toBe(undefined);
-	});
 });
 
 describe("als de animatie tóch niet komt", () => {

@@ -1,8 +1,8 @@
 # Regressietests berichtenbox
 
 Acceptatiecriteria voor de PR `refactor/berichtenbox-datalaag`. De refactor verandert de weg
-waarlangs berichten op het scherm komen: de datalaag is nu de waarheid en de tabel wordt één keer
-opnieuw opgebouwd, in plaats van dat de server-gerenderde rijen zelf de lijst zijn. Vrijwel elk
+waarlangs berichten op het scherm komen: de datalaag is nu de waarheid en de tabel wordt gevuld uit
+de bron, in plaats van dat de server-gerenderde rijen zelf de lijst zijn. Vrijwel elk
 zichtbaar gedrag loopt daardoor over nieuwe code, ook waar de code er hetzelfde uitziet.
 
 Deze lijst beschrijft wat er vóór de refactor werkte. Alles hieronder hoort erna nog te werken.
@@ -184,9 +184,12 @@ rijen. Of dat zo hoort is een vraag voor het ontwerp, geen regressie van deze br
 
 ### B12. Zonder JavaScript
 
-- [ ] Met JavaScript uit staat er een gevulde lijst met server-gerenderde rijen.
-- [ ] De links naar de detailpagina's werken.
-- [ ] Er staat geen lege staat en geen storingsmelding onder een gevulde lijst.
+De lijst werkte hier vroeger zonder JavaScript, omdat de inbox alle berichten vooraf renderde. Dat
+doet zij niet meer; zie deel C voor de reden.
+
+- [ ] Met JavaScript uit staat er geen lege tabel, maar het `<noscript>`-blok met de uitleg.
+- [ ] Een detailpagina die u rechtstreeks opent, werkt zonder JavaScript gewoon.
+- [ ] Er staat geen lege staat en geen storingsmelding naast dat blok.
 
 ### B13. Opslag die niet meewerkt
 
@@ -225,6 +228,13 @@ branch oplost; twee zijn gevolg van de opzet en vragen om een akkoord.
       prullenbak voorrang, zoals de bewaarde staat het al beschreef.
 
 ### Wat bewust verandert
+
+- [ ] **De inbox rendert geen rijen meer vooraf.** Dit prototype simuleert een stelsel dat berichten
+      ophaalt bij verschillende organisaties. Die zijn er niet synchroon, dus een vooraf gerenderde
+      lijst van 141 berichten uit 14 bronnen beweert iets wat niet waar is — en spreekt de
+      voortgangsanimatie tegen die ernaast staat. Het archief en de prullenbak deden dit al niet.
+      De inboxpagina gaat daarmee van 789 naar 311 KB. Wie geen JavaScript heeft, krijgt een
+      `<noscript>`-blok met uitleg in plaats van een lijst.
 
 - [ ] **Zoeken kijkt naar de brongegevens.** Op `main` liep het zoeken over de tekst in de rijen,
       inclusief de verborgen “Ongelezen.”. Zoeken op “ongelezen” gaf daar tien resultaten; hier

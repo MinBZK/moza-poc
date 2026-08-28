@@ -7,9 +7,10 @@ import { vi } from "vitest";
  * de inbox pagineert en heeft een acties-kolom, archief en prullenbak niet — verschilt deze
  * fixture mee: een test die op de inbox slaagt maar op archief zou breken, hoort hier ook te breken.
  *
- * De tbody wordt server-gerenderd gevuld, net als in `moza/berichtenbox.html`. Dat is de basis voor
- * bezoekers zonder JavaScript, en het is precies wat de render-laag hoort te vervangen. Een lege
- * tbody zou elke test over "de rijen komen uit de datalaag" vanzelf laten slagen.
+ * De tbody is leeg, net als in `moza/berichtenbox.html`. De rijen komen uit de datalaag; ook de
+ * inbox rendert er geen meer vooraf. Wie geen JavaScript heeft krijgt het `<noscript>`-blok, want
+ * een berichtenbox die zijn berichten bij verschillende organisaties ophaalt heeft niets om
+ * synchroon te tonen.
  */
 
 const KOPPEN_INBOX = `
@@ -56,20 +57,6 @@ const STORING = `
 		<div><p data-berichtenbox-storing-tekst></p></div>
 	</div>`;
 
-/** Eén server-gerenderde rij, zoals `_includes/berichtenbox-row.njk` die opbouwt. */
-function serverRij(bericht) {
-	const ongelezen = bericht.isOngelezen ? " is-unread" : "";
-	return `
-				<tr class="berichtenbox-row${ongelezen}" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}">
-					<td class="berichtenbox-row-mark"><button type="button" class="mark-toggle" data-mark-toggle aria-pressed="false"><span class="visually-hidden">Markeren</span></button></td>
-					<td class="berichtenbox-row-sender">${bericht.afzender}</td>
-					<td class="berichtenbox-row-subject"><a href="/moza/berichtenbox/bericht/${bericht.id}/">${bericht.onderwerp}</a></td>
-					<td class="berichtenbox-row-date">${bericht.datum}</td>
-					<td class="berichtenbox-row-attachment"></td>
-					<td class="berichtenbox-row-actions"></td>
-				</tr>`;
-}
-
 function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 	const inbox = view === "inbox";
 	// Server-gerenderd, met echte aantallen — net als in de templates. Op nul zetten zou verbergen
@@ -80,8 +67,8 @@ function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 		bronnen: new Set(bruikbaar.map((b) => b.magazijnId)).size,
 		ongelezen: bruikbaar.filter((b) => b.isOngelezen).length,
 	};
-	// Alleen de inbox server-rendert rijen; archief en prullenbak worden altijd door JS gevuld.
-	const rijen = inbox ? berichten.filter((b) => b && b.id).map(serverRij).join("") : "";
+	// Geen enkele weergave server-rendert nog rijen.
+	const rijen = "";
 	const lijstAttr = inbox ? ' data-page-size="10"' : ` data-berichtenbox-view="${view}"`;
 	const pagnav = inbox ? '\n\t<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>' : "";
 

@@ -1599,19 +1599,6 @@ button.is-marked {
 }
 
 /* Berichtenbox animatie bij nieuw bericht */
-/* Zolang deze vlag staat, komt de voortgangsbalk eraan en hoort de lijst er nog niet te zijn.
-   Gezet door berichtenbox-voortgang-vooraf.njk, vóór de tabel geparseerd wordt, en weggehaald door
-   berichtenbox.js zodra de animatie klaar is of blijkt niet te komen. Zonder dit staan de
-   server-gerenderde rijen op het scherm tot de module aan bod komt. */
-[data-berichtenbox-voortgang="wacht"] [data-berichtenbox-list],
-[data-berichtenbox-voortgang="wacht"] .berichtenbox-content .pagination {
-	display: none;
-}
-
-[data-berichtenbox-voortgang="wacht"] [data-berichtenbox-progress] {
-	display: block;
-}
-
 /* Plaatsvervanger voor een bericht dat niet te renderen is. Geen alarmkleur: het gaat om één
    ontbrekend bericht, niet om een storing van de hele berichtenbox. */
 .berichtenbox-row.is-unreadable td {
