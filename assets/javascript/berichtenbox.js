@@ -224,6 +224,45 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	const mapVan = (id, origineel) => stateModule.mapVan(id, origineel);
 	const isGemarkeerd = (id, origineel) => stateModule.isGemarkeerd(id, origineel);
 
+	// De voortgangsanimatie verbergt de lijst zelf, maar dat gebeurt pas als de bron geladen is.
+	// Dit script is bovendien een module, dus het draait ná alle klassieke defer-scripts. In dat gat
+	// staan de server-gerenderde rijen op het scherm, en die flitsen dan voorbij vlak voordat de
+	// voortgang begint. Op main viel de beslissing synchroon, meteen na het renderen, en was dat gat
+	// er niet. Wat straks verborgen wordt, verbergen we daarom nu al: view, pagina en de bewaarde
+	// staat zijn hier alle drie bekend.
+	let voortgangKlaargezet = false;
+
+	function verbergVoorVoortgang() {
+		const wrap = document.querySelector('[data-berichtenbox-progress]');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (!wrap || !lijst) return false;
+
+		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		lijst.hidden = true;
+		if (pagnav) pagnav.hidden = true;
+		wrap.hidden = false;
+		voortgangKlaargezet = true;
+		return true;
+	}
+
+	/** De lijst weer tonen als de animatie tóch niet komt: een mislukte lading, of een andere pagina. */
+	function toonNaVoortgang() {
+		if (!voortgangKlaargezet) return;
+		voortgangKlaargezet = false;
+
+		const wrap = document.querySelector('[data-berichtenbox-progress]');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		if (wrap) wrap.hidden = true;
+		if (lijst) lijst.hidden = false;
+		if (pagnav) pagnav.hidden = false;
+	}
+
+	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
+	if (huidigeView() === 'inbox' && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
+		verbergVoorVoortgang();
+	}
+
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
 	// doorgestreept oog (ongelezen) = "maak ongelezen". Icoon volgt het label/actie.
 	const SVG_OOG_PAD = 'M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45';
@@ -565,7 +604,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			pagnav.hidden = true;
 			return;
 		}
-		pagnav.hidden = false;
+		// Niet tonen zolang de voortgangsanimatie op het scherm staat: de paginering hoort bij de
+		// lijst, en die is dan verborgen. De animatie zet hem zelf terug als ze klaar is.
+		pagnav.hidden = voortgangKlaargezet;
 
 		// Bouwt de nav met ten hoogste maxItems cijfercellen. Retourneert de <ol>.
 		function renderMet(maxItems) {
@@ -1610,11 +1651,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const wrap = document.querySelector('[data-berichtenbox-progress]');
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const pagnav = document.querySelector('.berichtenbox-content .pagination');
-		if (!wrap || !lijst) { opKlaar(); return; }
-
-		lijst.hidden = true;
-		if (pagnav) pagnav.hidden = true;
-		wrap.hidden = false;
+		if (!verbergVoorVoortgang()) { opKlaar(); return; }
 
 		// Respecteer het org-filter: bij alleen Belastingdienst is er 1 bron en het
 		// juiste aantal Belastingdienst-berichten; met andere organisaties alle bronnen.
@@ -1681,6 +1718,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 			if (t < 1) {
 				requestAnimationFrame(stap);
 			} else {
+				voortgangKlaargezet = false;
 				wrap.hidden = true;
 				lijst.hidden = false;
 				if (pagnav) pagnav.hidden = false;
@@ -1917,6 +1955,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 				});
 			});
 		} else {
+			// De animatie komt niet: een mislukte lading, een andere weergave, of niet het eerste
+			// bezoek. Wat we vooruitlopend verborgen hebben, hoort dan gewoon zichtbaar te zijn.
+			toonNaVoortgang();
 			startDemoGedrag();
 		}
 	}

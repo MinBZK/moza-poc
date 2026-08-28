@@ -29,7 +29,7 @@ Deze lijst beschrijft wat er vóór de refactor werkte. Alles hieronder hoort er
 
 ## A. Wat de geautomatiseerde tests afdekken
 
-154 tests in `tests/berichtenbox/`. Ze draaien in jsdom, dus ze zeggen iets over de logica en over de
+162 tests in `tests/berichtenbox/`. Ze draaien in jsdom, dus ze zeggen iets over de logica en over de
 opbouw van de HTML, en niets over opmaak, animatie of echte browsers.
 
 | Gebied | Bestand | Wat vaststaat |
@@ -43,6 +43,7 @@ opbouw van de HTML, en niets over opmaak, animatie of echte browsers.
 | Archief en prullenbak | `views.test.js` | Eigen filters per weergave, kolomaantallen, meldingen per weergave |
 | Detailpagina | `detail.test.js` | Archiveren, markeren, terugdraaien en navigeren bij mislukt bewaren |
 | Markeren buiten de berichtenbox | `homepage.test.js` | Gedeelde state, geen overschrijving van onleesbare state |
+| De voortgangsanimatie | `voortgang.test.js` | De lijst is verborgen vóór de eerste rij gebouwd wordt, en komt daarna terug |
 
 ## A2. De vergelijking met main
 
@@ -161,6 +162,7 @@ Draait alleen op de inbox, op pagina 1, zonder `eersteBezoekGehad` in de opslag 
 lading. Neem `/moza/berichtenbox/`: de animatie duurt daar 4 seconden, tegen 1,2 seconde op het
 Belastingdienst-portaal, waar het organisatiefilter maar één bron overlaat.
 
+- [ ] De berichten flitsen niet even voorbij voordat de balk verschijnt.
 - [ ] Na het wissen van de opslag loopt de balk “berichten ophalen bij bronnen” door.
 - [ ] De aantallen in de animatie eindigen op wat er daadwerkelijk in de lijst staat.
 - [ ] Bij een volgend bezoek wordt de animatie overgeslagen.
