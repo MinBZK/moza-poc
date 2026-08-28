@@ -87,6 +87,10 @@
 		<script src="{{ '/assets/javascript/aria-disabled.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/indeterminate.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/account-switcher.js' | url }}" defer></script>
+		<!-- Vóór content-interactions: personas.js wist bij een persona-wisseling de opgeslagen
+		     gegevens van de vorige. Draait het daarna, dan leest content-interactions nog één
+		     keer wat er van iemand anders stond. -->
+		<script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/content-interactions.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/feature-flags.js' | url }}" defer></script>
 		<script>
@@ -101,7 +105,6 @@
 		<script>
 			window.activiteitenLogData = {{ activiteitenLogData | dump | safe }};
 		</script>
-		<script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/assistent-vraag.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/homepage-profiel.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/external-links.js' | url }}" defer></script>

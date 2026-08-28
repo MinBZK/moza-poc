@@ -13,9 +13,14 @@ import { laadLive, maakOpslag, stackDraait, wachtOpRijen } from "./laad-live.js"
  * laten de tweede dus struikelen over de eerste.
  */
 
-// De staat hoort bij één persona; zonder die naam gooit state.js hem weg en telt het weer als
-// eerste bezoek — inclusief de ophaalanimatie van de dataset.
-const TWEEDE_BEZOEK = (persona) => maakOpslag({ berichtenbox: JSON.stringify({ persona, eersteBezoekGehad: true }) });
+// Een terugkerende bezoeker: de staat draagt de naam van deze persona, en personas.js weet dat de
+// opgeslagen gegevens al van hem zijn. Ontbreekt een van die twee, dan wordt de staat weggegooid —
+// door state.js of door de opruimregel bij een wisseling — en telt het weer als eerste bezoek,
+// inclusief de ophaalanimatie van de dataset.
+const TWEEDE_BEZOEK = (persona) => maakOpslag({
+	"persona:gegevens-van": persona,
+	berichtenbox: JSON.stringify({ persona, eersteBezoekGehad: true }),
+});
 
 const rijen = () => [...document.querySelectorAll(".berichtenbox-row")].filter((r) => !r.hidden && !r.closest("[hidden]"));
 const storing = () => {

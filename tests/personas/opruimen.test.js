@@ -1,0 +1,120 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+
+/**
+ * Wisselen van persona gooit de opgeslagen gegevens van de vorige weg.
+ *
+ * Tussen persona's bestaat geen verband: het zijn andere mensen bij andere bedrijven, met andere
+ * post en andere keuzes. Wat de een bewaarde, gearchiveerd of weggeklikt heeft, hoort de ander niet
+ * te zien. Vlaggen en instellingen zijn gereedschap van wie het prototype bekijkt en blijven staan.
+ */
+
+const PERSONAS = process.cwd() + "/assets/javascript/personas.js";
+
+function nepOpslag(begin = {}) {
+	const kluis = { ...begin };
+	return {
+		getItem: (k) => (k in kluis ? kluis[k] : null),
+		setItem: (k, v) => { kluis[k] = String(v); },
+		removeItem: (k) => { delete kluis[k]; },
+		key: (i) => Object.keys(kluis)[i] ?? null,
+		get length() { return Object.keys(kluis).length; },
+		_kluis: kluis,
+	};
+}
+
+const GEGEVENS = {
+	berichtenbox: JSON.stringify({ persona: "koffiezaak", gearchiveerd: { "msg-1": true } }),
+	"berichtenbox-keten": JSON.stringify({ ontvanger: "KVK:90000011", berichten: [] }),
+	"hidden:Subsidie voor verduurzaming": JSON.stringify({ title: "x" }),
+	"read:msg-1": "true",
+	"favorite:msg-2": "true",
+	"dismissed:banner": "true",
+	"unread:count": "7",
+	"feature:Dynamische berichten": "true",
+	"setting:test-user-kvk": "85234567",
+};
+
+function draaiPersonas(opslag) {
+	vi.stubGlobal("localStorage", opslag);
+	document.body.innerHTML = "";
+	window.personasData = [
+		{ id: "koffiezaak", label: "Horeca", actief: true, persoon: {}, bedrijf: { kvkNummer: "85234567" } },
+		{ id: "bloemenkweker", label: "Kweker", persoon: {}, bedrijf: { kvkNummer: "62345681" } },
+	];
+	new Function(readFileSync(PERSONAS, "utf8")).call(window);
+}
+
+beforeEach(() => {
+	vi.spyOn(console, "info").mockImplementation(() => {});
+	vi.spyOn(console, "error").mockImplementation(() => {});
+	vi.spyOn(console, "warn").mockImplementation(() => {});
+	window.history.replaceState({}, "", "/moza/berichtenbox/");
+});
+
+afterEach(() => {
+	delete window.Personas;
+	delete window.personasData;
+	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
+});
+
+describe("wisselen van persona", () => {
+	it("wist wat bij de vorige persona hoorde", () => {
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(opslag._kluis["berichtenbox-keten"]).toBeUndefined();
+		expect(opslag._kluis["hidden:Subsidie voor verduurzaming"]).toBeUndefined();
+		expect(opslag._kluis["read:msg-1"]).toBeUndefined();
+		expect(opslag._kluis["favorite:msg-2"]).toBeUndefined();
+		expect(opslag._kluis["dismissed:banner"]).toBeUndefined();
+		expect(opslag._kluis["unread:count"]).toBeUndefined();
+	});
+
+	it("laat vlaggen en instellingen met rust", () => {
+		// Gereedschap van wie het prototype bekijkt, geen gegevens van een bedrijf.
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis["feature:Dynamische berichten"]).toBe("true");
+		expect(opslag._kluis["setting:test-user-kvk"]).toBe("85234567");
+		expect(opslag._kluis.persona).toBe("koffiezaak");
+	});
+
+	it("noteert bij wie de gegevens nu horen", () => {
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis["persona:gegevens-van"]).toBe("koffiezaak");
+	});
+
+	it("laat alles staan als de persona niet wisselt", () => {
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "koffiezaak", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBe(GEGEVENS.berichtenbox);
+		expect(opslag._kluis["unread:count"]).toBe("7");
+	});
+
+	it("werkt ook via ?persona=, dat niets opschrijft", () => {
+		// Die weg zou langs een hook op de wisselaar heen glippen.
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "koffiezaak", persona: "koffiezaak" });
+		window.history.replaceState({}, "", "/moza/berichtenbox/?persona=bloemenkweker");
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(opslag._kluis["persona:gegevens-van"]).toBe("bloemenkweker");
+	});
+
+	it("ruimt bij een eerste bezoek stil op", () => {
+		// Geen herkomst bekend: opruimen mag, maar er valt niets te melden.
+		const opslag = nepOpslag({ ...GEGEVENS, persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis["persona:gegevens-van"]).toBe("koffiezaak");
+		expect(console.info).not.toHaveBeenCalled();
+	});
+});
