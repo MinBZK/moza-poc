@@ -107,10 +107,14 @@ describe("een bron die onderweg wegvalt", () => {
 		await vi.advanceTimersByTimeAsync(13000);
 
 		expect(sessie._kluis["berichtenbox-bron-uitval"]).toBeTruthy();
-		// En een tweede bron in dezelfde zitting leest dezelfde stand.
+
+		// En een tweede bron in dezelfde zitting — de detailpagina — leert het via zijn eigen lading.
+		// Bewust niet via een losse uitval()-functie: die zou daar een eigen scenario dobbelen, en dan
+		// weten de inbox en de detailpagina iets anders.
 		const detail = datasetBron(DATA, { vlagAan: () => true, sessie: () => sessie });
 		vi.spyOn(Math, "random").mockReturnValue(2 / 3 + 0.01);
-		expect(detail.uitval().uitgevallen).toBeTruthy();
+		const inhoud = await detail.laad();
+		expect(inhoud.uitval.uitgevallen).toBeTruthy();
 		vi.useRealTimers();
 	}, 20000);
 });
@@ -120,11 +124,44 @@ describe("de bezoeker herstelt de bronnen", () => {
 		const bron = metScenario("een");
 		expect((await bron.laad()).berichten).toHaveLength(2);
 
-		bron.herstelBronnen();
+		await bron.herstelBronnen();
 
-		expect((await bron.laad()).berichten).toHaveLength(4);
-		expect(bron.uitval()).toBe(null);
+		const na = await bron.laad();
+		expect(na.berichten).toHaveLength(4);
+		expect(na.uitval).toBe(null);
 	});
+
+	it("levert de weggelaten berichten opnieuw, niet alleen de melding weg", async () => {
+		// De bron liet ze weg, dus alleen de bron kan ze teruggeven. Zonder deze levering houdt de
+		// bezoeker een kortere lijst over én is de melding die dat verklaarde net verdwenen — bij het
+		// scenario "geen" zelfs een lege postbus met "u heeft geen berichten".
+		const bron = metScenario("een");
+		await bron.laad();
+
+		const gemeld = [];
+		bron.start((wijziging) => {
+			gemeld.push(wijziging);
+			return [];
+		});
+
+		await bron.herstelBronnen();
+
+		expect(gemeld).toHaveLength(1);
+		expect(gemeld[0].berichten).toHaveLength(4);
+		expect(gemeld[0].uitval).toBe(null);
+	}, 20000);
+
+	it("meldt het als die hernieuwde levering niet te tonen was", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const meldStoring = vi.fn();
+		const bron = metScenario("een", { meldStoring });
+		await bron.laad();
+		bron.start(() => [new Error("rij niet te bouwen")]);
+
+		await bron.herstelBronnen();
+
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet opnieuw tonen"));
+	}, 20000);
 
 	it("vergeet de uitval als de vlag uitgaat", async () => {
 		const sessie = nepSessie({ "berichtenbox-bron-uitval": JSON.stringify({ id: "rdw", naam: "RDW" }) });

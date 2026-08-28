@@ -348,11 +348,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			return false;
 		}
 	}
-	// Unhappy-flow (feature flag "Berichtenbox unhappy flow"): één bron (RDW) is
-	// onbereikbaar. Zolang de flag aan staat en de gebruiker niet handmatig heeft
-	// hersteld, tellen RDW-berichten niet mee in de lijst en de tellers.
-	const ONBEREIKBARE_BRON = "rdw";
-	let bronHandmatigHersteld = false;
 	// De flag wordt persistent bewaard in een cookie (overleeft localStorage-wissen),
 	// zie PERSISTENT_FEATURES in feature-flags.js.
 	// De nagebootste uitval zit in de dataset-bron: een bron die niet antwoordt levert geen berichten,
@@ -366,10 +361,17 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	/** Wat de actieve bron op dit moment niet kan leveren, of null. */
+	/**
+	 * Wat de actieve bron niet kon leveren, of null.
+	 *
+	 * Alleen wat de bron ons verteld heeft — bij het laden, of bij een latere wijziging. Geen
+	 * terugval die de bron opnieuw bevraagt: die zou ná de lading een verse toestand kunnen
+	 * verzinnen, en dan staat er "de RDW is niet bereikbaar" boven een lijst waar het RDW-bericht
+	 * gewoon in staat. En op een detailpagina zou elke pagina zijn eigen scenario dobbelen, terwijl
+	 * de inbox en de detailpagina hetzelfde horen te weten.
+	 */
 	function huidigeUitval() {
-		if (laatsteUitval) return laatsteUitval;
-		const bron = register.actief();
-		return bron && typeof bron.uitval === "function" ? bron.uitval() : null;
+		return laatsteUitval;
 	}
 
 	function magazijnDoorOrgFilter(magazijnId) {
@@ -1128,6 +1130,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (naamEl) naamEl.textContent = uitval.naam;
 		}
 	}
+	/** De drie plekken waar de uitval te zien is. Eén stand, dus één aanroep. */
+	function werkUitvalWeergaveBij() {
+		werkBronWaarschuwingBij();
+		werkBronUitvalBij();
+		werkBerichtBeschikbaarheidBij();
+	}
+
 	function bindBronOnbereikbaar() {
 		const waarschuwingen = document.querySelectorAll("[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]");
 		if (!waarschuwingen.length) return;
@@ -2039,7 +2048,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// betekenen dat sorteren, het kebab-menu of de rij-acties dood zijn.
 	bindSortering();
 	bindBronOnbereikbaar();
-	bindBerichtBeschikbaarheid();
 
 	// De berichtenbox pagineert via ?pagina=; /pagina-N/ bestaat hier niet als route.
 	const isEerstePagina = huidigePaginaUitUrl() === 1;
@@ -2087,6 +2095,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
 		veilig({ log: "Vullen van de detailpagina", bezoeker: "Wij kunnen dit bericht niet volledig tonen." }, vulDemoDetailPagina);
 		veilig({ log: "Binden van de acties op de detailpagina", bezoeker: "U kunt dit bericht nu niet archiveren, verwijderen of markeren." }, bindDetailPaginaActies);
+
+		// Ná het register: dit hangt aan de bron. De wéérgave hoeft hier niet bijgewerkt te worden —
+		// de lading meldt zich als bronwijziging, en die luisteraar doet het.
+		veilig({ log: "De beschikbaarheid van dit bericht", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, bindBerichtBeschikbaarheid);
 
 		// Meldt een bron voortgang, dan blijft de lijst weg tot die klaar is; de luisteraar hierboven
 		// zet hem dan terug. Anders hoort wat we vooruitlopend verborgen hebben er gewoon te staan —
@@ -2158,7 +2170,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (inhoud.nieuwBericht) zojuistBinnengekomenId = inhoud.nieuwBericht.id;
 
 		data.berichten = volgende;
-		if ("uitval" in inhoud) laatsteUitval = inhoud.uitval;
+		if ("uitval" in inhoud) {
+			laatsteUitval = inhoud.uitval;
+			// Een bron die onderweg wegvalt laat berichten uit de lijst verdwijnen. Zonder dit gebeurt
+			// dat zwijgend: de tellers zakken, een rij is weg, en het blok dat daar precies voor in de
+			// template staat blijft verborgen.
+			werkUitvalWeergaveBij();
+		}
 		if (!inhoud.nieuwBericht) {
 			data.magazijnen = inhoud.magazijnen;
 			data.mappen = inhoud.mappen;

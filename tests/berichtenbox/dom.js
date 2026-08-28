@@ -41,6 +41,13 @@ const MELDINGEN_INBOX = `
 		</div>
 	</div>
 
+	<div class="feedback feedback-warning" hidden data-bron-uitval role="status">
+		<div>
+			<p data-bron-uitval-tekst><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden.</p>
+			<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
+		</div>
+	</div>
+
 	<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 		<div>
 			<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
@@ -155,6 +162,16 @@ function detailHtml(bericht, { metStoringsblok = true } = {}) {
 		<h1 class="h3">${bericht.onderwerp}</h1>
 ${storing}
 		<p class="berichtenbox-detail-meta">${bericht.afzender}</p>
+
+		<!-- Staat in de echte template en ontbrak hier. Daardoor keerde werkBerichtBeschikbaarheidBij
+		     meteen af en bleef een crash op die weg ongezien. -->
+		<div class="feedback feedback-warning" hidden data-bericht-onbeschikbaar role="status">
+			<div>
+				<p><b data-bron-uitval-naam></b> is momenteel niet bereikbaar.</p>
+				<p><button class="link-button" type="button" data-bericht-retry>Opnieuw proberen</button></p>
+			</div>
+		</div>
+
 		<div class="berichtenbox-detail-body"><p>${bericht.inhoud}</p></div>
 		<div class="action-options">
 			<button class="icon-button" data-actie="markeren" aria-pressed="false">Markeren</button>

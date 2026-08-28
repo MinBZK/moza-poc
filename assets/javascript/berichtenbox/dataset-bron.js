@@ -19,9 +19,9 @@
  * stelsel — `volgVoortgang` — zodat de render-laag niet hoeft te weten of de getallen nagebootst
  * zijn of gemeten.
  *
- * Nog niet verhuisd: de gesimuleerde bronuitval. Die zit dieper in de render-laag verweven
- * (org-filter, unhappy-flow-scenario's, sessionStorage gedeeld met de detailpagina) en hoort in een
- * eigen stap hierheen te komen.
+ * En de gesimuleerde bronuitval, om dezelfde reden: een bron die niet antwoordt levert geen
+ * berichten. Die laat `laad()` dus weg, in plaats van dat de render-laag ze wegfiltert — zo is een
+ * nagebootste storing hetzelfde als een echte, wat het hele punt van de unhappy flow is.
  */
 
 /** Minimale tussenpoos, ook als ?poll= een lagere waarde meegeeft. */
@@ -90,6 +90,27 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	let scenario = "een";
 	let handmatigHersteld = false;
 	let uitvalGepland = false;
+	let meldWijziging = null;
+
+	/**
+	 * Levert de lijst opnieuw, met de stand van dat moment. Voor na een herstel: de berichten die
+	 * werden weggelaten horen dan weer op het scherm.
+	 */
+	async function leverOpnieuw() {
+		if (!meldWijziging) return;
+
+		try {
+			const inhoud = await bron.laad();
+			const mislukt = meldWijziging(inhoud);
+			if (mislukt && mislukt.length) {
+				console.error("[Berichtenbox] De herstelde lijst kon niet getoond worden.");
+				meldStoring("Wij konden de berichten niet opnieuw tonen. Ververs de pagina.");
+			}
+		} catch (fout) {
+			console.error("[Berichtenbox] Opnieuw leveren na een herstel mislukte.", fout);
+			meldStoring("Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.");
+		}
+	}
 
 	function unhappyAan() {
 		if (handmatigHersteld) return false;
@@ -124,8 +145,16 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	}
 
 	/** Magazijnen die bij het laden niet antwoorden. Bij "later" is dat er bij het laden geen. */
-	function geblokkeerdBijLaden(magazijnId) {
+	function geblokkeerdBijLaden(bericht) {
 		if (!unhappyAan()) return false;
+
+		// Alleen wat er binnenkomt. Wat de bezoeker zelf archiveerde of weggooide is van hem; dat uit
+		// zijn archief laten verdwijnen omdat een bron nu even stil is, klopt niet — en op die
+		// pagina's staat geen enkel blok dat het zou kunnen uitleggen.
+		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
+		if (statusVan(bericht.id) !== "inbox") return false;
+
+		const magazijnId = bericht.magazijnId;
 		const sc = huidigScenario();
 		if (sc === "geen") return true;
 		if (sc === "een") return magazijnId === ONBEREIKBARE_BRON;
@@ -329,7 +358,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		};
 	}
 
-	return {
+	// Met een naam, zodat leverOpnieuw hierboven zijn eigen laad() kan aanroepen.
+	const bron = {
 		naam: "dataset",
 
 		// De dataset is er altijd; wie hier komt, komt nergens anders terecht.
@@ -371,9 +401,9 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			// in de render-laag weg te filteren: dan is een nagebootste storing hetzelfde als een echte,
 			// en dat is precies wat de unhappy flow moet laten zien.
 			const alles = [...terug, ...uitDataset];
-			const geleverd = alles.filter((bericht) => !geblokkeerdBijLaden(bericht.magazijnId));
+			const geleverd = alles.filter((bericht) => !bericht || !geblokkeerdBijLaden(bericht));
 			if (geleverd.length < alles.length) {
-				console.info("[Berichtenbox] Gesimuleerde uitval (" + huidigScenario() + "): " + (alles.length - geleverd.length) + " bericht(en) niet geleverd.");
+				console.warn("[Berichtenbox] Gesimuleerde uitval (" + huidigScenario() + "): " + (alles.length - geleverd.length) + " bericht(en) niet geleverd.");
 			}
 
 			return {
@@ -386,16 +416,18 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			};
 		},
 
-		/** Voor pagina's die niet laden maar wel moeten weten wat er wegviel — de detailpagina. */
-		uitval() {
-			return uitvalStand();
-		},
-
-		/** De bezoeker drukt op "opnieuw proberen": de nagebootste storing is voorbij. */
+		/**
+		 * De bezoeker drukt op "opnieuw proberen": de nagebootste storing is voorbij.
+		 *
+		 * De bron liet die berichten weg, dus alleen de bron kan ze teruggeven — het scherm opnieuw
+		 * tekenen helpt niet, want ze staan nergens meer. Zonder deze levering blijft de bezoeker met
+		 * een kortere lijst zitten én is de melding die dat verklaarde net verdwenen.
+		 */
 		herstelBronnen() {
 			handmatigHersteld = true;
 			uitvalGepland = false;
 			schrijfUitval(null);
+			return leverOpnieuw();
 		},
 
 		/** De vlag ging uit of aan; bij de volgende weergave hoort een nieuwe keuze. */
@@ -404,6 +436,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			scenarioGekozen = false;
 			uitvalGepland = false;
 			schrijfUitval(null);
+			return leverOpnieuw();
 		},
 
 		/** Zie bron.js: de render-laag abonneert zich hierop, vóór de bronkeuze. */
@@ -455,6 +488,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		 * niets van polling te weten.
 		 */
 		start(meld) {
+			meldWijziging = meld;
 			if (magAnimeren()) {
 				// Dezelfde afscherming als herhaalOphalen. Klikt de bezoeker op "Opnieuw proberen" in het
 				// gat tussen de bronkeuze en deze aanroep, dan loopt er al een ronde; er een tweede naast
@@ -503,6 +537,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		},
 	};
 
+	return bron;
+
 	/**
 	 * Het binnendruppelen zelf. Los van start(), zodat de ophaalanimatie het kan aanroepen zodra zij
 	 * klaar is: verzonnen berichten tijdens het ophalen zou de nabootsing tegenspreken.
@@ -532,7 +568,9 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			const voorbeeld = (data.berichten || []).find((bericht) => bericht && bericht.magazijnId === id);
 			schrijfUitval({ id, naam: voorbeeld ? voorbeeld.afzender : id });
 
-			const overgebleven = (data.berichten || []).filter((bericht) => bericht && bericht.magazijnId !== id);
+			// Weer alleen de inbox: het archief van de bezoeker hoort niet mee te krimpen.
+			const statusVan = zichtbaarheid.statusVan || (() => "inbox");
+			const overgebleven = (data.berichten || []).filter((bericht) => bericht && (bericht.magazijnId !== id || statusVan(bericht.id) !== "inbox"));
 			const mislukt = meld({
 				berichten: overgebleven,
 				magazijnen: (data.magazijnen || []).slice(),
