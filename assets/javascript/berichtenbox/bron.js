@@ -4,12 +4,22 @@
  * Een bron is een object met:
  *
  *     {
- *       naam:      "keten",
- *       geldtVoor: async (persona) => boolean,   // is deze bron van toepassing?
- *       laad:      async () => ({ berichten, magazijnen, mappen }),
- *       start:     (meld) => {},                 // optioneel: gedrag ná het laden
- *       inhoudVan: async (berichtId) => string,  // optioneel: inhoud naleveren
+ *       naam:          "keten",
+ *       geldtVoor:     async (persona) => boolean,   // is deze bron van toepassing?
+ *       laad:          async () => ({ berichten, magazijnen, mappen }),
+ *       start:         (meld) => {},                 // optioneel: gedrag ná het laden
+ *       inhoudVan:     async (berichtId) => string,  // optioneel: inhoud naleveren
+ *       volgVoortgang: (kijker) => {},               // optioneel: hoe ver het ophalen is
+ *       herhaalOphalen: (klaar) => {},               // optioneel: nog een keer, op verzoek
  *     }
+ *
+ * `volgVoortgang` meldt `{ bevraagd, klaar, gevonden }` zolang er opgehaald wordt, en `null` zodra
+ * er niets meer te melden valt. Of die getallen gemeten zijn of nagebootst, hoort de render-laag
+ * niet te kunnen zien. Let op: de render-laag abonneert zich hierop vóór de bronkeuze — `geldtVoor`
+ * wacht een ophaalronde af, en daarna is de voortgang voorbij.
+ *
+ * `herhaalOphalen` is er voor de bezoeker die erom vraagt: een hersteld magazijn, een verruimd
+ * organisatiefilter. Wie het niet aanbiedt, wordt niet gevraagd.
  *
  * De volgorde van registreren is de voorrang: de eerste bron waarvoor `geldtVoor` waar is, wint.
  * De dataset-bron hoort daarom achteraan — die is altijd van toepassing en vangt op wat geen

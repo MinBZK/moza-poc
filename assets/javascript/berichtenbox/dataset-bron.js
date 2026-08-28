@@ -2,8 +2,12 @@
  * De gegenereerde dataset als berichtenbron.
  *
  * Deze bron is altijd van toepassing en hoort daarom achteraan in het register: hij vangt op wat
- * geen andere bron opeist. `window.berichtenboxData` wordt door Eleventy in de pagina gezet; de
- * kopieën hieronder zorgen dat de render-laag de dataset niet muteert.
+ * geen andere bron opeist. `window.berichtenboxData` wordt door Eleventy in de pagina gezet.
+ *
+ * Let op: `laad()` geeft kopieën terug, maar `data` blijft hetzelfde object dat de render-laag in
+ * handen heeft — en die schrijft er wél in (`data.berichten = volgende` bij een bronwijziging). De
+ * ophaalanimatie telt over `data.berichten` en leunt daarmee op die gedeelde staat. Zolang dat zo
+ * is, hoort het hier te staan en niet als vanzelfsprekendheid weggeschreven.
  *
  * Het federatieve gedrag is hier gesimuleerd: er druppelen na verloop van tijd berichten binnen,
  * alsof een magazijn later antwoordt. Dat gedrag hoort bij déze bron. Een echte bron doet het echt
@@ -24,12 +28,7 @@
 const POLL_MIN_SEC = 5;
 const POLL_STANDAARD_SEC = 60;
 
-const ONDERWERPEN = [
-	"Nieuw bericht ontvangen",
-	"Bevestiging ontvangst",
-	"Bericht beschikbaar",
-	"Actie mogelijk vereist",
-];
+const ONDERWERPEN = ["Nieuw bericht ontvangen", "Bevestiging ontvangst", "Bericht beschikbaar", "Actie mogelijk vereist"];
 
 /** Staat de feature-flag "Dynamische berichten" aan? Standaard uit. */
 function dynamischeBerichtenAan() {
@@ -48,30 +47,36 @@ function tussenpoos() {
 }
 
 /**
- * @param data   window.berichtenboxData
- * @param opties { state, limiet, magOphalen } — `state` om binnengekomen berichten te bewaren,
- *               `magOphalen` om te bepalen of polling op deze pagina zinnig is.
- */
-/**
+ * @param data                  window.berichtenboxData
+ * @param opties.state          Om binnengekomen berichten en het eerste bezoek te bewaren.
+ * @param opties.limiet         Hoeveel binnengedruppelde berichten er hoogstens bewaard blijven.
+ * @param opties.magOphalen     Of polling op deze pagina zinnig is.
+ * @param opties.meldStoring    Waar een melding aan de bezoeker terechtkomt.
  * @param opties.zichtbaarheid  Wat de bezoeker straks écht ziet: `statusVan`, `magazijnDoorOrgFilter`,
  *                              `magazijnToegestaan`, `persoonRelevant`. De animatie moet op díe
  *                              aantallen eindigen, anders telt zij naar iets anders toe dan er komt.
  * @param opties.magAnimeren    Of de ophaalanimatie hier op zijn plaats is. Dat weet de render-laag:
  *                              de inbox, pagina 1, eerste bezoek, geen mislukte lading.
+ * @param opties.duurMs         Hoe lang de nabootsing doet over één ronde. Standaard hangt dat af van
+ *                              het aantal bronnen; tests zetten hem kort, want de duur is niet wat zij
+ *                              toetsen.
  */
-export function datasetBron(data, {
-	state,
-	limiet = 5,
-	magOphalen = () => true,
-	meldStoring = () => {},
-	zichtbaarheid = {},
-	magAnimeren = () => false,
-} = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), zichtbaarheid = {}, magAnimeren = () => false, duurMs = null } = {}) {
 	let teller = 0;
 	let voortgangKijker = null;
+	let haaltOp = false;
 
+	/**
+	 * Een kijker die struikelt mag de ronde niet stilzetten. Deed hij dat wel, dan kwam er nooit een
+	 * `null` en bleef de lijst verborgen bij een render-laag die op die `null` wacht.
+	 */
 	function meldVoortgang(voortgang) {
-		if (voortgangKijker) voortgangKijker(voortgang);
+		if (!voortgangKijker) return;
+		try {
+			voortgangKijker(voortgang);
+		} catch (fout) {
+			console.error("[Berichtenbox] Een kijker op de voortgang struikelde.", fout);
+		}
 	}
 
 	/**
@@ -105,8 +110,10 @@ export function datasetBron(data, {
 		const berichtTijden = tijden(bereikteBerichten.length);
 
 		// Bij één bron valt er weinig op te halen: korte animatie. Meer bronnen, langer.
-		const duur = totaalBronnen <= 1 ? 1200 : 4000;
-		const begin = Date.now();
+		const duur = duurMs === null ? (totaalBronnen <= 1 ? 1200 : 4000) : duurMs;
+		// Monotone klok: een NTP-correctie midden in de animatie laat de balk anders springen.
+		const klok = () => (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now());
+		const begin = klok();
 
 		function aantalVoor(reeks, t) {
 			// Binary search: hoeveel tijden liggen op of vóór t?
@@ -114,35 +121,61 @@ export function datasetBron(data, {
 			let hi = reeks.length;
 			while (lo < hi) {
 				const mid = (lo + hi) >>> 1;
-				if (reeks[mid] <= t) lo = mid + 1; else hi = mid;
+				if (reeks[mid] <= t) lo = mid + 1;
+				else hi = mid;
 			}
 			return lo;
 		}
 
-		const volgendeStap = typeof requestAnimationFrame === "function"
-			? (fn) => requestAnimationFrame(fn)
-			: (fn) => setTimeout(fn, 16);
+		const volgendeStap = typeof requestAnimationFrame === "function" ? (fn) => requestAnimationFrame(fn) : (fn) => setTimeout(fn, 16);
 
-		function stap() {
-			const t = Math.min(1, (Date.now() - begin) / duur);
-			meldVoortgang({
-				bevraagd: totaalBronnen,
-				klaar: aantalVoor(bronTijden, t),
-				gevonden: aantalVoor(berichtTijden, t),
-			});
+		let afgerond = false;
 
-			if (t < 1) {
-				volgendeStap(stap);
-				return;
+		/**
+		 * Eén uitgang, en die wordt gegarandeerd genomen. De render-laag verbergt de lijst zolang er
+		 * voortgang gemeld wordt en zet hem pas terug bij `null`; blijft die uit, dan kijkt de
+		 * bezoeker naar kolomkoppen en een bevroren balk, zonder een woord erbij.
+		 */
+		function rondAf(fout) {
+			if (afgerond) return;
+			afgerond = true;
+
+			if (fout) {
+				console.error("[Berichtenbox] De ophaalronde is afgebroken.", fout);
+				meldStoring("Het ophalen bij de bronnen is afgebroken. Ververs de pagina om het opnieuw te proberen.");
 			}
 
-			// Null betekent: er valt niets meer te melden. De render-laag zet de lijst dan terug.
 			meldVoortgang(null);
 			klaar();
 		}
 
-		meldVoortgang({ bevraagd: totaalBronnen, klaar: 0, gevonden: 0 });
-		volgendeStap(stap);
+		function stap() {
+			try {
+				const t = Math.min(1, (klok() - begin) / duur);
+				meldVoortgang({
+					bevraagd: totaalBronnen,
+					klaar: aantalVoor(bronTijden, t),
+					gevonden: aantalVoor(berichtTijden, t),
+				});
+
+				if (t < 1) {
+					volgendeStap(stap);
+					return;
+				}
+			} catch (fout) {
+				rondAf(fout);
+				return;
+			}
+
+			rondAf(null);
+		}
+
+		try {
+			meldVoortgang({ bevraagd: totaalBronnen, klaar: 0, gevonden: 0 });
+			volgendeStap(stap);
+		} catch (fout) {
+			rondAf(fout);
+		}
 	}
 
 	function nieuwBericht(magazijnen) {
@@ -193,14 +226,12 @@ export function datasetBron(data, {
 				}
 			}
 
-			const uitDataset = (data.berichten || []);
+			const uitDataset = data.berichten || [];
 			const magazijnen = (data.magazijnen || []).slice();
 			const bekendeIds = new Set(uitDataset.map((bericht) => bericht.id));
 			const bekendeMagazijnen = new Set(magazijnen.map((magazijn) => magazijn.id));
 
-			const terug = eerderBinnengekomen.filter(
-				(bericht) => !bekendeIds.has(bericht.id) && bekendeMagazijnen.has(bericht.magazijnId)
-			);
+			const terug = eerderBinnengekomen.filter((bericht) => !bekendeIds.has(bericht.id) && bekendeMagazijnen.has(bericht.magazijnId));
 
 			return {
 				berichten: [...terug, ...uitDataset],
@@ -209,10 +240,6 @@ export function datasetBron(data, {
 			};
 		},
 
-		/**
-		 * Laat na het laden af en toe een bericht binnenkomen, en meldt de nieuwe lijst. De
-		 * render-laag ziet dat als een gewone bronwijziging en hoeft niets van polling te weten.
-		 */
 		/** Zie bron.js: de render-laag abonneert zich hierop, vóór de bronkeuze. */
 		volgVoortgang(kijker) {
 			voortgangKijker = kijker;
@@ -224,12 +251,25 @@ export function datasetBron(data, {
 		 * animatie nog een keer — maar de render-laag hoeft dat niet te weten.
 		 */
 		herhaalOphalen(klaar) {
-			ophaalAnimatie(typeof klaar === "function" ? klaar : () => {});
+			// Twee ronden tegelijk schrijven in hetzelfde voortgangsblok, en de eerste die klaar is
+			// meldt `null` terwijl de tweede nog telt. Twee keer klikken hoort niets extra's te doen.
+			if (haaltOp) return;
+			haaltOp = true;
+
+			ophaalAnimatie(() => {
+				haaltOp = false;
+				if (typeof klaar === "function") klaar();
+			});
 		},
 
+		/**
+		 * Het gedrag ná het laden: eerst laten zien dat er opgehaald wordt, dan pas berichten laten
+		 * binnendruppelen. De render-laag ziet dat laatste als een gewone bronwijziging en hoeft
+		 * niets van polling te weten.
+		 */
 		start(meld) {
-			// Eerst laten zien dat er opgehaald wordt, dan pas berichten laten binnendruppelen.
 			if (magAnimeren()) {
+				haaltOp = true;
 				ophaalAnimatie(() => {
 					if (state) {
 						state.ruw.eersteBezoekGehad = true;
@@ -237,9 +277,14 @@ export function datasetBron(data, {
 						// bewaren niet, dan speelt zij bij het volgende bezoek nog een keer af —
 						// hinderlijk, maar geen reden om de bezoeker lastig te vallen.
 						if (!state.bewaar()) {
-							console.warn("[Berichtenbox] Eerste bezoek niet bewaard; de ophaalanimatie speelt opnieuw af.");
+							// Geen melding aan de bezoeker: het gevolg is een animatie die nog een keer
+							// afspeelt, hinderlijk maar niet misleidend. Wel de reden erbij, anders is dit
+							// signaal niet te scheiden van ruis.
+							const reden = typeof state.waaromNietBewaard === "function" ? state.waaromNietBewaard() : "onbekend";
+							console.error("[Berichtenbox] Eerste bezoek niet bewaard (" + reden + "); de ophaalanimatie speelt opnieuw af.");
 						}
 					}
+					haaltOp = false;
 					begintDruppelen(meld);
 				});
 				return;
@@ -263,7 +308,7 @@ export function datasetBron(data, {
 		if (!dynamischeBerichtenAan()) return;
 		if (!magOphalen()) return;
 
-		const magazijnen = (data.magazijnen || []);
+		const magazijnen = data.magazijnen || [];
 		if (!magazijnen.length) {
 			console.warn("[Berichtenbox] Geen magazijnen; er kunnen geen demo-berichten binnenkomen.");
 			meldStilstand("Er zijn geen bronnen om berichten van te ontvangen.", "info");
@@ -316,6 +361,6 @@ export function datasetBron(data, {
 				clearInterval(klok);
 				meldStilstand("Er komen geen nieuwe berichten meer binnen. Ververs de pagina.");
 			}
-	}, tussenpoos());
+		}, tussenpoos());
 	}
 }

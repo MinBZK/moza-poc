@@ -23,7 +23,7 @@ import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lij
 import { datasetBron } from "./berichtenbox/dataset-bron.js";
 import { ketenBron } from "./berichtenbox/keten-bron.js";
 
-(function() {
+(function () {
 	"use strict";
 
 	// Werk de badges voor ongelezen berichten bij op alle pagina's vanuit
@@ -31,15 +31,17 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	try {
 		const navBadges = document.querySelectorAll('[data-berichtenbox-count="ongelezen"]');
 		if (navBadges.length) {
-			const opgeslagen = JSON.parse(localStorage.getItem('berichtenbox') || '{}');
-			if (typeof opgeslagen.aantalOngelezen === 'number') {
-				navBadges.forEach((badge) => { badge.textContent = opgeslagen.aantalOngelezen > 0 ? opgeslagen.aantalOngelezen : ''; });
+			const opgeslagen = JSON.parse(localStorage.getItem("berichtenbox") || "{}");
+			if (typeof opgeslagen.aantalOngelezen === "number") {
+				navBadges.forEach((badge) => {
+					badge.textContent = opgeslagen.aantalOngelezen > 0 ? opgeslagen.aantalOngelezen : "";
+				});
 			}
 		}
 	} catch (e) {
 		// De badge houdt dan het server-gerenderde aantal; beter dan geen badge, maar het hoort
 		// niet spoorloos te gebeuren.
-		console.warn('[Berichtenbox] Ongelezen-badge niet bij te werken uit de bewaarde state.', e);
+		console.warn("[Berichtenbox] Ongelezen-badge niet bij te werken uit de bewaarde state.", e);
 	}
 
 	// De actieve persona, in dezelfde volgorde als personas.js: ?persona= > localStorage > actief.
@@ -49,18 +51,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	const actievePersonaId = (function () {
 		const personas = window.personasData;
 		if (!Array.isArray(personas) || !personas.length) return null;
-		const param = new URLSearchParams(location.search).get('persona');
+		const param = new URLSearchParams(location.search).get("persona");
 		if (param) {
 			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
 			if (gevonden) return gevonden.id;
 		}
 		try {
-			const opgeslagen = localStorage.getItem('persona');
+			const opgeslagen = localStorage.getItem("persona");
 			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
 		} catch (e) {
 			// Zonder de bewaarde keuze valt de berichtenbox terug op de standaardpersona; dat is een
 			// andere postbus dan de bezoeker koos, dus het hoort in de console te staan.
-			console.warn('[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.', e);
+			console.warn("[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.", e);
 		}
 		const actief = personas.find((p) => p.actief);
 		return actief ? actief.id : personas[0].id;
@@ -73,27 +75,27 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		function sluitRijMenus(behalve) {
 			document.querySelectorAll('.row-actions-toggle[aria-expanded="true"]').forEach((btn) => {
 				if (btn === behalve) return;
-				btn.setAttribute('aria-expanded', 'false');
+				btn.setAttribute("aria-expanded", "false");
 				if (btn.nextElementSibling) btn.nextElementSibling.hidden = true;
 			});
 		}
-		document.addEventListener('click', (e) => {
-			const toggle = e.target.closest('.row-actions-toggle');
+		document.addEventListener("click", (e) => {
+			const toggle = e.target.closest(".row-actions-toggle");
 			if (toggle) {
 				const menu = toggle.nextElementSibling;
-				const open = toggle.getAttribute('aria-expanded') === 'true';
+				const open = toggle.getAttribute("aria-expanded") === "true";
 				sluitRijMenus(toggle);
-				toggle.setAttribute('aria-expanded', String(!open));
+				toggle.setAttribute("aria-expanded", String(!open));
 				if (menu) menu.hidden = open;
 				return;
 			}
 			// Menukeuze of klik buiten het menu sluit alle open menu's.
-			if (e.target.closest('[data-row-actie]') || !e.target.closest('.row-actions')) {
+			if (e.target.closest("[data-row-actie]") || !e.target.closest(".row-actions")) {
 				sluitRijMenus();
 			}
 		});
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape') {
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape") {
 				const open = document.querySelector('.row-actions-toggle[aria-expanded="true"]');
 				sluitRijMenus();
 				if (open) open.focus();
@@ -101,7 +103,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		});
 	})();
 
-	const wrapper = document.querySelector('.berichtenbox');
+	const wrapper = document.querySelector(".berichtenbox");
 	if (!wrapper) {
 		// Geen volledige berichtenbox op deze pagina (bijv. de homepage-preview).
 		// De rest van de IIFE stopt hieronder; markeren regelen we hier apart en
@@ -114,55 +116,55 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		function leesGedeeldeState() {
 			let rauw;
 			try {
-				rauw = localStorage.getItem('berichtenbox');
+				rauw = localStorage.getItem("berichtenbox");
 			} catch (e) {
-				console.error('[Berichtenbox] Opslag niet leesbaar; markering wordt niet bewaard.', e);
+				console.error("[Berichtenbox] Opslag niet leesbaar; markering wordt niet bewaard.", e);
 				return null;
 			}
 			if (!rauw) return {};
 
 			try {
 				const ontleed = JSON.parse(rauw);
-				if (!ontleed || typeof ontleed !== 'object' || Array.isArray(ontleed)) {
-					throw new Error('state is geen object');
+				if (!ontleed || typeof ontleed !== "object" || Array.isArray(ontleed)) {
+					throw new Error("state is geen object");
 				}
 				// Van een andere persona: niet lezen en niet aanvullen. Zelfde regel als in
 				// state.js — tussen persona's bestaat geen verband.
 				if ((ontleed.persona ?? null) !== (actievePersonaId ?? null)) return { persona: actievePersonaId };
 				return ontleed;
 			} catch (e) {
-				console.error('[Berichtenbox] Bewaarde state onleesbaar; markering wordt niet bewaard.', e);
+				console.error("[Berichtenbox] Bewaarde state onleesbaar; markering wordt niet bewaard.", e);
 				gedeeldeStateOnleesbaar = true;
 				return null;
 			}
 		}
 
-		document.querySelectorAll('.berichtenbox-row[data-bericht-id] [data-mark-toggle]').forEach((knop) => {
-			const id = knop.closest('.berichtenbox-row').dataset.berichtId;
-			const vh = knop.querySelector('.visually-hidden');
+		document.querySelectorAll(".berichtenbox-row[data-bericht-id] [data-mark-toggle]").forEach((knop) => {
+			const id = knop.closest(".berichtenbox-row").dataset.berichtId;
+			const vh = knop.querySelector(".visually-hidden");
 
 			function toonMarkering(aan) {
-				knop.classList.toggle('is-marked', aan);
-				knop.setAttribute('aria-pressed', aan ? 'true' : 'false');
-				if (vh) vh.textContent = aan ? 'Markering verwijderen' : 'Markeren';
+				knop.classList.toggle("is-marked", aan);
+				knop.setAttribute("aria-pressed", aan ? "true" : "false");
+				if (vh) vh.textContent = aan ? "Markering verwijderen" : "Markeren";
 			}
 
 			const opgeslagen = (leesGedeeldeState() || {}).gemarkeerd || {};
 			if (id in opgeslagen) toonMarkering(!!opgeslagen[id]);
 
-			knop.addEventListener('click', () => {
-				const aan = !knop.classList.contains('is-marked');
+			knop.addEventListener("click", () => {
+				const aan = !knop.classList.contains("is-marked");
 				const s = leesGedeeldeState();
 
 				if (s) {
 					if (!s.gemarkeerd) s.gemarkeerd = {};
 					s.gemarkeerd[id] = aan;
 					try {
-						localStorage.setItem('berichtenbox', JSON.stringify(s));
+						localStorage.setItem("berichtenbox", JSON.stringify(s));
 						toonMarkering(aan);
 						return;
 					} catch (e) {
-						console.error('[Berichtenbox] Kon markering niet bewaren.', e);
+						console.error("[Berichtenbox] Kon markering niet bewaren.", e);
 					}
 				}
 
@@ -170,9 +172,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// meldingsblok, dus de knop zelf is het enige dat de waarheid kan vertellen. Niet
 				// blijvend uitschakelen — een volgende poging kan wel lukken.
 				toonMarkering(!aan);
-				knop.title = gedeeldeStateOnleesbaar
-					? 'Markeren lukte niet; uw eerder bewaarde berichtenbox is niet te lezen.'
-					: 'Markeren lukte niet; uw browser bewaart op dit moment niets.';
+				knop.title = gedeeldeStateOnleesbaar ? "Markeren lukte niet; uw eerder bewaarde berichtenbox is niet te lezen." : "Markeren lukte niet; uw browser bewaart op dit moment niets.";
 			});
 		});
 		return;
@@ -180,21 +180,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	const data = window.berichtenboxData;
 	if (!data || !Array.isArray(data.berichten) || !Array.isArray(data.mappen) || !Array.isArray(data.magazijnen)) {
-		console.error('[Berichtenbox] window.berichtenboxData ontbreekt of is incompleet; script gestopt.');
+		console.error("[Berichtenbox] window.berichtenboxData ontbreekt of is incompleet; script gestopt.");
 
 		// Toen de rijen nog server-gerenderd waren, bleef er iets staan als dit misging. Nu komen ze
 		// uit de datalaag en houdt de bezoeker een lege tabel over waar niets bij staat. De melding
 		// hier niet via toonPaginaMelding: die leunt op variabelen die verderop pas bestaan.
 		// Alleen op een echte berichtenbox-pagina; de demo-postvakken hebben geen lijst en geen data,
 		// en daar is niets aan de hand.
-		if (document.querySelector('[data-berichtenbox-list]')) {
-			const blok = document.querySelector('[data-berichtenbox-storing]');
-			const slot = blok && blok.querySelector('[data-berichtenbox-storing-tekst]');
-			if (slot) slot.textContent = 'Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.';
+		if (document.querySelector("[data-berichtenbox-list]")) {
+			const blok = document.querySelector("[data-berichtenbox-storing]");
+			const slot = blok && blok.querySelector("[data-berichtenbox-storing-tekst]");
+			if (slot) slot.textContent = "Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.";
 			if (blok) blok.hidden = false;
 
 			// "U heeft nog geen berichten" is aantoonbaar onwaar zolang we niet weten wát er is.
-			const leeg = document.querySelector('[data-berichtenbox-empty]');
+			const leeg = document.querySelector("[data-berichtenbox-empty]");
 			if (leeg) leeg.hidden = true;
 		}
 		return;
@@ -207,12 +207,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Eleventy pathPrefix — via window.PATH_PREFIX uit base.njk.
 	// pathPrefix moet beginnen met '/'; herstel dat als dat niet zo is.
-	let rawPrefix = (typeof window.PATH_PREFIX === 'string' && window.PATH_PREFIX) ? window.PATH_PREFIX : '/';
-	if (!rawPrefix.startsWith('/')) rawPrefix = '/' + rawPrefix;
+	let rawPrefix = typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX ? window.PATH_PREFIX : "/";
+	if (!rawPrefix.startsWith("/")) rawPrefix = "/" + rawPrefix;
 	const PATH_PREFIX = rawPrefix;
 	function url(absPath) {
-		if (PATH_PREFIX === '/') return absPath;
-		return PATH_PREFIX.replace(/\/$/, '') + absPath;
+		if (PATH_PREFIX === "/") return absPath;
+		return PATH_PREFIX.replace(/\/$/, "") + absPath;
 	}
 	// Basis-URL van de berichtenbox waarin we ons bevinden, zodat berichten en
 	// acties binnen het juiste portaal (MOZa of Mijn Belastingdienst) blijven.
@@ -225,9 +225,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function berichtenboxBasis() {
-		return location.pathname.indexOf('/mijn-belastingdienst/') !== -1
-			? '/mijn-belastingdienst/berichtenbox/'
-			: '/moza/berichtenbox/';
+		return location.pathname.indexOf("/mijn-belastingdienst/") !== -1 ? "/mijn-belastingdienst/berichtenbox/" : "/moza/berichtenbox/";
 	}
 
 	// Dezelfde sleutel als de state-module. Het pre-guard-blok hierboven draait vóór `data` bestaat
@@ -261,11 +259,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * maar een bewering over bronnen die nooit bevraagd zijn.
 	 */
 	function verbergVoorVoortgang() {
-		const wrap = document.querySelector('[data-berichtenbox-progress]');
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const wrap = document.querySelector("[data-berichtenbox-progress]");
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!wrap || !lijst) return false;
 
-		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		const pagnav = document.querySelector(".berichtenbox-content .pagination");
 		lijst.hidden = true;
 		if (pagnav) pagnav.hidden = true;
 		voortgangKlaargezet = true;
@@ -277,53 +275,55 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (!voortgangKlaargezet) return;
 		voortgangKlaargezet = false;
 
-		const wrap = document.querySelector('[data-berichtenbox-progress]');
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		const wrap = document.querySelector("[data-berichtenbox-progress]");
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (wrap) wrap.hidden = true;
 		if (lijst) lijst.hidden = false;
-		if (pagnav) pagnav.hidden = false;
+
+		// Niet blind tonen: bij één pagina hoort er geen navigatie te staan, en na het ophalen kan
+		// het aantal pagina's een ander zijn dan ervoor. toonBerichten bepaalt dat opnieuw.
+		veilig({ log: "Het herstellen van de lijst na het ophalen", bezoeker: "Zoeken en filteren werkt op dit moment niet." }, toonBerichten);
 	}
 
 	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
-	if (huidigeView() === 'inbox' && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
+	if (huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
 		verbergVoorVoortgang();
 	}
 
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
 	// doorgestreept oog (ongelezen) = "maak ongelezen". Icoon volgt het label/actie.
-	const SVG_OOG_PAD = 'M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45';
+	const SVG_OOG_PAD = "M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45";
 	const SVG_TONEN = '<path fill="currentColor" d="' + SVG_OOG_PAD + '" />';
 	const SVG_ONGELEZEN = '<mask id="gap"><rect width="64" height="64" fill="white" /><line x1="12" y1="52" x2="52" y2="12" stroke="black" stroke-width="12" stroke-linecap="round" /></mask><path mask="url(#gap)" fill="currentColor" d="' + SVG_OOG_PAD + '" /><path fill="currentColor" d="M10.59 53.41a2 2 0 0 1 0-2.82L50.59 10.59a2 2 0 1 1 2.82 2.82L13.41 53.41a2 2 0 0 1-2.82 0z" />';
 
 	// Wissel label én icoon van de "Markeer als ongelezen"-knop.
 	function werkOngelezenKnopBij(btn, ongelezen) {
 		const labelNode = [...btn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
-		const tekst = ongelezen ? 'Markeer als gelezen' : 'Markeer als ongelezen';
+		const tekst = ongelezen ? "Markeer als gelezen" : "Markeer als ongelezen";
 		if (labelNode) labelNode.textContent = tekst;
 		else btn.append(tekst);
-		const svg = btn.querySelector('svg');
+		const svg = btn.querySelector("svg");
 		if (svg) svg.innerHTML = ongelezen ? SVG_TONEN : SVG_ONGELEZEN;
 	}
 
 	// Werk de Markeren-actieknop op de detailpagina bij (label + aria-pressed + class).
 	function werkMarkeerKnopBij(btn, gemarkeerd) {
-		btn.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
-		btn.classList.toggle('is-marked', gemarkeerd);
-		const label = btn.querySelector('[data-markeer-label]');
-		if (label) label.textContent = gemarkeerd ? 'Markering verwijderen' : 'Markeren';
+		btn.setAttribute("aria-pressed", gemarkeerd ? "true" : "false");
+		btn.classList.toggle("is-marked", gemarkeerd);
+		const label = btn.querySelector("[data-markeer-label]");
+		if (label) label.textContent = gemarkeerd ? "Markering verwijderen" : "Markeren";
 	}
 
 	// A/B-test: het org-filter is alleen actief op een berichtenbox met de toggle
 	// (de Belastingdienst-berichtenbox). Standaard tonen we alleen 'belastingdienst';
 	// staat de toggle aan, dan ook de berichten van andere organisaties.
-	const ORG_EIGEN = 'belastingdienst';
-	const ORG_FEATURE = 'Berichten van andere organisaties';
+	const ORG_EIGEN = "belastingdienst";
+	const ORG_FEATURE = "Berichten van andere organisaties";
 	// Alleen het Belastingdienst-portaal filtert op organisatie; MOZa toont altijd
 	// alles. Portaalbepaling via de basis-URL zodat het ook geldt op pagina's
 	// zonder de org-switch (archief, prullenbak, detail).
 	function orgFilterActief() {
-		return berichtenboxBasis().indexOf('/mijn-belastingdienst/') !== -1;
+		return berichtenboxBasis().indexOf("/mijn-belastingdienst/") !== -1;
 	}
 	// Staat de feature-flag aan? Lees rechtstreeks uit localStorage (zelfde sleutel
 	// als feature-flags.js, default-off). Werkt ook op pagina's waar de switch zelf
@@ -331,7 +331,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// stond de switch eerder aan.
 	function andereOrgenFeatureAan() {
 		try {
-			return localStorage.getItem('feature:' + ORG_FEATURE) === 'true';
+			return localStorage.getItem("feature:" + ORG_FEATURE) === "true";
 		} catch (e) {
 			console.warn('[Berichtenbox] Vlag "Berichten van andere organisaties" niet leesbaar; behandeld als uit.', e);
 			return false;
@@ -388,13 +388,17 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		try {
 			const raw = sessionStorage.getItem(UITVAL_KEY);
 			return raw ? JSON.parse(raw) : null;
-		} catch (e) { return null; }
+		} catch (e) {
+			return null;
+		}
 	}
 	function schrijfBronUitval(bron) {
 		try {
 			if (bron) sessionStorage.setItem(UITVAL_KEY, JSON.stringify(bron));
 			else sessionStorage.removeItem(UITVAL_KEY);
-		} catch (e) { /* sessionStorage niet beschikbaar */ }
+		} catch (e) {
+			/* sessionStorage niet beschikbaar */
+		}
 	}
 
 	// Alleen het org-filter (Belastingdienst-portaal), zonder de unhappy-flow-
@@ -416,29 +420,29 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function werkMappenZichtbaarheidBij() {
 		if (!orgFilterActief()) return;
 		const toon = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
-		document.querySelectorAll('.berichtenbox-folder-user').forEach((li) => { li.hidden = !toon; });
-		const sep = document.querySelector('.tablist .list-separation');
+		document.querySelectorAll(".berichtenbox-folder-user").forEach((li) => {
+			li.hidden = !toon;
+		});
+		const sep = document.querySelector(".tablist .list-separation");
 		if (sep) sep.hidden = !toon;
 	}
 	// Bij alleen Belastingdienst-berichten is de afzender altijd hetzelfde, dus
 	// filteren op afzender heeft geen zin: toon dan alleen 'Filter op onderwerp'.
 	function werkZoekPlaceholderBij() {
 		if (!orgFilterActief()) return;
-		const input = document.querySelector('[data-berichtenbox-search-input]');
+		const input = document.querySelector("[data-berichtenbox-search-input]");
 		if (!input) return;
-		input.placeholder = state.toonAndereOrganisaties
-			? 'Filter op afzender of onderwerp'
-			: 'Filter op onderwerp';
+		input.placeholder = state.toonAndereOrganisaties ? "Filter op afzender of onderwerp" : "Filter op onderwerp";
 	}
 
 	function huidigeView() {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		const attr = lijst ? lijst.dataset.berichtenboxView : null;
 		if (attr) return attr;
 		const path = location.pathname;
-		if (path.includes('/berichtenbox-archief/')) return 'archief';
-		if (path.includes('/berichtenbox-prullenbak/')) return 'prullenbak';
-		return 'inbox';
+		if (path.includes("/berichtenbox-archief/")) return "archief";
+		if (path.includes("/berichtenbox-prullenbak/")) return "prullenbak";
+		return "inbox";
 	}
 
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
@@ -447,10 +451,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// zou die melding tegenspreken, en via state.aantalOngelezen ook de badges op andere
 		// pagina's een getal geven voor berichten die niemand kon zien.
 		if (ladingMislukt || laadfoutGetoond) return;
-		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
+		const tellerTotaal = document.querySelector("[data-berichtenbox-counter-total]");
 		let getoond = 0;
-		if (view === 'inbox') {
-			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
+		if (view === "inbox") {
+			getoond = data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
 		} else {
 			// Tellen op dezelfde manier waarop de lijst gevuld wordt. Rechtstreeks de sleutels van
 			// state.gearchiveerd tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd
@@ -460,42 +464,36 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (tellerTotaal) tellerTotaal.textContent = getoond;
 
 		// Aantal bronnen: aantal verschillende organisaties van de zichtbare inbox-berichten.
-		const tellerBronnen = document.querySelector('[data-berichtenbox-sources]');
+		const tellerBronnen = document.querySelector("[data-berichtenbox-sources]");
 		if (tellerBronnen) {
-			const bronnen = new Set(
-				data.berichten
-					.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b))
-					.map((b) => b.magazijnId)
-			);
+			const bronnen = new Set(data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId));
 			tellerBronnen.textContent = bronnen.size;
 		}
 
-		const ongelezenAantal = data.berichten.filter((b) =>
-			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
-		).length;
+		const ongelezenAantal = data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)).length;
 
-		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
+		const tellerOngelezen = document.querySelector("[data-berichtenbox-counter-unread]");
 		if (tellerOngelezen) tellerOngelezen.textContent = ongelezenAantal;
 
 		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
 		if (navInbox) navInbox.textContent = ongelezenAantal;
 		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
-			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : '';
+			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : "";
 		});
 		state.aantalOngelezen = ongelezenAantal;
 		// Op dezelfde manier tellen als de lijst gevuld wordt; de sleutels van state.gearchiveerd
 		// rechtstreeks tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd is.
 		const navArchief = document.querySelector('[data-berichtenbox-count="archief"]');
-		if (navArchief) navArchief.textContent = data.berichten.filter((b) => statusVan(b.id) === 'archief').length;
+		if (navArchief) navArchief.textContent = data.berichten.filter((b) => statusVan(b.id) === "archief").length;
 		const navPrullenbak = document.querySelector('[data-berichtenbox-count="prullenbak"]');
-		if (navPrullenbak) navPrullenbak.textContent = data.berichten.filter((b) => statusVan(b.id) === 'prullenbak').length;
+		if (navPrullenbak) navPrullenbak.textContent = data.berichten.filter((b) => statusVan(b.id) === "prullenbak").length;
 
 		const alleMappen = [...data.mappen, ...state.eigenMappen];
 		alleMappen.forEach((m) => {
 			const el = document.querySelector(`[data-berichtenbox-count="map:${m.slug}"]`);
 			if (!el) return;
 			const n = data.berichten.filter((b) => {
-				if (statusVan(b.id) !== 'inbox') return false;
+				if (statusVan(b.id) !== "inbox") return false;
 				const effMap = mapVan(b.id, b.map);
 				return effMap === m.slug;
 			}).length;
@@ -509,13 +507,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// verwijst naar de teller (data-attribuut) waaruit het getal komt en draagt het
 	// enkelvoud (data-ev) en meervoud (data-mv). Bij 1 -> enkelvoud, anders meervoud.
 	function werkMeervoudBij() {
-		document.querySelectorAll('[data-meervoud]').forEach((span) => {
-			const tellerAttr = span.getAttribute('data-meervoud');
-			const teller = document.querySelector('[' + tellerAttr + ']');
+		document.querySelectorAll("[data-meervoud]").forEach((span) => {
+			const tellerAttr = span.getAttribute("data-meervoud");
+			const teller = document.querySelector("[" + tellerAttr + "]");
 			if (!teller) return;
 			const n = parseInt(teller.textContent, 10);
 			if (!Number.isFinite(n)) return;
-			span.textContent = n === 1 ? span.getAttribute('data-ev') : span.getAttribute('data-mv');
+			span.textContent = n === 1 ? span.getAttribute("data-ev") : span.getAttribute("data-mv");
 		});
 	}
 
@@ -523,29 +521,29 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (stateModule.bewaar()) {
 			// Weer ruimte: de melding hoort niet te blijven staan. QuotaExceededError is van nature
 			// tijdelijk — bewaar() krimpt zelf de lijst met binnengekomen berichten.
-			if (staandeMeldingEigenaar === 'opslag') verbergPaginaMelding('opslag');
+			if (staandeMeldingEigenaar === "opslag") verbergPaginaMelding("opslag");
 			return true;
 		}
 
 		// Terug naar wat er wél bewaard is. Zonder dit blijft het scherm de wijziging tonen als
 		// voltooid, en spreekt het de melding eronder tegen.
-		if (typeof herstel === 'function') herstel();
+		if (typeof herstel === "function") herstel();
 
 		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
 		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
-		if (staandeMeldingEigenaar !== 'opslag') {
+		if (staandeMeldingEigenaar !== "opslag") {
 			const reden = stateModule.waaromNietBewaard();
 			let tekst;
-			if (reden === 'vol') {
-				tekst = 'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.';
-			} else if (reden === 'onleesbaar') {
+			if (reden === "vol") {
+				tekst = "Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.";
+			} else if (reden === "onleesbaar") {
 				// Overschrijven zou het archief, de prullenbak en de eigen mappen wissen; dat doen we
 				// bewust niet, en dan is "zet privénavigatie uit" een advies dat nergens op slaat.
-				tekst = 'Uw wijziging is niet bewaard. Uw eerder bewaarde berichtenbox is niet te lezen, en wij schrijven daar niet overheen.';
+				tekst = "Uw wijziging is niet bewaard. Uw eerder bewaarde berichtenbox is niet te lezen, en wij schrijven daar niet overheen.";
 			} else {
-				tekst = 'Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.';
+				tekst = "Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.";
 			}
-			toonPaginaMelding(tekst, 'storing', 'opslag');
+			toonPaginaMelding(tekst, "storing", "opslag");
 		}
 		return false;
 	}
@@ -557,7 +555,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 */
 	function opslaanStil() {
 		if (stateModule.bewaar()) return true;
-		console.error('[Berichtenbox] Leesstatus kon niet worden bewaard.');
+		console.error("[Berichtenbox] Leesstatus kon niet worden bewaard.");
 		return false;
 	}
 
@@ -567,13 +565,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan staat alles op één
 	// pagina.
 	const PAGINA_GROOTTE = (function () {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		const n = parseInt(lijst && lijst.dataset.pageSize, 10);
 		return Number.isFinite(n) && n > 0 ? n : Infinity;
 	})();
 
 	function huidigePaginaUitUrl() {
-		const p = parseInt(new URLSearchParams(location.search).get('pagina'), 10);
+		const p = parseInt(new URLSearchParams(location.search).get("pagina"), 10);
 		return Number.isFinite(p) && p > 0 ? p : 1;
 	}
 	let huidigePagina = huidigePaginaUitUrl();
@@ -594,7 +592,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
 	let resizeTimer = null;
-	window.addEventListener('resize', () => {
+	window.addEventListener("resize", () => {
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(() => {
 			// Tijdens een storing staat er geen lijst; paginanavigatie eronder zou werkende
@@ -603,11 +601,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			// Alleen de ellipsis-truncatie van de paginanavigatie schaalt mee. De rijen opnieuw
 			// opbouwen zou een geopend kebab-menu sluiten en de toetsenbordfocus naar body gooien.
-			veilig({ log: 'Herberekenen van de paginanavigatie', bezoeker: 'De paginanavigatie klopt mogelijk niet meer. Ververs de pagina.' }, () => {
+			veilig({ log: "Herberekenen van de paginanavigatie", bezoeker: "De paginanavigatie klopt mogelijk niet meer. Ververs de pagina." }, () => {
 				const gevonden = filterBerichten(data.berichten, huidigeCriteria());
 				const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
 				huidigePagina = venster.pagina;
-				bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+				bouwPaginaNav(venster.totaalPaginas, document.querySelector("[data-berichtenbox-pagination]"));
 			});
 		}, 150);
 	});
@@ -617,13 +615,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function gaNaarPagina(nr) {
 		huidigePagina = nr;
 		const params = new URLSearchParams(location.search);
-		if (nr <= 1) params.delete('pagina'); else params.set('pagina', String(nr));
+		if (nr <= 1) params.delete("pagina");
+		else params.set("pagina", String(nr));
 		const query = params.toString();
-		history.replaceState(null, '', location.pathname + (query ? '?' + query : ''));
+		history.replaceState(null, "", location.pathname + (query ? "?" + query : ""));
 		herpagineerHuidigeView();
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst && typeof lijst.scrollIntoView === 'function') {
-			lijst.scrollIntoView({ block: 'start' });
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		if (lijst && typeof lijst.scrollIntoView === "function") {
+			lijst.scrollIntoView({ block: "start" });
 		}
 	}
 
@@ -641,22 +640,22 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Bouwt de nav met ten hoogste maxItems cijfercellen. Retourneert de <ol>.
 		function renderMet(maxItems) {
 			while (pagnav.firstChild) pagnav.removeChild(pagnav.firstChild);
-			const ol = document.createElement('ol');
+			const ol = document.createElement("ol");
 
 			function maakItem(label, paginaNr, opties) {
 				opties = opties || {};
-				const li = document.createElement('li');
+				const li = document.createElement("li");
 				if (opties.huidig) {
-					const span = document.createElement('span');
-					span.setAttribute('aria-current', 'page');
+					const span = document.createElement("span");
+					span.setAttribute("aria-current", "page");
 					span.textContent = label;
 					li.appendChild(span);
 				} else {
-					const a = document.createElement('a');
-					a.href = '#';
-					if (opties.rel) a.setAttribute('rel', opties.rel);
+					const a = document.createElement("a");
+					a.href = "#";
+					if (opties.rel) a.setAttribute("rel", opties.rel);
 					a.textContent = label;
-					a.addEventListener('click', (e) => {
+					a.addEventListener("click", (e) => {
 						e.preventDefault();
 						gaNaarPagina(paginaNr);
 					});
@@ -666,24 +665,24 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			}
 
 			function maakEllipsis() {
-				const li = document.createElement('li');
-				li.className = 'pagination-ellipsis';
-				const span = document.createElement('span');
-				span.setAttribute('aria-hidden', 'true');
-				span.textContent = '…';
+				const li = document.createElement("li");
+				li.className = "pagination-ellipsis";
+				const span = document.createElement("span");
+				span.setAttribute("aria-hidden", "true");
+				span.textContent = "…";
 				li.appendChild(span);
 				ol.appendChild(li);
 			}
 
 			const teTonen = paginaNummers(totaal, huidigePagina, maxItems);
-			if (huidigePagina > 1) maakItem('Vorige', huidigePagina - 1, { rel: 'prev' });
+			if (huidigePagina > 1) maakItem("Vorige", huidigePagina - 1, { rel: "prev" });
 			let vorige = 0;
 			teTonen.forEach((n) => {
 				if (n - vorige > 1) maakEllipsis();
 				maakItem(String(n), n, { huidig: n === huidigePagina });
 				vorige = n;
 			});
-			if (huidigePagina < totaal) maakItem('Volgende', huidigePagina + 1, { rel: 'next' });
+			if (huidigePagina < totaal) maakItem("Volgende", huidigePagina + 1, { rel: "next" });
 			pagnav.appendChild(ol);
 			return ol;
 		}
@@ -710,11 +709,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Schat hoeveel cijfercellen er naast Vorige/Volgende passen, op basis van de
 	// breedte van de container waarin lijst + pager zitten (#berichtenbox-inbox).
 	function schatMaxItems(pagnav) {
-		const container = (pagnav && (
-			pagnav.closest('#berichtenbox-inbox')
-			|| pagnav.closest('.berichtenbox-content')
-			|| pagnav.parentElement
-		)) || pagnav;
+		const container = (pagnav && (pagnav.closest("#berichtenbox-inbox") || pagnav.closest(".berichtenbox-content") || pagnav.parentElement)) || pagnav;
 		const breedte = (container && container.clientWidth) || (pagnav && pagnav.clientWidth) || 0;
 		const ITEM = 46;
 		const PREV_NEXT = 150;
@@ -735,8 +730,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const half = Math.floor(venster / 2);
 		let start = huidig - half;
 		let eind = huidig + (venster - 1 - half);
-		if (start < 2) { eind += 2 - start; start = 2; }
-		if (eind > totaal - 1) { start -= eind - (totaal - 1); eind = totaal - 1; }
+		if (start < 2) {
+			eind += 2 - start;
+			start = 2;
+		}
+		if (eind > totaal - 1) {
+			start -= eind - (totaal - 1);
+			eind = totaal - 1;
+		}
 		if (start < 2) start = 2;
 		const set = new Set([1, totaal]);
 		for (let n = start; n <= eind; n++) set.add(n);
@@ -750,14 +751,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function sluitVerplaatsPaneel() {
 		if (!actiefVerplaatsPaneel) return;
 		actiefVerplaatsPaneel.remove();
-		if (actieveVerplaatsKnop) actieveVerplaatsKnop.setAttribute('aria-expanded', 'false');
+		if (actieveVerplaatsKnop) actieveVerplaatsKnop.setAttribute("aria-expanded", "false");
 		actiefVerplaatsPaneel = null;
 		actieveVerplaatsKnop = null;
 	}
-	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape' && actiefVerplaatsPaneel) sluitVerplaatsPaneel();
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && actiefVerplaatsPaneel) sluitVerplaatsPaneel();
 	});
-	document.addEventListener('click', (e) => {
+	document.addEventListener("click", (e) => {
 		if (!actiefVerplaatsPaneel) return;
 		if (actiefVerplaatsPaneel.contains(e.target)) return;
 		if (actieveVerplaatsKnop && actieveVerplaatsKnop.contains(e.target)) return;
@@ -769,36 +770,33 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			sluitVerplaatsPaneel();
 			return;
 		}
-		const alleMappen = [
-			...data.mappen,
-			...state.eigenMappen,
-		];
+		const alleMappen = [...data.mappen, ...state.eigenMappen];
 
-		const paneel = document.createElement('div');
-		paneel.className = 'berichtenbox-move-panel';
-		paneel.setAttribute('role', 'group');
-		paneel.setAttribute('aria-label', 'Verplaats bericht naar map');
+		const paneel = document.createElement("div");
+		paneel.className = "berichtenbox-move-panel";
+		paneel.setAttribute("role", "group");
+		paneel.setAttribute("aria-label", "Verplaats bericht naar map");
 
-		const kiesP = document.createElement('p');
-		kiesP.textContent = 'Verplaats naar map:';
+		const kiesP = document.createElement("p");
+		kiesP.textContent = "Verplaats naar map:";
 		paneel.appendChild(kiesP);
 
-		const ul = document.createElement('ul');
+		const ul = document.createElement("ul");
 		paneel.appendChild(ul);
 
-		const nieuweMapFieldset = document.createElement('div');
-		const nieuweMapLabel = document.createElement('label');
-		nieuweMapLabel.textContent = 'Maak een nieuwe map aan:';
-		const nieuweMapInput = document.createElement('input');
-		nieuweMapInput.type = 'text';
-		nieuweMapLabel.setAttribute('for', 'nieuwe-map-naam');
-		nieuweMapInput.id = 'nieuwe-map-naam';
-		const nieuweMapBevestig = document.createElement('button');
-		nieuweMapBevestig.type = 'button';
-		nieuweMapBevestig.className = 'button';
-		nieuweMapBevestig.textContent = 'Nieuwe map aanmaken';
-		const nieuweMapActions = document.createElement('div');
-		nieuweMapActions.className = 'action-group';
+		const nieuweMapFieldset = document.createElement("div");
+		const nieuweMapLabel = document.createElement("label");
+		nieuweMapLabel.textContent = "Maak een nieuwe map aan:";
+		const nieuweMapInput = document.createElement("input");
+		nieuweMapInput.type = "text";
+		nieuweMapLabel.setAttribute("for", "nieuwe-map-naam");
+		nieuweMapInput.id = "nieuwe-map-naam";
+		const nieuweMapBevestig = document.createElement("button");
+		nieuweMapBevestig.type = "button";
+		nieuweMapBevestig.className = "button";
+		nieuweMapBevestig.textContent = "Nieuwe map aanmaken";
+		const nieuweMapActions = document.createElement("div");
+		nieuweMapActions.className = "action-group";
 		nieuweMapActions.appendChild(nieuweMapBevestig);
 		nieuweMapFieldset.appendChild(nieuweMapLabel);
 		nieuweMapFieldset.appendChild(nieuweMapInput);
@@ -808,22 +806,25 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const mapIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M58 15H29v-2c0-1.1-.9-2-2-2H12c-1.1 0-2 .9-2 2v4.69c7.13.47 40.09 2.62 40.59 2.75.28.07.38.21.4.34 0 .04.02.23-.01.23H4.53c-1.29 0-2.24 1.2-1.95 2.46l7.06 30c.27 1.16 1.18 1.54 2.36 1.54h46a2 2 0 0 0 2-2V17c0-1.1-.9-2-2-2" /></svg>';
 
 		alleMappen.forEach((m) => {
-			const li = document.createElement('li');
-			const btn = document.createElement('button');
-			btn.type = 'button';
-			btn.className = 'icon-button';
+			const li = document.createElement("li");
+			const btn = document.createElement("button");
+			btn.type = "button";
+			btn.className = "icon-button";
 			btn.innerHTML = mapIconSvg;
 			btn.appendChild(document.createTextNode(m.naam));
-			btn.addEventListener('click', () => {
+			btn.addEventListener("click", () => {
 				const voorMap = state.mapOverride[berichtId];
 				state.mapOverride[berichtId] = m.slug;
 
 				// Niets doen alsof: het paneel sluiten en het maplabel zetten zou de wijziging als
 				// voltooid tonen terwijl er niets bewaard is.
-				if (!opslaan(() => {
-					if (voorMap === undefined) delete state.mapOverride[berichtId];
-					else state.mapOverride[berichtId] = voorMap;
-				})) return;
+				if (
+					!opslaan(() => {
+						if (voorMap === undefined) delete state.mapOverride[berichtId];
+						else state.mapOverride[berichtId] = voorMap;
+					})
+				)
+					return;
 
 				sluitVerplaatsPaneel();
 				render(huidigeView());
@@ -832,10 +833,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			li.appendChild(btn);
 			ul.appendChild(li);
 		});
-		nieuweMapBevestig.addEventListener('click', () => {
+		nieuweMapBevestig.addEventListener("click", () => {
 			const naam = nieuweMapInput.value.trim();
 			if (!naam) return;
-			const slug = naam.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+			const slug = naam
+				.toLowerCase()
+				.replace(/[^a-z0-9]+/g, "-")
+				.replace(/^-|-$/g, "");
 			if (!slug) return;
 			const voorMappen = state.eigenMappen.slice();
 			const voorMap = state.mapOverride[berichtId];
@@ -846,30 +850,33 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			// Anders staat de nieuwe map in de zijbalk en op het bericht, en is hij na het
 			// verversen spoorloos.
-			if (!opslaan(() => {
-				state.eigenMappen = voorMappen;
-				if (voorMap === undefined) delete state.mapOverride[berichtId];
-				else state.mapOverride[berichtId] = voorMap;
-			})) return;
+			if (
+				!opslaan(() => {
+					state.eigenMappen = voorMappen;
+					if (voorMap === undefined) delete state.mapOverride[berichtId];
+					else state.mapOverride[berichtId] = voorMap;
+				})
+			)
+				return;
 
 			sluitVerplaatsPaneel();
 			render(huidigeView());
 			updateMapLabelDetail(slug);
 			voegMapToeAanZijbalk({ slug, naam });
 		});
-		const actionGroup = knop.closest('.action-group') || knop.closest('.berichtenbox-detail-actions');
+		const actionGroup = knop.closest(".action-group") || knop.closest(".berichtenbox-detail-actions");
 		if (actionGroup) {
 			actionGroup.parentNode.insertBefore(paneel, actionGroup.nextSibling);
 		} else {
 			knop.parentNode.insertBefore(paneel, knop.nextSibling);
 		}
-		knop.setAttribute('aria-expanded', 'true');
+		knop.setAttribute("aria-expanded", "true");
 		actiefVerplaatsPaneel = paneel;
 		actieveVerplaatsKnop = knop;
 	}
 
 	function updateMapLabelDetail(mapSlug) {
-		const meta = document.querySelector('.berichtenbox-detail-meta [data-maplabel]');
+		const meta = document.querySelector(".berichtenbox-detail-meta [data-maplabel]");
 		if (!mapSlug) {
 			if (meta) meta.remove();
 			return;
@@ -877,29 +884,29 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (meta) {
 			meta.textContent = mapSlug;
 		} else {
-			const metaP = document.querySelector('.berichtenbox-detail-meta');
+			const metaP = document.querySelector(".berichtenbox-detail-meta");
 			if (metaP) {
-				const span = document.createElement('span');
-				span.dataset.maplabel = '';
-				span.textContent = ' · ' + mapSlug;
+				const span = document.createElement("span");
+				span.dataset.maplabel = "";
+				span.textContent = " · " + mapSlug;
 				metaP.appendChild(span);
 			}
 		}
 	}
 
 	function voegMapToeAanZijbalk(map) {
-		const lijst = document.querySelector('[data-berichtenbox-folders]');
+		const lijst = document.querySelector("[data-berichtenbox-folders]");
 		if (!lijst) return;
 		if (lijst.querySelector('[data-map-slug="' + map.slug + '"]')) return;
-		const li = document.createElement('li');
+		const li = document.createElement("li");
 		li.dataset.mapSlug = map.slug;
-		const a = document.createElement('a');
-		a.href = url(berichtenboxBasis() + '?map=' + map.slug);
-		a.textContent = map.naam + ' ';
-		const teller = document.createElement('span');
-		teller.className = 'berichtenbox-nav-count';
-		teller.dataset.berichtenboxCount = 'map:' + map.slug;
-		teller.textContent = '0';
+		const a = document.createElement("a");
+		a.href = url(berichtenboxBasis() + "?map=" + map.slug);
+		a.textContent = map.naam + " ";
+		const teller = document.createElement("span");
+		teller.className = "berichtenbox-nav-count";
+		teller.dataset.berichtenboxCount = "map:" + map.slug;
+		teller.textContent = "0";
 		a.appendChild(teller);
 		li.appendChild(a);
 		lijst.appendChild(li);
@@ -907,21 +914,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Vlag-knop voor de Gemarkeerd-kolom; spiegelt de markup uit berichtenbox-row.njk.
 	function maakMarkKnop(gemarkeerd) {
-		const knop = document.createElement('button');
-		knop.type = 'button';
-		knop.className = 'mark-toggle' + (gemarkeerd ? ' is-marked' : '');
-		knop.dataset.markToggle = '';
-		knop.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
-		const vh = document.createElement('span');
-		vh.className = 'visually-hidden';
-		vh.textContent = 'Markeren';
+		const knop = document.createElement("button");
+		knop.type = "button";
+		knop.className = "mark-toggle" + (gemarkeerd ? " is-marked" : "");
+		knop.dataset.markToggle = "";
+		knop.setAttribute("aria-pressed", gemarkeerd ? "true" : "false");
+		const vh = document.createElement("span");
+		vh.className = "visually-hidden";
+		vh.textContent = "Markeren";
 		knop.appendChild(vh);
-		const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-		icon.setAttribute('viewBox', '0 0 64 64');
-		icon.setAttribute('aria-hidden', 'true');
-		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-		path.setAttribute('fill', 'currentColor');
-		path.setAttribute('d', 'M58.89 20.86 10 6.14V3.87C10 3 8.66 2 7 2S4 3 4 3.87V61h6V27.03c.09-.03.33-.06.42.49.08.47 2.58 17.49 2.58 17.49l46.09-21.35c1.24-.58 1.12-2.39-.2-2.79');
+		const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		icon.setAttribute("viewBox", "0 0 64 64");
+		icon.setAttribute("aria-hidden", "true");
+		const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		path.setAttribute("fill", "currentColor");
+		path.setAttribute("d", "M58.89 20.86 10 6.14V3.87C10 3 8.66 2 7 2S4 3 4 3.87V61h6V27.03c.09-.03.33-.06.42.49.08.47 2.58 17.49 2.58 17.49l46.09-21.35c1.24-.58 1.12-2.39-.2-2.79");
 		icon.appendChild(path);
 		knop.appendChild(icon);
 		return knop;
@@ -930,7 +937,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function createRij(bericht) {
 		const ongelezen = isOngelezen(bericht.id, bericht.isOngelezen);
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
-		const dynamisch = bericht.id.startsWith('msg-live-');
+		const dynamisch = bericht.id.startsWith("msg-live-");
 		// Detailpagina's worden bij de build uit de dataset gegenereerd. Berichten uit het stelsel
 		// staan daar niet bij, dus die gaan naar dezelfde client-gevulde pagina als de binnengekomen
 		// demo-berichten; een link naar bericht/<id>/ zou een 404 opleveren.
@@ -939,65 +946,62 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// geen nieuw bericht meer.
 		const zojuistBinnen = bericht.id === zojuistBinnengekomenId;
 
-		const tr = document.createElement('tr');
-		tr.className = 'berichtenbox-row'
-			+ (ongelezen ? ' is-unread' : '')
-			+ (dynamisch ? ' is-dynamic' : '')
-			+ (zojuistBinnen ? ' is-new' : '');
+		const tr = document.createElement("tr");
+		tr.className = "berichtenbox-row" + (ongelezen ? " is-unread" : "") + (dynamisch ? " is-dynamic" : "") + (zojuistBinnen ? " is-new" : "");
 		tr.dataset.berichtId = bericht.id;
 		tr.dataset.afzenderId = bericht.magazijnId;
 
-		const tdMark = document.createElement('td');
-		tdMark.className = 'berichtenbox-row-mark';
+		const tdMark = document.createElement("td");
+		tdMark.className = "berichtenbox-row-mark";
 		tdMark.appendChild(maakMarkKnop(gemarkeerd));
 		tr.appendChild(tdMark);
 
-		const tdAfz = document.createElement('td');
-		tdAfz.className = 'berichtenbox-row-sender';
+		const tdAfz = document.createElement("td");
+		tdAfz.className = "berichtenbox-row-sender";
 		if (ongelezen) {
-			const vh = document.createElement('span');
-			vh.className = 'visually-hidden';
-			vh.textContent = 'Ongelezen. ';
+			const vh = document.createElement("span");
+			vh.className = "visually-hidden";
+			vh.textContent = "Ongelezen. ";
 			tdAfz.appendChild(vh);
 		}
 		tdAfz.appendChild(document.createTextNode(bericht.afzender));
 		tr.appendChild(tdAfz);
 
-		const tdOnd = document.createElement('td');
-		tdOnd.className = 'berichtenbox-row-subject';
+		const tdOnd = document.createElement("td");
+		tdOnd.className = "berichtenbox-row-subject";
 		if (zonderEigenPagina) {
-			const a = document.createElement('a');
-			a.href = url(berichtenboxBasis() + 'bericht-demo/?id=' + encodeURIComponent(bericht.id));
+			const a = document.createElement("a");
+			a.href = url(berichtenboxBasis() + "bericht-demo/?id=" + encodeURIComponent(bericht.id));
 			a.textContent = bericht.onderwerp;
 			tdOnd.appendChild(a);
 		} else {
-			const a = document.createElement('a');
-			a.href = url(berichtenboxBasis() + 'bericht/' + bericht.id + '/');
+			const a = document.createElement("a");
+			a.href = url(berichtenboxBasis() + "bericht/" + bericht.id + "/");
 			a.textContent = bericht.onderwerp;
 			tdOnd.appendChild(a);
 		}
 		tr.appendChild(tdOnd);
 
-		const tdDat = document.createElement('td');
-		tdDat.className = 'berichtenbox-row-date';
+		const tdDat = document.createElement("td");
+		tdDat.className = "berichtenbox-row-date";
 		tdDat.textContent = datumNL(bericht.datum);
 		tr.appendChild(tdDat);
 
-		const tdBij = document.createElement('td');
-		tdBij.className = 'berichtenbox-row-attachment';
+		const tdBij = document.createElement("td");
+		tdBij.className = "berichtenbox-row-attachment";
 		if (bericht.heeftBijlage) {
-			const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-			icon.setAttribute('viewBox', '0 0 32 32');
-			icon.setAttribute('aria-hidden', 'true');
-			const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-			path1.setAttribute('fill', 'currentColor');
-			path1.setAttribute('fill-rule', 'evenodd');
-			path1.setAttribute('d', 'M23.679 32a6.26 6.26 0 0 1-4.472-1.874L4.59 15.314c-3.453-3.5-3.453-9.192 0-12.691a8.786 8.786 0 0 1 12.523 0L28.152 13.81c.494.5.494 1.312 0 1.812a1.25 1.25 0 0 1-1.79 0L15.325 4.436a6.28 6.28 0 0 0-8.946 0c-2.465 2.5-2.465 6.565 0 9.065l14.618 14.812a3.767 3.767 0 0 0 5.367 0 3.89 3.89 0 0 0 .095-5.339L11.743 8.062a1.256 1.256 0 0 0-1.788 0 1.295 1.295 0 0 0 0 1.812l11.041 11.188c.494.5.494 1.311 0 1.813-.495.5-1.295.5-1.79 0L8.168 11.686a3.884 3.884 0 0 1 0-5.436 3.766 3.766 0 0 1 5.366-.001l14.619 14.813c2.464 2.499 2.464 6.565 0 9.064A6.27 6.27 0 0 1 23.679 32');
+			const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			icon.setAttribute("viewBox", "0 0 32 32");
+			icon.setAttribute("aria-hidden", "true");
+			const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+			path1.setAttribute("fill", "currentColor");
+			path1.setAttribute("fill-rule", "evenodd");
+			path1.setAttribute("d", "M23.679 32a6.26 6.26 0 0 1-4.472-1.874L4.59 15.314c-3.453-3.5-3.453-9.192 0-12.691a8.786 8.786 0 0 1 12.523 0L28.152 13.81c.494.5.494 1.312 0 1.812a1.25 1.25 0 0 1-1.79 0L15.325 4.436a6.28 6.28 0 0 0-8.946 0c-2.465 2.5-2.465 6.565 0 9.065l14.618 14.812a3.767 3.767 0 0 0 5.367 0 3.89 3.89 0 0 0 .095-5.339L11.743 8.062a1.256 1.256 0 0 0-1.788 0 1.295 1.295 0 0 0 0 1.812l11.041 11.188c.494.5.494 1.311 0 1.813-.495.5-1.295.5-1.79 0L8.168 11.686a3.884 3.884 0 0 1 0-5.436 3.766 3.766 0 0 1 5.366-.001l14.619 14.813c2.464 2.499 2.464 6.565 0 9.064A6.27 6.27 0 0 1 23.679 32");
 			icon.appendChild(path1);
 			tdBij.appendChild(icon);
-			const bijVh = document.createElement('span');
-			bijVh.className = 'visually-hidden';
-			bijVh.textContent = 'Heeft bijlage';
+			const bijVh = document.createElement("span");
+			bijVh.className = "visually-hidden";
+			bijVh.textContent = "Heeft bijlage";
 			tdBij.appendChild(bijVh);
 		}
 		tr.appendChild(tdBij);
@@ -1009,7 +1013,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Acties-kolom alleen op berichtenboxen die de kolom tonen (marker-th in de
 		// thead). Zo krijgen dynamische rijen (live-berichten) dezelfde kebab als de
 		// server-gerenderde rijen, terwijl archief/prullenbak (zonder th) 5-koloms blijven.
-		if (document.querySelector('.berichtenbox-actions-th')) {
+		if (document.querySelector(".berichtenbox-actions-th")) {
 			tr.appendChild(maakActiesTd());
 		}
 
@@ -1017,35 +1021,29 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function maakActiesTd() {
-		const td = document.createElement('td');
-		td.className = 'berichtenbox-row-actions';
+		const td = document.createElement("td");
+		td.className = "berichtenbox-row-actions";
 		// Statische, vertrouwde markup (geen brondata) — innerHTML is hier veilig.
-		td.innerHTML = '<div class="row-actions">'
-			+ '<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m0 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m0 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg></button>'
-			+ '<div class="row-actions-menu action-options" role="menu" hidden>'
-			+ '<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M53.72 24.36 34.9 9.5a3.35 3.35 0 0 0-4.27.09 3.365 3.365 0 0 0-.73 4.21l4.7 8.2H20.99c-6.63 0-12 5.37-12 12v17.28c0 2.72 2.35 3.53 5 3.53s5-.81 5-3.53V34c0-1.1.9-2 2-2H34.6l-4.7 8.2c-.8 1.4-.49 3.16.73 4.21a3.35 3.35 0 0 0 4.27.09l18.82-14.86C54.53 29 55 28.03 55 27.01s-.47-2-1.28-2.64"/></svg>Delen</button>'
-			+ '<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M7 23v33c0 .55.45 1 1 1h48c.55 0 1-.45 1-1V23c0-.55-.45-1-1-1H8c-.55 0-1 .45-1 1m18 7h14v7H25v-7Zm17 20.5c0 .83-.67 1.5-1.5 1.5h-17c-.83 0-1.5-.67-1.5-1.5V47c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v2h14v-2c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3.5ZM51 16H13c-.55 0-1 .45-1 1v3h40v-3c0-.55-.45-1-1-1m-5-6H18c-.55 0-1 .45-1 1v3h30v-3c0-.55-.45-1-1-1"/></svg>Archiveren</button>'
-			+ '<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M10.67 18.67zm40-8h-8V8A2.67 2.67 0 0 0 40 5.33H24A2.67 2.67 0 0 0 21.33 8v2.67h-8a2.67 2.67 0 0 0-2.67 2.67v5.33h14.28s.15.32-.31.44c-.58.16-11.31 1.43-11.31 1.43V56a2.67 2.67 0 0 0 2.67 2.67h32A2.67 2.67 0 0 0 50.66 56V18.67h2.67v-5.33a2.67 2.67 0 0 0-2.67-2.67ZM24 50.67l-5.33 2.67V24.01H24v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67ZM24.43 10.63v-.8c0-.94-.16-1.7.88-1.7h13.27c1.04 0 .88.76.88 1.7v.8H24.43Z"/></svg>Verwijderen</button>'
-			+ '</div></div>';
+		td.innerHTML = '<div class="row-actions">' + '<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m0 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m0 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg></button>' + '<div class="row-actions-menu action-options" role="menu" hidden>' + '<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M53.72 24.36 34.9 9.5a3.35 3.35 0 0 0-4.27.09 3.365 3.365 0 0 0-.73 4.21l4.7 8.2H20.99c-6.63 0-12 5.37-12 12v17.28c0 2.72 2.35 3.53 5 3.53s5-.81 5-3.53V34c0-1.1.9-2 2-2H34.6l-4.7 8.2c-.8 1.4-.49 3.16.73 4.21a3.35 3.35 0 0 0 4.27.09l18.82-14.86C54.53 29 55 28.03 55 27.01s-.47-2-1.28-2.64"/></svg>Delen</button>' + '<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M7 23v33c0 .55.45 1 1 1h48c.55 0 1-.45 1-1V23c0-.55-.45-1-1-1H8c-.55 0-1 .45-1 1m18 7h14v7H25v-7Zm17 20.5c0 .83-.67 1.5-1.5 1.5h-17c-.83 0-1.5-.67-1.5-1.5V47c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v2h14v-2c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3.5ZM51 16H13c-.55 0-1 .45-1 1v3h40v-3c0-.55-.45-1-1-1m-5-6H18c-.55 0-1 .45-1 1v3h30v-3c0-.55-.45-1-1-1"/></svg>Archiveren</button>' + '<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M10.67 18.67zm40-8h-8V8A2.67 2.67 0 0 0 40 5.33H24A2.67 2.67 0 0 0 21.33 8v2.67h-8a2.67 2.67 0 0 0-2.67 2.67v5.33h14.28s.15.32-.31.44c-.58.16-11.31 1.43-11.31 1.43V56a2.67 2.67 0 0 0 2.67 2.67h32A2.67 2.67 0 0 0 50.66 56V18.67h2.67v-5.33a2.67 2.67 0 0 0-2.67-2.67ZM24 50.67l-5.33 2.67V24.01H24v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67ZM24.43 10.63v-.8c0-.94-.16-1.7.88-1.7h13.27c1.04 0 .88.76.88 1.7v.8H24.43Z"/></svg>Verwijderen</button>' + "</div></div>";
 		return td;
 	}
 
 	// De criteria waarop de huidige weergave filtert. Het zoekveld en de afzendervinkjes staan in
 	// de DOM omdat de bezoeker ze daar invult; de rest komt uit de state en de URL.
 	function huidigeCriteria() {
-		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
+		const zoekInput = document.querySelector("[data-berichtenbox-search-input]");
 		const view = huidigeView();
 		// Het organisatiefilter, de persona-relevantie en de gesimuleerde bronuitval gaan over wat
 		// er bij dít portaal binnenkomt. Wat de bezoeker eenmaal gearchiveerd of weggegooid heeft,
 		// blijft van hem: die weergaven filteren alleen op waar het bericht staat.
-		const inbox = view === 'inbox';
+		const inbox = view === "inbox";
 
 		return {
 			view,
-			zoek: zoekInput ? zoekInput.value : '',
+			zoek: zoekInput ? zoekInput.value : "",
 			// Geen afzenderfilter in de templates; lijst.js kan het, er is alleen geen bediening voor.
 			afzenders: new Set(),
-			map: inbox ? new URLSearchParams(location.search).get('map') : null,
+			map: inbox ? new URLSearchParams(location.search).get("map") : null,
 			magazijnToegestaan: inbox ? magazijnToegestaan : () => true,
 			persoonRelevant: inbox ? persoonRelevant : () => true,
 			state: stateModule,
@@ -1056,7 +1054,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// huidige pagina, bouw die rijen. Voorheen liep dit door de DOM-rijen en zocht per rij het
 	// bericht terug — daardoor waren de rijen een tweede waarheid naast de berichten.
 	function toonBerichten() {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst) return;
 
 		const gevonden = filterBerichten(data.berichten, huidigeCriteria());
@@ -1086,29 +1084,28 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Niet naast de gesimuleerde "geen bronnen"-melding: die verklaart de lege lijst al, en twee
 		// verklaringen naast elkaar spreken elkaar tegen. Alleen op de inbox: archief en prullenbak
 		// hebben dat blok niet, dus daar zou onderdrukken een lege pagina zonder woorden opleveren.
-		const leeg = document.querySelector('[data-berichtenbox-empty]');
-		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === 'inbox' && bronOnbereikbaar());
+		const leeg = document.querySelector("[data-berichtenbox-empty]");
+		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === "inbox" && bronOnbereikbaar());
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
-		if (huidigeView() !== 'inbox') lijst.hidden = gevonden.length === 0;
+		if (huidigeView() !== "inbox") lijst.hidden = gevonden.length === 0;
 
-		bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+		bouwPaginaNav(venster.totaalPaginas, document.querySelector("[data-berichtenbox-pagination]"));
 	}
-
 
 	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
 	// databron (zodat herbouwde views mee-sorteren) en herordent de DOM-rijen op
 	// berichtId. Daarna herpagineert de actieve view (inbox behoudt DOM-volgorde,
 	// archief/prullenbak herbouwen uit de gesorteerde data).
 	function bindSortering() {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst || !lijst.tHead) return;
-		lijst.tHead.addEventListener('click', (e) => {
-			const btn = e.target.closest('button[data-sort]');
+		lijst.tHead.addEventListener("click", (e) => {
+			const btn = e.target.closest("button[data-sort]");
 			if (!btn) return;
-			const th = btn.closest('th');
-			const oplopend = th.getAttribute('aria-sort') !== 'ascending';
-			lijst.tHead.querySelectorAll('th[aria-sort]').forEach((t) => t.setAttribute('aria-sort', 'none'));
-			th.setAttribute('aria-sort', oplopend ? 'ascending' : 'descending');
+			const th = btn.closest("th");
+			const oplopend = th.getAttribute("aria-sort") !== "ascending";
+			lijst.tHead.querySelectorAll("th[aria-sort]").forEach((t) => t.setAttribute("aria-sort", "none"));
+			th.setAttribute("aria-sort", oplopend ? "ascending" : "descending");
 
 			// Sorteer de berichten; de rijen volgen bij het renderen. Voorheen werd de DOM apart
 			// herordend op berichtId, wat alleen klopte zolang de rijen en de berichten in de pas
@@ -1124,10 +1121,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// simuleert een geslaagde herverbinding; toggelen van de flag zet de bron
 	// weer op onbereikbaar. Bij elke wijziging worden lijst en tellers herrenderd.
 	function herrenderInbox() {
-		if (huidigeView() !== 'inbox') return;
+		if (huidigeView() !== "inbox") return;
 		huidigePagina = 1;
 		toonBerichten();
-		render('inbox');
+		render("inbox");
 	}
 	// Toon de waarschuwing alleen als de bron onbereikbaar is. De waarschuwing
 	// heeft géén data-feature (anders zou feature-flags.js die al tijdens de
@@ -1136,25 +1133,25 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function werkBronWaarschuwingBij() {
 		// De gesimuleerde uitval gaat over wat er binnenkomt; archief en prullenbak tonen wat de
 		// bezoeker zelf heeft weggezet en hebben er niets mee te maken.
-		if (huidigeView() !== 'inbox') return;
+		if (huidigeView() !== "inbox") return;
 		if (laadfoutGetoond) return;
-		const een = document.querySelector('[data-bron-onbereikbaar]');
-		const geen = document.querySelector('[data-geen-bronnen]');
+		const een = document.querySelector("[data-bron-onbereikbaar]");
+		const geen = document.querySelector("[data-geen-bronnen]");
 		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
-		if (een) een.hidden = sc !== 'een';
-		if (geen) geen.hidden = sc !== 'geen';
+		if (een) een.hidden = sc !== "een";
+		if (geen) geen.hidden = sc !== "geen";
 	}
 	// "later"-scenario: toon de uitval-melding op de inbox zodra een bron is
 	// uitgevallen (geregistreerd in sessionStorage) en vul de naam in.
 	function werkBronUitvalBij() {
 		if (laadfoutGetoond) return;
-		const melding = document.querySelector('[data-bron-uitval]');
+		const melding = document.querySelector("[data-bron-uitval]");
 		if (!melding) return;
-		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === 'later';
+		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === "later";
 		const uitval = actief ? leesBronUitval() : null;
 		melding.hidden = !uitval;
 		if (uitval) {
-			const naamEl = melding.querySelector('[data-bron-uitval-naam]');
+			const naamEl = melding.querySelector("[data-bron-uitval-naam]");
 			if (naamEl) naamEl.textContent = uitval.naam;
 		}
 	}
@@ -1165,18 +1162,19 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Een gesimuleerde storing naast een echte is niet van echt te onderscheiden, en de
 		// retry-knop erbij lost niets op.
 		if (laadfoutGetoond) return;
-		if (huidigeView() !== 'inbox') return;
-		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later') return;
-		if (leesBronUitval()) { werkBronUitvalBij(); return; }
+		if (huidigeView() !== "inbox") return;
+		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== "later") return;
+		if (leesBronUitval()) {
+			werkBronUitvalBij();
+			return;
+		}
 		if (uitvalGepland) return;
 		uitvalGepland = true;
-		const bronnen = [...new Set(
-			data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId)
-		)];
+		const bronnen = [...new Set(data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId))];
 		if (!bronnen.length) return;
 		const vertraging = 4000 + Math.floor(Math.random() * 8000); // 4–12 s
 		setTimeout(() => {
-			if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later' || leesBronUitval()) return;
+			if (!bronOnbereikbaar() || huidigUnhappyScenario() !== "later" || leesBronUitval()) return;
 			const id = bronnen[Math.floor(Math.random() * bronnen.length)];
 			const voorbeeld = data.berichten.find((b) => b.magazijnId === id);
 			schrijfBronUitval({ id: id, naam: voorbeeld ? voorbeeld.afzender : id });
@@ -1184,12 +1182,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}, vertraging);
 	}
 	function bindBronOnbereikbaar() {
-		const waarschuwingen = document.querySelectorAll('[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]');
+		const waarschuwingen = document.querySelectorAll("[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]");
 		if (!waarschuwingen.length) return;
 		waarschuwingen.forEach((w) => {
-			const retry = w.querySelector('[data-bron-retry]');
+			const retry = w.querySelector("[data-bron-retry]");
 			if (retry) {
-				retry.addEventListener('click', () => {
+				retry.addEventListener("click", () => {
 					bronHandmatigHersteld = true;
 					schrijfBronUitval(null);
 					uitvalGepland = false;
@@ -1203,7 +1201,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Flag-wijziging in het paneel: bij uitzetten zijn de bronnen weer beschikbaar
 		// en wordt bij een volgende keer opnieuw een scenario gekozen. Na de eerste
 		// progress-animatie mag de melding meteen mee-togglen.
-		document.addEventListener('feature-flags-applied', () => {
+		document.addEventListener("feature-flags-applied", () => {
 			if (!unhappyFlowAan()) {
 				bronHandmatigHersteld = false;
 				scenarioGekozen = false;
@@ -1221,29 +1219,27 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// berichtinhoud. De retry-knop herstelt de bron en toont het bericht weer.
 	function werkBerichtBeschikbaarheidBij() {
 		if (laadfoutGetoond) return;
-		const melding = document.querySelector('[data-bericht-onbeschikbaar]');
-		const content = document.querySelector('.berichtenbox-content[data-afzender-id]');
+		const melding = document.querySelector("[data-bericht-onbeschikbaar]");
+		const content = document.querySelector(".berichtenbox-content[data-afzender-id]");
 		if (!melding || !content) return;
 		const uitval = leesBronUitval();
 		const onbeschikbaar = !!uitval && uitval.id === content.dataset.afzenderId;
 		melding.hidden = !onbeschikbaar;
 		if (onbeschikbaar) {
-			const naamEl = melding.querySelector('[data-bron-uitval-naam]');
+			const naamEl = melding.querySelector("[data-bron-uitval-naam]");
 			if (naamEl) naamEl.textContent = uitval.naam;
 		}
-		[
-			content.querySelector('.berichtenbox-detail-body'),
-			content.querySelector('[data-berichtenbox-attachments]'),
-			content.querySelector('.berichtenbox-detail-pdf'),
-		].forEach((el) => { if (el) el.hidden = onbeschikbaar; });
+		[content.querySelector(".berichtenbox-detail-body"), content.querySelector("[data-berichtenbox-attachments]"), content.querySelector(".berichtenbox-detail-pdf")].forEach((el) => {
+			if (el) el.hidden = onbeschikbaar;
+		});
 	}
 	function bindBerichtBeschikbaarheid() {
-		const melding = document.querySelector('[data-bericht-onbeschikbaar]');
+		const melding = document.querySelector("[data-bericht-onbeschikbaar]");
 		if (!melding) return;
 		werkBerichtBeschikbaarheidBij();
-		const retry = melding.querySelector('[data-bericht-retry]');
+		const retry = melding.querySelector("[data-bericht-retry]");
 		if (retry) {
-			retry.addEventListener('click', () => {
+			retry.addEventListener("click", () => {
 				schrijfBronUitval(null);
 				werkBerichtBeschikbaarheidBij();
 			});
@@ -1251,14 +1247,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function bindInboxFilters() {
-		if (huidigeView() !== 'inbox') return;
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (huidigeView() !== "inbox") return;
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst) return;
 
-		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
+		const zoekInput = document.querySelector("[data-berichtenbox-search-input]");
 		function mapUitUrl() {
 			const params = new URLSearchParams(location.search);
-			return params.get('map');
+			return params.get("map");
 		}
 
 		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het
@@ -1266,19 +1262,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const pasFilterToe = toonBerichten;
 
 		// Een nieuw filter zet de weergave terug naar pagina 1.
-		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
-		if (zoekInput) zoekInput.addEventListener('input', filterVanafEerstePagina);
+		function filterVanafEerstePagina() {
+			huidigePagina = 1;
+			pasFilterToe();
+		}
+		if (zoekInput) zoekInput.addEventListener("input", filterVanafEerstePagina);
 
 		// A/B-test: schakelaar om ook berichten van andere organisaties te tonen.
-		const orgToggle = document.querySelector('[data-berichtenbox-org-toggle]');
+		const orgToggle = document.querySelector("[data-berichtenbox-org-toggle]");
 		if (orgToggle) {
 			orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
 			werkZoekPlaceholderBij();
-			orgToggle.addEventListener('change', () => {
+			orgToggle.addEventListener("change", () => {
 				const voorKeuze = state.toonAndereOrganisaties;
 				state.toonAndereOrganisaties = orgToggle.checked;
 
-				if (!opslaan(() => { state.toonAndereOrganisaties = voorKeuze; })) {
+				if (
+					!opslaan(() => {
+						state.toonAndereOrganisaties = voorKeuze;
+					})
+				) {
 					orgToggle.checked = voorKeuze;
 					return;
 				}
@@ -1288,24 +1291,28 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (orgToggle.checked) {
 					// Simuleer het ophalen van berichten bij de andere organisaties; de
 					// eigen mappen verschijnen pas als die berichten binnen zijn.
-					speelOphalenOpnieuw(() => { werkMappenZichtbaarheidBij(); pasFilterToe(); render('inbox'); });
+					speelOphalenOpnieuw(() => {
+						werkMappenZichtbaarheidBij();
+						pasFilterToe();
+						render("inbox");
+					});
 				} else {
 					werkMappenZichtbaarheidBij();
 					pasFilterToe();
-					render('inbox');
+					render("inbox");
 				}
 			});
 
 			// Wordt de feature-flag in het paneel uit-/aangezet, dan herfilteren
 			// zonder herladen. Bij flag-uit valt magazijnToegestaan terug op
 			// alleen-Belastingdienst, ook al stond de switch eerder aan.
-			document.addEventListener('feature-flags-applied', () => {
+			document.addEventListener("feature-flags-applied", () => {
 				orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
 				werkZoekPlaceholderBij();
 				werkMappenZichtbaarheidBij();
 				huidigePagina = 1;
 				pasFilterToe();
-				render('inbox');
+				render("inbox");
 			});
 		}
 
@@ -1313,26 +1320,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (mapFilter) {
 			const mapTab = document.querySelector('[data-map-slug="' + mapFilter + '"] a');
 			if (mapTab) {
-				mapTab.setAttribute('aria-current', 'page');
-				mapTab.setAttribute('aria-selected', 'true');
+				mapTab.setAttribute("aria-current", "page");
+				mapTab.setAttribute("aria-selected", "true");
 			}
 			const inboxTab = document.querySelector('[data-berichtenbox-count="inbox"]');
 			if (inboxTab) {
-				const inboxLink = inboxTab.closest('a');
+				const inboxLink = inboxTab.closest("a");
 				if (inboxLink) {
-					inboxLink.removeAttribute('aria-current');
-					inboxLink.removeAttribute('aria-selected');
+					inboxLink.removeAttribute("aria-current");
+					inboxLink.removeAttribute("aria-selected");
 				}
 			}
-			const counterP = document.querySelector('[data-berichtenbox-toolbar] > p');
-			if (counterP) counterP.textContent = 'Deze map heeft u aangemaakt op 7 april 2026.';
+			const counterP = document.querySelector("[data-berichtenbox-toolbar] > p");
+			if (counterP) counterP.textContent = "Deze map heeft u aangemaakt op 7 april 2026.";
 		}
 		pasFilterToe();
 	}
 
 	function bindDetailPaginaActies() {
-		const content = document.querySelector('[data-bericht-id]');
-		if (!content || !content.matches('.berichtenbox-content')) return;
+		const content = document.querySelector("[data-bericht-id]");
+		if (!content || !content.matches(".berichtenbox-content")) return;
 		const berichtId = content.dataset.berichtId;
 
 		delete state.ongelezenToegevoegd[berichtId];
@@ -1354,32 +1361,35 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Zet de actieve tab op basis van de status van dit bericht. De detail-URL
 		// matcht server-side altijd 'Inbox'; voor een geopend archief-/prullenbak-
 		// bericht corrigeren we dat hier.
-		const tablist = document.querySelector('.tablist');
+		const tablist = document.querySelector(".tablist");
 		if (tablist) {
 			const status = statusVan(berichtId);
 			const inboxBadge = tablist.querySelector('[data-berichtenbox-count="inbox"]');
-			const inboxLink = inboxBadge ? inboxBadge.closest('a') : null;
+			const inboxLink = inboxBadge ? inboxBadge.closest("a") : null;
 			const archiefLink = tablist.querySelector('a[href*="berichtenbox-archief/"]');
 			const prullenbakLink = tablist.querySelector('a[href*="berichtenbox-prullenbak/"]');
 			[inboxLink, archiefLink, prullenbakLink].forEach((a) => {
-				if (a) { a.removeAttribute('aria-current'); a.removeAttribute('aria-selected'); }
+				if (a) {
+					a.removeAttribute("aria-current");
+					a.removeAttribute("aria-selected");
+				}
 			});
-			const actiefLink = status === 'archief' ? archiefLink : status === 'prullenbak' ? prullenbakLink : inboxLink;
-			if (actiefLink) actiefLink.setAttribute('aria-current', 'page');
+			const actiefLink = status === "archief" ? archiefLink : status === "prullenbak" ? prullenbakLink : inboxLink;
+			if (actiefLink) actiefLink.setAttribute("aria-current", "page");
 		}
 
 		// Zit het bericht al in Archief, dan wordt "Archiveren" "Terugplaatsen in inbox".
-		if (statusVan(berichtId) === 'archief') {
+		if (statusVan(berichtId) === "archief") {
 			const archiveerBtn = content.querySelector('[data-actie="archiveren"]');
 			if (archiveerBtn) {
 				const labelNode = [...archiveerBtn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
-				if (labelNode) labelNode.textContent = 'Terugplaatsen in inbox';
-				else archiveerBtn.append('Terugplaatsen in inbox');
+				if (labelNode) labelNode.textContent = "Terugplaatsen in inbox";
+				else archiveerBtn.append("Terugplaatsen in inbox");
 			}
 		}
 
-		content.querySelectorAll('[data-actie]').forEach((btn) => {
-			btn.addEventListener('click', () => {
+		content.querySelectorAll("[data-actie]").forEach((btn) => {
+			btn.addEventListener("click", () => {
 				const actie = btn.dataset.actie;
 				// Momentopname vóór de wijziging, zodat opslaan() het geheugen kan terugdraaien als er
 				// niets bewaard kan worden.
@@ -1401,8 +1411,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					zet(state.ongelezenToegevoegd, berichtId, voorOngelezen);
 				};
 
-				if (actie === 'archiveren') {
-					if (statusVan(berichtId) === 'archief') {
+				if (actie === "archiveren") {
+					if (statusVan(berichtId) === "archief") {
 						// Zit al in Archief: terugplaatsen in inbox.
 						delete state.gearchiveerd[berichtId];
 					} else {
@@ -1413,12 +1423,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					// en daar zou het bericht gewoon onaangeroerd staan.
 					if (!opslaan(herstelStatus)) return;
 					navigeerNaar(url(berichtenboxBasis()));
-				} else if (actie === 'verwijderen') {
+				} else if (actie === "verwijderen") {
 					state.verwijderd[berichtId] = true;
 					delete state.gearchiveerd[berichtId];
 					if (!opslaan(herstelStatus)) return;
 					navigeerNaar(url(berichtenboxBasis()));
-				} else if (actie === 'markeer-ongelezen') {
+				} else if (actie === "markeer-ongelezen") {
 					// Toggle gelezen/ongelezen; geen navigatie, blijf op het bericht.
 					const wordtOngelezen = !isOngelezen(berichtId, false);
 					if (wordtOngelezen) {
@@ -1435,14 +1445,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					// Ná render: die berekent state.aantalOngelezen. Stil, want de wijziging zelf is
 					// hierboven al bewaard of al teruggedraaid.
 					opslaanStil();
-				} else if (actie === 'markeren') {
+				} else if (actie === "markeren") {
 					// Toggle markering; geen navigatie, blijf op het bericht.
 					const nu = !isGemarkeerd(berichtId, false);
 					state.gemarkeerd[berichtId] = nu;
 					if (opslaan(() => zet(state.gemarkeerd, berichtId, voorGemarkeerd))) {
 						werkMarkeerKnopBij(btn, nu);
 					}
-				} else if (actie === 'verplaatsen') {
+				} else if (actie === "verplaatsen") {
 					toonVerplaatsPaneel(berichtId, btn);
 				}
 			});
@@ -1452,33 +1462,28 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function laadBijlagen() {
-		const bijlSec = document.querySelector('[data-berichtenbox-attachments]');
-		const previewVooraf = document.querySelector('[data-berichtenbox-attachments-preview]');
+		const bijlSec = document.querySelector("[data-berichtenbox-attachments]");
+		const previewVooraf = document.querySelector("[data-berichtenbox-attachments-preview]");
 		// De PDF-viewer staat bij élk bericht (alleen zichtbaar in variant B); de
 		// "Bijlage(n)"-lijst alleen bij een bericht met een echte bijlage.
 		if (!bijlSec && !previewVooraf) return;
-		const laden = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-loading]') : null;
-		const lijst = bijlSec ? bijlSec.querySelector('[data-berichtenbox-attachments-list]') : null;
+		const laden = bijlSec ? bijlSec.querySelector("[data-berichtenbox-attachments-loading]") : null;
+		const lijst = bijlSec ? bijlSec.querySelector("[data-berichtenbox-attachments-list]") : null;
 
 		// Toon de PDF-laadindicator meteen (de viewer blijft verborgen). De
 		// vertraging hieronder fungeert als zichtbare laadtijd; zonder dit zou de
 		// lokale PDF zó snel laden dat de indicator alleen even flitst.
-		const pdfLadenVooraf = document.querySelector('[data-pdf-laden]');
+		const pdfLadenVooraf = document.querySelector("[data-pdf-laden]");
 		if (pdfLadenVooraf) pdfLadenVooraf.hidden = false;
 		if (previewVooraf) previewVooraf.hidden = true;
 
 		setTimeout(() => {
 			// Voorbeeld-PDF voor zowel de bijlage-links als de preview (prototype).
-			const pdfHref = url('/assets/documents/voorbeeld-bijlage.pdf');
+			const pdfHref = url("/assets/documents/voorbeeld-bijlage.pdf");
 
 			// Bijlagenlijst alleen opbouwen bij een bericht met een echte bijlage.
 			if (bijlSec && laden && lijst) {
-				const namen = [
-					'Beschikking.pdf',
-					'Bijlage-specificatie.pdf',
-					'Toelichting.pdf',
-					'Overzicht.pdf',
-				];
+				const namen = ["Beschikking.pdf", "Bijlage-specificatie.pdf", "Toelichting.pdf", "Overzicht.pdf"];
 				const aantal = 1 + Math.floor(Math.random() * 3);
 				const gekozen = namen.slice(0, aantal);
 
@@ -1496,32 +1501,32 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 				// Werkende bijlage-link.
 				function bijlageLink(naam) {
-					const a = document.createElement('a');
+					const a = document.createElement("a");
 					a.href = pdfHref;
-					a.target = '_blank';
-					a.rel = 'noopener';
+					a.target = "_blank";
+					a.rel = "noopener";
 					a.textContent = naam;
 					return a;
 				}
 				// Gefaalde bijlage: feedback-warning met retry die de bijlage alsnog "ophaalt".
 				const WARNING_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
 				function bijlageFout(naam) {
-					const feedback = document.createElement('div');
-					feedback.className = 'feedback feedback-warning';
-					feedback.setAttribute('role', 'status');
-					const icoon = document.createElement('template');
+					const feedback = document.createElement("div");
+					feedback.className = "feedback feedback-warning";
+					feedback.setAttribute("role", "status");
+					const icoon = document.createElement("template");
 					icoon.innerHTML = WARNING_ICON;
 					feedback.appendChild(icoon.content.firstChild);
 
-					const inner = document.createElement('div');
-					const tekst = document.createElement('p');
-					tekst.textContent = 'Bijlage kon niet worden opgehaald.';
-					const actie = document.createElement('p');
-					const retry = document.createElement('button');
-					retry.type = 'button';
-					retry.className = 'link-button';
-					retry.textContent = 'Opnieuw proberen';
-					retry.addEventListener('click', () => {
+					const inner = document.createElement("div");
+					const tekst = document.createElement("p");
+					tekst.textContent = "Bijlage kon niet worden opgehaald.";
+					const actie = document.createElement("p");
+					const retry = document.createElement("button");
+					retry.type = "button";
+					retry.className = "link-button";
+					retry.textContent = "Opnieuw proberen";
+					retry.addEventListener("click", () => {
 						feedback.replaceWith(bijlageLink(naam));
 					});
 					actie.appendChild(retry);
@@ -1532,7 +1537,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 				// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
 				gekozen.forEach((n, i) => {
-					const li = document.createElement('li');
+					const li = document.createElement("li");
 					li.appendChild(faalIndexen.has(i) ? bijlageFout(n) : bijlageLink(n));
 					lijst.appendChild(li);
 				});
@@ -1543,10 +1548,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			// Preview van de bijlage in een ingesloten PDF-viewer (bij élk bericht).
 			// Verberg de thumbnail-zijbalk en toon op volle breedte.
-			const preview = document.querySelector('[data-berichtenbox-attachments-preview]');
+			const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
 			if (preview) {
 				// Laad-indicator (feedback-progress-stijl) tonen tot de PDF geladen is.
-				const pdfLaden = document.querySelector('[data-pdf-laden]');
+				const pdfLaden = document.querySelector("[data-pdf-laden]");
 				if (pdfLaden) pdfLaden.hidden = false;
 				preview.hidden = true;
 				let getoond = false;
@@ -1555,19 +1560,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					getoond = true;
 					// Onthul de viewer: start ingeklapt op de plek van de laadindicator
 					// en groei naar de eindpositie; de indicator vouwt tegelijk weg.
-					const reveal = preview.closest('.pdf-reveal');
+					const reveal = preview.closest(".pdf-reveal");
 					preview.hidden = false;
 					if (reveal) {
-						reveal.setAttribute('data-collapsed', '');
+						reveal.setAttribute("data-collapsed", "");
 						void reveal.offsetHeight; // forceer reflow zodat de transitie loopt
-						reveal.removeAttribute('data-collapsed');
+						reveal.removeAttribute("data-collapsed");
 					}
 					if (pdfLaden) {
-						pdfLaden.classList.add('feedback-progress--afgerond');
-						setTimeout(() => { pdfLaden.hidden = true; }, 340);
+						pdfLaden.classList.add("feedback-progress--afgerond");
+						setTimeout(() => {
+							pdfLaden.hidden = true;
+						}, 340);
 					}
 				}
-				preview.addEventListener('load', toonPreview, { once: true });
+				preview.addEventListener("load", toonPreview, { once: true });
 				// Safari vuurt 'load' niet betrouwbaar op <object> met PDF; de
 				// voorbeeld-PDF is lokaal en laadt snel, dus toon de viewer sowieso
 				// na een korte tijd zodat de indicator niet blijft doorlopen.
@@ -1578,15 +1585,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				preview.setAttribute("data", pdfHref + "#navpanes=0&view=FitH");
 			}
 			// Download PDF-link onder de preview.
-			const download = document.querySelector('[data-berichtenbox-pdf-download]');
+			const download = document.querySelector("[data-berichtenbox-pdf-download]");
 			if (download) {
 				download.href = pdfHref;
 				download.hidden = false;
 			}
 			// Optionele tekst-versie-link naast de download (indien aanwezig).
-			const tekstVersie = document.querySelector('[data-berichtenbox-tekst-download]');
+			const tekstVersie = document.querySelector("[data-berichtenbox-tekst-download]");
 			if (tekstVersie) {
-				tekstVersie.href = url('/assets/documents/voorbeeld-bijlage.txt');
+				tekstVersie.href = url("/assets/documents/voorbeeld-bijlage.txt");
 				tekstVersie.hidden = false;
 			}
 		}, 1500);
@@ -1594,14 +1601,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
 	function vulDemoDetailPagina() {
-		const detail = document.querySelector('[data-demo-detail]');
+		const detail = document.querySelector("[data-demo-detail]");
 		if (!detail) return;
 
 		const params = new URLSearchParams(location.search);
-		const id = params.get('id');
+		const id = params.get("id");
 		if (!id) {
 			detail.hidden = true;
-			const melding = document.querySelector('[data-demo-niet-gevonden]');
+			const melding = document.querySelector("[data-demo-niet-gevonden]");
 			if (melding) melding.hidden = false;
 			return;
 		}
@@ -1609,7 +1616,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const bericht = data.berichten.find((b) => b.id === id);
 		if (!bericht) {
 			detail.hidden = true;
-			const melding = document.querySelector('[data-demo-niet-gevonden]');
+			const melding = document.querySelector("[data-demo-niet-gevonden]");
 			if (melding) melding.hidden = false;
 			return;
 		}
@@ -1618,72 +1625,72 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		detail.dataset.berichtId = bericht.id;
 		detail.dataset.afzenderId = bericht.magazijnId;
 		detail.dataset.afzenderNaam = bericht.afzender;
-		if (bericht.heeftBijlage) detail.dataset.heeftBijlage = 'true';
+		if (bericht.heeftBijlage) detail.dataset.heeftBijlage = "true";
 
 		// Link naar de Berichtenbox van de afzender-organisatie. Alleen de
 		// Belastingdienst heeft in dit prototype een eigen berichtenbox; de rest is
 		// placeholder (#).
-		const orgWrap = document.querySelector('[data-demo-organisatie]');
+		const orgWrap = document.querySelector("[data-demo-organisatie]");
 		if (orgWrap) {
-			const naamEl = orgWrap.querySelector('[data-demo-organisatie-naam]');
-			const orgLink = orgWrap.querySelector('[data-demo-organisatie-link]');
+			const naamEl = orgWrap.querySelector("[data-demo-organisatie-naam]");
+			const orgLink = orgWrap.querySelector("[data-demo-organisatie-link]");
 			if (naamEl) naamEl.textContent = bericht.afzender;
-			if (orgLink) orgLink.setAttribute('href', bericht.magazijnId === 'belastingdienst' ? url('/mijn-belastingdienst/berichtenbox/') : '#');
+			if (orgLink) orgLink.setAttribute("href", bericht.magazijnId === "belastingdienst" ? url("/mijn-belastingdienst/berichtenbox/") : "#");
 			orgWrap.hidden = false;
 		}
 
-		const onderwerpEl = detail.querySelector('[data-demo-onderwerp]');
+		const onderwerpEl = detail.querySelector("[data-demo-onderwerp]");
 		if (onderwerpEl) onderwerpEl.textContent = bericht.onderwerp;
 
-		const breadcrumb = document.querySelector('[data-demo-breadcrumb]');
+		const breadcrumb = document.querySelector("[data-demo-breadcrumb]");
 		if (breadcrumb) breadcrumb.textContent = bericht.onderwerp;
 
-		document.title = 'MijnOverheid Zakelijk: ' + bericht.onderwerp;
+		document.title = "MijnOverheid Zakelijk: " + bericht.onderwerp;
 
 		const effMap = mapVan(bericht.id, bericht.map);
-		const metaEl = detail.querySelector('[data-demo-meta]');
+		const metaEl = detail.querySelector("[data-demo-meta]");
 		if (metaEl) {
-			metaEl.textContent = bericht.afzender + ' \u00b7 ' + datumNL(bericht.datum);
+			metaEl.textContent = bericht.afzender + " \u00b7 " + datumNL(bericht.datum);
 			if (effMap) {
-				const span = document.createElement('span');
-				span.dataset.maplabel = '';
+				const span = document.createElement("span");
+				span.dataset.maplabel = "";
 				span.textContent = effMap;
-				metaEl.appendChild(document.createTextNode(' \u00b7 '));
+				metaEl.appendChild(document.createTextNode(" \u00b7 "));
 				metaEl.appendChild(span);
 			}
 		}
 
-		const bodyEl = detail.querySelector('[data-demo-body]');
+		const bodyEl = detail.querySelector("[data-demo-body]");
 		if (bodyEl) {
-			const alineas = (bericht.inhoud || '').split('\n\n').filter((alinea) => alinea.trim() !== '');
+			const alineas = (bericht.inhoud || "").split("\n\n").filter((alinea) => alinea.trim() !== "");
 			if (!alineas.length) {
 				// Voor een bericht uit het stelsel is dit de normale toestand: de berichtenuitvraag
 				// levert alleen de kopgegevens, de inhoud zit er niet bij. Benoem dat, in plaats van
 				// een lege pagina te tonen. Voor een bericht uit de dataset is een lege inhoud geen
 				// toestand maar een fout in de gegevens; die hoort in de console.
-				if (!bericht.uitKeten) console.error('[Berichtenbox] Bericht zonder inhoud in de dataset.', bericht.id);
-				alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.');
+				if (!bericht.uitKeten) console.error("[Berichtenbox] Bericht zonder inhoud in de dataset.", bericht.id);
+				alineas.push("Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.");
 			}
 			alineas.forEach((alinea) => {
-				const p = document.createElement('p');
+				const p = document.createElement("p");
 				p.textContent = alinea;
 				bodyEl.appendChild(p);
 			});
 		}
 
 		if (bericht.heeftBijlage) {
-			const bijlSec = detail.querySelector('[data-berichtenbox-attachments]');
+			const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
 			if (bijlSec) {
 				bijlSec.hidden = false;
-				const laden = bijlSec.querySelector('[data-berichtenbox-attachments-loading]');
-				if (laden) laden.textContent = 'Bijlagen ophalen bij ' + bericht.afzender + '\u2026';
+				const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
+				if (laden) laden.textContent = "Bijlagen ophalen bij " + bericht.afzender + "\u2026";
 			}
 		}
 	}
 
 	function toonMappenZijbalk() {
-		const kop = document.querySelector('[data-berichtenbox-folders-heading]');
-		const lijst = document.querySelector('[data-berichtenbox-folders]');
+		const kop = document.querySelector("[data-berichtenbox-folders-heading]");
+		const lijst = document.querySelector("[data-berichtenbox-folders]");
 		if (kop) kop.hidden = false;
 		if (lijst) lijst.hidden = false;
 		state.eigenMappen.forEach(voegMapToeAanZijbalk);
@@ -1694,7 +1701,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * animatie hieronder, en de echte ophaalronde van een bron die meldt hoe ver hij is.
 	 */
 	function vulVoortgang(bevraagd, klaar, gevonden) {
-		const blok = document.querySelector('[data-berichtenbox-progress]');
+		const blok = document.querySelector("[data-berichtenbox-progress]");
 		if (!blok) return;
 
 		// Hier pas: er valt iets te melden.
@@ -1704,12 +1711,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const el = document.querySelector(kiezer);
 			if (el) el.textContent = waarde;
 		};
-		slot('[data-berichtenbox-progress-total]', bevraagd);
-		slot('[data-berichtenbox-progress-source]', klaar);
-		slot('[data-berichtenbox-progress-found]', gevonden);
+		slot("[data-berichtenbox-progress-total]", bevraagd);
+		slot("[data-berichtenbox-progress-source]", klaar);
+		slot("[data-berichtenbox-progress-found]", gevonden);
 
-		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
-		if (balk) balk.style.inlineSize = (bevraagd ? Math.round((klaar / bevraagd) * 100) : 0) + '%';
+		const balk = document.querySelector("[data-berichtenbox-progress-bar]");
+		if (balk) balk.style.inlineSize = (bevraagd ? Math.round((klaar / bevraagd) * 100) : 0) + "%";
 
 		// "1 bronnen" en "1 berichten" staan er anders.
 		werkMeervoudBij();
@@ -1727,8 +1734,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// het langer, dan hoort de bezoeker te zien dat er gewacht wordt.
 	const VOORTGANG_DREMPEL_MS = 300;
 
-	// Meldt een bron op dit moment voortgang? Dan hoort naEersteLading de lijst niet terug te zetten.
-	let voortgangLoopt = false;
+	// Ruim boven de langste nagebootste ronde (4 seconden) en boven wat een echte ophaalronde bij het
+	// stelsel mag kosten. Hierna gaat de lijst terug, wat de bron ook doet.
+	const VOORTGANG_LIMIET_MS = 45000;
+
+	// Welke bronnen op dit moment voortgang melden. Een verzameling en geen vlag: de render-laag
+	// abonneert zich op álle bronnen, en de eerste die klaar meldt mag de tweede niet stilzetten.
+	const lopendeBronnen = new Set();
+	const voortgangLoopt = () => lopendeBronnen.size > 0;
 
 	/**
 	 * Vraagt de actieve bron opnieuw op te halen. Kan zij dat niet — het stelsel heeft zijn eigen
@@ -1736,34 +1749,60 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 */
 	function speelOphalenOpnieuw(opKlaar) {
 		const bron = register.actief();
-		if (bron && typeof bron.herhaalOphalen === 'function') {
-			bron.herhaalOphalen(opKlaar);
+		if (!bron || typeof bron.herhaalOphalen !== "function") {
+			opKlaar();
 			return;
 		}
-		opKlaar();
+
+		// Gooit het opnieuw ophalen synchroon, dan sterft de klik-afhandeling eromheen geruisloos en
+		// blijft het vervolg — opnieuw renderen, de mappen bijwerken — achterwege. De toestand is dan
+		// al veranderd en het scherm niet.
+		veilig(
+			{
+				log: "Opnieuw ophalen bij de bronnen",
+				bezoeker: "Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.",
+				eigenaar: "lading",
+				herstel: opKlaar,
+			},
+			() => bron.herhaalOphalen(opKlaar)
+		);
 	}
 
 	function volgEchteVoortgang(bronnen) {
 		bronnen.forEach((bron) => {
-			if (typeof bron.volgVoortgang !== 'function') return;
+			if (typeof bron.volgVoortgang !== "function") return;
 
 			let wachter = null;
+			let wachthond = null;
 			let laatste = null;
 			let getoond = false;
+
+			function stopKlokken() {
+				if (wachter) {
+					clearTimeout(wachter);
+					wachter = null;
+				}
+				if (wachthond) {
+					clearTimeout(wachthond);
+					wachthond = null;
+				}
+			}
 
 			bron.volgVoortgang((voortgang) => {
 				laatste = voortgang;
 
-				// Geen voortgang meer: de ronde is klaar of afgebroken. Wat we voor haar verborgen
-				// hebben, hoort dan weer op het scherm.
+				// Geen voortgang meer: de ronde is klaar of afgebroken. Wat er voor haar verborgen is,
+				// hoort dan weer op het scherm — ook als deze bron nooit aan tonen toekwam, want de
+				// lijst kan al vóór de bronkeuze zijn weggehaald. Alleen als niemand anders nog bezig is.
 				if (!voortgang) {
-					if (wachter) { clearTimeout(wachter); wachter = null; }
-					voortgangLoopt = false;
-					if (getoond) { getoond = false; toonNaVoortgang(); }
+					stopKlokken();
+					getoond = false;
+					lopendeBronnen.delete(bron);
+					if (!voortgangLoopt()) toonNaVoortgang();
 					return;
 				}
 
-				voortgangLoopt = true;
+				lopendeBronnen.add(bron);
 
 				if (getoond) {
 					vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
@@ -1780,18 +1819,33 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					verbergVoorVoortgang();
 					vulVoortgang(laatste.bevraagd, laatste.klaar, laatste.gevonden);
 				}, VOORTGANG_DREMPEL_MS);
+
+				// Vangnet. Een bron die zijn ronde niet afmaakt — een fout in een later frame, een
+				// verbinding die blijft hangen — laat de bezoeker anders naar kolomkoppen en een
+				// bevroren balk kijken, zonder een woord erbij en zonder weg terug.
+				if (!wachthond) {
+					wachthond = setTimeout(() => {
+						wachthond = null;
+						if (!lopendeBronnen.has(bron)) return;
+
+						console.error("[Berichtenbox] Bron '" + bron.naam + "' meldde " + VOORTGANG_LIMIET_MS + " ms lang geen einde; lijst teruggezet.");
+						getoond = false;
+						lopendeBronnen.delete(bron);
+						if (!voortgangLoopt()) toonNaVoortgang();
+						toonPaginaMelding("Het ophalen bij de bronnen duurde te lang. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
+					}, VOORTGANG_LIMIET_MS);
+				}
 			});
 		});
 	}
 
-
-	document.querySelectorAll('[data-berichtenbox-reset]').forEach((link) => {
-		link.addEventListener('click', (e) => {
+	document.querySelectorAll("[data-berichtenbox-reset]").forEach((link) => {
+		link.addEventListener("click", (e) => {
 			e.preventDefault();
 			try {
 				localStorage.removeItem(LS_KEY);
 			} catch (err) {
-				console.error('[Berichtenbox] Kon state niet wissen.', err);
+				console.error("[Berichtenbox] Kon state niet wissen.", err);
 			}
 			location.href = url(berichtenboxBasis());
 		});
@@ -1799,39 +1853,42 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Gemarkeerd-kolom: klik op de vlag-knop wisselt de markering. Gedelegeerd zodat
 	// het ook werkt voor dynamisch (via createRij) toegevoegde rijen.
-	document.addEventListener('click', (e) => {
-		const knop = e.target.closest('[data-mark-toggle]');
+	document.addEventListener("click", (e) => {
+		const knop = e.target.closest("[data-mark-toggle]");
 		if (!knop) return;
-		const rij = knop.closest('.berichtenbox-row');
+		const rij = knop.closest(".berichtenbox-row");
 		if (!rij) return;
 		const id = rij.dataset.berichtId;
 		const voorGemarkeerd = state.gemarkeerd[id];
-		const nu = !isGemarkeerd(id, knop.classList.contains('is-marked'));
+		const nu = !isGemarkeerd(id, knop.classList.contains("is-marked"));
 		state.gemarkeerd[id] = nu;
 
 		// Knop pas omzetten als het bewaard is; anders toont hij een markering die na het verversen
 		// weg is.
-		if (!opslaan(() => {
-			if (voorGemarkeerd === undefined) delete state.gemarkeerd[id];
-			else state.gemarkeerd[id] = voorGemarkeerd;
-		})) return;
+		if (
+			!opslaan(() => {
+				if (voorGemarkeerd === undefined) delete state.gemarkeerd[id];
+				else state.gemarkeerd[id] = voorGemarkeerd;
+			})
+		)
+			return;
 
-		knop.classList.toggle('is-marked', nu);
-		knop.setAttribute('aria-pressed', nu ? 'true' : 'false');
+		knop.classList.toggle("is-marked", nu);
+		knop.setAttribute("aria-pressed", nu ? "true" : "false");
 	});
 
 	// Acties-kolom: de acties zelf (openen/sluiten van het menu gebeurt in het
 	// pre-guard deel, zodat het ook op demo-berichtenboxen zonder data werkt).
 	// Gedelegeerd zodat het ook werkt voor dynamisch (via createRij) toegevoegde rijen.
-	document.addEventListener('click', (e) => {
-		const actie = e.target.closest('[data-row-actie]');
+	document.addEventListener("click", (e) => {
+		const actie = e.target.closest("[data-row-actie]");
 		if (!actie) return;
-		const rij = actie.closest('.berichtenbox-row');
+		const rij = actie.closest(".berichtenbox-row");
 		if (!rij) return;
 		const id = rij.dataset.berichtId;
 		if (!id) return; // demo-rijen zonder bericht-id: geen actie
 		const soort = actie.dataset.rowActie;
-		if (soort !== 'archiveren' && soort !== 'verwijderen') return;
+		if (soort !== "archiveren" && soort !== "verwijderen") return;
 
 		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
 		const voorGearchiveerd = state.gearchiveerd[id];
@@ -1843,7 +1900,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			else state.verwijderd[id] = voorVerwijderd;
 		};
 
-		if (soort === 'archiveren') {
+		if (soort === "archiveren") {
 			state.gearchiveerd[id] = true;
 			delete state.verwijderd[id];
 		} else {
@@ -1870,9 +1927,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Welke rij en welk element de aandacht hadden, zodat een herbouw van de tbody die niet weggooit.
 	function legFocusVast() {
 		const actief = document.activeElement;
-		const rij = actief && typeof actief.closest === 'function' ? actief.closest('.berichtenbox-row') : null;
+		const rij = actief && typeof actief.closest === "function" ? actief.closest(".berichtenbox-row") : null;
 		const open = document.querySelector('.row-actions-toggle[aria-expanded="true"]');
-		const openRij = open ? open.closest('.berichtenbox-row') : null;
+		const openRij = open ? open.closest(".berichtenbox-row") : null;
 
 		return {
 			focusId: rij ? rij.dataset.berichtId : null,
@@ -1882,19 +1939,19 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function rolVan(el) {
-		if (el.matches('[data-mark-toggle]')) return '[data-mark-toggle]';
-		if (el.matches('.row-actions-toggle')) return '.row-actions-toggle';
-		if (el.matches('[data-row-actie]')) return '[data-row-actie="' + el.dataset.rowActie + '"]';
-		if (el.matches('a')) return '.berichtenbox-row-subject a';
+		if (el.matches("[data-mark-toggle]")) return "[data-mark-toggle]";
+		if (el.matches(".row-actions-toggle")) return ".row-actions-toggle";
+		if (el.matches("[data-row-actie]")) return '[data-row-actie="' + el.dataset.rowActie + '"]';
+		if (el.matches("a")) return ".berichtenbox-row-subject a";
 		return null;
 	}
 
 	function herstelFocus(vastgelegd) {
 		if (vastgelegd.openId) {
 			const rij = document.querySelector('.berichtenbox-row[data-bericht-id="' + vastgelegd.openId + '"]');
-			const toggle = rij && rij.querySelector('.row-actions-toggle');
+			const toggle = rij && rij.querySelector(".row-actions-toggle");
 			if (toggle) {
-				toggle.setAttribute('aria-expanded', 'true');
+				toggle.setAttribute("aria-expanded", "true");
 				if (toggle.nextElementSibling) toggle.nextElementSibling.hidden = false;
 			}
 		}
@@ -1906,8 +1963,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function rendersLijst(lijstBerichten) {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const body = lijst && (lijst.querySelector('tbody') || lijst);
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const body = lijst && (lijst.querySelector("tbody") || lijst);
 		if (!body) return 0;
 
 		// De rijen worden vervangen, niet bijgewerkt. Zonder dit sluit een geopend rijmenu en valt
@@ -1936,7 +1993,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Eén regel per render. Per bericht loggen betekent bij elke toetsaanslag in het zoekveld
 		// opnieuw de hele stapel in de console.
 		if (overgeslagen > 0) {
-			console.error('[Berichtenbox] ' + overgeslagen + ' bericht(en) konden niet worden getoond.', eersteFout);
+			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) konden niet worden getoond.", eersteFout);
 		}
 
 		body.replaceChildren(...rijen);
@@ -1947,20 +2004,20 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// De lege staat staat in de HTML zichtbaar, want zonder JavaScript is archief en prullenbak
 	// werkelijk leeg. Draait JS wél, dan volgt er zo een lijst; hem tot die tijd laten staan zou
 	// "u heeft nog geen berichten" tonen vlak voordat de berichten verschijnen.
-	const legeStaat = document.querySelector('[data-berichtenbox-empty]');
+	const legeStaat = document.querySelector("[data-berichtenbox-empty]");
 	if (legeStaat) legeStaat.hidden = true;
 
 	// Plaatsvervanger voor een bericht dat niet te renderen is. Kolommenaantal volgt de kop, zodat
 	// de tabel niet scheef trekt.
 	function maakOnleesbaarRij() {
-		const tr = document.createElement('tr');
-		tr.className = 'berichtenbox-row is-unreadable';
+		const tr = document.createElement("tr");
+		tr.className = "berichtenbox-row is-unreadable";
 
-		const td = document.createElement('td');
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll('th').length : 1;
+		const td = document.createElement("td");
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll("th").length : 1;
 		td.colSpan = koppen || 1;
-		td.textContent = 'Wij kunnen dit bericht niet tonen. Ververs de pagina om het opnieuw te proberen.';
+		td.textContent = "Wij kunnen dit bericht niet tonen. Ververs de pagina om het opnieuw te proberen.";
 		tr.appendChild(td);
 
 		return tr;
@@ -1976,21 +2033,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
 	function startDemoGedrag() {
-		veilig({ log: 'De mappen-zijbalk', bezoeker: 'De mappen in de zijbalk zijn niet beschikbaar.' }, toonMappenZijbalk);
-		veilig({ log: 'Het filteren van de lijst', bezoeker: 'Zoeken en filteren werkt op dit moment niet.' }, bindInboxFilters);
+		veilig({ log: "De mappen-zijbalk", bezoeker: "De mappen in de zijbalk zijn niet beschikbaar." }, toonMappenZijbalk);
+		veilig({ log: "Het filteren van de lijst", bezoeker: "Zoeken en filteren werkt op dit moment niet." }, bindInboxFilters);
 
 		// Een nagebootste storing bovenop echte berichten is niet van echt te onderscheiden, en het
 		// scenario "geen" blokkeert élk magazijn — dat zou werkelijke post wegfilteren zonder dat
 		// er iets over te zeggen valt. De gesimuleerde uitval hoort dus alleen bij de dataset.
 		if (!simulatieMag()) return;
-		veilig({ log: 'De bronwaarschuwing', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, werkBronWaarschuwingBij);
-		veilig({ log: 'De gesimuleerde bronuitval', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, plannBronUitval);
+		veilig({ log: "De bronwaarschuwing", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, werkBronWaarschuwingBij);
+		veilig({ log: "De gesimuleerde bronuitval", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, plannBronUitval);
 	}
 
 	/** Alleen de gegenereerde dataset laat zich een storing aanpraten die er niet is. */
 	function simulatieMag() {
 		const bron = register.actief();
-		return !bron || bron.naam === 'dataset';
+		return !bron || bron.naam === "dataset";
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
@@ -2001,20 +2058,33 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		try {
 			doen();
 		} catch (fout) {
-			console.error('[Berichtenbox] ' + wat.log + ' mislukte.', fout);
-			toonPaginaMelding(wat.bezoeker);
+			console.error("[Berichtenbox] " + wat.log + " mislukte.", fout);
+
+			// Melden alleen is niet genoeg als er een halve toestand achterblijft: een verborgen lijst
+			// onder "niet alles werkt zoals bedoeld" is voor de bezoeker een lege pagina.
+			if (typeof wat.herstel === "function") {
+				try {
+					wat.herstel();
+				} catch (herstelFout) {
+					console.error("[Berichtenbox] Herstel na een mislukte " + wat.log + " ging ook mis.", herstelFout);
+				}
+			}
+
+			toonPaginaMelding(wat.bezoeker, "storing", wat.eigenaar || "algemeen");
 		}
 	}
 
 	function naEersteLading() {
 		// Apart afgeschermd: op een detailpagina hangen hier de knoppen Archiveren en Verwijderen
 		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
-		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
-		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
+		veilig({ log: "Vullen van de detailpagina", bezoeker: "Wij kunnen dit bericht niet volledig tonen." }, vulDemoDetailPagina);
+		veilig({ log: "Binden van de acties op de detailpagina", bezoeker: "U kunt dit bericht nu niet archiveren, verwijderen of markeren." }, bindDetailPaginaActies);
 
-		// Meldt de bron voortgang, dan blijft de lijst weg tot die klaar is; de luisteraar hierboven
-		// zet hem dan terug. Anders hoort wat we vooruitlopend verborgen hebben er gewoon te staan.
-		if (!voortgangLoopt) toonNaVoortgang();
+		// Meldt een bron voortgang, dan blijft de lijst weg tot die klaar is; de luisteraar hierboven
+		// zet hem dan terug. Anders hoort wat we vooruitlopend verborgen hebben er gewoon te staan —
+		// behalve na een mislukte lading: toonLaadfout heeft de tabel net leeggemaakt en verborgen,
+		// en een lege tabel met koppen en paginering onder een storingsmelding helpt niemand.
+		if (!voortgangLoopt() && !ladingMislukt && !laadfoutGetoond) toonNaVoortgang();
 		startDemoGedrag();
 	}
 
@@ -2023,24 +2093,20 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
 	const register = maakRegister();
 	register.registreer(ketenBron(window.BerichtenboxKeten, { meldStoring: toonPaginaMelding }));
-	register.registreer(datasetBron(window.berichtenboxData, {
-		state: stateModule,
-		limiet: NIEUWE_BERICHTEN_LIMIET,
-		meldStoring: toonPaginaMelding,
-		// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
-		zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
-		// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
-		magAnimeren: () => huidigeView() === 'inbox'
-			&& isEerstePagina
-			&& !state.eersteBezoekGehad
-			&& !ladingMislukt
-			&& !laadfoutGetoond,
-		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
-		// onzichtbaar of misleidend.
-		magOphalen: () => huidigeView() === 'inbox'
-			&& huidigePaginaUitUrl() === 1
-			&& !!document.querySelector('[data-berichtenbox-list]'),
-	}));
+	register.registreer(
+		datasetBron(window.berichtenboxData, {
+			state: stateModule,
+			limiet: NIEUWE_BERICHTEN_LIMIET,
+			meldStoring: toonPaginaMelding,
+			// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
+			zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
+			// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
+			magAnimeren: () => huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
+			// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
+			// onzichtbaar of misleidend.
+			magOphalen: () => huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]"),
+		})
+	);
 
 	// De weergave wordt pas bijgewerkt als álle rijen gebouwd zijn. Struikelt createRij over één
 	// bericht, dan blijft de vorige weergave staan in plaats van een halve nieuwe — en de melding
@@ -2050,12 +2116,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// voorkomen, render() niet — en één null zou anders alle andere berichten meenemen. Alleen
 		// écht lege plekken; een bericht met een onbruikbaar id gaat door naar createRij, die er een
 		// zichtbaar gat van maakt in plaats van het stil te laten verdwijnen.
-		const rauw = inhoud.nieuwBericht
-			? [inhoud.nieuwBericht, ...data.berichten]
-			: inhoud.berichten;
+		const rauw = inhoud.nieuwBericht ? [inhoud.nieuwBericht, ...data.berichten] : inhoud.berichten;
 		const volgende = rauw.filter((bericht) => !!bericht);
 		if (volgende.length < rauw.length) {
-			console.error('[Berichtenbox] ' + (rauw.length - volgende.length) + ' lege plek(ken) in de berichtenlijst overgeslagen.');
+			console.error("[Berichtenbox] " + (rauw.length - volgende.length) + " lege plek(ken) in de berichtenlijst overgeslagen.");
 		}
 
 		// Alles wat we straks moeten kunnen terugdraaien, in één keer vastgelegd — vóór er iets
@@ -2097,7 +2161,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				toonBerichten();
 				render(huidigeView());
 			} catch (herstelFout) {
-				console.error('[Berichtenbox] Ook de vorige weergave was niet te herstellen.', herstelFout);
+				console.error("[Berichtenbox] Ook de vorige weergave was niet te herstellen.", herstelFout);
 				toonLaadfout();
 			}
 
@@ -2115,9 +2179,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		zojuistBinnengekomenId = null;
 
 		if (inhoud.nieuwBericht) {
-			const live = document.querySelector('[data-berichtenbox-live]');
+			const live = document.querySelector("[data-berichtenbox-live]");
 			if (live) {
-				live.textContent = 'Nieuw bericht van ' + inhoud.nieuwBericht.afzender + ': ' + inhoud.nieuwBericht.onderwerp;
+				live.textContent = "Nieuw bericht van " + inhoud.nieuwBericht.afzender + ": " + inhoud.nieuwBericht.onderwerp;
 			}
 		}
 	});
@@ -2133,10 +2197,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (!laadfoutGetoond) return;
 		laadfoutGetoond = false;
 
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst && huidigeView() === 'inbox') lijst.hidden = false;
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		if (lijst && huidigeView() === "inbox") lijst.hidden = false;
 
-		verbergPaginaMelding('lading');
+		verbergPaginaMelding("lading");
 
 		// De gesimuleerde meldingen mogen weer meedoen nu er een lijst staat.
 		werkBronWaarschuwingBij();
@@ -2159,32 +2223,31 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * zwaardere; die wordt onderdrukt en meldt dat met false, zodat een aanroeper die "we hebben het
 	 * al gezegd" wil onthouden dat niet doet voor iets wat niemand zag.
 	 */
-	function toonPaginaMelding(tekst, soort = 'storing', eigenaar = 'algemeen') {
+	function toonPaginaMelding(tekst, soort = "storing", eigenaar = "algemeen") {
 		const zwaarte = MELDING_ZWAARTE[soort] || MELDING_ZWAARTE.storing;
 		if (zwaarte < staandeMeldingZwaarte) return false;
 
-		const blok = document.querySelector('[data-berichtenbox-storing]');
+		const blok = document.querySelector("[data-berichtenbox-storing]");
 		if (!blok) {
 			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
 			return false;
 		}
 
-		const slot = blok.querySelector('[data-berichtenbox-storing-tekst]');
+		const slot = blok.querySelector("[data-berichtenbox-storing-tekst]");
 		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar && slot && slot.textContent) {
-			console.warn("[Berichtenbox] Melding van '" + staandeMeldingEigenaar + "' vervangen door die van '"
-				+ eigenaar + "': " + slot.textContent);
+			console.warn("[Berichtenbox] Melding van '" + staandeMeldingEigenaar + "' vervangen door die van '" + eigenaar + "': " + slot.textContent);
 		}
 		if (slot) slot.textContent = tekst;
-		blok.classList.toggle('feedback-error', soort === 'storing');
-		blok.classList.toggle('feedback-info', soort === 'info');
+		blok.classList.toggle("feedback-error", soort === "storing");
+		blok.classList.toggle("feedback-info", soort === "info");
 
 		// Beide pictogrammen staan in het blok, in deze volgorde: eerst het storings-, dan het
 		// informatie-pictogram. Alleen de kleur wisselen liet een wit kruis op een blauwe schijf
 		// achter bij een mededeling.
-		const iconen = blok.querySelectorAll(':scope > svg');
+		const iconen = blok.querySelectorAll(":scope > svg");
 		if (iconen.length === 2) {
-			iconen[0].style.display = soort === 'info' ? 'none' : '';
-			iconen[1].style.display = soort === 'info' ? '' : 'none';
+			iconen[0].style.display = soort === "info" ? "none" : "";
+			iconen[1].style.display = soort === "info" ? "" : "none";
 		}
 		blok.hidden = false;
 		staandeMeldingZwaarte = zwaarte;
@@ -2196,13 +2259,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * Haalt alleen de eigen melding weg. Dat de lijst weer laadt zegt niets over een wijziging die
 	 * niet bewaard kon worden; die melding hoort te blijven staan.
 	 */
-	function verbergPaginaMelding(eigenaar = 'algemeen') {
+	function verbergPaginaMelding(eigenaar = "algemeen") {
 		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar) return;
 
 		staandeMeldingZwaarte = 0;
 		staandeMeldingEigenaar = null;
 
-		const blok = document.querySelector('[data-berichtenbox-storing]');
+		const blok = document.querySelector("[data-berichtenbox-storing]");
 		if (blok) blok.hidden = true;
 	}
 
@@ -2210,19 +2273,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
 	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
 	// aantoonbaar onwaar zolang we niet weten wát er is.
-	const SIMULATIE_MELDINGEN = [
-		'[data-bron-onbereikbaar]',
-		'[data-geen-bronnen]',
-		'[data-bron-uitval]',
-	];
+	const SIMULATIE_MELDINGEN = ["[data-bron-onbereikbaar]", "[data-geen-bronnen]", "[data-bron-uitval]"];
 
-	const TELLERS_OP_DE_PAGINA = [
-		'[data-berichtenbox-counter-total]',
-		'[data-berichtenbox-sources]',
-		'[data-berichtenbox-counter-unread]',
-		'[data-berichtenbox-count="inbox"]',
-		'[data-berichtenbox-count="ongelezen"]',
-	];
+	const TELLERS_OP_DE_PAGINA = ["[data-berichtenbox-counter-total]", "[data-berichtenbox-sources]", "[data-berichtenbox-counter-unread]", '[data-berichtenbox-count="inbox"]', '[data-berichtenbox-count="ongelezen"]'];
 
 	function toonLaadfout() {
 		laadfoutGetoond = true;
@@ -2232,7 +2285,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// state.aantalOngelezen blijft ongemoeid: die stuurt de badges op andere pagina's.
 		TELLERS_OP_DE_PAGINA.forEach((kiezer) => {
 			const el = document.querySelector(kiezer);
-			if (el) el.textContent = '–';
+			if (el) el.textContent = "–";
 		});
 
 		// De gesimuleerde bronmeldingen gaan over een nagebootste situatie. "Berichten van overige
@@ -2241,48 +2294,45 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const el = document.querySelector(kiezer);
 			if (el) el.hidden = true;
 		});
-		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (lijst) {
-			const body = lijst.querySelector('tbody') || lijst;
+			const body = lijst.querySelector("tbody") || lijst;
 			body.replaceChildren();
 			lijst.hidden = true;
 		}
 
-		const leeg = document.querySelector('[data-berichtenbox-empty]');
+		const leeg = document.querySelector("[data-berichtenbox-empty]");
 		if (leeg) leeg.hidden = true;
 
-		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
+		const pagnav = document.querySelector("[data-berichtenbox-pagination]");
 		if (pagnav) pagnav.hidden = true;
 
-		toonPaginaMelding('Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.', 'storing', 'lading');
+		toonPaginaMelding("Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
 	}
 
 	if (stateModule.onleesbaar) {
-		toonPaginaMelding(
-			'Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.',
-			'storing',
-			'opslag'
-		);
+		toonPaginaMelding("Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.", "storing", "opslag");
 	}
 
 	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
 	// laten staan, inclusief berichten die de bezoeker allang gearchiveerd heeft.
 	let persona = null;
 	try {
-		if (window.Personas && typeof window.Personas.actief === 'function') persona = window.Personas.actief();
+		if (window.Personas && typeof window.Personas.actief === "function") persona = window.Personas.actief();
 	} catch (fout) {
-		console.error('[Berichtenbox] Actieve persona niet op te vragen; verder zonder.', fout);
+		console.error("[Berichtenbox] Actieve persona niet op te vragen; verder zonder.", fout);
 	}
 
 	// Vóór de keuze, niet erna: een bron die ophaalt meldt zijn voortgang terwijl geldtVoor nog
 	// wacht. Bronnen die niet gekozen worden, melden vanzelf niets.
 	volgEchteVoortgang(register.bronnen());
 
-	register.kies(persona)
+	register
+		.kies(persona)
 		.then((bron) => {
 			// Geen enkele bron van toepassing is geen stille uitkomst: dan is er niets te tonen en
 			// hoort de bezoeker dat te weten in plaats van naar oude rijen te kijken.
-			if (!bron) throw new Error('geen enkele bron kon de berichten leveren');
+			if (!bron) throw new Error("geen enkele bron kon de berichten leveren");
 			return bron.laad();
 		})
 		.then((inhoud) => {
@@ -2298,11 +2348,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
 			});
 			if (storingen.length) {
-				toonPaginaMelding('Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.');
+				toonPaginaMelding("Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.");
 			}
 		})
 		.catch((fout) => {
-			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
+			console.error("[Berichtenbox] Berichten konden niet worden getoond.", fout);
 			// Leeg maken vóór de melding: anders bouwt een latere render de server-gerenderde
 			// dataset terug op onder een verborgen tabel, en die negeert de state.
 			data.berichten = [];
@@ -2314,18 +2364,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// nagebootst of echt — en naEersteLading zet de lijst terug zodra er géén voortgang
 			// loopt. Andersom onthult die de lijst een tel voordat de ronde hem weer wegneemt.
 			//
-			// Brongedrag start alleen als de lading gelukt is. Na een storing zou één binnendruppelend
-			// demo-bericht zich voordoen als de hele berichtenbox.
-			if (!ladingMislukt) {
+			// Brongedrag start alleen als er ook echt een lijst staat. Na een storing zou één
+			// binnendruppelend demo-bericht zich voordoen als de hele berichtenbox — en de live-regio
+			// kondigt hem aan, ook al is hij nergens te zien.
+			if (!ladingMislukt && !laadfoutGetoond) {
 				const bron = register.actief();
-				if (bron && typeof bron.start === 'function') {
-					veilig({ log: 'Het gedrag van de bron', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => bron.start((wijziging) => {
-						const mislukt = register.meld(wijziging);
-						// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
-						// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
-						// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
-						return mislukt;
-					}));
+				if (bron && typeof bron.start === "function") {
+					veilig({ log: "Het gedrag van de bron", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, () =>
+						bron.start((wijziging) => {
+							const mislukt = register.meld(wijziging);
+							// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
+							// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
+							// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
+							return mislukt;
+						})
+					);
 				}
 			}
 

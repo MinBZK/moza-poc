@@ -78,6 +78,8 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 		await laad();
 		kijker.disconnect();
 
+		// Zonder deze regel slaagt every() ook als de render-laag de nav helemaal niet meer aanraakt.
+		expect(zichtbaarGeweest.length).toBeGreaterThan(0);
 		expect(zichtbaarGeweest.every((verborgen) => verborgen === true)).toBe(true);
 		expect(nav.hidden).toBe(true);
 	});
@@ -92,7 +94,7 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 
 		// De balk zelf komt pas als de ronde na de drempel nog loopt; een ronde die meteen klaar
 		// is, hoort niemand te zien. De nagebootste duurt ruim langer dan dat.
-		await new Promise((r) => setTimeout(r, 400));
+		await new Promise((r) => setTimeout(r, 550));
 		expect(voortgang().hidden).toBe(false);
 		expect(lijst().hidden).toBe(true);
 	});
