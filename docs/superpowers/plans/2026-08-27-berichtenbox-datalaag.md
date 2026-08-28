@@ -1134,3 +1134,12 @@ Eén spec-eis raakt dit plan bewust aan: sectie "Data" noemt `_data/berichtenbox
 **Placeholders.** Geen "TBD" of "voeg foutafhandeling toe". Geen openstaande onbekenden: het endpoint voor de berichtinhoud is geverifieerd tegen de OpenAPI-spec van het stelsel, zie "Het contract van het stelsel". Eén vraag is bewust buiten scope gelaten en als vervolgvraag vastgelegd: dat het stelsel eigenaar is van leesstatus, map en verwijdering, terwijl wij die in localStorage houden.
 
 **Typeconsistentie.** `Bron` heeft in Taak 4, 5 en Fase 2 dezelfde vorm: `naam`, `geldtVoor`, `laad`, optioneel `start` en `inhoudVan`. `State` uit Taak 2 wordt in Taak 3 als `criteria.state` doorgegeven met alleen `statusVan` en `mapVan` in gebruik — de tests gebruiken daarom een minimale dubbel, geen volledige state.
+
+---
+
+## Acceptatiecriteria
+
+De regressielijst staat apart in `docs/berichtenbox-regressietests.md`, zodat die na het samenvoegen
+van deze PR bruikbaar blijft bij elke volgende wijziging aan de berichtenbox. Die lijst beschrijft
+wat vóór de refactor werkte en dus erna nog hoort te werken: deel A wat de geautomatiseerde tests
+afdekken, deel B wat handmatig nagelopen moet worden, deel C het gedrag dat bewust verandert.

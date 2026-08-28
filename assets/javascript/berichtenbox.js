@@ -1,11 +1,19 @@
 /**
  * berichtenbox.js
  *
- * Client-side gedrag voor de FBS Berichtenbox-mock.
- * State (gelezen, archief, prullenbak, map-toewijzingen, eigen mappen)
- * wordt bewaard in localStorage onder de key "berichtenbox".
- * Statische lijst komt uit de server-gerenderde HTML; JS manipuleert
- * zichtbaarheid en klassen op basis van state.
+ * De render-laag van de Berichtenbox: dit bestand leest uit de datalaag en zet het op het scherm.
+ * Het muteert de bron nooit.
+ *
+ * De datalaag staat in `berichtenbox/` en kent geen DOM: `state.js` (de bewaarde staat in
+ * localStorage onder de key "berichtenbox" en de vragen daarover), `lijst.js` (filteren, sorteren
+ * en pagineren als pure functies), `bron.js` (het bronregister), `dataset-bron.js` (de gegenereerde
+ * dataset als bron) en `datum.js` (datumnotatie).
+ *
+ * Eén weg naar het scherm: `toonBerichten()` filtert de berichten, neemt het paginavenster en bouwt
+ * die rijen. De server-gerenderde rijen uit `_includes/berichtenbox-row.njk` blijven de basis voor
+ * bezoekers zonder JavaScript; draait JS wél, dan wordt de tbody één keer opnieuw opgebouwd.
+ *
+ * Wat u handmatig hoort na te lopen bij een wijziging staat in `docs/berichtenbox-regressietests.md`.
  */
 
 import { datumNL } from "./berichtenbox/datum.js";
