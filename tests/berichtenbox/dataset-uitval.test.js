@@ -17,6 +17,15 @@ const DATA = {
 	mappen: [],
 };
 
+/** Een verse kopie per test: de luisteraar schrijft erin, en dat mag niet lekken. */
+function versDATA() {
+	return {
+		berichten: DATA.berichten.map((b) => ({ ...b })),
+		magazijnen: DATA.magazijnen.map((m) => ({ ...m })),
+		mappen: [],
+	};
+}
+
 function nepSessie(begin = {}) {
 	const kluis = { ...begin };
 	return {
@@ -32,14 +41,30 @@ function nepSessie(begin = {}) {
 }
 
 /** Dwingt één scenario af; de bron kiest anders willekeurig. */
+/**
+ * Bootst de luisteraar uit de render-laag na — inclusief het terugschrijven in `data.berichten`.
+ *
+ * Dat terugschrijven is geen detail: het is precies wat de bron zijn eigen voorraad afnam. Een
+ * nep-meld die het weglaat, laat een kapotte "Opnieuw proberen" groen door de test heen.
+ */
+function echteLuisteraar(data, gemeld) {
+	return (wijziging) => {
+		gemeld.push(wijziging);
+		data.berichten = wijziging.berichten;
+		return [];
+	};
+}
+
 function metScenario(naam, opties = {}) {
 	const volgorde = { een: 0, geen: 1, later: 2 };
 	vi.spyOn(Math, "random").mockReturnValue(volgorde[naam] / 3 + 0.01);
 
 	// `sessie` apart houden: het is een fabriek in het contract, en meespreiden zou hem hier door het
 	// opslagobject zelf vervangen.
-	const { sessie = nepSessie(), ...rest } = opties;
-	return datasetBron(DATA, { vlagAan: () => true, sessie: () => sessie, ...rest });
+	const { sessie = nepSessie(), data = versDATA(), ...rest } = opties;
+	const bron = datasetBron(data, { vlagAan: () => true, sessie: () => sessie, ...rest });
+	bron._data = data;
+	return bron;
 }
 
 beforeEach(() => vi.spyOn(console, "info").mockImplementation(() => {}));
@@ -84,10 +109,7 @@ describe("een bron die onderweg wegvalt", () => {
 		await bron.laad();
 
 		const gemeld = [];
-		bron.start((wijziging) => {
-			gemeld.push(wijziging);
-			return [];
-		});
+		bron.start(echteLuisteraar(bron._data, gemeld));
 
 		await vi.advanceTimersByTimeAsync(13000);
 
@@ -136,14 +158,16 @@ describe("de bezoeker herstelt de bronnen", () => {
 		// bezoeker een kortere lijst over én is de melding die dat verklaarde net verdwenen — bij het
 		// scenario "geen" zelfs een lege postbus met "u heeft geen berichten".
 		const bron = metScenario("een");
-		await bron.laad();
-
 		const gemeld = [];
-		bron.start((wijziging) => {
-			gemeld.push(wijziging);
-			return [];
-		});
+		const luisteraar = echteLuisteraar(bron._data, gemeld);
 
+		// De echte volgorde: laden, en de uitkomst door de luisteraar laten gaan — die schrijft de
+		// ingekorte lijst terug in data.berichten. Zonder die stap toetst deze test niets.
+		luisteraar(await bron.laad());
+		expect(bron._data.berichten).toHaveLength(2);
+		gemeld.length = 0;
+
+		bron.start(luisteraar);
 		await bron.herstelBronnen();
 
 		expect(gemeld).toHaveLength(1);
@@ -161,6 +185,42 @@ describe("de bezoeker herstelt de bronnen", () => {
 		await bron.herstelBronnen();
 
 		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet opnieuw tonen"));
+	}, 20000);
+
+	it("past de storing weer toe als de vlag opnieuw aangaat", async () => {
+		// De bron laat de berichten weg bij het laden, dus alleen opnieuw leveren brengt de storing
+		// terug. Zonder dat is de vlag binnen één paginalading nog maar één keer uit te zetten.
+		let vlag = true;
+		const gemeld = [];
+		const data = versDATA();
+		vi.spyOn(Math, "random").mockReturnValue(0.01); // scenario "een"
+		const bron = datasetBron(data, { vlagAan: () => vlag, sessie: () => nepSessie() });
+		const luisteraar = echteLuisteraar(data, gemeld);
+
+		luisteraar(await bron.laad());
+		expect(data.berichten).toHaveLength(2);
+		bron.start(luisteraar);
+
+		vlag = false;
+		await bron.vergeetUitval();
+		expect(data.berichten).toHaveLength(4);
+
+		vlag = true;
+		await bron.vergeetUitval();
+		expect(data.berichten).toHaveLength(2);
+	}, 20000);
+
+	it("meldt het als er niemand is om de herstelde lijst aan te melden", async () => {
+		// start() wordt overgeslagen na een getoonde laadfout. Stil teruggaan zou de knop dood laten
+		// lijken terwijl de melding die het gemis verklaarde net is weggehaald.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const meldStoring = vi.fn();
+		const bron = metScenario("een", { meldStoring });
+		await bron.laad();
+
+		await bron.herstelBronnen();
+
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet opnieuw ophalen"));
 	}, 20000);
 
 	it("vergeet de uitval als de vlag uitgaat", async () => {

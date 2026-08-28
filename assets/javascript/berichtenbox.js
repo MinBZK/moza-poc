@@ -1147,8 +1147,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					const bron = register.actief();
 					if (bron && typeof bron.herstelBronnen === "function") bron.herstelBronnen();
 					laatsteUitval = null;
-					werkBronWaarschuwingBij();
-					werkBronUitvalBij();
+					werkUitvalWeergaveBij();
 					// Opnieuw ophalen bij de bronnen voordat de volledige lijst verschijnt.
 					speelOphalenOpnieuw(() => herrenderInbox());
 				});
@@ -1158,13 +1157,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// en wordt bij een volgende keer opnieuw een scenario gekozen. Na de eerste
 		// progress-animatie mag de melding meteen mee-togglen.
 		document.addEventListener("feature-flags-applied", () => {
-			if (!unhappyFlowAan()) {
-				const bron = register.actief();
-				if (bron && typeof bron.vergeetUitval === "function") bron.vergeetUitval();
+			// Beide kanten op. Voorheen filterde de render-laag op rendertijd, dus aanzetten paste de
+			// storing meteen weer toe. Nu laat de bron de berichten weg bij het laden — dus moet die
+			// opnieuw leveren, bij aan én bij uit. Zonder dat is de vlag binnen één paginalading nog
+			// maar één keer uit te zetten en daarna dood.
+			const bron = register.actief();
+			if (bron && typeof bron.vergeetUitval === "function") {
 				laatsteUitval = null;
+				bron.vergeetUitval();
 			}
-			werkBronWaarschuwingBij();
-			werkBronUitvalBij();
+			werkUitvalWeergaveBij();
 			herrenderInbox();
 		});
 	}
@@ -2132,7 +2134,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// De unhappy-flow-vlag staat in een cookie; die leest de render-laag, de bron hoeft de
 			// pagina niet te kennen.
 			vlagAan: unhappyFlowAan,
-			magAnimeren: () => huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
+			// De nabootsing gaat over de lijst op de inbox. Archief en prullenbak tonen wat de bezoeker
+			// zelf wegzette, en een detailpagina moet zijn bericht gewoon kunnen vinden.
+			magUitvallen: () => !!document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])"),
+			// Op de aanwezigheid van het voortgangsblok, niet op huidigeView(): die valt op elke
+			// detailpagina terug op "inbox", en dan draaide de animatie daar onzichtbaar — en verbruikte
+			// wel het eerste bezoek, zodat de bezoeker haar op de inbox nooit meer zag.
+			magAnimeren: () => !!document.querySelector("[data-berichtenbox-progress]") && huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
 			// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 			// onzichtbaar of misleidend.
 			magOphalen: () => huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]"),
@@ -2241,8 +2249,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		verbergPaginaMelding("lading");
 
 		// De gesimuleerde meldingen mogen weer meedoen nu er een lijst staat.
-		werkBronWaarschuwingBij();
-		werkBronUitvalBij();
+		werkUitvalWeergaveBij();
 
 		// De tellers stonden op "–" zolang er niets te tonen was. toonBerichten rekent ze niet uit,
 		// dus zonder dit blijft "– berichten uit – bronnen" boven een werkende lijst staan.

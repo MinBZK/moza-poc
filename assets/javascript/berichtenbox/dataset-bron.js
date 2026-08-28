@@ -80,9 +80,15 @@ function tussenpoos() {
  *                              het aantal bronnen; tests zetten hem kort, want de duur is niet wat zij
  *                              toetsen.
  */
-export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null, vlagAan = () => false, sessie = () => sessionStorage } = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null, vlagAan = () => false, sessie = () => sessionStorage, magUitvallen = () => true } = {}) {
 	let teller = 0;
 	let voortgangKijker = null;
+
+	// Eén keer vastgelegd, en daarna van ons. `data.berichten` is hetzelfde object dat de render-laag
+	// in handen heeft, en die schrijft er de gefilterde lijst in terug — dus wat wij bij het laden
+	// weglaten, bestaat daarna nergens meer. Zonder deze kopie kan "Opnieuw proberen" de berichten
+	// niet teruggeven en verdwijnt alleen de melding die het gemis verklaarde.
+	const uitDeDataset = (data.berichten || []).slice();
 
 	// --- De nagebootste uitval, van deze bron ---------------------------------------------------
 
@@ -91,25 +97,42 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	let handmatigHersteld = false;
 	let uitvalGepland = false;
 	let meldWijziging = null;
+	let levertOpnieuw = null;
 
 	/**
 	 * Levert de lijst opnieuw, met de stand van dat moment. Voor na een herstel: de berichten die
 	 * werden weggelaten horen dan weer op het scherm.
 	 */
 	async function leverOpnieuw() {
-		if (!meldWijziging) return;
-
-		try {
-			const inhoud = await bron.laad();
-			const mislukt = meldWijziging(inhoud);
-			if (mislukt && mislukt.length) {
-				console.error("[Berichtenbox] De herstelde lijst kon niet getoond worden.");
-				meldStoring("Wij konden de berichten niet opnieuw tonen. Ververs de pagina.");
-			}
-		} catch (fout) {
-			console.error("[Berichtenbox] Opnieuw leveren na een herstel mislukte.", fout);
+		if (!meldWijziging) {
+			// start() is overgeslagen — bijvoorbeeld na een getoonde laadfout — dus er is niemand om
+			// aan te melden. Stil teruggaan zou de knop dood laten lijken terwijl de melding die het
+			// gemis verklaarde net is weggehaald.
+			console.error("[Berichtenbox] Geen luisteraar om de herstelde lijst aan te melden.");
 			meldStoring("Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.");
+			return;
 		}
+
+		// Twee ronden tegelijk draaien de opruimactie op de bewaarde berichten dubbel.
+		if (levertOpnieuw) return levertOpnieuw;
+
+		levertOpnieuw = (async () => {
+			try {
+				const inhoud = await bron.laad();
+				const mislukt = meldWijziging(inhoud);
+				if (mislukt && mislukt.length) {
+					console.error("[Berichtenbox] De herstelde lijst kon niet getoond worden.");
+					meldStoring("Wij konden de berichten niet opnieuw tonen. Ververs de pagina.");
+				}
+			} catch (fout) {
+				console.error("[Berichtenbox] Opnieuw leveren na een herstel mislukte.", fout);
+				meldStoring("Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.");
+			} finally {
+				levertOpnieuw = null;
+			}
+		})();
+
+		return levertOpnieuw;
 	}
 
 	function unhappyAan() {
@@ -147,6 +170,11 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	/** Magazijnen die bij het laden niet antwoorden. Bij "later" is dat er bij het laden geen. */
 	function geblokkeerdBijLaden(bericht) {
 		if (!unhappyAan()) return false;
+
+		// Alleen waar de lijst staat. Op een detailpagina zou het bericht anders onvindbaar zijn en
+		// meldt die pagina "bericht niet gevonden" — een andere oorzaak dan de werkelijke, en er staat
+		// daar geen blok dat het zou kunnen rechtzetten.
+		if (!magUitvallen()) return false;
 
 		// Alleen wat er binnenkomt. Wat de bezoeker zelf archiveerde of weggooide is van hem; dat uit
 		// zijn archief laten verdwijnen omdat een bron nu even stil is, klopt niet — en op die
@@ -390,7 +418,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 				}
 			}
 
-			const uitDataset = data.berichten || [];
+			const uitDataset = uitDeDataset;
 			const magazijnen = (data.magazijnen || []).slice();
 			const bekendeIds = new Set(uitDataset.map((bericht) => bericht.id));
 			const bekendeMagazijnen = new Set(magazijnen.map((magazijn) => magazijn.id));
@@ -552,11 +580,14 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	 */
 	function plannUitval(meld) {
 		if (!unhappyAan() || huidigScenario() !== "later") return;
+		// Alleen waar de lijst staat: op een detailpagina zouden de tellers stilletjes zakken zonder
+		// dat iets het uitlegt.
+		if (!magUitvallen()) return;
 		if (uitvalGepland) return;
 		if (leesUitval()) return;
 		uitvalGepland = true;
 
-		const kandidaten = [...new Set((data.berichten || []).filter((bericht) => bericht && bericht.magazijnId).map((bericht) => bericht.magazijnId))];
+		const kandidaten = [...new Set(uitDeDataset.filter((bericht) => bericht && bericht.magazijnId).map((bericht) => bericht.magazijnId))];
 		if (!kandidaten.length) return;
 
 		// Ergens tussen vier en twaalf seconden: lang genoeg om de lijst eerst compleet te zien.
@@ -565,12 +596,12 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			if (!unhappyAan() || huidigScenario() !== "later" || leesUitval()) return;
 
 			const id = kandidaten[Math.floor(Math.random() * kandidaten.length)];
-			const voorbeeld = (data.berichten || []).find((bericht) => bericht && bericht.magazijnId === id);
+			const voorbeeld = uitDeDataset.find((bericht) => bericht && bericht.magazijnId === id);
 			schrijfUitval({ id, naam: voorbeeld ? voorbeeld.afzender : id });
 
 			// Weer alleen de inbox: het archief van de bezoeker hoort niet mee te krimpen.
 			const statusVan = zichtbaarheid.statusVan || (() => "inbox");
-			const overgebleven = (data.berichten || []).filter((bericht) => bericht && (bericht.magazijnId !== id || statusVan(bericht.id) !== "inbox"));
+			const overgebleven = uitDeDataset.filter((bericht) => bericht && (bericht.magazijnId !== id || statusVan(bericht.id) !== "inbox"));
 			const mislukt = meld({
 				berichten: overgebleven,
 				magazijnen: (data.magazijnen || []).slice(),
