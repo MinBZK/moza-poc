@@ -66,10 +66,27 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	let voortgangKijker = null;
 	let haaltOp = false;
 	const wachtendeVervolgen = [];
+	let hernieuwGevraagd = false;
 
 	/** Iedereen die op deze ronde wachtte, precies één keer. Eén struikelaar sleept de rest niet mee. */
 	function rondVervolgenAf(fout) {
 		haaltOp = false;
+
+		// Er is onderweg om een nieuwe ronde gevraagd, en die vraag ging over andere zichtbaarheid dan
+		// deze ronde geteld heeft. De wachtenden krijgen dus die verse ronde, niet deze uitkomst.
+		if (hernieuwGevraagd && !fout) {
+			hernieuwGevraagd = false;
+			haaltOp = true;
+			try {
+				ophaalAnimatie(rondVervolgenAf);
+				return;
+			} catch (opnieuwFout) {
+				console.error("[Berichtenbox] De hernieuwde ophaalronde kwam niet op gang.", opnieuwFout);
+				haaltOp = false;
+			}
+		}
+		hernieuwGevraagd = false;
+
 		const vervolgen = wachtendeVervolgen.splice(0);
 		vervolgen.forEach((vervolg) => {
 			try {
@@ -284,8 +301,16 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			// bijwerken. Dat stil laten vallen levert een scherm op dat niet meer klopt met de
 			// toestand. Vandaar dat het vervolg meelift op de ronde die al loopt.
 			if (haaltOp) {
+				// Wie hierom vraagt, verandert meestal juist wat er te zien is: een hersteld magazijn, een
+				// verruimd organisatiefilter. De lopende ronde telt nog naar de oude aantallen toe, dus
+				// meeliften zou eindigen op "11 van 12 bronnen" boven een lijst uit dertien. Vandaar een
+				// verse ronde zodra deze klaar is.
 				wachtendeVervolgen.push(vervolg);
-				return;
+				hernieuwGevraagd = true;
+
+				// De aanroeper hoort te weten dat er niets zichtbaars gebeurt: zonder dat lijkt de knop
+				// dood, terwijl het verzoek gewoon in de rij staat.
+				return "wacht";
 			}
 
 			haaltOp = true;
@@ -307,6 +332,10 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		 */
 		start(meld) {
 			if (magAnimeren()) {
+				// Dezelfde afscherming als herhaalOphalen. Klikt de bezoeker op "Opnieuw proberen" in het
+				// gat tussen de bronkeuze en deze aanroep, dan loopt er al een ronde; er een tweede naast
+				// zetten laat ze langs elkaar heen tellen en het scherm heen en weer gaan.
+				const alBezig = haaltOp;
 				haaltOp = true;
 				wachtendeVervolgen.push((fout) => {
 					// Een afgebroken ronde is geen gehad eerste bezoek: boeken we hem toch, dan speelt de
@@ -333,6 +362,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 					}
 					begintDruppelen(meld);
 				});
+				if (alBezig) return;
+
 				try {
 					ophaalAnimatie(rondVervolgenAf);
 				} catch (fout) {

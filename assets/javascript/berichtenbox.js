@@ -1776,7 +1776,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// Geen herstel dat opKlaar nog eens aanroept: de bron bedient het vervolg zelf, ook als
 				// het opnieuw ophalen synchroon omvalt. Hier herhalen zou het dubbel doen.
 			},
-			() => bron.herhaalOphalen(opKlaar)
+			() => {
+				// De bron kan zeggen dat er al een ronde loopt en dit verzoek daarin meegaat. Zonder dat
+				// te melden lijkt de knop dood, terwijl het verzoek gewoon in de rij staat.
+				if (bron.herhaalOphalen(opKlaar) === "wacht") {
+					toonPaginaMelding("Het ophalen bij de bronnen loopt nog. Uw verzoek wordt daarin meegenomen.", "info", "lading");
+				}
+			}
 		);
 	}
 
@@ -1818,7 +1824,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					// "ververs de pagina" niet boven een lijst te blijven staan die compleet is.
 					if (opgegeven) {
 						opgegeven = false;
-						verbergPaginaMelding("lading");
+						// Alleen de eigen melding intrekken. Eigenaar "lading" is van vier plekken; staat er
+						// intussen een echte storing over de lading, dan is die nog steeds waar en is dit
+						// blok het enige wat de bezoeker die vertelt.
+						verbergPaginaMelding("wachthond");
 					}
 					return;
 				}
@@ -1864,8 +1873,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 						// pagina" niet. Dan blijft het bij de console tot ook die klaar is.
 						if (voortgangLoopt()) return;
 
+						// Was er niets weggehaald — geen voortgangsblok op deze pagina, of de lijst stond
+						// er allang weer — dan is er ook niets om over te melden. "Ververs de pagina" onder
+						// een bericht dat compleet op het scherm staat, is alleen maar verwarrend.
+						if (!voortgangKlaargezet) return;
+
 						toonNaVoortgang();
-						toonPaginaMelding("Het ophalen bij de bronnen duurde te lang. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
+						toonPaginaMelding("Het ophalen bij de bronnen duurde te lang. Ververs de pagina om het opnieuw te proberen.", "storing", "wachthond");
 					}, VOORTGANG_LIMIET_MS);
 				}
 			});
@@ -2130,6 +2144,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	register.registreer(
 		ketenBron(window.BerichtenboxKeten, {
 			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:keten"),
+			verbergMelding: () => verbergPaginaMelding("bron:keten"),
 		})
 	);
 	register.registreer(
@@ -2317,7 +2332,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	const TELLERS_OP_DE_PAGINA = ["[data-berichtenbox-counter-total]", "[data-berichtenbox-sources]", "[data-berichtenbox-counter-unread]", '[data-berichtenbox-count="inbox"]', '[data-berichtenbox-count="ongelezen"]'];
 
 	function toonLaadfout() {
-		laadfoutGetoond = true;
+		// De lijst is weg om een andere reden dan voortgang. Bleef deze vlag staan, dan blijft
+		// bouwPaginaNav de paginering verbergen — ook nadat herstelNaLaadfout de lijst teruggaf, en
+		// dan mist de bezoeker pagina 2 zonder dat iets uitlegt waarom.
+		voortgangKlaargezet = false;
 
 		// De tellers komen server-gerenderd met echte aantallen. Ze laten staan naast "we konden
 		// niets ophalen" laat de bezoeker het getal geloven en de zin voor een detail aanzien.
@@ -2347,6 +2365,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (pagnav) pagnav.hidden = true;
 
 		toonPaginaMelding("Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
+
+		// Pas hier: valt het opbouwen van de storingsweergave halverwege om, dan staat de vlag anders
+		// op "getoond" boven een tabel met verouderde rijen die nog gewoon zichtbaar is.
+		laadfoutGetoond = true;
 	}
 
 	if (stateModule.onleesbaar) {
@@ -2428,8 +2450,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			}
 
 			// Precies één keer, wat er ook gebeurd is: dit bindt luisteraars die niet twee keer
-			// gebonden mogen worden.
-			naEersteLading();
+			// gebonden mogen worden. In een vangnet, want de keten eindigt hier: een uitworp wordt
+			// anders een onafgehandelde rejectie — geen melding, geen context, en de acties op de
+			// detailpagina blijven ongebonden.
+			veilig(
+				{
+					log: "Het afronden van de eerste lading",
+					bezoeker: "Niet alles op deze pagina werkt zoals bedoeld.",
+				},
+				naEersteLading
+			);
 		});
 
 	// Debug-handle; niet bedoeld voor productiegebruik.

@@ -14,12 +14,19 @@
  * en gevonden zijn. Dat zijn echte getallen, waar de dataset-bron een nabootsing tegenover zet.
  */
 
-export function ketenBron(keten, { meldStoring = () => {} } = {}) {
+export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () => {} } = {}) {
 	let uitkomst = null;
 
-	/** Meldingen van de keten gaan langs dezelfde weg als die van elke andere bron. */
+	/**
+	 * Meldingen van de keten gaan langs dezelfde weg als die van elke andere bron — ook het intrekken
+	 * ervan. De keten haalt zijn melding weg na een geslaagde herhaalronde; bleef die staan, dan
+	 * vertelt de pagina over ontbrekende berichten die er intussen wél zijn.
+	 */
 	function geefDoor(melding) {
-		if (!melding) return;
+		if (!melding) {
+			verbergMelding();
+			return;
+		}
 		meldStoring(melding.tekst, melding.soort === "mededeling" ? "info" : "storing");
 	}
 
@@ -48,7 +55,13 @@ export function ketenBron(keten, { meldStoring = () => {} } = {}) {
 		 * die keuze valt pas als de ronde klaar is, en dan valt er niets meer te tonen.
 		 */
 		volgVoortgang(kijker) {
-			if (!keten || typeof keten.opWijziging !== "function") return;
+			if (!keten) return;
+			if (typeof keten.opWijziging !== "function") {
+				// Het script bestaat maar mist zijn vorm: een bedradingsfout. Stil overslaan levert een
+				// kijker op die nooit wordt aangeroepen, en dat is later niet terug te vinden.
+				console.error("[Berichtenbox] Het keten-script kent geen opWijziging; voortgang blijft onzichtbaar.");
+				return;
+			}
 
 			// Een kijker die struikelt mag de keten niet meesleuren: aan dezelfde melding hangen ook
 			// de andere abonnees. Zelfde afscherming als in dataset-bron.js.
@@ -83,7 +96,11 @@ export function ketenBron(keten, { meldStoring = () => {} } = {}) {
 		 * dezelfde weg als elke andere bronwijziging.
 		 */
 		start(meld) {
-			if (!keten || typeof keten.opWijziging !== "function") return;
+			if (!keten) return;
+			if (typeof keten.opWijziging !== "function") {
+				console.error("[Berichtenbox] Het keten-script kent geen opWijziging; een volgende ronde blijft onopgemerkt.");
+				return;
+			}
 
 			keten.opWijziging((toestand) => {
 				geefDoor(toestand.melding);

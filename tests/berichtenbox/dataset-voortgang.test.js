@@ -208,6 +208,32 @@ describe("de volgorde: eerst ophalen, dan binnendruppelen", () => {
 	}, 20000);
 });
 
+describe("twee ronden tegelijk", () => {
+	it("zet er geen tweede naast als start() aankomt terwijl er al een loopt", async () => {
+		// De luisteraars van de bronwaarschuwing worden synchroon gebonden, vóór de belofteketen.
+		// Klikt de bezoeker op "Opnieuw proberen" in het gat tussen de bronkeuze en start(), dan loopt
+		// er al een ronde. Twee ronden tellen langs elkaar heen in hetzelfde blok, en de eerste die
+		// afrondt bedient ook de wachtenden van de tweede — vóórdat die klaar is.
+		const gemeld = [];
+		const bediend = [];
+		const bron = datasetBron(SMAL, { state: nepState(), magAnimeren: () => true, duurMs: 120 });
+		bron.volgVoortgang((v) => gemeld.push(v));
+
+		bron.herhaalOphalen(() => bediend.push("knop"));
+		bron.start(() => []);
+
+		const tot = Date.now() + 10000;
+		while (bediend.length < 1) {
+			if (Date.now() > tot) throw new Error("de aanvrager is niet bediend");
+			await new Promise((r) => setTimeout(r, 20));
+		}
+		await new Promise((r) => setTimeout(r, 300));
+
+		// Eén ronde, dus één einde. Twee zouden er twee opleveren.
+		expect(gemeld.filter((v) => v === null)).toHaveLength(1);
+	}, 20000);
+});
+
 describe("een ronde die halverwege omvalt", () => {
 	it("meldt een einde als het inplannen van het volgende beeld mislukt", async () => {
 		// Een fout die niet uit de kijker komt maar uit de lus zelf. Zonder vangnet in stap() blijft
@@ -282,18 +308,18 @@ describe("om een nieuwe ronde vragen", () => {
 		expect(gemeld.at(-1)).toBe(null);
 	}, 20000);
 
-	it("draait één ronde als er twee keer om gevraagd wordt, en bedient beide aanvragers", async () => {
-		// Twee ronden tegelijk zouden om beurten in hetzelfde voortgangsblok schrijven, en de eerste
-		// die klaar is meldt null terwijl de tweede nog telt. Maar de tweede aanvrager laten vallen
-		// mag evenmin: aan zijn vervolg hangt het opnieuw renderen en het bijwerken van de mappen.
-		// Zonder dat staat de schakelaar aan, is de keuze bewaard, en verandert het scherm niet.
+	it("zegt dat een tweede verzoek meegaat, en geeft het een verse ronde", async () => {
+		// Wie hierom vraagt verandert meestal juist wat er te zien is: een hersteld magazijn, een
+		// verruimd organisatiefilter. Meeliften op de lopende ronde zou eindigen op de oude aantallen,
+		// dus krijgt het verzoek een eigen ronde zodra de eerste klaar is. Beide aanvragers worden
+		// bediend, en pas daarna.
 		const gemeld = [];
 		const bediend = [];
 		const bron = datasetBron(SMAL, { state: nepState(), magAnimeren: () => false, duurMs: 120 });
 		bron.volgVoortgang((v) => gemeld.push(v));
 
-		bron.herhaalOphalen(() => bediend.push("eerste"));
-		bron.herhaalOphalen(() => bediend.push("tweede"));
+		expect(bron.herhaalOphalen(() => bediend.push("eerste"))).toBe(undefined);
+		expect(bron.herhaalOphalen(() => bediend.push("tweede"))).toBe("wacht");
 
 		const tot = Date.now() + 10000;
 		while (bediend.length < 2) {
@@ -302,7 +328,7 @@ describe("om een nieuwe ronde vragen", () => {
 		}
 
 		expect(bediend).toEqual(["eerste", "tweede"]);
-		// Eén ronde, dus precies één einde.
-		expect(gemeld.filter((v) => v === null)).toHaveLength(1);
+		// Twee ronden, dus twee einden — en de aanvragers zijn pas na de tweede bediend.
+		expect(gemeld.filter((v) => v === null)).toHaveLength(2);
 	}, 20000);
 });
