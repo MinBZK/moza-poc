@@ -21,6 +21,7 @@ import { maakState, NIEUWE_BERICHTEN_LIMIET, LS_KEY as STATE_SLEUTEL } from "./b
 import { maakRegister } from "./berichtenbox/bron.js";
 import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lijst.js";
 import { datasetBron } from "./berichtenbox/dataset-bron.js";
+import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 (function() {
 	"use strict";
@@ -355,6 +356,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		return unhappyScenario;
 	}
 	function bronOnbereikbaar() {
+		// Op echte bronnen heeft de unhappy-flow-vlag geen betekenis: scenario "geen" blokkeert élk
+		// magazijn, en dat zou werkelijke post wegfilteren.
+		if (!simulatieMag()) return false;
 		if (bronHandmatigHersteld) return false;
 		return unhappyFlowAan();
 	}
@@ -917,6 +921,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		const ongelezen = isOngelezen(bericht.id, bericht.isOngelezen);
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
 		const dynamisch = bericht.id.startsWith('msg-live-');
+		// Detailpagina's worden bij de build uit de dataset gegenereerd. Berichten uit het stelsel
+		// staan daar niet bij, dus die gaan naar dezelfde client-gevulde pagina als de binnengekomen
+		// demo-berichten; een link naar bericht/<id>/ zou een 404 opleveren.
+		const zonderEigenPagina = dynamisch || bericht.uitKeten === true;
 		// Alleen de rij die zojuist binnenkwam krijgt de fade-in; bij een volgende render is het
 		// geen nieuw bericht meer.
 		const zojuistBinnen = bericht.id === zojuistBinnengekomenId;
@@ -947,7 +955,7 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 		const tdOnd = document.createElement('td');
 		tdOnd.className = 'berichtenbox-row-subject';
-		if (dynamisch) {
+		if (zonderEigenPagina) {
 			const a = document.createElement('a');
 			a.href = url(berichtenboxBasis() + 'bericht-demo/?id=' + encodeURIComponent(bericht.id));
 			a.textContent = bericht.onderwerp;
@@ -1638,7 +1646,16 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 
 		const bodyEl = detail.querySelector('[data-demo-body]');
 		if (bodyEl) {
-			bericht.inhoud.split('\n\n').forEach((alinea) => {
+			const alineas = (bericht.inhoud || '').split('\n\n').filter((alinea) => alinea.trim() !== '');
+			if (!alineas.length) {
+				// Voor een bericht uit het stelsel is dit de normale toestand: de berichtenuitvraag
+				// levert alleen de kopgegevens, de inhoud zit er niet bij. Benoem dat, in plaats van
+				// een lege pagina te tonen. Voor een bericht uit de dataset is een lege inhoud geen
+				// toestand maar een fout in de gegevens; die hoort in de console.
+				if (!bericht.uitKeten) console.error('[Berichtenbox] Bericht zonder inhoud in de dataset.', bericht.id);
+				alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.');
+			}
+			alineas.forEach((alinea) => {
 				const p = document.createElement('p');
 				p.textContent = alinea;
 				bodyEl.appendChild(p);
@@ -1937,8 +1954,19 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	function startDemoGedrag() {
 		veilig({ log: 'De mappen-zijbalk', bezoeker: 'De mappen in de zijbalk zijn niet beschikbaar.' }, toonMappenZijbalk);
 		veilig({ log: 'Het filteren van de lijst', bezoeker: 'Zoeken en filteren werkt op dit moment niet.' }, bindInboxFilters);
+
+		// Een nagebootste storing bovenop echte berichten is niet van echt te onderscheiden, en het
+		// scenario "geen" blokkeert élk magazijn — dat zou werkelijke post wegfilteren zonder dat
+		// er iets over te zeggen valt. De gesimuleerde uitval hoort dus alleen bij de dataset.
+		if (!simulatieMag()) return;
 		veilig({ log: 'De bronwaarschuwing', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, werkBronWaarschuwingBij);
 		veilig({ log: 'De gesimuleerde bronuitval', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, plannBronUitval);
+	}
+
+	/** Alleen de gegenereerde dataset laat zich een storing aanpraten die er niet is. */
+	function simulatieMag() {
+		const bron = register.actief();
+		return !bron || bron.naam === 'dataset';
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
@@ -1960,7 +1988,9 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
 		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
 
-		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond) {
+		// Ook de ophaalanimatie is een nabootsing: zij verzint aankomsttijden per bron. Draait de
+		// keten, dan is er echte voortgang en hoort die nabootsing niet over het scherm te lopen.
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond && simulatieMag()) {
 			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
 				voortgangsAnimatie(() => {
 					state.eersteBezoekGehad = true;
@@ -1979,8 +2009,10 @@ import { datasetBron } from "./berichtenbox/dataset-bron.js";
 	}
 
 	// De datalaag bepaalt welke bron de berichten levert; de render-laag hieronder weet niet welke
-	// dat is. Nu is dat altijd de dataset; een tweede bron registreert zich hier straks vóór die.
+	// dat is. De volgorde is de voorrang: is de persona aangesloten op het Federatief
+	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
 	const register = maakRegister();
+	register.registreer(ketenBron(window.BerichtenboxKeten, { meldStoring: toonPaginaMelding }));
 	register.registreer(datasetBron(window.berichtenboxData, {
 		state: stateModule,
 		limiet: NIEUWE_BERICHTEN_LIMIET,

@@ -105,6 +105,9 @@
 		<script src="{{ '/assets/javascript/assistent-vraag.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/homepage-profiel.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/external-links.js' | url }}" defer></script>
+		<!-- Klassiek en vóór de module: de ophaalronde bij het stelsel start zo vroeg mogelijk, en
+		     berichtenbox.js draait als module hoe dan ook ná alle defer-scripts. -->
+		<script src="{{ '/assets/javascript/berichtenbox-keten.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/berichtenbox.js' | url }}" type="module"></script>
 		<script src="{{ '/assets/javascript/lopende-zaken.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/digitale-assistent-demo.js' | url }}" defer></script>

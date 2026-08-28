@@ -26,12 +26,21 @@ FROM nginxinc/nginx-unprivileged:alpine
 # interne cluster-adres van de backend.
 #  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
 #    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
-#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot deze twee vars, zodat nginx-eigen
-#    variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven.
+#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot alle BACKEND_*-vars en de resolver, zodat
+#    nginx-eigen variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven — die zijn
+#    kleine letters en vallen dus buiten het patroon. Het patroon is bewust generiek: staat een
+#    backend-var er niet in, dan blijft zijn ${...} letterlijk in de config staan. Elke var
+#    hieronder heeft een lege default, zodat de fallback in de template werkt.
 # De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
 ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    BACKEND_PROFIEL= \
+    BACKEND_API_2= \
+    BACKEND_KETEN= \
+    BACKEND_DEMO= \
+    BACKEND_KETEN_HOST= \
+    BACKEND_DEMO_HOST= \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
-    NGINX_ENVSUBST_FILTER='^(BACKEND_ORIGIN|NGINX_LOCAL_RESOLVERS)$'
+    NGINX_ENVSUBST_FILTER='^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$'
 
 COPY container/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=site_builder /app/_site /usr/share/nginx/html
