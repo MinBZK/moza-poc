@@ -163,6 +163,58 @@ describe("maakState — binnengedruppelde berichten", () => {
 	});
 });
 
+describe("maakState — de staat hoort bij één persona", () => {
+	it("gooit de staat van een andere persona weg", async () => {
+		// Tussen persona's bestaat geen verband: het zijn andere bedrijven met andere post. Wat de
+		// vorige archiveerde, hoort de volgende niet in zijn archief te zien.
+		const info = vi.spyOn(console, "info").mockImplementation(() => {});
+		const state = maakState(metState({ persona: "koffiezaak", gearchiveerd: { "msg-1": true } }), "bloemenkweker");
+
+		expect(state.ruw.gearchiveerd).toEqual({});
+		expect(state.ruw.persona).toBe("bloemenkweker");
+		expect(info).toHaveBeenCalled();
+	});
+
+	it("houdt de staat van dezelfde persona vast", () => {
+		const state = maakState(metState({ persona: "koffiezaak", gearchiveerd: { "msg-1": true } }), "koffiezaak");
+		expect(state.ruw.gearchiveerd).toEqual({ "msg-1": true });
+	});
+
+	it("gooit ook eersteBezoekGehad weg, want de animatie hoort bij die postbus", () => {
+		vi.spyOn(console, "info").mockImplementation(() => {});
+		const state = maakState(metState({ persona: "koffiezaak", eersteBezoekGehad: true }), "bloemenkweker");
+		expect(state.ruw.eersteBezoekGehad).toBe(false);
+	});
+
+	it("gooit een staat zonder persona weg zodra er wél een persona is", () => {
+		// Uit een oudere versie: van wie die staat was, valt niet meer te zeggen.
+		const state = maakState(metState({ gearchiveerd: { "msg-1": true } }), "koffiezaak");
+		expect(state.ruw.gearchiveerd).toEqual({});
+	});
+
+	it("laat een staat zonder persona staan als er geen persona's zijn", () => {
+		// Zonder personas.js valt er niets te verwarren.
+		const state = maakState(metState({ gearchiveerd: { "msg-1": true } }));
+		expect(state.ruw.gearchiveerd).toEqual({ "msg-1": true });
+	});
+
+	it("schrijft niet over onleesbare opslag heen om een persona te zetten", () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const opslag = nepOpslag({ [LS_KEY]: "{niet json" });
+		const state = maakState(opslag, "koffiezaak");
+
+		expect(state.bewaar()).toBe(false);
+		expect(opslag._kluis[LS_KEY]).toBe("{niet json");
+	});
+
+	it("bewaart bij wie de staat hoort", () => {
+		const opslag = nepOpslag();
+		const state = maakState(opslag, "koffiezaak");
+		state.bewaar();
+		expect(JSON.parse(opslag._kluis[LS_KEY]).persona).toBe("koffiezaak");
+	});
+});
+
 describe("maakState — bewaren", () => {
 	it("schrijft de state terug naar de opslag", () => {
 		const opslag = nepOpslag();

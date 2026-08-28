@@ -6,8 +6,12 @@
  * de bezoeker eraan veranderd heeft. De twee worden pas in de render-laag samengevoegd — vandaar
  * dat elke vraag hier het oorspronkelijke veld uit het bericht meekrijgt als tweede argument.
  *
- * Kent de dataset niet en raakt de DOM niet aan. `opslag` en `bekendeMagazijnIds` komen van buiten,
- * zodat dit zonder browser te testen is.
+ * Kent de dataset niet en raakt de DOM niet aan. `opslag`, `persona` en `bekendeMagazijnIds` komen
+ * van buiten, zodat dit zonder browser te testen is.
+ *
+ * De staat hoort bij één persona. Tussen persona's bestaat geen enkel verband: het zijn andere
+ * bedrijven met andere post. Staat er een staat van iemand anders, dan wordt die niet gelezen maar
+ * weggegooid — anders draagt een bezoeker het archief van een vorige persona met zich mee.
  *
  * Let op: dit is client-state. Het Federatief Berichtenstelsel is zelf eigenaar van leesstatus,
  * map en verwijdering (`PATCH`/`DELETE /berichten/{berichtId}`). Zolang die niet gebruikt worden,
@@ -30,6 +34,8 @@ const SLEUTELS_MET_OBJECT = [
 
 function defaults() {
 	return {
+		// Van wie deze staat is. Wisselt de persona, dan begint alles opnieuw.
+		persona: null,
 		eersteBezoekGehad: false,
 		gelezen: {},
 		ongelezenToegevoegd: {},
@@ -103,11 +109,31 @@ function lees(opslag) {
  * en wegfilteren tegen de verkeerde lijst is onomkeerbaar. Dat gebeurt in `beperkTot`, zodra de
  * bron vaststaat.
  */
-export function maakState(opslag) {
+/**
+ * @param opslag   localStorage of iets met dezelfde vorm.
+ * @param persona  De actieve persona. Hoort de bewaarde staat bij iemand anders, dan begint die
+ *                 leeg — met één uitzondering: onleesbare opslag blijft onleesbaar, want daar
+ *                 overheen schrijven maakt van "niet te lezen" onherstelbaar "weg".
+ */
+export function maakState(opslag, persona = null) {
 	// Waarom het bewaren de laatste keer misging: "vol" of "geweigerd" (privénavigatie, opslag uit).
 	let laatsteFout = null;
 
-	const { waarden: ruw, onleesbaar } = lees(opslag);
+	let { waarden: ruw, onleesbaar } = lees(opslag);
+
+	// Een staat zonder persona komt uit een oudere versie: van wie die was, is niet meer te zeggen.
+	// Bij een bekende persona gaat hij daarom weg. Draait er geen personas.js — dan is de actieve
+	// persona null — dan valt er niets te verwarren en blijft hij staan.
+	const vanWie = ruw.persona ?? null;
+	const nu = persona ?? null;
+
+	if (!onleesbaar && vanWie !== nu) {
+		if (vanWie !== null) {
+			console.info("[Berichtenbox] Bewaarde staat hoort bij '" + vanWie + "'; die van '" + nu + "' begint leeg.");
+		}
+		ruw = defaults();
+	}
+	ruw.persona = nu;
 
 	return {
 		ruw,

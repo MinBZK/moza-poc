@@ -12,9 +12,13 @@
  * dataset er een is. Vandaar dat hier geen DOM in staat, op één plek na: `paginaStartRonde` kijkt
  * of dit de inbox is, want dat bepaalt óf er opgehaald wordt.
  *
- * Het draait vóór berichtenbox.js en herstelt synchroon een eerdere ophaalronde uit localStorage,
- * zodat het archief, de prullenbak en de detailpagina's hun berichten vinden. Op de inbox loopt een
- * nieuwe ronde asynchroon; de bron wacht die af voordat hij zegt dat hij van toepassing is.
+ * Het draait vóór berichtenbox.js, zodat de ophaalronde zo vroeg mogelijk begint; de bron wacht die
+ * af voordat hij zegt dat hij van toepassing is.
+ *
+ * Berichten uit de keten komen niet in localStorage. Wat eerder opgehaald is staat op de server, in
+ * een sessiecache per ontvanger. Elke berichtenbox-pagina draait daarom zijn eigen ronde — ook het
+ * archief, de prullenbak en een detailpagina. Dat kan niet anders: de berichtenlijst geeft per
+ * bericht het OIN van de organisatie, en de naam komt alleen uit de ophaalronde zelf.
  *
  * Er is geen stille terugval. Lukt het ophalen niet voor een persona die aantoonbaar aangesloten
  * is, dan blijft deze bron de bron en zegt de melding wat er misging; terugvallen op de dataset zou
@@ -28,7 +32,6 @@
 (function () {
 	"use strict";
 
-	const CACHE_KEY = "berichtenbox-keten";
 
 	// De demo-console is een kleine lijst en hoort meteen te antwoorden. De berichtenlijst mag wat
 	// langer duren. De ophaalronde zelf krijgt geen harde limiet maar een stiltebewaking: een ronde
@@ -317,34 +320,6 @@
 
 	// --- Cache --------------------------------------------------------------------------------
 
-	// De detailpagina's en archief/prullenbak worden client-side uit dezelfde dataset gevuld. Zonder
-	// cache zouden die opnieuw een hele ophaalronde moeten draaien om één bericht te tonen.
-	//
-	// Bewust localStorage en geen sessionStorage: `state.gearchiveerd` en `state.verwijderd` staan
-	// óók in localStorage en verwijzen naar deze berichtIds. Raakte de cache eerder kwijt dan de
-	// state, dan toonde het archief "u heeft nog niets gearchiveerd" naast een tabbadge van 3.
-	function schrijfCache(ontvanger, berichten, magazijnen) {
-		try {
-			localStorage.setItem(CACHE_KEY, JSON.stringify({ ontvanger, berichten, magazijnen }));
-		} catch (e) {
-			console.error("[Berichtenbox] keten-cache niet te bewaren; detailpagina's vinden hun bericht straks niet.", e);
-		}
-	}
-
-	function leesCache(ontvanger) {
-		try {
-			const rauw = localStorage.getItem(CACHE_KEY);
-			if (!rauw) return null;
-			const cache = JSON.parse(rauw);
-			if (!cache || cache.ontvanger !== ontvanger) return null;
-			if (!Array.isArray(cache.berichten) || !Array.isArray(cache.magazijnen)) return null;
-			return cache;
-		} catch (e) {
-			console.error("[Berichtenbox] keten-cache onleesbaar; er wordt opnieuw opgehaald.", e);
-			return null;
-		}
-	}
-
 	// --- Paginabereik -------------------------------------------------------------------------
 
 	// Het Belastingdienst-portaal filtert op de eigen organisatie; keten-magazijnen vallen daar
@@ -359,9 +334,6 @@
 
 	// Alleen de inbox bevraagt de bronnen. Archief, prullenbak en de detailpagina's hebben genoeg
 	// aan de cache van de vorige ronde; die herkennen we aan data-berichtenbox-view.
-	function paginaStartRonde() {
-		return paginaGebruiktKeten() && !!document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])");
-	}
 
 	// --- Persona ------------------------------------------------------------------------------
 
@@ -463,8 +435,6 @@
 				type: "instantie",
 			}));
 
-			schrijfCache(ontvangerVanRonde, berichten, magazijnen);
-
 			// De tellers boven de lijst tonen zelf hoeveel bronnen antwoordden; alleen een
 			// onvolledige lijst of een organisatie die niet reageerde heeft een eigen melding nodig.
 			verbergVoortgang();
@@ -492,28 +462,14 @@
 	// Alleen op pagina's die een berichtenbox tonen: elders is er niets te vervangen, en zou een
 	// persona zonder kvkNummer alleen console-ruis opleveren.
 	const kvkNummer = (window.berichtenboxData && paginaGebruiktKeten()) ? actiefKvkNummer() : null;
-	const startRonde = !!kvkNummer && paginaStartRonde();
 
-	// Synchroon, vóór berichtenbox.js: staat de vorige ophaalronde nog in de cache, dan heeft deze
-	// bron meteen berichten te leveren. Op de inbox slaan we dat over — daar wordt toch opnieuw
-	// opgehaald, en een oude lijst tonen om hem meteen te vervangen helpt niemand. Het archief, de
-	// prullenbak en de detailpagina's draaien wél op de cache: die verwijzen naar dezelfde
-	// berichtIds als de bewaarde staat.
-	if (kvkNummer && !startRonde) {
-		const cache = leesCache("KVK:" + kvkNummer);
-		if (cache) {
-			laatsteUitkomst = { berichten: cache.berichten, magazijnen: cache.magazijnen };
-			ontvangerVanRonde = cache.ontvanger;
-			aangeslotenBevestigd = true;
-		}
-	}
-
-	if (startRonde) {
-		// Geen voortgang melden vóór de eerste gebeurtenis uit de stroom. De ronde begint met één
-		// vraag aan de demo-console — kent de keten deze ontvanger? — en het antwoord is voor de
-		// meeste persona's "nee". Meteen "0 van 0 bronnen" melden zet dan een lege balk op het
-		// scherm die even later zonder uitleg weer verdwijnt. Vanaf `magazijn-bevraging-gestart`
-		// valt er wél iets te melden.
+	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
+	// ophaalde staat op de server (sessiecache per ontvanger, schuivende TTL), maar de
+	// organisatienamen zitten alleen in de ophaalronde — de berichtenlijst geeft per bericht het
+	// OIN, niet de naam. Dus draait elke berichtenbox-pagina zijn eigen ronde, ook het archief, de
+	// prullenbak en een detailpagina. Trager dan een cache uit de vorige pagina, en het enige wat
+	// klopt.
+	if (kvkNummer) {
 		ronde = draaiRonde(kvkNummer);
 	}
 

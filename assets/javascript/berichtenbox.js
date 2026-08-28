@@ -42,6 +42,30 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		console.warn('[Berichtenbox] Ongelezen-badge niet bij te werken uit de bewaarde state.', e);
 	}
 
+	// De actieve persona, in dezelfde volgorde als personas.js: ?persona= > localStorage > actief.
+	// Hier bovenaan, want twee dingen hangen eraan: welke berichten relevant zijn (berichten met
+	// een relevantVoor-tag horen bij één persona; zonder tag zijn ze generiek), en van wie de
+	// bewaarde staat is. Persona-wisseling herlaadt de pagina, dus één keer bepalen volstaat.
+	const actievePersonaId = (function () {
+		const personas = window.personasData;
+		if (!Array.isArray(personas) || !personas.length) return null;
+		const param = new URLSearchParams(location.search).get('persona');
+		if (param) {
+			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
+			if (gevonden) return gevonden.id;
+		}
+		try {
+			const opgeslagen = localStorage.getItem('persona');
+			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
+		} catch (e) {
+			// Zonder de bewaarde keuze valt de berichtenbox terug op de standaardpersona; dat is een
+			// andere postbus dan de bezoeker koos, dus het hoort in de console te staan.
+			console.warn('[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.', e);
+		}
+		const actief = personas.find((p) => p.actief);
+		return actief ? actief.id : personas[0].id;
+	})();
+
 	// Kebab-menu's in berichtenbox-rijen: openen/sluiten. Bewust vóór de data-guard,
 	// zodat het ook werkt op demo-berichtenboxen (mobu/belang) die geen volledige
 	// data hebben. Heeft geen state nodig; de acties zelf staan achter de guard.
@@ -102,6 +126,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (!ontleed || typeof ontleed !== 'object' || Array.isArray(ontleed)) {
 					throw new Error('state is geen object');
 				}
+				// Van een andere persona: niet lezen en niet aanvullen. Zelfde regel als in
+				// state.js — tussen persona's bestaat geen verband.
+				if ((ontleed.persona ?? null) !== (actievePersonaId ?? null)) return { persona: actievePersonaId };
 				return ontleed;
 			} catch (e) {
 				console.error('[Berichtenbox] Bewaarde state onleesbaar; markering wordt niet bewaard.', e);
@@ -173,30 +200,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		return;
 	}
 
-	// Persona-relevantie (Aanpak A). Bepaal de actieve persona (zelfde volgorde als
-	// personas.js: ?persona= > localStorage > actief) en toon berichten met een
-	// relevantVoor-tag alleen bij de juiste persona. Berichten zonder tag zijn
-	// generiek en verschijnen altijd. Persona-wisseling herlaadt de pagina, dus
-	// het volstaat dit één keer bij het laden te bepalen.
-	const actievePersonaId = (function () {
-		const personas = window.personasData;
-		if (!Array.isArray(personas) || !personas.length) return null;
-		const param = new URLSearchParams(location.search).get('persona');
-		if (param) {
-			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
-			if (gevonden) return gevonden.id;
-		}
-		try {
-			const opgeslagen = localStorage.getItem('persona');
-			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
-		} catch (e) {
-			// Zonder de bewaarde keuze valt de berichtenbox terug op de standaardpersona; dat is een
-			// andere postbus dan de bezoeker koos, dus het hoort in de console te staan.
-			console.warn('[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.', e);
-		}
-		const actief = personas.find((p) => p.actief);
-		return actief ? actief.id : personas[0].id;
-	})();
 	function persoonRelevant(bericht) {
 		if (!bericht || !Array.isArray(bericht.relevantVoor) || !bericht.relevantVoor.length) return true;
 		return actievePersonaId != null && bericht.relevantVoor.indexOf(actievePersonaId) !== -1;
@@ -234,7 +237,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// De state komt uit berichtenbox/state.js: één plek voor wat de bezoeker met zijn berichten
 	// heeft gedaan. `state` blijft de rauwe vorm, want er wordt op tientallen plekken rechtstreeks
 	// in geschreven; die schrijfacties lopen nog steeds via opslaan().
-	const stateModule = maakState(localStorage);
+	const stateModule = maakState(localStorage, actievePersonaId);
 	const state = stateModule.ruw;
 	const statusVan = (berichtId) => stateModule.statusVan(berichtId);
 	const isOngelezen = (id, origineel) => stateModule.isOngelezen(id, origineel);

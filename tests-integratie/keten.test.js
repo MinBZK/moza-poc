@@ -13,7 +13,9 @@ import { laadLive, maakOpslag, stackDraait, wachtOpRijen } from "./laad-live.js"
  * laten de tweede dus struikelen over de eerste.
  */
 
-const TWEEDE_BEZOEK = () => maakOpslag({ berichtenbox: JSON.stringify({ eersteBezoekGehad: true }) });
+// De staat hoort bij één persona; zonder die naam gooit state.js hem weg en telt het weer als
+// eerste bezoek — inclusief de ophaalanimatie van de dataset.
+const TWEEDE_BEZOEK = (persona) => maakOpslag({ berichtenbox: JSON.stringify({ persona, eersteBezoekGehad: true }) });
 
 const rijen = () => [...document.querySelectorAll(".berichtenbox-row")].filter((r) => !r.hidden && !r.closest("[hidden]"));
 const storing = () => {
@@ -38,7 +40,7 @@ afterEach(() => {
 
 describe("een aangesloten persona", () => {
 	it("krijgt de berichten van het stelsel, met een werkende link en zonder melding", async () => {
-		const een = await laadLive("/moza/berichtenbox/?persona=proeftuin-een", { opslag: TWEEDE_BEZOEK() });
+		const een = await laadLive("/moza/berichtenbox/?persona=proeftuin-een", { opslag: TWEEDE_BEZOEK("proeftuin-een") });
 		opruimen.push(een.ruimOp);
 		expect(await wachtOpRijen(1)).toBe(true);
 
@@ -56,7 +58,7 @@ describe("een aangesloten persona", () => {
 	}, 40000);
 
 	it("krijgt zijn eigen post, niet die van een andere ontvanger", async () => {
-		const twee = await laadLive("/moza/berichtenbox/?persona=proeftuin-twee", { opslag: TWEEDE_BEZOEK() });
+		const twee = await laadLive("/moza/berichtenbox/?persona=proeftuin-twee", { opslag: TWEEDE_BEZOEK("proeftuin-twee") });
 		opruimen.push(twee.ruimOp);
 		expect(await wachtOpRijen(1)).toBe(true);
 
@@ -69,7 +71,7 @@ describe("een bericht uit het stelsel openen", () => {
 	it("zegt dat alleen de kopgegevens opgehaald zijn", async () => {
 		// De berichtenuitvraag levert geen inhoud, alleen afzender, onderwerp en datum. Een lege
 		// pagina zou dat verzwijgen.
-		const opslag = TWEEDE_BEZOEK();
+		const opslag = TWEEDE_BEZOEK("proeftuin-drie");
 		const drie = await laadLive("/moza/berichtenbox/?persona=proeftuin-drie", { opslag });
 		opruimen.push(drie.ruimOp);
 		expect(await wachtOpRijen(1)).toBe(true);
@@ -96,7 +98,7 @@ describe("een persona die niet aangesloten is", () => {
 		// De ronde begint met een vraag aan de demo-console. Voor deze persona is het antwoord
 		// "nee", en dan hoort er nooit een balk te zijn geweest. Eerder verscheen hij op nul,
 		// bleef leeg zolang de console erover deed, en verdween daarna zonder uitleg.
-		const kof = await laadLive("/moza/berichtenbox/?persona=melkveehouder", { opslag: TWEEDE_BEZOEK() });
+		const kof = await laadLive("/moza/berichtenbox/?persona=melkveehouder", { opslag: TWEEDE_BEZOEK("melkveehouder") });
 		opruimen.push(kof.ruimOp);
 
 		// Meteen meten. De ronde start in het klassieke script, dus als de balk op nul gemeld wordt,
@@ -118,7 +120,7 @@ describe("een persona die niet aangesloten is", () => {
 
 
 	it("krijgt gewoon de dataset, zonder melding", async () => {
-		const kof = await laadLive("/moza/berichtenbox/?persona=koffiezaak", { opslag: TWEEDE_BEZOEK() });
+		const kof = await laadLive("/moza/berichtenbox/?persona=koffiezaak", { opslag: TWEEDE_BEZOEK("koffiezaak") });
 		opruimen.push(kof.ruimOp);
 		expect(await wachtOpRijen(1)).toBe(true);
 
