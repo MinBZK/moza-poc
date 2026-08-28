@@ -11,6 +11,7 @@
  *       inhoudVan:     async (berichtId) => string,  // optioneel: inhoud naleveren
  *       volgVoortgang: (kijker) => {},               // optioneel: hoe ver het ophalen is
  *       herhaalOphalen: (klaar) => {},               // optioneel: nog een keer, op verzoek
+ *       uitval: () => ({ ... }) | null,              // optioneel: wat er niet geleverd kon worden
  *     }
  *
  * `volgVoortgang` meldt `{ bevraagd, klaar, gevonden }` zolang er opgehaald wordt, en `null` zodra
@@ -20,6 +21,11 @@
  *
  * `herhaalOphalen` is er voor de bezoeker die erom vraagt: een hersteld magazijn, een verruimd
  * organisatiefilter. Wie het niet aanbiedt, wordt niet gevraagd.
+ *
+ * `uitval` en het gelijknamige veld in het antwoord van `laad` zeggen wat een bron níet kon leveren.
+ * Een bron die niet antwoordt levert immers geen berichten; dat weglaten is de eerlijke vorm, en de
+ * render-laag beslist hoe het eruitziet. Het antwoordveld is voor het moment van laden, de functie
+ * voor pagina's die niet laden maar het wel moeten weten — de detailpagina.
  *
  * De volgorde van registreren is de voorrang: de eerste bron waarvoor `geldtVoor` waar is, wint.
  * De dataset-bron hoort daarom achteraan — die is altijd van toepassing en vangt op wat geen

@@ -30,6 +30,25 @@ const POLL_STANDAARD_SEC = 60;
 
 const ONDERWERPEN = ["Nieuw bericht ontvangen", "Bevestiging ontvangst", "Bericht beschikbaar", "Actie mogelijk vereist"];
 
+// --- Gesimuleerde bronuitval -----------------------------------------------------------------
+
+// De unhappy flow hoort bij deze bron: het is een nabootsing van bronnen die niet antwoorden, en
+// een bron die niet antwoordt levert geen berichten. Voorheen filterde de render-laag ze weg — dan
+// is een gesimuleerde storing iets anders dan een echte, terwijl ze voor de bezoeker hetzelfde
+// horen te zijn.
+//
+// Drie scenario's, één per weergave gekozen:
+//  - "een":   één magazijn is bij het laden onbereikbaar.
+//  - "geen":  geen enkel magazijn antwoordt.
+//  - "later": alles laadt, waarna er onderweg één uitvalt.
+const UNHAPPY_SCENARIOS = ["een", "geen", "later"];
+const ONBEREIKBARE_BRON = "rdw";
+
+// Welke bron ná een geslaagde lading is uitgevallen. In sessionStorage, want de detailpagina moet
+// hetzelfde weten: die toont geen inhoud van een bericht waarvan de bron zojuist wegviel. Blijft
+// binnen het tabblad en verdwijnt als dat sluit.
+const UITVAL_KEY = "berichtenbox-bron-uitval";
+
 /** Staat de feature-flag "Dynamische berichten" aan? Standaard uit. */
 function dynamischeBerichtenAan() {
 	try {
@@ -61,9 +80,69 @@ function tussenpoos() {
  *                              het aantal bronnen; tests zetten hem kort, want de duur is niet wat zij
  *                              toetsen.
  */
-export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null } = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null, vlagAan = () => false, sessie = () => sessionStorage } = {}) {
 	let teller = 0;
 	let voortgangKijker = null;
+
+	// --- De nagebootste uitval, van deze bron ---------------------------------------------------
+
+	let scenarioGekozen = false;
+	let scenario = "een";
+	let handmatigHersteld = false;
+	let uitvalGepland = false;
+
+	function unhappyAan() {
+		if (handmatigHersteld) return false;
+		return vlagAan();
+	}
+
+	function huidigScenario() {
+		if (!scenarioGekozen) {
+			scenario = UNHAPPY_SCENARIOS[Math.floor(Math.random() * UNHAPPY_SCENARIOS.length)];
+			scenarioGekozen = true;
+		}
+		return scenario;
+	}
+
+	function leesUitval() {
+		try {
+			const rauw = sessie().getItem(UITVAL_KEY);
+			return rauw ? JSON.parse(rauw) : null;
+		} catch (fout) {
+			console.warn("[Berichtenbox] De bewaarde bronuitval is niet te lezen.", fout);
+			return null;
+		}
+	}
+
+	function schrijfUitval(bron) {
+		try {
+			if (bron) sessie().setItem(UITVAL_KEY, JSON.stringify(bron));
+			else sessie().removeItem(UITVAL_KEY);
+		} catch (fout) {
+			console.warn("[Berichtenbox] De bronuitval is niet te bewaren; de detailpagina weet er straks niets van.", fout);
+		}
+	}
+
+	/** Magazijnen die bij het laden niet antwoorden. Bij "later" is dat er bij het laden geen. */
+	function geblokkeerdBijLaden(magazijnId) {
+		if (!unhappyAan()) return false;
+		const sc = huidigScenario();
+		if (sc === "geen") return true;
+		if (sc === "een") return magazijnId === ONBEREIKBARE_BRON;
+		return false;
+	}
+
+	/** Wat er op dit moment aan uitval te melden valt. Null als er niets aan de hand is. */
+	function uitvalStand() {
+		if (!unhappyAan()) return null;
+		const sc = huidigScenario();
+		if (sc === "later") {
+			const gevallen = leesUitval();
+			return gevallen ? { scenario: "later", uitgevallen: gevallen } : null;
+		}
+		return { scenario: sc, uitgevallen: null };
+	}
+
 	let haaltOp = false;
 	const wachtendeVervolgen = [];
 	let hernieuwGevraagd = false;
@@ -288,11 +367,43 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 
 			const terug = eerderBinnengekomen.filter((bericht) => !bekendeIds.has(bericht.id) && bekendeMagazijnen.has(bericht.magazijnId));
 
+			// Een magazijn dat niet antwoordt, levert geen berichten. Ze hier weglaten in plaats van ze
+			// in de render-laag weg te filteren: dan is een nagebootste storing hetzelfde als een echte,
+			// en dat is precies wat de unhappy flow moet laten zien.
+			const alles = [...terug, ...uitDataset];
+			const geleverd = alles.filter((bericht) => !geblokkeerdBijLaden(bericht.magazijnId));
+			if (geleverd.length < alles.length) {
+				console.info("[Berichtenbox] Gesimuleerde uitval (" + huidigScenario() + "): " + (alles.length - geleverd.length) + " bericht(en) niet geleverd.");
+			}
+
 			return {
-				berichten: [...terug, ...uitDataset],
+				berichten: geleverd,
 				magazijnen,
 				mappen: (data.mappen || []).slice(),
+				// Wat deze bron niet kon leveren. De render-laag beslist hoe dat eruitziet; hier staat
+				// alleen wát er is.
+				uitval: uitvalStand(),
 			};
+		},
+
+		/** Voor pagina's die niet laden maar wel moeten weten wat er wegviel — de detailpagina. */
+		uitval() {
+			return uitvalStand();
+		},
+
+		/** De bezoeker drukt op "opnieuw proberen": de nagebootste storing is voorbij. */
+		herstelBronnen() {
+			handmatigHersteld = true;
+			uitvalGepland = false;
+			schrijfUitval(null);
+		},
+
+		/** De vlag ging uit of aan; bij de volgende weergave hoort een nieuwe keuze. */
+		vergeetUitval() {
+			handmatigHersteld = false;
+			scenarioGekozen = false;
+			uitvalGepland = false;
+			schrijfUitval(null);
 		},
 
 		/** Zie bron.js: de render-laag abonneert zich hierop, vóór de bronkeuze. */
@@ -373,6 +484,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 					} catch (stateFout) {
 						console.error("[Berichtenbox] Het eerste bezoek kon niet geboekt worden.", stateFout);
 					}
+					plannUitval(meld);
 					begintDruppelen(meld);
 				});
 				if (alBezig) return;
@@ -386,6 +498,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 				return;
 			}
 
+			plannUitval(meld);
 			begintDruppelen(meld);
 		},
 	};
@@ -394,6 +507,46 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	 * Het binnendruppelen zelf. Los van start(), zodat de ophaalanimatie het kan aanroepen zodra zij
 	 * klaar is: verzonnen berichten tijdens het ophalen zou de nabootsing tegenspreken.
 	 */
+	/**
+	 * Het "later"-scenario: alles laadt, en dan valt er onderweg één magazijn uit. Dat is brongedrag
+	 * — een bron die halverwege wegvalt — dus hoort het bij `start`, net als het binnendruppelen.
+	 *
+	 * De bron meldt de nieuwe lijst zonder die berichten, plus wat er wegviel. De render-laag ziet
+	 * een gewone bronwijziging en hoeft niet te weten dat die nagebootst is.
+	 */
+	function plannUitval(meld) {
+		if (!unhappyAan() || huidigScenario() !== "later") return;
+		if (uitvalGepland) return;
+		if (leesUitval()) return;
+		uitvalGepland = true;
+
+		const kandidaten = [...new Set((data.berichten || []).filter((bericht) => bericht && bericht.magazijnId).map((bericht) => bericht.magazijnId))];
+		if (!kandidaten.length) return;
+
+		// Ergens tussen vier en twaalf seconden: lang genoeg om de lijst eerst compleet te zien.
+		const vertraging = 4000 + Math.floor(Math.random() * 8000);
+		setTimeout(() => {
+			if (!unhappyAan() || huidigScenario() !== "later" || leesUitval()) return;
+
+			const id = kandidaten[Math.floor(Math.random() * kandidaten.length)];
+			const voorbeeld = (data.berichten || []).find((bericht) => bericht && bericht.magazijnId === id);
+			schrijfUitval({ id, naam: voorbeeld ? voorbeeld.afzender : id });
+
+			const overgebleven = (data.berichten || []).filter((bericht) => bericht && bericht.magazijnId !== id);
+			const mislukt = meld({
+				berichten: overgebleven,
+				magazijnen: (data.magazijnen || []).slice(),
+				mappen: (data.mappen || []).slice(),
+				uitval: uitvalStand(),
+			});
+
+			if (mislukt && mislukt.length) {
+				console.error("[Berichtenbox] De uitgevallen bron kon niet verwerkt worden; de lijst klopt mogelijk niet meer.");
+				meldStoring("Er ging iets mis bij het bijwerken van de lijst. Ververs de pagina.");
+			}
+		}, vertraging);
+	}
+
 	function begintDruppelen(meld) {
 		// De vlag staat aan omdat iemand wil zien dat er berichten binnenkomen. Gebeurt dat niet
 		// meer, dan hoort dat gezegd te worden en niet alleen in de console te staan.

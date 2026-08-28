@@ -355,73 +355,31 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	let bronHandmatigHersteld = false;
 	// De flag wordt persistent bewaard in een cookie (overleeft localStorage-wissen),
 	// zie PERSISTENT_FEATURES in feature-flags.js.
+	// De nagebootste uitval zit in de dataset-bron: een bron die niet antwoordt levert geen berichten,
+	// en dat hoort hij zelf te weten. Hier staat alleen nog wat de bezoeker ervan ziet. `laad()` en
+	// elke bronwijziging leveren de stand mee; `uitval()` is er voor pagina's die niet laden.
+	let laatsteUitval = null;
+
 	function unhappyFlowAan() {
 		const rij = document.cookie.split("; ").find((r) => r.startsWith("unhappy-flow="));
 		return !!rij && rij.split("=").slice(1).join("=") === "true";
 	}
-	// Met de flag aan wordt per page-load willekeurig één scenario gekozen:
-	//  - "een":   alleen RDW is bij het laden onbereikbaar.
-	//  - "geen":  geen enkele bron is bij het laden bereikbaar.
-	//  - "later": alle bronnen laden succesvol, waarna op een willekeurig moment
-	//             één bron uitvalt (zie plannBronUitval / sessionStorage).
-	// De keuze wordt gecachet zodat die stabiel is binnen één weergave; bij het
-	// uit-/aanzetten van de flag (feature-flags-applied) wordt opnieuw gekozen.
-	const UNHAPPY_SCENARIOS = ["een", "geen", "later"];
-	let scenarioGekozen = false;
-	let unhappyScenario = "een";
-	function huidigUnhappyScenario() {
-		if (!scenarioGekozen) {
-			unhappyScenario = UNHAPPY_SCENARIOS[Math.floor(Math.random() * UNHAPPY_SCENARIOS.length)];
-			scenarioGekozen = true;
-		}
-		return unhappyScenario;
-	}
-	function bronOnbereikbaar() {
-		// Op echte bronnen heeft de unhappy-flow-vlag geen betekenis: scenario "geen" blokkeert élk
-		// magazijn, en dat zou werkelijke post wegfilteren.
-		if (!simulatieMag()) return false;
-		if (bronHandmatigHersteld) return false;
-		return unhappyFlowAan();
-	}
-	function magazijnGeblokkeerd(magazijnId) {
-		if (!bronOnbereikbaar()) return false;
-		const sc = huidigUnhappyScenario();
-		if (sc === "geen") return true;
-		if (sc === "een") return magazijnId === ONBEREIKBARE_BRON;
-		return false; // "later": bij het laden is nog niets geblokkeerd
+
+	/** Wat de actieve bron op dit moment niet kan leveren, of null. */
+	function huidigeUitval() {
+		if (laatsteUitval) return laatsteUitval;
+		const bron = register.actief();
+		return bron && typeof bron.uitval === "function" ? bron.uitval() : null;
 	}
 
-	// "later"-scenario: welke bron ná een succesvolle load is uitgevallen, gedeeld
-	// tussen de inbox en de bericht-detailpagina via sessionStorage (blijft binnen
-	// het tabblad staan bij navigatie, verdwijnt bij het sluiten van het tabblad).
-	const UITVAL_KEY = "berichtenbox-bron-uitval";
-	function leesBronUitval() {
-		try {
-			const raw = sessionStorage.getItem(UITVAL_KEY);
-			return raw ? JSON.parse(raw) : null;
-		} catch (e) {
-			return null;
-		}
-	}
-	function schrijfBronUitval(bron) {
-		try {
-			if (bron) sessionStorage.setItem(UITVAL_KEY, JSON.stringify(bron));
-			else sessionStorage.removeItem(UITVAL_KEY);
-		} catch (e) {
-			/* sessionStorage niet beschikbaar */
-		}
-	}
-
-	// Alleen het org-filter (Belastingdienst-portaal), zonder de unhappy-flow-
-	// uitsluiting. Gebruikt om te bepalen welke bronnen worden bevraagd, ook als
-	// er eentje onbereikbaar is.
 	function magazijnDoorOrgFilter(magazijnId) {
 		if (!orgFilterActief()) return true;
 		if (andereOrgenFeatureAan() && state.toonAndereOrganisaties) return true;
 		return magazijnId === ORG_EIGEN;
 	}
+	// Vroeger filterde dit ook de nagebootste uitval weg. Dat doet de bron nu zelf, door die berichten
+	// niet te leveren — precies zoals een bron die werkelijk niet antwoordt.
 	function magazijnToegestaan(magazijnId) {
-		if (magazijnGeblokkeerd(magazijnId)) return false;
 		return magazijnDoorOrgFilter(magazijnId);
 	}
 	// Eigen mappen (.berichtenbox-folder-user) horen bij de berichten van andere
@@ -1099,7 +1057,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// verklaringen naast elkaar spreken elkaar tegen. Alleen op de inbox: archief en prullenbak
 		// hebben dat blok niet, dus daar zou onderdrukken een lege pagina zonder woorden opleveren.
 		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === "inbox" && bronOnbereikbaar());
+		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === "inbox" && !!huidigeUitval());
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== "inbox") lijst.hidden = gevonden.length === 0;
 
@@ -1151,7 +1109,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (laadfoutGetoond) return;
 		const een = document.querySelector("[data-bron-onbereikbaar]");
 		const geen = document.querySelector("[data-geen-bronnen]");
-		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
+		const stand = huidigeUitval();
+		const sc = stand ? stand.scenario : null;
 		if (een) een.hidden = sc !== "een";
 		if (geen) geen.hidden = sc !== "geen";
 	}
@@ -1161,39 +1120,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (laadfoutGetoond) return;
 		const melding = document.querySelector("[data-bron-uitval]");
 		if (!melding) return;
-		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === "later";
-		const uitval = actief ? leesBronUitval() : null;
+		const stand = huidigeUitval();
+		const uitval = stand && stand.scenario === "later" ? stand.uitgevallen : null;
 		melding.hidden = !uitval;
 		if (uitval) {
 			const naamEl = melding.querySelector("[data-bron-uitval-naam]");
 			if (naamEl) naamEl.textContent = uitval.naam;
 		}
-	}
-	// Plan de uitval van één willekeurige bron op een willekeurig moment ná een
-	// succesvolle load. Is het al gebeurd (sessionStorage), dan alleen tonen.
-	let uitvalGepland = false;
-	function plannBronUitval() {
-		// Een gesimuleerde storing naast een echte is niet van echt te onderscheiden, en de
-		// retry-knop erbij lost niets op.
-		if (laadfoutGetoond) return;
-		if (huidigeView() !== "inbox") return;
-		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== "later") return;
-		if (leesBronUitval()) {
-			werkBronUitvalBij();
-			return;
-		}
-		if (uitvalGepland) return;
-		uitvalGepland = true;
-		const bronnen = [...new Set(data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId))];
-		if (!bronnen.length) return;
-		const vertraging = 4000 + Math.floor(Math.random() * 8000); // 4–12 s
-		setTimeout(() => {
-			if (!bronOnbereikbaar() || huidigUnhappyScenario() !== "later" || leesBronUitval()) return;
-			const id = bronnen[Math.floor(Math.random() * bronnen.length)];
-			const voorbeeld = data.berichten.find((b) => b.magazijnId === id);
-			schrijfBronUitval({ id: id, naam: voorbeeld ? voorbeeld.afzender : id });
-			werkBronUitvalBij();
-		}, vertraging);
 	}
 	function bindBronOnbereikbaar() {
 		const waarschuwingen = document.querySelectorAll("[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]");
@@ -1202,9 +1135,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const retry = w.querySelector("[data-bron-retry]");
 			if (retry) {
 				retry.addEventListener("click", () => {
-					bronHandmatigHersteld = true;
-					schrijfBronUitval(null);
-					uitvalGepland = false;
+					const bron = register.actief();
+					if (bron && typeof bron.herstelBronnen === "function") bron.herstelBronnen();
+					laatsteUitval = null;
 					werkBronWaarschuwingBij();
 					werkBronUitvalBij();
 					// Opnieuw ophalen bij de bronnen voordat de volledige lijst verschijnt.
@@ -1217,10 +1150,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// progress-animatie mag de melding meteen mee-togglen.
 		document.addEventListener("feature-flags-applied", () => {
 			if (!unhappyFlowAan()) {
-				bronHandmatigHersteld = false;
-				scenarioGekozen = false;
-				uitvalGepland = false;
-				schrijfBronUitval(null);
+				const bron = register.actief();
+				if (bron && typeof bron.vergeetUitval === "function") bron.vergeetUitval();
+				laatsteUitval = null;
 			}
 			werkBronWaarschuwingBij();
 			werkBronUitvalBij();
@@ -1236,7 +1168,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const melding = document.querySelector("[data-bericht-onbeschikbaar]");
 		const content = document.querySelector(".berichtenbox-content[data-afzender-id]");
 		if (!melding || !content) return;
-		const uitval = leesBronUitval();
+		const stand = huidigeUitval();
+		const uitval = stand && stand.scenario === "later" ? stand.uitgevallen : null;
 		const onbeschikbaar = !!uitval && uitval.id === content.dataset.afzenderId;
 		melding.hidden = !onbeschikbaar;
 		if (onbeschikbaar) {
@@ -1254,7 +1187,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const retry = melding.querySelector("[data-bericht-retry]");
 		if (retry) {
 			retry.addEventListener("click", () => {
-				schrijfBronUitval(null);
+				const bron = register.actief();
+				if (bron && typeof bron.herstelBronnen === "function") bron.herstelBronnen();
+				laatsteUitval = null;
 				werkBerichtBeschikbaarheidBij();
 			});
 		}
@@ -2116,15 +2051,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Een nagebootste storing bovenop echte berichten is niet van echt te onderscheiden, en het
 		// scenario "geen" blokkeert élk magazijn — dat zou werkelijke post wegfilteren zonder dat
 		// er iets over te zeggen valt. De gesimuleerde uitval hoort dus alleen bij de dataset.
-		if (!simulatieMag()) return;
+		// Geen vlag meer nodig: de uitval komt van de bron, en een bron die niet nabootst meldt er
+		// geen. Levert het stelsel, dan is `huidigeUitval()` gewoon null en blijven de blokken weg.
 		veilig({ log: "De bronwaarschuwing", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, werkBronWaarschuwingBij);
-		veilig({ log: "De gesimuleerde bronuitval", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, plannBronUitval);
-	}
-
-	/** Alleen de gegenereerde dataset laat zich een storing aanpraten die er niet is. */
-	function simulatieMag() {
-		const bron = register.actief();
-		return !bron || bron.naam === "dataset";
 	}
 
 	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
@@ -2188,6 +2117,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
 			zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
 			// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
+			// De unhappy-flow-vlag staat in een cookie; die leest de render-laag, de bron hoeft de
+			// pagina niet te kennen.
+			vlagAan: unhappyFlowAan,
 			magAnimeren: () => huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
 			// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 			// onzichtbaar of misleidend.
@@ -2226,6 +2158,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (inhoud.nieuwBericht) zojuistBinnengekomenId = inhoud.nieuwBericht.id;
 
 		data.berichten = volgende;
+		if ("uitval" in inhoud) laatsteUitval = inhoud.uitval;
 		if (!inhoud.nieuwBericht) {
 			data.magazijnen = inhoud.magazijnen;
 			data.mappen = inhoud.mappen;
@@ -2485,6 +2418,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			return bron.laad();
 		})
 		.then((inhoud) => {
+			laatsteUitval = inhoud && "uitval" in inhoud ? inhoud.uitval : null;
 			const mislukt = register.meld(inhoud);
 			if (mislukt.length) throw mislukt[0];
 
