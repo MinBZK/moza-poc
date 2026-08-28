@@ -20,8 +20,12 @@ Deze lijst beschrijft wat er vóór de refactor werkte. Alles hieronder hoort er
    cookie, overleeft het wissen van localStorage), “Dynamische berichten”, “Zakelijk postvak”,
    “Delen” en “Accountwisselaar”.
 6. Persona wisselt u via het Flags-paneel of via `?persona=`.
-7. Begin elk blok met een schone opslag: klik “Reset” in de berichtenbox, of wis de localStorage-key
-   `berichtenbox`.
+7. Begin elk blok met een schone opslag. Er is geen knop voor: wis de localStorage-key
+   `berichtenbox`, of gebruik een privévenster.
+
+   ```js
+   localStorage.removeItem('berichtenbox'); location.reload()
+   ```
 
 ## A. Wat de geautomatiseerde tests afdekken
 
@@ -153,10 +157,17 @@ Zet de vlag “Dynamische berichten” aan. Gebruik `?poll=5` om niet een minuut
 
 ### B10. De voortgangsanimatie
 
-- [ ] Bij het eerste bezoek (na een reset) loopt de balk “berichten ophalen bij bronnen” door.
+Draait alleen op de inbox, op pagina 1, zonder `eersteBezoekGehad` in de opslag en na een geslaagde
+lading. Neem `/moza/berichtenbox/`: de animatie duurt daar 4 seconden, tegen 1,2 seconde op het
+Belastingdienst-portaal, waar het organisatiefilter maar één bron overlaat.
+
+- [ ] Na het wissen van de opslag loopt de balk “berichten ophalen bij bronnen” door.
 - [ ] De aantallen in de animatie eindigen op wat er daadwerkelijk in de lijst staat.
 - [ ] Bij een volgend bezoek wordt de animatie overgeslagen.
-- [ ] Met “beperkte beweging” aan in het besturingssysteem springt hij naar het eind in plaats van te animeren.
+- [ ] De lijst en de paginanavigatie zijn tijdens de animatie verborgen en staan er daarna weer.
+
+De animatie houdt geen rekening met `prefers-reduced-motion`; dat geldt alleen voor het invaden van
+rijen. Of dat zo hoort is een vraag voor het ontwerp, geen regressie van deze branch.
 
 ### B11. Toegankelijkheid
 
@@ -166,6 +177,7 @@ Zet de vlag “Dynamische berichten” aan. Gebruik `?poll=5` om niet een minuut
 - [ ] Een screenreader leest per rij de afzender, het onderwerp, de datum en of het ongelezen is.
 - [ ] Elke gebouwde rij heeft evenveel cellen als er kolomkoppen zijn.
 - [ ] Bij 400% zoom en op 320 pixels breed blijft alles bereikbaar zonder horizontaal scrollen.
+- [ ] Met “beperkte beweging” aan in het besturingssysteem vaden binnengekomen rijen niet in.
 
 ### B12. Zonder JavaScript
 
