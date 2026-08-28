@@ -27,7 +27,13 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			verbergMelding();
 			return;
 		}
-		meldStoring(melding.tekst, melding.soort === "mededeling" ? "info" : "storing");
+		const staat = meldStoring(melding.tekst, melding.soort === "mededeling" ? "info" : "storing");
+		if (staat === false) {
+			// Het blok is bezet door iets zwaarders. De claim blijft staan en verschijnt zodra dat
+			// zwaardere weg is, maar op dit moment weet de bezoeker dit niet — en dat hoort ergens
+			// vastgelegd, anders is achteraf niet na te gaan wat hij wél gezien heeft.
+			console.warn("[Berichtenbox] Melding van het stelsel wacht achter een zwaardere: " + melding.tekst);
+		}
 	}
 
 	return {

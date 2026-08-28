@@ -1782,7 +1782,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			{
 				log: "Opnieuw ophalen bij de bronnen",
 				bezoeker: "Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.",
-				eigenaar: "lading",
+				// Eigen eigenaar, niet "lading": die wordt alleen ingetrokken door herstelNaLaadfout, en
+				// die keert meteen terug als er geen laadfout was. Deze claim bleef dus voorgoed staan.
+				eigenaar: "opnieuw",
 				// Geen herstel dat het vervolg nog eens aanroept: de bron bedient het zelf, ook als het
 				// opnieuw ophalen synchroon omvalt. Hier herhalen zou het dubbel doen.
 			},
@@ -1791,7 +1793,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// te melden lijkt de knop dood, terwijl het verzoek gewoon in de rij staat. Eigen
 				// eigenaar: "lading" is al van vier andere plekken, en dan trekt de een de ander weg.
 				if (bron.herhaalOphalen(vervolg) === "wacht") {
-					toonPaginaMelding("Het ophalen bij de bronnen loopt nog. Uw verzoek wordt daarin meegenomen.", "info", "wacht");
+					const gezegd = toonPaginaMelding("Het ophalen bij de bronnen loopt nog. Uw verzoek wordt daarin meegenomen.", "info", "wacht");
+					// Staat er iets zwaarders, dan ziet de bezoeker deze bevestiging niet — en dat is
+					// precies de situatie waarin de knop dood lijkt. Voorlopig alleen in de console: het
+					// alternatief is een mededeling die een storing verdringt, en dat is erger.
+					if (!gezegd) {
+						console.warn("[Berichtenbox] Het verzoek gaat mee in de lopende ronde, maar dat is niet te zien.");
+					}
 				}
 			}
 		);
