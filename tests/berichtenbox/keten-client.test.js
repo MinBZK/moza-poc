@@ -56,7 +56,9 @@ describe("berichtenbox-keten.js — wat er gemeld wordt vóór het eerste antwoo
 		await Promise.resolve();
 
 		let geleverd = "nog niets";
-		window.BerichtenboxKeten.berichten().then((u) => { geleverd = u; });
+		window.BerichtenboxKeten.berichten().then((u) => {
+			geleverd = u;
+		});
 		await Promise.resolve();
 
 		expect(geleverd).toBe("nog niets");

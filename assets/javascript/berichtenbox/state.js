@@ -23,14 +23,7 @@ export const LS_KEY = "berichtenbox";
 /** Meer dan dit aantal binnengedruppelde berichten bewaren heeft geen demo-waarde. */
 export const NIEUWE_BERICHTEN_LIMIET = 5;
 
-const SLEUTELS_MET_OBJECT = [
-	"gelezen",
-	"ongelezenToegevoegd",
-	"gearchiveerd",
-	"verwijderd",
-	"gemarkeerd",
-	"mapOverride",
-];
+const SLEUTELS_MET_OBJECT = ["gelezen", "ongelezenToegevoegd", "gearchiveerd", "verwijderd", "gemarkeerd", "mapOverride"];
 
 function defaults() {
 	return {
@@ -60,10 +53,7 @@ function opschonen(berichten) {
 
 	const over = bruikbaar.slice(-NIEUWE_BERICHTEN_LIMIET);
 	if (over.length < bruikbaar.length) {
-		console.warn(
-			"[Berichtenbox] " + (bruikbaar.length - over.length) +
-			" bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten."
-		);
+		console.warn("[Berichtenbox] " + (bruikbaar.length - over.length) + " bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten.");
 	}
 
 	return over;
@@ -178,10 +168,7 @@ export function maakState(opslag, persona = null) {
 			ruw.nieuweBerichten = ruw.nieuweBerichten.filter((bericht) => bekend.has(bericht.magazijnId));
 
 			if (ruw.nieuweBerichten.length < voor) {
-				console.warn(
-					"[Berichtenbox] " + (voor - ruw.nieuweBerichten.length) +
-					" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
-				);
+				console.warn("[Berichtenbox] " + (voor - ruw.nieuweBerichten.length) + " bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet.");
 			}
 		},
 

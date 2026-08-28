@@ -29,7 +29,13 @@ describe("maakRegister — kiezen", () => {
 	it("laat een bron die gooit de volgende niet blokkeren, en meldt dat", async () => {
 		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
 		const register = maakRegister();
-		register.registreer({ naam: "stuk", geldtVoor: async () => { throw new Error("plat"); }, laad: async () => LEEG });
+		register.registreer({
+			naam: "stuk",
+			geldtVoor: async () => {
+				throw new Error("plat");
+			},
+			laad: async () => LEEG,
+		});
 		register.registreer(nepBron("dataset", true));
 		expect((await register.kies({ id: "x" })).naam).toBe("dataset");
 		expect(fout).toHaveBeenCalled();
@@ -38,12 +44,16 @@ describe("maakRegister — kiezen", () => {
 	it("bewaart welke bron omviel, zodat de aanroeper het kan tonen", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		const register = maakRegister();
-		register.registreer({ naam: "stuk", geldtVoor: async () => { throw new Error("plat"); }, laad: async () => LEEG });
+		register.registreer({
+			naam: "stuk",
+			geldtVoor: async () => {
+				throw new Error("plat");
+			},
+			laad: async () => LEEG,
+		});
 		register.registreer(nepBron("dataset", true));
 		await register.kies(null);
-		expect(register.storingen()).toEqual([
-			{ bron: "stuk", fase: "geldtVoor", fout: expect.any(Error) },
-		]);
+		expect(register.storingen()).toEqual([{ bron: "stuk", fase: "geldtVoor", fout: expect.any(Error) }]);
 	});
 
 	it("heeft geen storingen te melden als alles goed gaat", async () => {
@@ -84,7 +94,14 @@ describe("maakRegister — kiezen", () => {
 	it("geeft de persona door aan geldtVoor", async () => {
 		const gezien = [];
 		const register = maakRegister();
-		register.registreer({ naam: "x", geldtVoor: async (p) => { gezien.push(p); return true; }, laad: async () => LEEG });
+		register.registreer({
+			naam: "x",
+			geldtVoor: async (p) => {
+				gezien.push(p);
+				return true;
+			},
+			laad: async () => LEEG,
+		});
 		await register.kies({ id: "koffiezaak" });
 		expect(gezien).toEqual([{ id: "koffiezaak" }]);
 	});
@@ -107,7 +124,9 @@ describe("maakRegister — wijzigingen melden", () => {
 		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
 		const register = maakRegister();
 		const daarna = vi.fn();
-		register.opWijziging(() => { throw new Error("plat"); });
+		register.opWijziging(() => {
+			throw new Error("plat");
+		});
 		register.opWijziging(daarna);
 		register.meld(LEEG);
 		expect(daarna).toHaveBeenCalledOnce();

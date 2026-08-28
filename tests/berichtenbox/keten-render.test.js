@@ -20,7 +20,9 @@ const UIT_DE_KETEN = [
 function zetKeten({ bezig = true, aangesloten = true, uitkomst, voortgang = null } = {}) {
 	const kijkers = [];
 	let losmaken;
-	const wachten = new Promise((klaar) => { losmaken = klaar; });
+	const wachten = new Promise((klaar) => {
+		losmaken = klaar;
+	});
 
 	window.BerichtenboxKeten = {
 		bezig,
@@ -37,7 +39,9 @@ function zetKeten({ bezig = true, aangesloten = true, uitkomst, voortgang = null
 			window.BerichtenboxKeten.voortgang = v;
 			kijkers.forEach((k) => k({ melding: null, voortgang: v, uitkomst: null }));
 		},
-		klaar(u) { losmaken(u); },
+		klaar(u) {
+			losmaken(u);
+		},
 	};
 }
 
@@ -166,10 +170,87 @@ describe("echte voortgang van de ophaalronde", () => {
 	});
 });
 
+describe("een bron die geen einde meldt", () => {
+	const storing = () => {
+		const el = document.querySelector("[data-berichtenbox-storing]");
+		return el && !el.hidden ? el.textContent.replace(/\s+/g, " ").trim() : null;
+	};
+
+	it("geeft de lijst na de wachthond terug en zegt waarom", async () => {
+		// Zonder wachthond kijkt de bezoeker naar kolomkoppen en een bevroren balk, zonder een woord
+		// erbij en zonder weg terug.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+
+		await laadBerichtenbox();
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await vi.advanceTimersByTimeAsync(400);
+		expect(lijst().hidden).toBe(true);
+
+		await vi.advanceTimersByTimeAsync(46000);
+
+		expect(lijst().hidden).toBe(false);
+		expect(blok().hidden).toBe(true);
+		expect(storing()).toContain("duurde te lang");
+		vi.useRealTimers();
+	}, 20000);
+
+	it("trekt die melding in als de ronde alsnog afrondt", async () => {
+		// Een tabblad op de achtergrond zet requestAnimationFrame stil; de wachthond gaat dan af
+		// terwijl er niets mis is. "Ververs de pagina" hoort niet boven een complete lijst te blijven.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+
+		await laadBerichtenbox();
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await vi.advanceTimersByTimeAsync(46000);
+		expect(storing()).toContain("duurde te lang");
+
+		keten.meldVoortgang(null);
+		await vi.advanceTimersByTimeAsync(10);
+
+		expect(storing()).toBe(null);
+		expect(lijst().hidden).toBe(false);
+		vi.useRealTimers();
+	}, 20000);
+
+	it("verbergt de lijst niet opnieuw als die bron daarna nog telt", async () => {
+		// Zonder vergrendeling zet een late melding de lijst weer weg, 300 ms na de wachthond, en
+		// begint de telling van voren af aan. Het scherm gaat dan heen en weer.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+
+		await laadBerichtenbox();
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await vi.advanceTimersByTimeAsync(46000);
+		expect(lijst().hidden).toBe(false);
+
+		keten.meldVoortgang({ bevraagd: 3, klaar: 2, gevonden: 6 });
+		await vi.advanceTimersByTimeAsync(1000);
+
+		expect(lijst().hidden).toBe(false);
+		vi.useRealTimers();
+	}, 20000);
+});
+
 describe("de keten levert de lijst", () => {
 	it("toont de berichten van het stelsel, niet die van de dataset", async () => {
 		bouwPagina([bericht({ id: "msg-uit-dataset", onderwerp: "Verzonnen" })]);
-		zetKeten({ uitkomst: { berichten: UIT_DE_KETEN, magazijnen: [{ id: "kvk", naam: "KVK" }, { id: "rdw", naam: "RDW" }] } });
+		zetKeten({
+			uitkomst: {
+				berichten: UIT_DE_KETEN,
+				magazijnen: [
+					{ id: "kvk", naam: "KVK" },
+					{ id: "rdw", naam: "RDW" },
+				],
+			},
+		});
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -181,7 +262,15 @@ describe("de keten levert de lijst", () => {
 
 	it("linkt naar de client-gevulde pagina, want gegenereerde detailpagina's zijn er niet", async () => {
 		bouwPagina([bericht()]);
-		zetKeten({ uitkomst: { berichten: UIT_DE_KETEN, magazijnen: [{ id: "kvk", naam: "KVK" }, { id: "rdw", naam: "RDW" }] } });
+		zetKeten({
+			uitkomst: {
+				berichten: UIT_DE_KETEN,
+				magazijnen: [
+					{ id: "kvk", naam: "KVK" },
+					{ id: "rdw", naam: "RDW" },
+				],
+			},
+		});
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -194,7 +283,15 @@ describe("de keten levert de lijst", () => {
 		// Verzonnen aankomsttijden boven echte berichten: niet van echt te onderscheiden.
 		bouwPagina([bericht(), bericht(), bericht()]);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
-		zetKeten({ uitkomst: { berichten: UIT_DE_KETEN, magazijnen: [{ id: "kvk", naam: "KVK" }, { id: "rdw", naam: "RDW" }] } });
+		zetKeten({
+			uitkomst: {
+				berichten: UIT_DE_KETEN,
+				magazijnen: [
+					{ id: "kvk", naam: "KVK" },
+					{ id: "rdw", naam: "RDW" },
+				],
+			},
+		});
 
 		await laadBerichtenbox();
 		await laatLaden();

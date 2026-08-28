@@ -17,7 +17,9 @@ afterEach(() => {
 function opslagWeigert(state = { eersteBezoekGehad: true }) {
 	vi.stubGlobal("localStorage", {
 		getItem: () => JSON.stringify(state),
-		setItem: () => { throw new Error("QuotaExceededError"); },
+		setItem: () => {
+			throw new Error("QuotaExceededError");
+		},
 		removeItem: () => {},
 		clear: () => {},
 	});

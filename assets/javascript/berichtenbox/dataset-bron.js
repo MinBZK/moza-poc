@@ -65,6 +65,20 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	let teller = 0;
 	let voortgangKijker = null;
 	let haaltOp = false;
+	const wachtendeVervolgen = [];
+
+	/** Iedereen die op deze ronde wachtte, precies één keer. Eén struikelaar sleept de rest niet mee. */
+	function rondVervolgenAf(fout) {
+		haaltOp = false;
+		const vervolgen = wachtendeVervolgen.splice(0);
+		vervolgen.forEach((vervolg) => {
+			try {
+				vervolg(fout || null);
+			} catch (fout) {
+				console.error("[Berichtenbox] Het vervolg na een ophaalronde mislukte.", fout);
+			}
+		});
+	}
 
 	/**
 	 * Een kijker die struikelt mag de ronde niet stilzetten. Deed hij dat wel, dan kwam er nooit een
@@ -110,7 +124,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		const berichtTijden = tijden(bereikteBerichten.length);
 
 		// Bij één bron valt er weinig op te halen: korte animatie. Meer bronnen, langer.
-		const duur = duurMs === null ? (totaalBronnen <= 1 ? 1200 : 4000) : duurMs;
+		const duur = Math.max(1, duurMs === null ? (totaalBronnen <= 1 ? 1200 : 4000) : duurMs);
 		// Monotone klok: een NTP-correctie midden in de animatie laat de balk anders springen.
 		const klok = () => (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now());
 		const begin = klok();
@@ -140,13 +154,24 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			if (afgerond) return;
 			afgerond = true;
 
-			if (fout) {
-				console.error("[Berichtenbox] De ophaalronde is afgebroken.", fout);
-				meldStoring("Het ophalen bij de bronnen is afgebroken. Ververs de pagina om het opnieuw te proberen.");
+			try {
+				if (fout) {
+					console.error("[Berichtenbox] De ophaalronde is afgebroken.", fout);
+					meldStoring("Het ophalen bij de bronnen is afgebroken. Ververs de pagina om het opnieuw te proberen.");
+				}
+			} catch (meldFout) {
+				console.error("[Berichtenbox] En die afbreking was niet te melden.", meldFout);
+			} finally {
+				// In een finally, want dit is de enige weg terug. Struikelt het melden — het schrijft in
+				// de DOM — dan blijft de bezoeker anders achter met een verborgen lijst en een bron die
+				// nooit meer iets zegt, en pas de wachthond haalt hem daar 45 seconden later uit.
+				meldVoortgang(null);
+				try {
+					klaar(fout || null);
+				} catch (klaarFout) {
+					console.error("[Berichtenbox] Het vervolg na de ophaalronde mislukte.", klaarFout);
+				}
 			}
-
-			meldVoortgang(null);
-			klaar();
 		}
 
 		function stap() {
@@ -251,15 +276,28 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		 * animatie nog een keer — maar de render-laag hoeft dat niet te weten.
 		 */
 		herhaalOphalen(klaar) {
-			// Twee ronden tegelijk schrijven in hetzelfde voortgangsblok, en de eerste die klaar is
-			// meldt `null` terwijl de tweede nog telt. Twee keer klikken hoort niets extra's te doen.
-			if (haaltOp) return;
-			haaltOp = true;
+			const vervolg = typeof klaar === "function" ? klaar : () => {};
 
-			ophaalAnimatie(() => {
-				haaltOp = false;
-				if (typeof klaar === "function") klaar();
-			});
+			// Twee ronden tegelijk schrijven in hetzelfde voortgangsblok, en de eerste die klaar is
+			// meldt `null` terwijl de tweede nog telt. Twee keer klikken hoort dus geen tweede ronde
+			// te starten — maar het vervolg van de aanroeper hangt eraan: opnieuw renderen, de mappen
+			// bijwerken. Dat stil laten vallen levert een scherm op dat niet meer klopt met de
+			// toestand. Vandaar dat het vervolg meelift op de ronde die al loopt.
+			if (haaltOp) {
+				wachtendeVervolgen.push(vervolg);
+				return;
+			}
+
+			haaltOp = true;
+			wachtendeVervolgen.push(vervolg);
+			// De eerste regels van ophaalAnimatie staan buiten haar eigen vangnet. Gooit daar iets, dan
+			// bleef haaltOp voorgoed staan en was de knop de rest van de zitting dood.
+			try {
+				ophaalAnimatie(rondVervolgenAf);
+			} catch (fout) {
+				rondVervolgenAf(fout);
+				throw fout;
+			}
 		},
 
 		/**
@@ -270,23 +308,37 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		start(meld) {
 			if (magAnimeren()) {
 				haaltOp = true;
-				ophaalAnimatie(() => {
-					if (state) {
-						state.ruw.eersteBezoekGehad = true;
-						// Stil: administratie van de animatie, niets wat de bezoeker vroeg. Lukt het
-						// bewaren niet, dan speelt zij bij het volgende bezoek nog een keer af —
-						// hinderlijk, maar geen reden om de bezoeker lastig te vallen.
-						if (!state.bewaar()) {
-							// Geen melding aan de bezoeker: het gevolg is een animatie die nog een keer
-							// afspeelt, hinderlijk maar niet misleidend. Wel de reden erbij, anders is dit
-							// signaal niet te scheiden van ruis.
-							const reden = typeof state.waaromNietBewaard === "function" ? state.waaromNietBewaard() : "onbekend";
-							console.error("[Berichtenbox] Eerste bezoek niet bewaard (" + reden + "); de ophaalanimatie speelt opnieuw af.");
+				wachtendeVervolgen.push((fout) => {
+					// Een afgebroken ronde is geen gehad eerste bezoek: boeken we hem toch, dan speelt de
+					// animatie na de aangeraden verversing niet opnieuw af en is de storing niet meer te
+					// reproduceren. En binnendruppelende demo-berichten onder een melding dat het ophalen
+					// is afgebroken, spreken die melding tegen — de schermlezer kondigt post aan waarvan
+					// de pagina zegt dat zij er niet is.
+					if (fout) return;
+
+					// Administratie van de animatie, niets wat de bezoeker vroeg — en niets wat het
+					// binnendruppelen hieronder mag tegenhouden. Lukt het bewaren niet, dan speelt zij bij
+					// het volgende bezoek nog een keer af: hinderlijk, niet misleidend. Wel met de reden
+					// erbij, anders is dit signaal niet van ruis te scheiden.
+					try {
+						if (state) {
+							state.ruw.eersteBezoekGehad = true;
+							if (!state.bewaar()) {
+								const reden = typeof state.waaromNietBewaard === "function" ? state.waaromNietBewaard() : "onbekend";
+								console.error("[Berichtenbox] Eerste bezoek niet bewaard (" + reden + "); de ophaalanimatie speelt opnieuw af.");
+							}
 						}
+					} catch (stateFout) {
+						console.error("[Berichtenbox] Het eerste bezoek kon niet geboekt worden.", stateFout);
 					}
-					haaltOp = false;
 					begintDruppelen(meld);
 				});
+				try {
+					ophaalAnimatie(rondVervolgenAf);
+				} catch (fout) {
+					rondVervolgenAf(fout);
+					throw fout;
+				}
 				return;
 			}
 

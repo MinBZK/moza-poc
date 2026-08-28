@@ -82,11 +82,7 @@ describe("berichtenbox.js — rijen komen uit de datalaag", () => {
 	});
 
 	it("telt de berichten en de bronnen boven de lijst", async () => {
-		await laad([
-			bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }),
-			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
-			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
-		]);
+		await laad([bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }), bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }), bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" })]);
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
 		expect(tekstVan("[data-berichtenbox-sources]")).toBe("2");
 	});
@@ -169,14 +165,16 @@ describe("berichtenbox.js — filteren en pagineren via de datalaag", () => {
 
 describe("berichtenbox.js — sorteren via de datalaag", () => {
 	function afzenders() {
-		return rijen().map((r) => r.querySelector(".berichtenbox-row-sender").textContent.trim().replace(/^Ongelezen\.\s*/, ""));
+		return rijen().map((r) =>
+			r
+				.querySelector(".berichtenbox-row-sender")
+				.textContent.trim()
+				.replace(/^Ongelezen\.\s*/, "")
+		);
 	}
 
 	it("sorteert oplopend op afzender en zet aria-sort", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd" })]);
 		const knop = document.querySelector('button[data-sort="afzender"]');
 		knop.click();
 		expect(afzenders()).toEqual(["Belastingdienst", "Zorginstituut"]);
@@ -184,10 +182,7 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 	});
 
 	it("draait de volgorde om bij een tweede klik", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd" })]);
 		const knop = document.querySelector('button[data-sort="afzender"]');
 		knop.click();
 		knop.click();
@@ -196,11 +191,7 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 	});
 
 	it("sorteert de gefilterde lijst, niet de hele lijst", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg", onderwerp: "Aanslag" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd", onderwerp: "Aanslag" }),
-			bericht({ afzender: "Gemeente", magazijnId: "gem", onderwerp: "Subsidie" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg", onderwerp: "Aanslag" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd", onderwerp: "Aanslag" }), bericht({ afzender: "Gemeente", magazijnId: "gem", onderwerp: "Subsidie" })]);
 		const zoek = document.querySelector("[data-berichtenbox-search-input]");
 		zoek.value = "aanslag";
 		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
@@ -420,7 +411,9 @@ describe("berichtenbox.js — de bezoeker hoort het als bewaren niet lukt", () =
 		// laden gezet: berichtenbox.js pakt de opslag één keer, bij het opzetten van de state.
 		vi.stubGlobal("localStorage", {
 			getItem: () => JSON.stringify({ eersteBezoekGehad: true }),
-			setItem: () => { throw new Error("QuotaExceededError"); },
+			setItem: () => {
+				throw new Error("QuotaExceededError");
+			},
 			removeItem: () => {},
 			clear: () => {},
 		});
@@ -450,9 +443,13 @@ describe("berichtenbox.js — scherm en gegevens lopen niet uiteen", () => {
 		// Eén bericht waarvan het id niet te lezen is. Met één renderpad raakt dat de hele lijst:
 		// filterBerichten struikelt erover, dus er valt niets meer te tonen. Een sabotage die
 		// createRij ongemoeid laat bereikt de rollback nooit — dat was de vorige versie van deze test.
-		window.berichtenboxData.berichten.push(Object.defineProperty({}, "id", {
-			get() { throw new Error("niet te lezen"); },
-		}));
+		window.berichtenboxData.berichten.push(
+			Object.defineProperty({}, "id", {
+				get() {
+					throw new Error("niet te lezen");
+				},
+			})
+		);
 
 		await vi.advanceTimersByTimeAsync(5000);
 
@@ -470,7 +467,9 @@ describe("berichtenbox.js — een storing blijft een storing", () => {
 		// Alle berichten onrenderbaar: dat is een storing, geen lege berichtenbox.
 		bouwPagina([bericht({ onderwerp: "Kapot" })]);
 		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-			get() { throw new Error("niet te lezen"); },
+			get() {
+				throw new Error("niet te lezen");
+			},
 		});
 		await laadBerichtenbox();
 		await laatLaden();
@@ -493,7 +492,9 @@ describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
 
 		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-			get() { throw new Error("niet te lezen"); },
+			get() {
+				throw new Error("niet te lezen");
+			},
 		});
 		await laadBerichtenbox();
 		await laatLaden();
@@ -502,7 +503,7 @@ describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
 		// "3 berichten uit 2 bronnen" naast "we konden niets ophalen" laat de bezoeker het getal
 		// geloven en de zin voor een detail aanzien.
 		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("3");
-		expect(tekstVan("[data-berichtenbox-count=\"inbox\"]")).not.toBe("3");
+		expect(tekstVan('[data-berichtenbox-count="inbox"]')).not.toBe("3");
 	});
 });
 
@@ -548,7 +549,9 @@ describe("berichtenbox.js — de storingsdrempel geldt per pagina", () => {
 		// een teller van 25 en werkende paginanavigatie — zonder één woord over de storing.
 		const kapot = Array.from({ length: 25 }, () =>
 			Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-				get() { throw new Error("niet te lezen"); },
+				get() {
+					throw new Error("niet te lezen");
+				},
 			})
 		);
 		bouwPagina([bericht()]);

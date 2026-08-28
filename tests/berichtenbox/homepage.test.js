@@ -16,7 +16,9 @@ function kluis(inhoud) {
 	const opslag = { ...inhoud };
 	return {
 		getItem: (k) => (k in opslag ? opslag[k] : null),
-		setItem: (k, v) => { opslag[k] = String(v); },
+		setItem: (k, v) => {
+			opslag[k] = String(v);
+		},
 		removeItem: () => {},
 		clear: () => {},
 		_lees: () => opslag.berichtenbox,
@@ -79,7 +81,9 @@ describe("markeren buiten de berichtenbox", () => {
 
 	it("doet niet alsof de markering gelukt is als er niets bewaard kan worden", async () => {
 		const opslag = kluis({});
-		opslag.setItem = () => { throw new Error("QuotaExceededError"); };
+		opslag.setItem = () => {
+			throw new Error("QuotaExceededError");
+		};
 		zetPagina(opslag);
 		await laadBerichtenbox();
 

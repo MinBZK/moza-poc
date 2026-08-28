@@ -282,20 +282,27 @@ describe("om een nieuwe ronde vragen", () => {
 		expect(gemeld.at(-1)).toBe(null);
 	}, 20000);
 
-	it("levert er één als er twee keer om gevraagd wordt", async () => {
-		// Ruim langer dan de wachttijd hieronder: de vraag is wat er gebeurt terwijl de eerste ronde
-		// nog loopt. Zou zij al klaar zijn, dan is er niets om doorheen te tellen.
+	it("draait één ronde als er twee keer om gevraagd wordt, en bedient beide aanvragers", async () => {
+		// Twee ronden tegelijk zouden om beurten in hetzelfde voortgangsblok schrijven, en de eerste
+		// die klaar is meldt null terwijl de tweede nog telt. Maar de tweede aanvrager laten vallen
+		// mag evenmin: aan zijn vervolg hangt het opnieuw renderen en het bijwerken van de mappen.
+		// Zonder dat staat de schakelaar aan, is de keuze bewaard, en verandert het scherm niet.
 		const gemeld = [];
-		const bron = datasetBron(SMAL, { state: nepState(), magAnimeren: () => false, duurMs: 500 });
+		const bediend = [];
+		const bron = datasetBron(SMAL, { state: nepState(), magAnimeren: () => false, duurMs: 120 });
 		bron.volgVoortgang((v) => gemeld.push(v));
 
-		bron.herhaalOphalen(() => {});
-		bron.herhaalOphalen(() => {});
-		await new Promise((r) => setTimeout(r, 80));
+		bron.herhaalOphalen(() => bediend.push("eerste"));
+		bron.herhaalOphalen(() => bediend.push("tweede"));
 
-		// Twee ronden tegelijk zouden om beurten in hetzelfde blok schrijven; de eerste die klaar is
-		// meldt null terwijl de tweede nog telt.
-		expect(gemeld.filter((v) => v === null)).toHaveLength(0);
-		expect(gemeld.filter(Boolean).filter((v) => v.klaar === 0 && v.gevonden === 0)).toHaveLength(1);
+		const tot = Date.now() + 10000;
+		while (bediend.length < 2) {
+			if (Date.now() > tot) throw new Error("niet beide aanvragers bediend: " + bediend.join(","));
+			await new Promise((r) => setTimeout(r, 20));
+		}
+
+		expect(bediend).toEqual(["eerste", "tweede"]);
+		// Eén ronde, dus precies één einde.
+		expect(gemeld.filter((v) => v === null)).toHaveLength(1);
 	}, 20000);
 });

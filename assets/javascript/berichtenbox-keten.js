@@ -32,7 +32,6 @@
 (function () {
 	"use strict";
 
-
 	// De demo-console is een kleine lijst en hoort meteen te antwoorden. De berichtenlijst mag wat
 	// langer duren. De ophaalronde zelf krijgt geen harde limiet maar een stiltebewaking: een ronde
 	// langs tientallen organisaties mag lang duren, stilte niet.
@@ -70,8 +69,8 @@
 	// Zonder die scheiding schrijft dit script in dezelfde meldingsblokken als de gesimuleerde
 	// bronuitval, en is voor de bezoeker niet meer te zien wat echt is en wat nagebootst.
 
-	let melding = null;    // { soort: "storing" | "mededeling", tekst }
-	let voortgang = null;  // { bevraagd, klaar, gevonden }
+	let melding = null; // { soort: "storing" | "mededeling", tekst }
+	let voortgang = null; // { bevraagd, klaar, gevonden }
 	let laatsteUitkomst = null;
 	const kijkers = [];
 
@@ -101,17 +100,13 @@
 	// Organisaties die tijdens de ronde niet antwoordden. Een mededeling en geen storing: er staat
 	// wél een lijst, hij is alleen niet volledig.
 	function toonUitval(namen) {
-		meld("mededeling", namen.length > 1
-			? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ")
-				+ ". Berichten van deze organisaties ontbreken mogelijk."
-			: namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+		meld("mededeling", namen.length > 1 ? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk." : namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
 	}
 
 	// De ronde telde meer berichten dan de lijst teruggaf: meer dan één pagina, of onderweg iets
 	// kwijtgeraakt. Stil inslikken zou een halve postbus als een volledige presenteren.
 	function toonOnvolledig(getoond, gevonden) {
-		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond
-			+ " opgehaald. Probeer het opnieuw om de rest op te halen.");
+		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond + " opgehaald. Probeer het opnieuw om de rest op te halen.");
 	}
 
 	function verbergMeldingen() {
@@ -269,7 +264,9 @@
 		} finally {
 			clearTimeout(stilteKlok);
 			// De stroom afsluiten, anders loopt de backend elke resterende organisatie nog af.
-			lezer.cancel().catch(() => { /* stroom al dicht */ });
+			lezer.cancel().catch(() => {
+				/* stroom al dicht */
+			});
 		}
 
 		// Een stroom die eindigt zonder "ophalen-gereed" is afgebroken. Die zou een halve lijst als
@@ -282,11 +279,7 @@
 	}
 
 	async function haalLijst(ontvanger) {
-		const respons = await metTijdslimiet(
-			"/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE,
-			{ headers: { "X-Ontvanger": ontvanger } },
-			LIJST_LIMIET_MS
-		);
+		const respons = await metTijdslimiet("/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
 		if (!respons.ok) throw ketenFout("onbereikbaar", "berichten laden mislukt (" + respons.status + ")");
 		return respons.json();
 	}
@@ -421,9 +414,7 @@
 				console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", lijst);
 			}
 
-			const berichten = ruw
-				.filter(bruikbaar)
-				.map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
+			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
 			const overgeslagen = ruw.length - berichten.length;
 			if (overgeslagen > 0) {
 				console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen.");
@@ -441,8 +432,7 @@
 			verbergMeldingen();
 
 			if (ruw.length >= LIJST_GROOTTE) {
-				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE
-					+ " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
+				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
 			} else if (berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
 			} else if (uitvraag.stil.length > 0) {
@@ -461,7 +451,7 @@
 
 	// Alleen op pagina's die een berichtenbox tonen: elders is er niets te vervangen, en zou een
 	// persona zonder kvkNummer alleen console-ruis opleveren.
-	const kvkNummer = (window.berichtenboxData && paginaGebruiktKeten()) ? actiefKvkNummer() : null;
+	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() ? actiefKvkNummer() : null;
 
 	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
 	// ophaalde staat op de server (sessiecache per ontvanger, schuivende TTL), maar de
@@ -475,16 +465,24 @@
 
 	window.BerichtenboxKeten = {
 		/** Loopt er een ophaalronde? Synchroon bekend, dus de bron kan er meteen op beslissen. */
-		get bezig() { return ronde !== null; },
+		get bezig() {
+			return ronde !== null;
+		},
 
 		/** Is deze persona aantoonbaar aangesloten op de keten? */
-		get aangesloten() { return aangeslotenBevestigd; },
+		get aangesloten() {
+			return aangeslotenBevestigd;
+		},
 
 		/** De huidige melding, of null. `{ soort: "storing" | "mededeling", tekst }`. */
-		get melding() { return melding; },
+		get melding() {
+			return melding;
+		},
 
 		/** De voortgang van de lopende ronde, of null. `{ bevraagd, klaar, gevonden }`. */
-		get voortgang() { return voortgang; },
+		get voortgang() {
+			return voortgang;
+		},
 
 		/**
 		 * De berichten van de lopende of laatst gedraaide ronde, of null als er niets te leveren
@@ -492,14 +490,17 @@
 		 */
 		berichten: function () {
 			if (!ronde) return Promise.resolve(laatsteUitkomst);
-			return ronde.then(function (uitkomst) {
-				if (uitkomst) laatsteUitkomst = uitkomst;
-				return laatsteUitkomst;
-			}, function (fout) {
-				console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
-				meldStoring("verwerking");
-				return laatsteUitkomst;
-			});
+			return ronde.then(
+				function (uitkomst) {
+					if (uitkomst) laatsteUitkomst = uitkomst;
+					return laatsteUitkomst;
+				},
+				function (fout) {
+					console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
+					meldStoring("verwerking");
+					return laatsteUitkomst;
+				}
+			);
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */
@@ -525,18 +526,21 @@
 			if (!kvkNummer) return false;
 
 			verbergMeldingen();
-			// Meteen laten zien dat er iets gebeurt; de demo-omgeving mag er vijf seconden over doen.
-			toonVoortgang(0, 0, 0);
+			// Geen "0 van 0 bronnen": dat is geen voortgang maar een bewering over bronnen die nog
+			// niemand bevraagd heeft. De eerste gebeurtenis uit de stroom meldt zich vanzelf.
 			ronde = draaiRonde(kvkNummer);
-			ronde.then(function (uitkomst) {
-				if (uitkomst) {
-					laatsteUitkomst = uitkomst;
-					laatWeten();
+			ronde.then(
+				function (uitkomst) {
+					if (uitkomst) {
+						laatsteUitkomst = uitkomst;
+						laatWeten();
+					}
+				},
+				function (fout) {
+					console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
+					meldStoring("verwerking");
 				}
-			}, function (fout) {
-				console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
-				meldStoring("verwerking");
-			});
+			);
 			return true;
 		},
 	};

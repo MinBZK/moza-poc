@@ -83,10 +83,13 @@ describe("filterBerichten", () => {
 
 	it("gebruikt de map-override uit de state, niet de map van het bericht", () => {
 		const berichten = [bericht({ id: "a", map: "Subsidies" })];
-		const uit = filterBerichten(berichten, criteria({
-			map: "Belastingen 2025",
-			state: state({ map: "Belastingen 2025" }),
-		}));
+		const uit = filterBerichten(
+			berichten,
+			criteria({
+				map: "Belastingen 2025",
+				state: state({ map: "Belastingen 2025" }),
+			})
+		);
 		expect(uit.map((b) => b.id)).toEqual(["a"]);
 	});
 
@@ -132,8 +135,7 @@ describe("paginaVan", () => {
 	const vijfentwintig = Array.from({ length: 25 }, (_, i) => bericht({ id: "m" + i }));
 
 	it("geeft het venster van de gevraagde pagina", () => {
-		expect(paginaVan(vijfentwintig, 2, 10).items.map((b) => b.id))
-			.toEqual(["m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17", "m18", "m19"]);
+		expect(paginaVan(vijfentwintig, 2, 10).items.map((b) => b.id)).toEqual(["m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17", "m18", "m19"]);
 	});
 
 	it("klemt een te hoge pagina naar de laatste", () => {

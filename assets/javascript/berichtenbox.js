@@ -282,7 +282,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		// Niet blind tonen: bij één pagina hoort er geen navigatie te staan, en na het ophalen kan
 		// het aantal pagina's een ander zijn dan ervoor. toonBerichten bepaalt dat opnieuw.
-		veilig({ log: "Het herstellen van de lijst na het ophalen", bezoeker: "Zoeken en filteren werkt op dit moment niet." }, toonBerichten);
+		veilig(
+			{
+				log: "Het opbouwen van de lijst na het ophalen",
+				bezoeker: "Wij konden uw berichten niet tonen. Ververs de pagina om het opnieuw te proberen.",
+				eigenaar: "lading",
+				// Struikelt toonBerichten vóór het vervangen van de rijen, dan staan de server-gerenderde
+				// rijen er nog — en die negeren de bewaarde staat: gearchiveerde en weggegooide berichten
+				// staan er weer tussen. Erger dan niets, dus dan liever de storingsweergave.
+				herstel: toonLaadfout,
+			},
+			toonBerichten
+		);
 	}
 
 	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
@@ -1762,7 +1773,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				log: "Opnieuw ophalen bij de bronnen",
 				bezoeker: "Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.",
 				eigenaar: "lading",
-				herstel: opKlaar,
+				// Geen herstel dat opKlaar nog eens aanroept: de bron bedient het vervolg zelf, ook als
+				// het opnieuw ophalen synchroon omvalt. Hier herhalen zou het dubbel doen.
 			},
 			() => bron.herhaalOphalen(opKlaar)
 		);
@@ -1776,6 +1788,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			let wachthond = null;
 			let laatste = null;
 			let getoond = false;
+			let opgegeven = false;
 
 			function stopKlokken() {
 				if (wachter) {
@@ -1799,8 +1812,20 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					getoond = false;
 					lopendeBronnen.delete(bron);
 					if (!voortgangLoopt()) toonNaVoortgang();
+
+					// De wachthond sloeg alarm en de ronde bleek toch af te ronden — een tabblad op de
+					// achtergrond zet requestAnimationFrame stil, dus dit is geen randgeval. Dan hoort
+					// "ververs de pagina" niet boven een lijst te blijven staan die compleet is.
+					if (opgegeven) {
+						opgegeven = false;
+						verbergPaginaMelding("lading");
+					}
 					return;
 				}
+
+				// Deze bron is opgegeven; alleen een einde telt nog. Anders verbergt hij de lijst die de
+				// wachthond zojuist teruggaf, gaat het scherm heen en weer, en begint de telling opnieuw.
+				if (opgegeven) return;
 
 				lopendeBronnen.add(bron);
 
@@ -1828,10 +1853,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 						wachthond = null;
 						if (!lopendeBronnen.has(bron)) return;
 
-						console.error("[Berichtenbox] Bron '" + bron.naam + "' meldde " + VOORTGANG_LIMIET_MS + " ms lang geen einde; lijst teruggezet.");
+						opgegeven = true;
 						getoond = false;
 						lopendeBronnen.delete(bron);
-						if (!voortgangLoopt()) toonNaVoortgang();
+
+						const nogBezig = [...lopendeBronnen].map((andere) => andere.naam).join(", ");
+						console.error("[Berichtenbox] Bron '" + bron.naam + "' meldde " + VOORTGANG_LIMIET_MS + " ms lang geen einde." + (nogBezig ? " Nog bezig: " + nogBezig + "." : " Lijst teruggezet."));
+
+						// Telt een andere bron nog door, dan is er niets teruggegeven en klopt "ververs de
+						// pagina" niet. Dan blijft het bij de console tot ook die klaar is.
+						if (voortgangLoopt()) return;
+
+						toonNaVoortgang();
 						toonPaginaMelding("Het ophalen bij de bronnen duurde te lang. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
 					}, VOORTGANG_LIMIET_MS);
 				}
@@ -2092,12 +2125,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// dat is. De volgorde is de voorrang: is de persona aangesloten op het Federatief
 	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
 	const register = maakRegister();
-	register.registreer(ketenBron(window.BerichtenboxKeten, { meldStoring: toonPaginaMelding }));
+	// Een eigen eigenaar per bron: anders verdringt een melding van de ene bron die van de andere, en
+	// kan verbergPaginaMelding hem daarna niet meer opruimen.
+	register.registreer(
+		ketenBron(window.BerichtenboxKeten, {
+			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:keten"),
+		})
+	);
 	register.registreer(
 		datasetBron(window.berichtenboxData, {
 			state: stateModule,
 			limiet: NIEUWE_BERICHTEN_LIMIET,
-			meldStoring: toonPaginaMelding,
+			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:dataset"),
 			// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
 			zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
 			// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
@@ -2325,7 +2364,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Vóór de keuze, niet erna: een bron die ophaalt meldt zijn voortgang terwijl geldtVoor nog
 	// wacht. Bronnen die niet gekozen worden, melden vanzelf niets.
-	volgEchteVoortgang(register.bronnen());
+	veilig(
+		{
+			log: "Het volgen van de voortgang",
+			bezoeker: "U ziet mogelijk niet hoe ver het ophalen is.",
+		},
+		() => volgEchteVoortgang(register.bronnen())
+	);
 
 	register
 		.kies(persona)

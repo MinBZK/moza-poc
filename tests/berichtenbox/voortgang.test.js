@@ -11,9 +11,7 @@ import { bericht, bouwPagina, laadBerichtenbox, laatLaden } from "./dom.js";
  * die horen ook niet even te verschijnen om meteen weer weg te gaan.
  */
 
-const BERICHTEN = Array.from({ length: 12 }, (_, i) =>
-	bericht({ id: "msg-" + i, magazijnId: i % 3 === 0 ? "rdw" : "belastingdienst", datum: "2026-04-0" + ((i % 9) + 1) })
-);
+const BERICHTEN = Array.from({ length: 12 }, (_, i) => bericht({ id: "msg-" + i, magazijnId: i % 3 === 0 ? "rdw" : "belastingdienst", datum: "2026-04-0" + ((i % 9) + 1) }));
 
 const lijst = () => document.querySelector("[data-berichtenbox-list]");
 const voortgang = () => document.querySelector("[data-berichtenbox-progress]");

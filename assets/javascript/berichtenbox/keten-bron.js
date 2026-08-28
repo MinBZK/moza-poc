@@ -50,10 +50,20 @@ export function ketenBron(keten, { meldStoring = () => {} } = {}) {
 		volgVoortgang(kijker) {
 			if (!keten || typeof keten.opWijziging !== "function") return;
 
+			// Een kijker die struikelt mag de keten niet meesleuren: aan dezelfde melding hangen ook
+			// de andere abonnees. Zelfde afscherming als in dataset-bron.js.
+			function meld(voortgang) {
+				try {
+					kijker(voortgang);
+				} catch (fout) {
+					console.error("[Berichtenbox] Een kijker op de voortgang van het stelsel struikelde.", fout);
+				}
+			}
+
 			// De eerste melding kan al geweest zijn voordat deze module bestond; het script draait
 			// vóór de module en begint dan meteen op te halen.
-			if (keten.voortgang) kijker(keten.voortgang);
-			keten.opWijziging((toestand) => kijker(toestand.voortgang));
+			if (keten.voortgang) meld(keten.voortgang);
+			keten.opWijziging((toestand) => meld(toestand.voortgang));
 		},
 
 		async laad() {

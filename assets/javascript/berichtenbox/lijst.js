@@ -16,15 +16,7 @@
  * @returns De berichten die aan alle criteria voldoen, in de volgorde waarin ze binnenkwamen.
  */
 export function filterBerichten(berichten, criteria) {
-	const {
-		view = "inbox",
-		zoek = "",
-		afzenders = new Set(),
-		map = null,
-		magazijnToegestaan = () => true,
-		persoonRelevant = () => true,
-		state,
-	} = criteria || {};
+	const { view = "inbox", zoek = "", afzenders = new Set(), map = null, magazijnToegestaan = () => true, persoonRelevant = () => true, state } = criteria || {};
 
 	const zoekterm = String(zoek).trim().toLowerCase();
 
@@ -57,9 +49,7 @@ export function filterBerichten(berichten, criteria) {
 export function sorteerBerichten(berichten, sleutel, oplopend) {
 	const richting = oplopend ? 1 : -1;
 
-	return berichten.slice().sort((a, b) =>
-		richting * String((a && a[sleutel]) || "").localeCompare(String((b && b[sleutel]) || ""), "nl", { numeric: true })
-	);
+	return berichten.slice().sort((a, b) => richting * String((a && a[sleutel]) || "").localeCompare(String((b && b[sleutel]) || ""), "nl", { numeric: true }));
 }
 
 /**
