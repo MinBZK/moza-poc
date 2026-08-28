@@ -1723,14 +1723,43 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * Dit hangt aan álle geregistreerde bronnen en niet aan de gekozene, want de keuze valt pas als
 	 * de ronde klaar is — en dan is er geen voortgang meer te tonen.
 	 */
+	// Een ronde die binnen deze tijd klaar is, heeft geen balk nodig. Lokaal duurt een ophaalronde
+	// een tiende seconde; die even laten oplichten leest als een storing, niet als voortgang. Duurt
+	// het langer, dan hoort de bezoeker te zien dat er gewacht wordt.
+	const VOORTGANG_DREMPEL_MS = 300;
+
 	function volgEchteVoortgang(bronnen) {
 		bronnen.forEach((bron) => {
 			if (typeof bron.volgVoortgang !== 'function') return;
 
+			let wachter = null;
+			let laatste = null;
+			let getoond = false;
+
 			bron.volgVoortgang((voortgang) => {
-				if (!voortgang) return;
-				verbergVoorVoortgang();
-				vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
+				laatste = voortgang;
+
+				// Geen voortgang meer: de ronde is klaar of afgebroken.
+				if (!voortgang) {
+					if (wachter) { clearTimeout(wachter); wachter = null; }
+					return;
+				}
+
+				if (getoond) {
+					vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
+					return;
+				}
+
+				// De lijst blijft voorlopig staan. Hem meteen weghalen zou bij een korte ronde een
+				// leeg vlak achterlaten waar niets voor in de plaats komt.
+				if (wachter) return;
+				wachter = setTimeout(() => {
+					wachter = null;
+					if (!laatste) return;
+					getoond = true;
+					verbergVoorVoortgang();
+					vulVoortgang(laatste.bevraagd, laatste.klaar, laatste.gevonden);
+				}, VOORTGANG_DREMPEL_MS);
 			});
 		});
 	}

@@ -42,6 +42,9 @@ function zetKeten({ bezig = true, aangesloten = true, uitkomst, voortgang = null
 }
 
 const blok = () => document.querySelector("[data-berichtenbox-progress]");
+
+/** De balk komt pas als de ronde langer duurt dan de drempel; korter en niemand ziet iets. */
+const naDrempel = () => new Promise((r) => setTimeout(r, 400));
 const slot = (naam) => document.querySelector("[data-berichtenbox-progress-" + naam + "]").textContent;
 const lijst = () => document.querySelector("[data-berichtenbox-list]");
 
@@ -91,7 +94,27 @@ describe("zolang de bron nog niets weet", () => {
 		expect(blok().hidden).toBe(true);
 
 		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await naDrempel();
 		expect(blok().hidden).toBe(false);
+	});
+});
+
+describe("een ronde die meteen klaar is", () => {
+	it("laat de balk helemaal niet zien", async () => {
+		// Lokaal duurt een ophaalronde een tiende seconde. Die even laten oplichten leest als een
+		// storing, niet als voortgang.
+		// Tweede bezoek: geen vroege verberging van de lijst, dus wat hier gebeurt komt alleen van
+		// de voortgang.
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+
+		await laadBerichtenbox();
+		keten.meldVoortgang({ bevraagd: 2, klaar: 0, gevonden: 0 });
+		keten.meldVoortgang(null); // klaar, ruim binnen de drempel
+		await naDrempel();
+
+		expect(blok().hidden).toBe(true);
+		expect(lijst().hidden).toBe(false);
 	});
 });
 
@@ -103,6 +126,7 @@ describe("echte voortgang van de ophaalronde", () => {
 
 		await laadBerichtenbox();
 		keten.meldVoortgang({ bevraagd: 7, klaar: 3, gevonden: 12 });
+		await naDrempel();
 
 		expect(slot("total")).toBe("7");
 		expect(slot("source")).toBe("3");
@@ -120,6 +144,7 @@ describe("echte voortgang van de ophaalronde", () => {
 
 		await laadBerichtenbox();
 		keten.meldVoortgang({ bevraagd: 4, klaar: 1, gevonden: 2 });
+		await naDrempel();
 		expect(slot("source")).toBe("1");
 
 		keten.meldVoortgang({ bevraagd: 4, klaar: 4, gevonden: 9 });
@@ -134,6 +159,7 @@ describe("echte voortgang van de ophaalronde", () => {
 
 		await laadBerichtenbox();
 		keten.meldVoortgang({ bevraagd: 1, klaar: 1, gevonden: 1 });
+		await naDrempel();
 
 		const meervoud = document.querySelector('[data-meervoud="data-berichtenbox-progress-total"]');
 		expect(meervoud.textContent).toBe("bron");
