@@ -509,7 +509,11 @@
 	}
 
 	if (startRonde) {
-		toonVoortgang(0, 0, 0);
+		// Geen voortgang melden vóór de eerste gebeurtenis uit de stroom. De ronde begint met één
+		// vraag aan de demo-console — kent de keten deze ontvanger? — en het antwoord is voor de
+		// meeste persona's "nee". Meteen "0 van 0 bronnen" melden zet dan een lege balk op het
+		// scherm die even later zonder uitleg weer verdwijnt. Vanaf `magazijn-bevraging-gestart`
+		// valt er wél iets te melden.
 		ronde = draaiRonde(kvkNummer);
 	}
 

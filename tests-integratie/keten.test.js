@@ -92,6 +92,31 @@ describe("een bericht uit het stelsel openen", () => {
 });
 
 describe("een persona die niet aangesloten is", () => {
+	it("krijgt geen lege voortgangsbalk te zien", async () => {
+		// De ronde begint met een vraag aan de demo-console. Voor deze persona is het antwoord
+		// "nee", en dan hoort er nooit een balk te zijn geweest. Eerder verscheen hij op nul,
+		// bleef leeg zolang de console erover deed, en verdween daarna zonder uitleg.
+		const kof = await laadLive("/moza/berichtenbox/?persona=melkveehouder", { opslag: TWEEDE_BEZOEK() });
+		opruimen.push(kof.ruimOp);
+
+		// Meteen meten. De ronde start in het klassieke script, dus als de balk op nul gemeld wordt,
+		// staat hij er al zodra de module geladen is — een observer die daarna pas kijkt, mist het.
+		const blok = document.querySelector("[data-berichtenbox-progress]");
+		expect(blok.hidden).toBe(true);
+
+		const gezien = [];
+		const kijker = new window.MutationObserver(() => gezien.push(blok.hidden));
+		kijker.observe(blok, { attributes: true, attributeFilter: ["hidden"] });
+
+		expect(await wachtOpRijen(1)).toBe(true);
+		await new Promise((r) => setTimeout(r, 2500));
+		kijker.disconnect();
+
+		expect(gezien.every((verborgen) => verborgen === true)).toBe(true);
+		expect(blok.hidden).toBe(true);
+	}, 40000);
+
+
 	it("krijgt gewoon de dataset, zonder melding", async () => {
 		const kof = await laadLive("/moza/berichtenbox/?persona=koffiezaak", { opslag: TWEEDE_BEZOEK() });
 		opruimen.push(kof.ruimOp);
