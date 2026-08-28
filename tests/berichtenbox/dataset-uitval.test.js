@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { datasetBron } from "../../assets/javascript/berichtenbox/dataset-bron.js";
 
@@ -67,7 +68,11 @@ function metScenario(naam, opties = {}) {
 	return bron;
 }
 
-beforeEach(() => vi.spyOn(console, "info").mockImplementation(() => {}));
+beforeEach(() => {
+	vi.spyOn(console, "info").mockImplementation(() => {});
+	vi.spyOn(console, "warn").mockImplementation(() => {});
+	window.localStorage.clear();
+});
 afterEach(() => vi.restoreAllMocks());
 
 describe("een magazijn dat niet antwoordt", () => {
@@ -102,6 +107,40 @@ describe("een magazijn dat niet antwoordt", () => {
 });
 
 describe("een bron die onderweg wegvalt", () => {
+	it("laat binnengedruppelde berichten van andere bronnen staan", async () => {
+		// Die staan in de bewaarde staat en niet in de dataset. Bouwde de uitval zijn lijst uit de
+		// momentopname, dan verdwenen ze allemaal — ook die van een heel andere organisatie dan de
+		// bron die net uitviel, terwijl de melding ernaast die ene bron noemt.
+		// De binnengedruppelde berichten worden alleen hersteld als de vlag aan staat; zonder jsdom
+		// bestaat localStorage niet en ruimt de bron ze juist op.
+		window.localStorage.setItem("feature:Dynamische berichten", "true");
+		vi.useFakeTimers();
+		const sessie = nepSessie();
+		const state = {
+			ruw: {
+				eersteBezoekGehad: true,
+				nieuweBerichten: [{ id: "msg-live-1", magazijnId: "kvk", afzender: "KVK", datum: "2026-04-02" }],
+			},
+			bewaar: () => true,
+			waaromNietBewaard: () => null,
+		};
+		const bron = metScenario("later", { sessie, state, magAnimeren: () => false });
+
+		const gemeld = [];
+		const luisteraar = echteLuisteraar(bron._data, gemeld);
+		luisteraar(await bron.laad());
+		expect(bron._data.berichten.map((b) => b.id)).toContain("msg-live-1");
+
+		bron.start(luisteraar);
+		await vi.advanceTimersByTimeAsync(13000);
+
+		const weggevallen = gemeld.at(-1).uitval.uitgevallen;
+		if (weggevallen.id !== "kvk") {
+			expect(gemeld.at(-1).berichten.map((b) => b.id)).toContain("msg-live-1");
+		}
+		vi.useRealTimers();
+	}, 20000);
+
 	it("meldt een nieuwe lijst zonder die berichten", async () => {
 		vi.useFakeTimers();
 		const sessie = nepSessie();
@@ -116,7 +155,11 @@ describe("een bron die onderweg wegvalt", () => {
 		expect(gemeld).toHaveLength(1);
 		const weggevallen = gemeld[0].uitval.uitgevallen;
 		expect(weggevallen).toBeTruthy();
-		expect(gemeld[0].berichten.every((b) => b.magazijnId !== weggevallen.id)).toBe(true);
+
+		// De volledige verwachte lijst, niet alleen "wat weg is". `every` op een lijst waar te veel uit
+		// is, is triviaal waar — bij een lege lijst zelfs per definitie.
+		const verwacht = DATA.berichten.filter((b) => b.magazijnId !== weggevallen.id).map((b) => b.id);
+		expect(gemeld[0].berichten.map((b) => b.id).sort()).toEqual(verwacht.sort());
 		vi.useRealTimers();
 	}, 20000);
 
@@ -139,6 +182,33 @@ describe("een bron die onderweg wegvalt", () => {
 		expect(inhoud.uitval.uitgevallen).toBeTruthy();
 		vi.useRealTimers();
 	}, 20000);
+});
+
+describe("het scenario hoort bij de zitting", () => {
+	it("blijft hetzelfde op een volgende pagina, ook al zou de dobbelsteen anders vallen", async () => {
+		// Rolde elke pagina opnieuw, dan zei de inbox "deze bron is onbereikbaar" en toonde de
+		// detailpagina het bericht gewoon — twee van de drie keer.
+		const sessie = nepSessie();
+		vi.spyOn(Math, "random").mockReturnValue(0.01); // "een"
+		const inbox = datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie });
+		expect((await inbox.laad()).uitval.scenario).toBe("een");
+
+		// Een tweede pagina in dezelfde zitting; de dobbelsteen zou nu "geen" zeggen.
+		vi.spyOn(Math, "random").mockReturnValue(0.34);
+		const detail = datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie });
+		expect((await detail.laad()).uitval.scenario).toBe("een");
+	});
+
+	it("kiest opnieuw nadat de vlag is omgezet", async () => {
+		const sessie = nepSessie();
+		vi.spyOn(Math, "random").mockReturnValue(0.01);
+		const bron = datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie });
+		expect((await bron.laad()).uitval.scenario).toBe("een");
+
+		await bron.vergeetUitval();
+		vi.spyOn(Math, "random").mockReturnValue(0.34);
+		expect((await bron.laad()).uitval.scenario).toBe("geen");
+	});
 });
 
 describe("de bezoeker herstelt de bronnen", () => {

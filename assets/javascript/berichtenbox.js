@@ -1145,18 +1145,28 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (retry) {
 				retry.addEventListener("click", () => {
 					const bron = register.actief();
-					if (bron && typeof bron.herstelBronnen === "function") bron.herstelBronnen();
-					laatsteUitval = null;
-					werkUitvalWeergaveBij();
-					// Opnieuw ophalen bij de bronnen voordat de volledige lijst verschijnt.
-					speelOphalenOpnieuw(() => herrenderInbox());
+					// Afwachten: de ophaalanimatie telt over de lijst die er dán staat. Startte zij
+					// eerder, dan las de bezoeker "0 van 1 bronnen" en verschenen er daarna vier
+					// berichten uit drie bronnen.
+					Promise.resolve(bron && typeof bron.herstelBronnen === "function" ? bron.herstelBronnen() : null).then(() => {
+						// Opnieuw ophalen bij de bronnen voordat de volledige lijst verschijnt.
+						speelOphalenOpnieuw(() => herrenderInbox());
+					});
 				});
 			}
 		});
 		// Flag-wijziging in het paneel: bij uitzetten zijn de bronnen weer beschikbaar
 		// en wordt bij een volgende keer opnieuw een scenario gekozen. Na de eerste
 		// progress-animatie mag de melding meteen mee-togglen.
+		// Onthouden wat de unhappy-flow-vlag was: feature-flags-applied gaat af bij élke vlag, en
+		// onvoorwaardelijk vergeten wist een lopende storing, een net uitgevoerd herstel én de
+		// zittingstoestand van de detailpagina's — omdat iemand "Dynamische berichten" aanzette.
+		let unhappyStand = unhappyFlowAan();
+
 		document.addEventListener("feature-flags-applied", () => {
+			if (unhappyFlowAan() === unhappyStand) return;
+			unhappyStand = unhappyFlowAan();
+
 			// Beide kanten op. Voorheen filterde de render-laag op rendertijd, dus aanzetten paste de
 			// storing meteen weer toe. Nu laat de bron de berichten weg bij het laden — dus moet die
 			// opnieuw leveren, bij aan én bij uit. Zonder dat is de vlag binnen één paginalading nog

@@ -372,8 +372,16 @@ describe("berichtenbox.js — een mislukte lading blijft een mislukte lading", (
 	// Een null in de lijst laat render() struikelen; dat rolt terug, wordt doorgegooid en komt in
 	// de .catch terecht. Dat is het pad waar de lading zelf mislukt, niet één rij.
 	async function metMislukteLading() {
+		// Een bericht waarvan het id gooit: dan struikelt het filteren zelf, de bronwijziging mislukt,
+		// en de lading loopt op zijn catch uit. Voorheen deed een losse `null` dat ook, maar de bron
+		// gaat daar inmiddels netjes langsheen — en een lading die slaagt is hier geen mislukte lading.
 		bouwPagina([bericht(), bericht()]);
-		window.berichtenboxData.berichten.push(null);
+		window.berichtenboxData.berichten.push({
+			get id() {
+				throw new Error("onleesbaar bericht");
+			},
+			magazijnId: "rdw",
+		});
 		await laadBerichtenbox();
 		await laatLaden();
 	}
