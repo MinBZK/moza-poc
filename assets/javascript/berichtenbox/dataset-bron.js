@@ -61,7 +61,7 @@ function tussenpoos() {
  *                              het aantal bronnen; tests zetten hem kort, want de duur is niet wat zij
  *                              toetsen.
  */
-export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), zichtbaarheid = {}, magAnimeren = () => false, duurMs = null } = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null } = {}) {
 	let teller = 0;
 	let voortgangKijker = null;
 	let haaltOp = false;
@@ -179,6 +179,10 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 				if (fout) {
 					console.error("[Berichtenbox] De ophaalronde is afgebroken.", fout);
 					meldStoring("Het ophalen bij de bronnen is afgebroken. Ververs de pagina om het opnieuw te proberen.");
+				} else {
+					// Een geslaagde ronde weerlegt de melding van een eerdere die het niet haalde. Zonder
+					// dit blijft "het ophalen is afgebroken" boven een lijst staan die compleet is.
+					verbergMelding();
 				}
 			} catch (meldFout) {
 				console.error("[Berichtenbox] En die afbreking was niet te melden.", meldFout);

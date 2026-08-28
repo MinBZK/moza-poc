@@ -542,7 +542,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
 		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
-		if (!meldingClaims.has("opslag")) {
+		// Op wat er stáát, niet op wat er geclaimd is: een claim die achter een zwaardere wacht, is voor
+		// de bezoeker niet gezegd.
+		const staandeMelding = zwaarsteClaim();
+		if (!staandeMelding || staandeMelding.eigenaar !== "opslag") {
 			const reden = stateModule.waaromNietBewaard();
 			let tekst;
 			if (reden === "vol") {
@@ -1878,8 +1881,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 						console.error("[Berichtenbox] Bron '" + bron.naam + "' meldde " + VOORTGANG_LIMIET_MS + " ms lang geen einde." + (nogBezig ? " Nog bezig: " + nogBezig + "." : " Lijst teruggezet."));
 
 						// Telt een andere bron nog door, dan is er niets teruggegeven en klopt "ververs de
-						// pagina" niet. Dan blijft het bij de console tot ook die klaar is.
-						if (voortgangLoopt()) return;
+						// pagina" niet. Dan blijft het bij de console — en blijft deze bron gewoon welkom,
+						// want er is niets over hem gezegd dat hij zou tegenspreken.
+						if (voortgangLoopt()) {
+							opgegeven = false;
+							return;
+						}
 
 						// Was er niets weggehaald — geen voortgangsblok op deze pagina, of de lijst stond
 						// er allang weer — dan is er ook niets om over te melden. "Ververs de pagina" onder
@@ -2125,7 +2132,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				}
 			}
 
-			toonPaginaMelding(wat.bezoeker, "storing", wat.eigenaar || "algemeen");
+			// Een eigen claim per aanroepplek. Deelden ze er één, dan overschreef de tweede fout de
+			// eerste zonder spoor, en verdween het bestaan van dat tweede defect uit beeld.
+			toonPaginaMelding(wat.bezoeker, "storing", wat.eigenaar || "veilig:" + wat.log);
 		}
 	}
 
@@ -2160,6 +2169,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			state: stateModule,
 			limiet: NIEUWE_BERICHTEN_LIMIET,
 			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:dataset"),
+			verbergMelding: () => verbergPaginaMelding("bron:dataset"),
 			// De nagebootste ophaalronde moet eindigen op wat er straks écht staat.
 			zichtbaarheid: { statusVan, magazijnDoorOrgFilter, magazijnToegestaan, persoonRelevant },
 			// Wanneer die nabootsing op zijn plaats is, weet alleen de render-laag.
@@ -2276,7 +2286,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// Er is één meldingsslot per pagina. Een lichtere melding mag een zwaardere niet overschrijven:
 	// "de demo is uitgespeeld" over "uw wijziging is niet bewaard" heen zou de bezoeker doen denken
 	// dat zijn actie gelukt is.
-	const MELDING_ZWAARTE = { info: 1, storing: 2 };
+	// Drie treden. "kritiek" is voor het geval waarin de pagina zelf is leeggemaakt: geen rijen, tellers
+	// op "–", geen lege staat. Dan mag geen andere melding ervoor komen, want die verklaart niet wat de
+	// bezoeker ziet — en bij gelijke zwaarte wint anders simpelweg de meest recente.
+	const MELDING_ZWAARTE = { info: 1, storing: 2, kritiek: 3 };
 	// Eén blok op het scherm, maar meerdere partijen die er iets in te zeggen hebben: de lading, de
 	// opslag, de wachthond, elke bron, en het vangnet rond de render-laag. Zij houden hier hun claim
 	// bij, en het scherm wordt daaruit afgeleid.
@@ -2319,6 +2332,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// informatie-pictogram. Alleen de kleur wisselen liet een wit kruis op een blauwe schijf
 		// achter bij een mededeling.
 		const iconen = blok.querySelectorAll(":scope > svg");
+		if (iconen.length !== 2) {
+			console.warn("[Berichtenbox] Het meldingsblok heeft " + iconen.length + " pictogram(men) in plaats van twee; " + "een mededeling leest daardoor als een storing.");
+		}
 		if (iconen.length === 2) {
 			iconen[0].style.display = claim.soort === "info" ? "none" : "";
 			iconen[1].style.display = claim.soort === "info" ? "" : "none";
@@ -2410,7 +2426,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const pagnav = document.querySelector("[data-berichtenbox-pagination]");
 		if (pagnav) pagnav.hidden = true;
 
-		toonPaginaMelding("Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.", "storing", "lading");
+		const staat = toonPaginaMelding("Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.", "kritiek", "lading");
+		if (!staat) {
+			// De pagina is leeg en de uitleg staat er niet. Dat mag niet stil blijven: dit is precies het
+			// scherm waar niemand iets van begrijpt.
+			console.error("[Berichtenbox] De lijst is leeggemaakt maar de uitleg daarover kwam niet op het scherm.");
+		}
 
 		// Pas hier: valt het opbouwen van de storingsweergave halverwege om, dan staat de vlag anders
 		// op "getoond" boven een tabel met verouderde rijen die nog gewoon zichtbaar is.
@@ -2453,15 +2474,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (mislukt.length) throw mislukt[0];
 
 			// Een bron die onderweg omviel betekent dat deze lijst van een andere bron komt dan
-			// bedoeld. Er is nu maar één bron, dus dit kan nog niet gebeuren; zodra er een tweede
-			// bij komt hoort hier een eigen melding. Het bestaande waarschuwingsblok hergebruiken
-			// kan niet: dat noemt bij naam een organisatie die er niets mee te maken heeft.
+			// bedoeld. Er zijn er nu twee — de keten en de dataset — dus dit kán gebeuren, en dan is
+			// de gegenereerde dataset getoond aan iemand die op het stelsel is aangesloten.
 			const storingen = register.storingen();
 			storingen.forEach((storing) => {
 				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
 			});
 			if (storingen.length) {
-				toonPaginaMelding("Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.");
+				toonPaginaMelding("Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.", "storing", "bronkeuze");
 			}
 		})
 		.catch((fout) => {

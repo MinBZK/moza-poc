@@ -294,6 +294,53 @@ describe("een ronde die halverwege omvalt", () => {
 	}, 20000);
 });
 
+describe("een geslaagde ronde weerlegt een eerdere storing", () => {
+	it("trekt de eigen melding in", async () => {
+		// Anders blijft "het ophalen is afgebroken" staan boven een lijst die compleet is, en kan
+		// niemand hem meer weghalen.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const ingetrokken = [];
+		const bron = datasetBron(SMAL, {
+			state: nepState(),
+			magAnimeren: () => false,
+			duurMs: 60,
+			verbergMelding: () => ingetrokken.push("weg"),
+		});
+		bron.volgVoortgang(() => {});
+
+		await new Promise((klaar) => bron.herhaalOphalen(klaar));
+
+		expect(ingetrokken).toEqual(["weg"]);
+	}, 20000);
+
+	it("trekt niets in als de ronde juist afbrak", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const ingetrokken = [];
+		const meldStoring = vi.fn();
+		const echt = globalThis.requestAnimationFrame;
+		let beurten = 0;
+		vi.stubGlobal("requestAnimationFrame", (fn) => {
+			beurten += 1;
+			if (beurten > 2) throw new Error("geen beeld meer");
+			return echt ? echt(fn) : setTimeout(fn, 16);
+		});
+
+		const bron = datasetBron(SMAL, {
+			state: nepState(),
+			magAnimeren: () => false,
+			duurMs: 60,
+			meldStoring,
+			verbergMelding: () => ingetrokken.push("weg"),
+		});
+		bron.volgVoortgang(() => {});
+
+		await new Promise((klaar) => bron.herhaalOphalen(klaar));
+
+		expect(ingetrokken).toEqual([]);
+		expect(meldStoring).toHaveBeenCalled();
+	}, 20000);
+});
+
 describe("om een nieuwe ronde vragen", () => {
 	it("speelt de ronde opnieuw af op verzoek", async () => {
 		// De herstelknop en de organisatie-schakelaar vragen erom; er valt bij de dataset niets écht

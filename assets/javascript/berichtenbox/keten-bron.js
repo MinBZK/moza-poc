@@ -44,8 +44,18 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			if (!keten) return false;
 			if (!keten.bezig && !keten.aangesloten) return false;
 
-			uitkomst = await keten.berichten();
-			geefDoor(keten.melding);
+			try {
+				uitkomst = await keten.berichten();
+				geefDoor(keten.melding);
+			} catch (fout) {
+				// Het register gaat bij een uitworp door naar de volgende bron, en achteraan staat de
+				// dataset die altijd van toepassing is. Voor iemand die aantoonbaar aangesloten is, zou
+				// dat verzonnen berichten als zijn post opdienen. Dan liever deze bron opeisen en `laad`
+				// laten werpen: dat geeft een melding in plaats van een geloofwaardige leugen.
+				console.error("[Berichtenbox] Het bepalen of het stelsel van toepassing is, ging mis.", fout);
+				uitkomst = null;
+				return !!keten.aangesloten;
+			}
 
 			return !!uitkomst || !!keten.aangesloten;
 		},

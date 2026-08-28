@@ -272,6 +272,26 @@ describe("meerdere partijen, één meldingsblok", () => {
 		vi.useRealTimers();
 	}, 20000);
 
+	it("laat een leeggemaakte pagina zijn eigen uitleg houden", async () => {
+		// toonLaadfout haalt de rijen weg, zet de tellers op "–" en verbergt de lege staat. Elke andere
+		// melding boven dát scherm verklaart niet wat de bezoeker ziet. Bij gelijke zwaarte won de
+		// meest recente, dus één mislukte zijbalk was genoeg om de uitleg te verdringen.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		bouwPagina([bericht(), bericht()]);
+		zetKeten({ uitkomst: { berichten: [{ magazijnId: "kvk" }, { magazijnId: "kvk" }], magazijnen: [{ id: "kvk", naam: "KVK" }] } });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		// Berichten zonder id leveren geen bruikbare rijen op; dan toont de render-laag de storing.
+		expect(melding()).toContain("Er gaat iets mis met het ophalen");
+
+		// Een latere, lichtere fout mag daar niet overheen.
+		window.Berichtenbox.meld("De mappen in de zijbalk zijn niet beschikbaar.", "storing", "veilig:zijbalk");
+		expect(melding()).toContain("Er gaat iets mis met het ophalen");
+	}, 20000);
+
 	it("laat het blok pas verdwijnen als niemand meer iets te melden heeft", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		vi.spyOn(console, "warn").mockImplementation(() => {});
