@@ -83,6 +83,9 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			} catch (opnieuwFout) {
 				console.error("[Berichtenbox] De hernieuwde ophaalronde kwam niet op gang.", opnieuwFout);
 				haaltOp = false;
+				// De wachtenden vroegen om díe ronde. Hen "geslaagd" melden zou het contract van
+				// klaar(fout) laten liegen.
+				fout = fout || opnieuwFout;
 			}
 		}
 		hernieuwGevraagd = false;
@@ -170,6 +173,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		function rondAf(fout) {
 			if (afgerond) return;
 			afgerond = true;
+			clearTimeout(geduld);
 
 			try {
 				if (fout) {
@@ -190,6 +194,11 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 				}
 			}
 		}
+
+		// Ontsnapping. requestAnimationFrame staat stil in een achtergrondtabblad, dus een ronde die
+		// niet afrondt is geen randgeval. Zonder deze klok blijft `haaltOp` staan, verdwijnt elk
+		// volgend verzoek in de wachtrij, en zijn de knoppen stille no-ops voor de rest van de zitting.
+		const geduld = setTimeout(() => rondAf(new Error("de ophaalronde rondde niet af")), Math.max(duur * 4, 30000));
 
 		function stap() {
 			try {

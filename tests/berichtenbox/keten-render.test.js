@@ -239,6 +239,59 @@ describe("een bron die geen einde meldt", () => {
 	}, 20000);
 });
 
+describe("meerdere partijen, één meldingsblok", () => {
+	const melding = () => {
+		const el = document.querySelector("[data-berichtenbox-storing]");
+		return el && !el.hidden ? el.textContent.replace(/\s+/g, " ").trim() : null;
+	};
+
+	it("laat de melding van een ander weer zien zodra de wachthond de zijne intrekt", async () => {
+		// Twee partijen claimen hetzelfde blok. Zolang tonen ook eigendom overdroeg, wiste de
+		// wachthond bij het intrekken de melding van de ander — en wist de bezoeker niet meer dat
+		// zijn actie mislukt was.
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+		await laadBerichtenbox();
+
+		window.Berichtenbox.meld("Uw wijziging is niet bewaard.", "storing", "opslag");
+		expect(melding()).toContain("niet bewaard");
+
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await vi.advanceTimersByTimeAsync(46000);
+		expect(melding()).toContain("duurde te lang");
+
+		// De ronde rondt alsnog af; de wachthond trekt zijn eigen melding in.
+		keten.meldVoortgang(null);
+		await vi.advanceTimersByTimeAsync(10);
+
+		// En dan hoort de melding van de opslag er weer te staan: die is nog steeds waar.
+		expect(melding()).toContain("niet bewaard");
+		vi.useRealTimers();
+	}, 20000);
+
+	it("laat het blok pas verdwijnen als niemand meer iets te melden heeft", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		bouwPagina([bericht(), bericht()]);
+		const keten = zetKeten({});
+		await laadBerichtenbox();
+
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		await vi.advanceTimersByTimeAsync(46000);
+		expect(melding()).toContain("duurde te lang");
+
+		keten.meldVoortgang(null);
+		await vi.advanceTimersByTimeAsync(10);
+
+		expect(melding()).toBe(null);
+		vi.useRealTimers();
+	}, 20000);
+});
+
 describe("de keten levert de lijst", () => {
 	it("toont de berichten van het stelsel, niet die van de dataset", async () => {
 		bouwPagina([bericht({ id: "msg-uit-dataset", onderwerp: "Verzonnen" })]);

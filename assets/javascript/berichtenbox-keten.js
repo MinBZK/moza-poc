@@ -47,11 +47,14 @@
 	const STILTE_LIMIET_MS = 30000;
 
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
+	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
+	// geen knop is die dat doet: `opnieuw()` hieronder heeft geen enkele aanroeper. Zolang die knop er
+	// niet is, is verversen wat de bezoeker rest — en dat is ook wat de render-laag overal zegt.
 	const FOUT_TEKSTEN = {
-		onbereikbaar: "Er gaat iets mis met het ophalen van uw berichten bij de bronnen. Probeer het later opnieuw.",
-		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht een minuut en probeer het opnieuw.",
-		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Probeer het opnieuw.",
-		stil: "De bronnen reageren niet meer. Probeer het opnieuw.",
+		onbereikbaar: "Er gaat iets mis met het ophalen van uw berichten bij de bronnen. Ververs de pagina om het opnieuw te proberen.",
+		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht een minuut en ververs dan de pagina.",
+		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
+		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
 	};
 
@@ -517,7 +520,9 @@
 		},
 
 		/**
-		 * Draait de ophaalronde opnieuw. Hangt onder de "Opnieuw proberen"-knop van de melding.
+		 * Draait de ophaalronde opnieuw. Bedoeld voor een "Opnieuw proberen"-knop bij de melding — die
+		 * knop bestaat nog niet, dus dit heeft op dit moment geen aanroeper. Bewaard omdat de knop er
+		 * hoort te komen; zolang dat niet zo is, zeggen de teksten hierboven "ververs de pagina".
 		 * Alleen het kvk-nummer is nodig: draaiRonde vraagt de ontvanger zelf opnieuw op, zodat de
 		 * knop ook werkt wanneer de vorige poging al bij de demo-omgeving strandde. Geeft false als
 		 * er niets te herhalen valt.

@@ -532,7 +532,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (stateModule.bewaar()) {
 			// Weer ruimte: de melding hoort niet te blijven staan. QuotaExceededError is van nature
 			// tijdelijk — bewaar() krimpt zelf de lijst met binnengekomen berichten.
-			if (staandeMeldingEigenaar === "opslag") verbergPaginaMelding("opslag");
+			verbergPaginaMelding("opslag");
 			return true;
 		}
 
@@ -542,7 +542,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
 		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
-		if (staandeMeldingEigenaar !== "opslag") {
+		if (!meldingClaims.has("opslag")) {
 			const reden = stateModule.waaromNietBewaard();
 			let tekst;
 			if (reden === "vol") {
@@ -1759,9 +1759,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * knop — dan gebeurt er niets bijzonders en gaat het vervolg meteen door.
 	 */
 	function speelOphalenOpnieuw(opKlaar) {
+		// Wat er ook gebeurt: de mededeling dat het verzoek meegaat, hoort weg zodra het gedaan is.
+		// Anders staat "het ophalen loopt nog" boven een lijst die allang compleet is.
+		const vervolg = (fout) => {
+			verbergPaginaMelding("wacht");
+			opKlaar(fout || null);
+		};
+
 		const bron = register.actief();
 		if (!bron || typeof bron.herhaalOphalen !== "function") {
-			opKlaar();
+			vervolg(null);
 			return;
 		}
 
@@ -1773,14 +1780,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				log: "Opnieuw ophalen bij de bronnen",
 				bezoeker: "Wij konden de berichten niet opnieuw ophalen. Ververs de pagina.",
 				eigenaar: "lading",
-				// Geen herstel dat opKlaar nog eens aanroept: de bron bedient het vervolg zelf, ook als
-				// het opnieuw ophalen synchroon omvalt. Hier herhalen zou het dubbel doen.
+				// Geen herstel dat het vervolg nog eens aanroept: de bron bedient het zelf, ook als het
+				// opnieuw ophalen synchroon omvalt. Hier herhalen zou het dubbel doen.
 			},
 			() => {
 				// De bron kan zeggen dat er al een ronde loopt en dit verzoek daarin meegaat. Zonder dat
-				// te melden lijkt de knop dood, terwijl het verzoek gewoon in de rij staat.
-				if (bron.herhaalOphalen(opKlaar) === "wacht") {
-					toonPaginaMelding("Het ophalen bij de bronnen loopt nog. Uw verzoek wordt daarin meegenomen.", "info", "lading");
+				// te melden lijkt de knop dood, terwijl het verzoek gewoon in de rij staat. Eigen
+				// eigenaar: "lading" is al van vier andere plekken, en dan trekt de een de ander weg.
+				if (bron.herhaalOphalen(vervolg) === "wacht") {
+					toonPaginaMelding("Het ophalen bij de bronnen loopt nog. Uw verzoek wordt daarin meegenomen.", "info", "wacht");
 				}
 			}
 		);
@@ -2269,58 +2277,92 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// "de demo is uitgespeeld" over "uw wijziging is niet bewaard" heen zou de bezoeker doen denken
 	// dat zijn actie gelukt is.
 	const MELDING_ZWAARTE = { info: 1, storing: 2 };
-	let staandeMeldingZwaarte = 0;
-	let staandeMeldingEigenaar = null;
+	// Eén blok op het scherm, maar meerdere partijen die er iets in te zeggen hebben: de lading, de
+	// opslag, de wachthond, elke bron, en het vangnet rond de render-laag. Zij houden hier hun claim
+	// bij, en het scherm wordt daaruit afgeleid.
+	//
+	// Dat is niet hetzelfde als "de laatste wint". Wie toonde, was daarvoor ook eigenaar van het slot,
+	// en trok bij het opruimen dus de melding van een ander weg — dat kostte in drie reviewrondes
+	// telkens een nieuwe patch. Nu haalt intrekken alleen de eigen claim weg en verschijnt vanzelf
+	// weer wat er nog wél waar is.
+	const meldingClaims = new Map();
 
-	/**
-	 * Geeft terug of de melding ook echt zichtbaar werd. Een lichtere melding dringt niet voor een
-	 * zwaardere; die wordt onderdrukt en meldt dat met false, zodat een aanroeper die "we hebben het
-	 * al gezegd" wil onthouden dat niet doet voor iets wat niemand zag.
-	 */
-	function toonPaginaMelding(tekst, soort = "storing", eigenaar = "algemeen") {
-		const zwaarte = MELDING_ZWAARTE[soort] || MELDING_ZWAARTE.storing;
-		if (zwaarte < staandeMeldingZwaarte) return false;
+	/** De zwaarste claim; bij gelijke zwaarte de meest recente. */
+	function zwaarsteClaim() {
+		let winnaar = null;
+		meldingClaims.forEach((claim) => {
+			if (!winnaar || claim.zwaarte > winnaar.zwaarte) {
+				winnaar = claim;
+				return;
+			}
+			if (claim.zwaarte === winnaar.zwaarte && claim.volgnummer > winnaar.volgnummer) winnaar = claim;
+		});
+		return winnaar;
+	}
 
+	function tekenMelding() {
 		const blok = document.querySelector("[data-berichtenbox-storing]");
-		if (!blok) {
-			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
-			return false;
+		if (!blok) return null;
+
+		const claim = zwaarsteClaim();
+		if (!claim) {
+			blok.hidden = true;
+			return null;
 		}
 
 		const slot = blok.querySelector("[data-berichtenbox-storing-tekst]");
-		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar && slot && slot.textContent) {
-			console.warn("[Berichtenbox] Melding van '" + staandeMeldingEigenaar + "' vervangen door die van '" + eigenaar + "': " + slot.textContent);
-		}
-		if (slot) slot.textContent = tekst;
-		blok.classList.toggle("feedback-error", soort === "storing");
-		blok.classList.toggle("feedback-info", soort === "info");
+		if (slot) slot.textContent = claim.tekst;
+		blok.classList.toggle("feedback-error", claim.soort === "storing");
+		blok.classList.toggle("feedback-info", claim.soort === "info");
 
 		// Beide pictogrammen staan in het blok, in deze volgorde: eerst het storings-, dan het
 		// informatie-pictogram. Alleen de kleur wisselen liet een wit kruis op een blauwe schijf
 		// achter bij een mededeling.
 		const iconen = blok.querySelectorAll(":scope > svg");
 		if (iconen.length === 2) {
-			iconen[0].style.display = soort === "info" ? "none" : "";
-			iconen[1].style.display = soort === "info" ? "" : "none";
+			iconen[0].style.display = claim.soort === "info" ? "none" : "";
+			iconen[1].style.display = claim.soort === "info" ? "" : "none";
 		}
 		blok.hidden = false;
-		staandeMeldingZwaarte = zwaarte;
-		staandeMeldingEigenaar = eigenaar;
+		return claim;
+	}
+
+	let meldingTeller = 0;
+
+	/**
+	 * Legt de claim van deze eigenaar vast en tekent wat er nu zwaarst weegt.
+	 *
+	 * Geeft terug of déze melding op het scherm staat. Staat er iets zwaarders, dan is dat geen
+	 * stilte: het blijft in de claims staan en verschijnt zodra het zwaardere is ingetrokken.
+	 */
+	function toonPaginaMelding(tekst, soort = "storing", eigenaar = "algemeen") {
+		const blok = document.querySelector("[data-berichtenbox-storing]");
+		if (!blok) {
+			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
+			return false;
+		}
+
+		meldingTeller += 1;
+		meldingClaims.set(eigenaar, {
+			eigenaar,
+			tekst,
+			soort,
+			zwaarte: MELDING_ZWAARTE[soort] || MELDING_ZWAARTE.storing,
+			volgnummer: meldingTeller,
+		});
+
+		const getoond = tekenMelding();
+		if (getoond && getoond.eigenaar !== eigenaar) {
+			console.warn("[Berichtenbox] Melding van '" + eigenaar + "' wacht achter die van '" + getoond.eigenaar + "': " + tekst);
+			return false;
+		}
 		return true;
 	}
 
-	/**
-	 * Haalt alleen de eigen melding weg. Dat de lijst weer laadt zegt niets over een wijziging die
-	 * niet bewaard kon worden; die melding hoort te blijven staan.
-	 */
+	/** Haalt alleen de eigen claim weg. Wat een ander nog te melden heeft, blijft staan. */
 	function verbergPaginaMelding(eigenaar = "algemeen") {
-		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar) return;
-
-		staandeMeldingZwaarte = 0;
-		staandeMeldingEigenaar = null;
-
-		const blok = document.querySelector("[data-berichtenbox-storing]");
-		if (blok) blok.hidden = true;
+		if (!meldingClaims.delete(eigenaar)) return;
+		tekenMelding();
 	}
 
 	// Er is geen lijst te tonen. De server-gerenderde rijen laten staan zou erger zijn dan niets:
@@ -2332,6 +2374,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	const TELLERS_OP_DE_PAGINA = ["[data-berichtenbox-counter-total]", "[data-berichtenbox-sources]", "[data-berichtenbox-counter-unread]", '[data-berichtenbox-count="inbox"]', '[data-berichtenbox-count="ongelezen"]'];
 
 	function toonLaadfout() {
+		// Een bevroren balk boven "er gaat iets mis met het ophalen" is twee waarheden op één scherm.
+		const voortgangsblok = document.querySelector("[data-berichtenbox-progress]");
+		if (voortgangsblok) voortgangsblok.hidden = true;
+
 		// De lijst is weg om een andere reden dan voortgang. Bleef deze vlag staan, dan blijft
 		// bouwPaginaNav de paginering verbergen — ook nadat herstelNaLaadfout de lijst teruggaf, en
 		// dan mist de bezoeker pagina 2 zonder dat iets uitlegt waarom.
@@ -2474,5 +2520,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		mapVan,
 		huidigeView,
 		render,
+		// Het meldingsblok heeft meerdere claimhouders; zonder deze twee is van buitenaf niet vast te
+		// stellen of intrekken alleen de eigen claim weghaalt.
+		meld: (tekst, soort, eigenaar) => toonPaginaMelding(tekst, soort, eigenaar),
+		trekMeldingIn: (eigenaar) => verbergPaginaMelding(eigenaar),
 	};
 })();
