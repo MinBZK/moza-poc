@@ -1,0 +1,26 @@
+# Onze werkkopie als proeftuin, met alle BACKEND_*-vars doorgelaten.
+#
+# compose.proeftuin-lokaal.yaml uit de FBS-repo beperkt NGINX_ENVSUBST_FILTER tot
+# BACKEND_(ORIGIN|PROFIEL|API_2|KETEN|DEMO). Onze default.conf.template gebruikt daarnaast
+# BACKEND_KETEN_HOST en BACKEND_DEMO_HOST; die zouden dan letterlijk in de nginx-config blijven
+# staan en als Host-header meegaan.
+# In hostnet delen alle containers één netns, dus staat alles op 127.0.0.1 en resolveert
+# "berichtenuitvraag" niet.
+services:
+  proeftuin:
+    image: docker.io/library/nginx:1.31-alpine
+    network_mode: host
+    ports: !reset []
+    environment:
+      NGINX_ENTRYPOINT_LOCAL_RESOLVERS: "1"
+      NGINX_ENVSUBST_FILTER: '^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$$'
+      BACKEND_ORIGIN: http://127.0.0.1:8086
+      BACKEND_KETEN: http://127.0.0.1:8086
+      BACKEND_DEMO: http://127.0.0.1:8095
+      BACKEND_KETEN_HOST: ""
+      BACKEND_DEMO_HOST: ""
+      BACKEND_PROFIEL: ""
+      BACKEND_API_2: ""
+    volumes:
+      - ${PROEFTUIN_PAD}/_site:/usr/share/nginx/html:ro,z
+      - ${PROEFTUIN_PAD}/container/default.conf.template:/etc/nginx/templates/default.conf.template:ro,z
