@@ -29,6 +29,11 @@ export function maakRegister() {
 			bronnen.push(bron);
 		},
 
+		/** Alles wat geregistreerd is, in volgorde van voorrang. */
+		bronnen() {
+			return bronnen.slice();
+		},
+
 		/** De eerste bron die van toepassing is, of null als geen enkele dat is. */
 		async kies(persona) {
 			for (const bron of bronnen) {

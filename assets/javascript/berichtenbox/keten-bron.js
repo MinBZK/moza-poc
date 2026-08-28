@@ -10,9 +10,8 @@
  * er is geen terugval: verzonnen berichten tussen echte zijn voor de bezoeker niet te onderscheiden,
  * dus liever een melding dan een postbus die er echt uitziet maar het niet is.
  *
- * Nog niet hier: de voortgang van de ronde. Het stelsel meldt per organisatie hoeveel er bevraagd,
- * klaar en gevonden zijn — echte getallen, waar de balk nu nog nagebootste toont. Die koppeling
- * hoort bij de stap waarin de voortgangsanimatie naar de datalaag verhuist.
+ * De voortgang komt hier ook vandaan: het stelsel meldt per organisatie hoeveel er bevraagd, klaar
+ * en gevonden zijn. Dat zijn echte getallen, waar de dataset-bron een nabootsing tegenover zet.
  */
 
 export function ketenBron(keten, { meldStoring = () => {} } = {}) {
@@ -42,6 +41,19 @@ export function ketenBron(keten, { meldStoring = () => {} } = {}) {
 			geefDoor(keten.melding);
 
 			return !!uitkomst || !!keten.aangesloten;
+		},
+
+		/**
+		 * Meldt hoe ver de ophaalronde is. De render-laag hangt hieraan vóórdat een bron gekozen is:
+		 * die keuze valt pas als de ronde klaar is, en dan valt er niets meer te tonen.
+		 */
+		volgVoortgang(kijker) {
+			if (!keten || typeof keten.opWijziging !== "function") return;
+
+			// De eerste melding kan al geweest zijn voordat deze module bestond; het script draait
+			// vóór de module en begint dan meteen op te halen.
+			if (keten.voortgang) kijker(keten.voortgang);
+			keten.opWijziging((toestand) => kijker(toestand.voortgang));
 		},
 
 		async laad() {

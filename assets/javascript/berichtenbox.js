@@ -1680,6 +1680,48 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		state.eigenMappen.forEach(voegMapToeAanZijbalk);
 	}
 
+	/**
+	 * Vult het voortgangsblok. Eén plek, want de getallen komen uit twee werelden: de nagebootste
+	 * animatie hieronder, en de echte ophaalronde van een bron die meldt hoe ver hij is.
+	 */
+	function vulVoortgang(bevraagd, klaar, gevonden) {
+		const blok = document.querySelector('[data-berichtenbox-progress]');
+		if (!blok) return;
+
+		const slot = (kiezer, waarde) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.textContent = waarde;
+		};
+		slot('[data-berichtenbox-progress-total]', bevraagd);
+		slot('[data-berichtenbox-progress-source]', klaar);
+		slot('[data-berichtenbox-progress-found]', gevonden);
+
+		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
+		if (balk) balk.style.inlineSize = (bevraagd ? Math.round((klaar / bevraagd) * 100) : 0) + '%';
+
+		// "1 bronnen" en "1 berichten" staan er anders.
+		werkMeervoudBij();
+	}
+
+	/**
+	 * Echte voortgang van de bron die de berichten ophaalt. Zolang die meldt, staat zijn blok op het
+	 * scherm en blijft de lijst weg: dat zijn andere berichten dan die straks binnenkomen.
+	 *
+	 * Dit hangt aan álle geregistreerde bronnen en niet aan de gekozene, want de keuze valt pas als
+	 * de ronde klaar is — en dan is er geen voortgang meer te tonen.
+	 */
+	function volgEchteVoortgang(bronnen) {
+		bronnen.forEach((bron) => {
+			if (typeof bron.volgVoortgang !== 'function') return;
+
+			bron.volgVoortgang((voortgang) => {
+				if (!voortgang) return;
+				verbergVoorVoortgang();
+				vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
+			});
+		});
+	}
+
 	function voortgangsAnimatie(opKlaar) {
 		const wrap = document.querySelector('[data-berichtenbox-progress]');
 		const lijst = document.querySelector('[data-berichtenbox-list]');
@@ -1702,11 +1744,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const aankomendeBronnen = bereikteBronnen.size;
 		const totaalBerichten = bereikteBerichten.length;
 
-		const bronEl = document.querySelector('[data-berichtenbox-progress-source]');
-		const totaalEl = document.querySelector('[data-berichtenbox-progress-total]');
-		const gevondenEl = document.querySelector('[data-berichtenbox-progress-found]');
-		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
-		if (totaalEl) totaalEl.textContent = totaalBronnen;
+		vulVoortgang(totaalBronnen, 0, 0);
 
 		// Simuleer SSE-gedrag: elke bereikbare bron arriveert op eigen moment. Trekken
 		// uit een zware-staart-verdeling (x^4) zodat de meeste bronnen snel antwoorden
@@ -1744,10 +1782,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const t = Math.min(1, (nu - start) / duur);
 			const bronnenBinnen = aantalVoor(bronTijden, t);
 			const berichtenBinnen = aantalVoor(berichtTijden, t);
-			if (bronEl) bronEl.textContent = bronnenBinnen;
-			if (gevondenEl) gevondenEl.textContent = berichtenBinnen;
-			werkMeervoudBij();
-			if (balk) balk.style.inlineSize = ((bronnenBinnen / totaalBronnen) * 100) + '%';
+			vulVoortgang(totaalBronnen, bronnenBinnen, berichtenBinnen);
 			if (t < 1) {
 				requestAnimationFrame(stap);
 			} else {
@@ -2255,6 +2290,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	} catch (fout) {
 		console.error('[Berichtenbox] Actieve persona niet op te vragen; verder zonder.', fout);
 	}
+
+	// Vóór de keuze, niet erna: een bron die ophaalt meldt zijn voortgang terwijl geldtVoor nog
+	// wacht. Bronnen die niet gekozen worden, melden vanzelf niets.
+	volgEchteVoortgang(register.bronnen());
 
 	register.kies(persona)
 		.then((bron) => {
