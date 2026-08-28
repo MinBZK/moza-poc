@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
  */
 
 const PERSONAS = process.cwd() + "/assets/javascript/personas.js";
+const VLAGGEN = process.cwd() + "/assets/javascript/feature-flags.js";
 
 function nepOpslag(begin = {}) {
 	const kluis = { ...begin };
@@ -58,6 +59,29 @@ afterEach(() => {
 	delete window.personasData;
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
+});
+
+describe("de persona-kiezer", () => {
+	it("verschijnt in het flags-paneel", () => {
+		// De kiezer hangt aan .feature-flags-panel, dat feature-flags.js bouwt. Draait personas.js
+		// eerder, dan is er geen paneel en verschijnt de kiezer niet — zonder fout en zonder
+		// melding. Zie ook tests/scriptvolgorde.test.js.
+		const opslag = nepOpslag({ persona: "koffiezaak" });
+		vi.stubGlobal("localStorage", opslag);
+		// Het paneel wordt alleen gebouwd als er iets te schakelen valt.
+		document.body.innerHTML = '<span hidden data-feature="Iets" data-feature-type="functionaliteit"></span>';
+		window.personasData = [
+			{ id: "koffiezaak", label: "Horeca", actief: true, persoon: {}, bedrijf: { kvkNummer: "85234567" } },
+			{ id: "bloemenkweker", label: "Kweker", persoon: {}, bedrijf: { kvkNummer: "62345681" } },
+		];
+		new Function(readFileSync(VLAGGEN, "utf8")).call(window);
+		new Function(readFileSync(PERSONAS, "utf8")).call(window);
+
+		const paneel = document.querySelector(".feature-flags-panel");
+		expect(paneel).not.toBe(null);
+		expect(paneel.textContent).toContain("Persona's");
+		expect(paneel.querySelectorAll("input[name=persona]").length).toBe(2);
+	});
 });
 
 describe("wisselen van persona", () => {

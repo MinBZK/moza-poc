@@ -90,9 +90,13 @@
 		<!-- Vóór content-interactions: personas.js wist bij een persona-wisseling de opgeslagen
 		     gegevens van de vorige. Draait het daarna, dan leest content-interactions nog één
 		     keer wat er van iemand anders stond. -->
+		<script src="{{ '/assets/javascript/feature-flags.js' | url }}" defer></script>
+		<!-- Volgorde is hier gedrag, geen smaak. personas.js ná feature-flags.js, want de
+		     persona-kiezer hangt in het flags-paneel dat dát script bouwt. En
+		     content-interactions.js ná personas.js, want personas.js wist bij een wisseling de
+		     gegevens van de vorige persona (hidden:, read:, favorite:) die dát script leest. -->
 		<script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/content-interactions.js' | url }}" defer></script>
-		<script src="{{ '/assets/javascript/feature-flags.js' | url }}" defer></script>
 		<script>
 			window.personasData = {{ personas | dump | safe }};
 		</script>
