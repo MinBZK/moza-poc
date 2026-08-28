@@ -37,7 +37,10 @@
 	// dan we tonen; dat hoort de bezoeker te weten in plaats van het stil af te kappen.
 	const LIJST_GROOTTE = 200;
 
-	const DEMO_LIMIET_MS = 5000;
+	// De demo-console beantwoordt één vraag: welke persona's kent de keten. Dat hoort in
+	// milliseconden te gaan. Vijf seconden was een tijdslimiet die als wachttijd voelde: staat er
+	// geen backend, dan wacht élke bezoeker die tijd uit voordat de dataset in beeld komt.
+	const DEMO_LIMIET_MS = 1500;
 	const LIJST_LIMIET_MS = 30000;
 	const STILTE_LIMIET_MS = 30000;
 

@@ -55,6 +55,46 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
+describe("zolang de bron nog niets weet", () => {
+	it("toont geen balk op nul boven een lege pagina", async () => {
+		// De ronde begint met een vraag aan de demo-console: kent de keten deze persona? Zolang die
+		// niet beantwoord is, valt er niets te melden. Een balk op "0 van 14 bronnen" is dan geen
+		// voortgang maar een bewering over bronnen die nooit bevraagd zijn — en staat er geen
+		// backend, dan staat hij daar seconden.
+		bouwPagina([bericht(), bericht()]);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		zetKeten({}); // de ronde lost nooit op
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(blok().hidden).toBe(true);
+	});
+
+	it("houdt de lijst wel weg, zodat de koppen niet even verschijnen", async () => {
+		bouwPagina([bericht(), bericht()]);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		zetKeten({});
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(lijst().hidden).toBe(true);
+	});
+
+	it("laat de balk verschijnen zodra er wél een getal is", async () => {
+		bouwPagina([bericht(), bericht()]);
+		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
+		const keten = zetKeten({});
+
+		await laadBerichtenbox();
+		expect(blok().hidden).toBe(true);
+
+		keten.meldVoortgang({ bevraagd: 3, klaar: 1, gevonden: 4 });
+		expect(blok().hidden).toBe(false);
+	});
+});
+
 describe("echte voortgang van de ophaalronde", () => {
 	it("zet de getallen van het stelsel in de balk, niet die van de nabootsing", async () => {
 		bouwPagina([bericht(), bericht(), bericht()]);

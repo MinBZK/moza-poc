@@ -249,6 +249,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// staat zijn hier alle drie bekend.
 	let voortgangKlaargezet = false;
 
+	/**
+	 * Ruimt de lijst op voor een bron die gaat melden hoe ver hij is. Het voortgangsblok zelf blijft
+	 * hier verborgen: dat verschijnt pas bij het eerste getal, in vulVoortgang.
+	 *
+	 * Anders staat er een balk op nul boven een lege pagina zolang de bron nog niets weet — en dat
+	 * kan seconden duren als het stelsel niet antwoordt. "0 van 14 bronnen" is dan geen voortgang
+	 * maar een bewering over bronnen die nooit bevraagd zijn.
+	 */
 	function verbergVoorVoortgang() {
 		const wrap = document.querySelector('[data-berichtenbox-progress]');
 		const lijst = document.querySelector('[data-berichtenbox-list]');
@@ -257,7 +265,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const pagnav = document.querySelector('.berichtenbox-content .pagination');
 		lijst.hidden = true;
 		if (pagnav) pagnav.hidden = true;
-		wrap.hidden = false;
 		voortgangKlaargezet = true;
 		return true;
 	}
@@ -1687,6 +1694,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	function vulVoortgang(bevraagd, klaar, gevonden) {
 		const blok = document.querySelector('[data-berichtenbox-progress]');
 		if (!blok) return;
+
+		// Hier pas: er valt iets te melden.
+		blok.hidden = false;
 
 		const slot = (kiezer, waarde) => {
 			const el = document.querySelector(kiezer);
