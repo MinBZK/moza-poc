@@ -7,7 +7,7 @@ import { bericht, bouwDemoDetailPagina, laadBerichtenbox, laatLaden } from "./do
  *
  * De berichtenuitvraag levert alleen kopgegevens: afzender, onderwerp, datum. De inhoud blijft bij
  * de organisatie tot iemand erom vraagt. Voor de bezoeker mag dat nooit een lege pagina opleveren —
- * hij moet zien dat er iets wordt opgehaald, en lezen wat er misging als het niet lukt.
+ * de bezoeker moet zien dat er iets wordt opgehaald, en lezen wat er misging als het niet lukt.
  */
 
 const KETEN_BERICHT = bericht({
@@ -76,7 +76,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laadBerichtenbox();
 		await laatLaden();
 
-		expect(tekst()).toBe("De inhoud van dit bericht wordt opgehaald bij RVO…");
+		expect(tekst()).toBe("Wij halen de inhoud van dit bericht op bij RVO…");
 		expect(document.querySelector("[data-demo-body]").getAttribute("aria-busy")).toBe("true");
 	});
 
@@ -94,7 +94,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 
 	it("blijft niet op 'wordt opgehaald' staan als de bron onverwacht struikelt", async () => {
 		// `inhoudVan` hoort niet te werpen, maar als het toch gebeurt is de bezoeker het slachtoffer:
-		// zonder deze vangst leest hij tot in lengte van dagen dat zijn bericht wordt opgehaald.
+		// zonder deze vangst staat er tot in lengte van dagen dat het bericht wordt opgehaald.
 		window.BerichtenboxKeten = nepKeten(async () => {
 			throw new Error("stuk");
 		});
@@ -133,16 +133,35 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 
 		const bijlagen = document.querySelector("[data-berichtenbox-attachments]");
+		const lijst = bijlagen.querySelector("[data-berichtenbox-attachments-list]");
 		expect(bijlagen.hidden).toBe(false);
-		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").textContent).toBe("2 bijlagen bij dit bericht van RVO");
+		expect(lijst.hidden).toBe(false);
+
+		// De échte namen, niet de nagebootste. En erbij dat openen nog niet kan: een naam zonder
+		// link en zonder woord laat de bezoeker klikken op iets dat er niet is.
+		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
+		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf", "Bijlagen openen kan in dit prototype nog niet."]);
+
+		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
+		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
 	});
 
-	it("laat een bericht uit de dataset met rust", async () => {
-		// Die heeft zijn inhoud al; er valt niets na te halen en niets te melden.
-		const uitDataset = bericht({ id: "msg-dataset", inhoud: "Eerste alinea.\n\nTweede alinea." });
-		const inhoudVan = vi.fn();
-		window.BerichtenboxKeten = { bezig: false, aangesloten: false, melding: null, voortgang: null, berichten: async () => null, opWijziging: () => {}, inhoudVan };
-		bouwDemoDetailPagina(uitDataset);
+	it("vraagt niets na voor een bericht dat zijn inhoud al heeft", async () => {
+		// De spy moet op de áctieve bron zitten, anders bewijst hij niets: een keten die zich niet
+		// aangesloten meldt wordt sowieso nooit geraadpleegd, en dan is "niet aangeroepen" waar om
+		// de verkeerde reden. Dus: wél aangesloten, en een bericht dat zijn inhoud al bij zich draagt.
+		const metInhoud = { ...KETEN_BERICHT, id: "al-compleet", inhoud: "Eerste alinea.\n\nTweede alinea." };
+		const inhoudVan = vi.fn(async () => ({ inhoud: "Dit hoort nooit op het scherm te komen.", bijlagen: [] }));
+		window.BerichtenboxKeten = {
+			bezig: false,
+			aangesloten: true,
+			melding: null,
+			voortgang: null,
+			berichten: async () => ({ berichten: [metInhoud], magazijnen: [{ id: metInhoud.magazijnId, naam: "RVO", type: "instantie" }] }),
+			opWijziging: () => {},
+			inhoudVan,
+		};
+		bouwDemoDetailPagina(metInhoud);
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -150,5 +169,38 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 
 		expect(tekst()).toBe("Eerste alinea. Tweede alinea.");
 		expect(inhoudVan).not.toHaveBeenCalled();
+	});
+
+	it("laat de nagebootste bijlagen weg bij een bericht uit het stelsel", async () => {
+		// De nabootsing vult de bijlagenlijst anderhalve seconde na het laden met verzonnen namen
+		// die naar een voorbeeld-PDF wijzen. Over échte bijlagegegevens heen is dat geen nabootsing
+		// meer maar een onwaarheid — met een werkende downloadknop erbij.
+		vi.useFakeTimers();
+		try {
+			window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ naam: "besluit-2026.pdf" }] }));
+			bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+
+			await laadBerichtenbox();
+			await vi.advanceTimersByTimeAsync(5000);
+
+			const regels = [...document.querySelectorAll("[data-berichtenbox-attachments-list] li")].map((li) => li.textContent);
+			expect(regels).toContain("besluit-2026.pdf");
+			expect(regels.some((regel) => /Beschikking\.pdf|Bijlage-specificatie\.pdf/.test(regel))).toBe(false);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("meldt aan een schermlezer dat de inhoud binnen is", async () => {
+		// De brief verschijnt buiten elke live-regio. Zonder deze melding hoort iemand met een
+		// schermlezer dat er iets wordt opgehaald, en daarna niets meer.
+		window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "De brief.", bijlagen: [] }));
+		bouwDemoDetailPagina(KETEN_BERICHT);
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toBe("De inhoud van dit bericht is opgehaald.");
 	});
 });

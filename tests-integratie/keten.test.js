@@ -89,15 +89,16 @@ describe("een bericht uit het stelsel openen", () => {
 		const detail = await laadLive("/moza/berichtenbox/bericht-demo/?id=" + id + "&persona=proeftuin-drie", { opslag });
 		opruimen.push(detail.ruimOp);
 
-		// Eerst zegt de pagina dat ze bezig is, daarna staat de inhoud er. Op het eerste wachten is
-		// niet betrouwbaar te doen — de ronde kan sneller zijn dan de lus — dus wachten we op de
-		// eindtoestand: iets dat noch leeg is, noch de "wordt opgehaald"-tekst.
+		// Wachten op `aria-busy`, niet op een zinsnede: dat attribuut ís het signaal dat het ophalen
+		// loopt, en het blijft kloppen als de tekst verandert. Op een tekst matchen deed dat niet —
+		// die veranderde, en de lus stapte meteen uit met de tussentekst in handen.
 		const tot = Date.now() + 20000;
 		let tekst = "";
-		while (Date.now() < tot && (!tekst || tekst.indexOf("wordt opgehaald") !== -1)) {
+		while (Date.now() < tot) {
 			const body = document.querySelector("[data-demo-body]");
 			tekst = body ? body.textContent.trim() : "";
-			if (!tekst || tekst.indexOf("wordt opgehaald") !== -1) await new Promise((r) => setTimeout(r, 100));
+			if (body && tekst && !body.hasAttribute("aria-busy")) break;
+			await new Promise((r) => setTimeout(r, 100));
 		}
 
 		// De proeftuin-berichten zijn brieven van een overheidsorganisatie; ze openen met een

@@ -59,7 +59,7 @@
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
-		weg: "Dit bericht is niet meer beschikbaar bij de organisatie die het stuurde.",
+		weg: "Dit bericht is niet meer beschikbaar bij de organisatie die het stuurde. Ga terug naar uw Berichtenbox voor uw overige berichten.",
 	};
 
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
@@ -299,13 +299,36 @@
 	 * bezoeker het bericht opent. Dat is niet alleen zuinig: het is ook wat er in een federatief
 	 * stelsel gebeurt, waar de inhoud bij de organisatie zelf blijft tot iemand erom vraagt.
 	 */
+	/**
+	 * Zegt dit 404-antwoord zelf dat het bericht weg is?
+	 *
+	 * Het stelsel antwoordt met `application/problem+json`. Staat daar niets bruikbaars in — of is
+	 * het geen problem+json, wat op een tussenliggende laag wijst en niet op het stelsel — dan
+	 * weten we het niet, en dan is "onbereikbaar" het eerlijke antwoord.
+	 */
+	async function zegtWeg(respons) {
+		const soort = respons.headers.get("content-type") || "";
+		if (soort.indexOf("problem+json") === -1) return false;
+
+		try {
+			const probleem = await respons.json();
+			const tekst = ((probleem && (probleem.type || "")) + " " + (probleem && (probleem.title || ""))).toLowerCase();
+			return tekst.indexOf("bericht") !== -1;
+		} catch (fout) {
+			console.warn("[Berichtenbox] 404-antwoord niet te lezen; behandeld als onbereikbaar.", fout);
+			return false;
+		}
+	}
+
 	async function haalInhoud(ontvanger, berichtId) {
 		const respons = await metTijdslimiet("/api/v1/berichten/" + encodeURIComponent(berichtId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
 
-		// Een bericht dat er in de lijst wel stond en hier niet meer, is iets anders dan een bron die
-		// niet antwoordt. Het eerste overkomt de bezoeker die een oude link opent; het tweede is een
-		// storing. Dat verschil hoort in de melding terecht te komen.
-		if (respons.status === 404) throw ketenFout("weg", "bericht bestaat niet meer (" + berichtId + ")");
+		// Een 404 zegt niet wat wij zouden willen dat hij zegt. Hij kan betekenen dat het bericht er
+		// niet meer is, maar net zo goed dat deze backend de route niet kent of het bericht niet aan
+		// déze ontvanger toekent. "Dit bericht bestaat niet meer" is dan de stelligste onwaarheid
+		// die deze pagina kan uitspreken, en van de waarheid niet te onderscheiden. Alleen als het
+		// antwoord zelf zegt dat het bericht weg is, nemen we dat over.
+		if (respons.status === 404) throw ketenFout((await zegtWeg(respons)) ? "weg" : "onbereikbaar", "bericht niet geleverd (404: " + berichtId + ")");
 		if (!respons.ok) throw ketenFout("onbereikbaar", "berichtinhoud laden mislukt (" + respons.status + ")");
 
 		const bericht = await respons.json();
@@ -356,8 +379,9 @@
 		return !inBelastingdienstPortaal();
 	}
 
-	// Alleen de inbox bevraagt de bronnen. Archief, prullenbak en de detailpagina's hebben genoeg
-	// aan de cache van de vorige ronde; die herkennen we aan data-berichtenbox-view.
+	// Elke berichtenbox-pagina draait zijn eigen ronde — zie de toelichting bij de start hieronder.
+	// Dat geldt ook voor een detailpagina: zonder ronde is er geen ontvanger, en dan valt de inhoud
+	// van een bericht niet op te vragen.
 
 	// --- Persona ------------------------------------------------------------------------------
 
@@ -543,8 +567,13 @@
 		 */
 		inhoudVan: async function (berichtId) {
 			// Zonder ronde is er geen ontvanger, en zonder ontvanger geen adres om het bij op te
-			// halen. Dat is geen fout: dit is een bericht uit de dataset, dat zijn inhoud al heeft.
-			if (!ontvangerVanRonde || !berichtId) return null;
+			// halen. Voor de aanroeper is dat iets anders dan "de organisatie heeft niets": er is
+			// niets gevraagd. Dat verschil moet zichtbaar blijven, anders staat er straks een
+			// uitspraak over een organisatie die nooit iets gevraagd is.
+			if (!ontvangerVanRonde || !berichtId) {
+				console.warn("[Berichtenbox] Geen ontvanger van een ophaalronde; de inhoud is niet op te vragen.", berichtId);
+				return { fout: "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen." };
+			}
 
 			try {
 				return await haalInhoud(ontvangerVanRonde, berichtId);

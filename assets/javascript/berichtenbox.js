@@ -1438,6 +1438,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function laadBijlagen() {
+		// Nagebootste bijlagen horen bij een nagebootst bericht. Voor een bericht uit het stelsel
+		// zijn de bijlagen echt bekend — ze komen mee met de inhoud — en zou deze nabootsing ze
+		// anderhalve seconde later overschrijven met verzonnen namen die naar een voorbeeld-PDF
+		// wijzen. Dat levert een downloadknop op voor een bijlage die niet bestaat,
+		// óók onder de mededeling dat het bericht zelf niet meer beschikbaar is.
+		if (document.querySelector("[data-demo-detail][data-uit-keten]")) return;
+
 		const bijlSec = document.querySelector("[data-berichtenbox-attachments]");
 		const previewVooraf = document.querySelector("[data-berichtenbox-attachments-preview]");
 		// De PDF-viewer staat bij élk bericht (alleen zichtbaar in variant B); de
@@ -1592,7 +1599,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * Haalt de inhoud van één bericht na bij de bron die het leverde.
 	 *
 	 * De bezoeker ziet ondertussen dat er iets gebeurt. Komt er niets, dan staat er wat er misging —
-	 * een lege pagina laten staan zou hem laten denken dat het bericht zelf leeg is.
+	 * een lege pagina laten staan zou de indruk wekken dat het bericht zelf leeg is.
 	 */
 	function haalInhoudNa(bericht, bodyEl, detail) {
 		const bron = register.actief();
@@ -1601,15 +1608,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			return;
 		}
 
-		schrijfAlineas(bodyEl, ["De inhoud van dit bericht wordt opgehaald bij " + bericht.afzender + "…"]);
+		schrijfAlineas(bodyEl, ["Wij halen de inhoud van dit bericht op bij " + bericht.afzender + "…"]);
 		bodyEl.setAttribute("aria-busy", "true");
+
+		// Wat er gebeurt is buiten de tekst niet te zien. Zonder deze meldingen hoort iemand met een
+		// schermlezer dat er iets wordt opgehaald, en daarna niets meer — terwijl de brief er staat.
+		const zegHardop = (tekst) => {
+			const status = document.querySelector("[data-demo-inhoud-status]");
+			if (status) status.textContent = tekst;
+		};
+
+		const afronden = (alineas, gezegd) => {
+			bodyEl.removeAttribute("aria-busy");
+			schrijfAlineas(bodyEl, alineas);
+			zegHardop(gezegd);
+		};
 
 		Promise.resolve(bron.inhoudVan(bericht.id))
 			.then((uitkomst) => {
-				bodyEl.removeAttribute("aria-busy");
-
 				if (uitkomst && uitkomst.fout) {
-					schrijfAlineas(bodyEl, [uitkomst.fout]);
+					afronden([uitkomst.fout], uitkomst.fout);
 					return;
 				}
 
@@ -1617,29 +1635,57 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (!alineas.length) {
 					// De bron antwoordde, maar zonder inhoud. Dat is iets anders dan een storing, en
 					// hoort ook iets anders te zeggen.
-					schrijfAlineas(bodyEl, ["Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is bij de organisatie niet beschikbaar."]);
+					const geen = "Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is bij de organisatie niet beschikbaar.";
+					afronden([geen], geen);
 					return;
 				}
 
-				schrijfAlineas(bodyEl, alineas);
+				afronden(alineas, "De inhoud van dit bericht is opgehaald.");
 				toonNagekomenBijlagen(uitkomst.bijlagen, bericht, detail);
 			})
 			.catch((fout) => {
-				bodyEl.removeAttribute("aria-busy");
 				console.error("[Berichtenbox] Ophalen van de berichtinhoud mislukte onverwacht.", fout);
-				schrijfAlineas(bodyEl, ["Wij konden de inhoud van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen."]);
+				const mis = "Wij konden de inhoud van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
+				afronden([mis], mis);
 			});
 	}
 
-	/** Bijlagen komen mee met de inhoud; de lijst wist er bij het laden nog niets van. */
+	/**
+	 * Bijlagen komen mee met de inhoud; de lijst wist er bij het laden nog niets van.
+	 *
+	 * De namen komen op het scherm, het openen nog niet: het stelsel levert de bijlage zelf achter
+	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort de bezoeker te lezen — een naam
+	 * zonder link en zonder woord laat de bezoeker klikken op iets dat er niet is.
+	 */
 	function toonNagekomenBijlagen(bijlagen, bericht, detail) {
 		if (!Array.isArray(bijlagen) || !bijlagen.length) return;
 		const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
-		if (!bijlSec) return;
+		const lijst = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-list]");
+		if (!bijlSec || !lijst) return;
 
 		bijlSec.hidden = false;
+
+		// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven
+		// staan.
 		const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
-		if (laden) laden.textContent = bijlagen.length === 1 ? "1 bijlage bij dit bericht van " + bericht.afzender : bijlagen.length + " bijlagen bij dit bericht van " + bericht.afzender;
+		if (laden) {
+			laden.textContent = "";
+			laden.hidden = true;
+		}
+
+		lijst.replaceChildren();
+		bijlagen.forEach((bijlage) => {
+			const li = document.createElement("li");
+			li.textContent = (bijlage && bijlage.naam) || "Bijlage zonder naam";
+			lijst.appendChild(li);
+		});
+
+		const uitleg = document.createElement("li");
+		uitleg.className = "metadata";
+		uitleg.textContent = "Bijlagen openen kan in dit prototype nog niet.";
+		lijst.appendChild(uitleg);
+
+		lijst.hidden = false;
 	}
 
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
@@ -1660,13 +1706,24 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (!bericht) {
 			detail.hidden = true;
 			const melding = document.querySelector("[data-demo-niet-gevonden]");
-			if (melding) melding.hidden = false;
+			if (melding) {
+				// Mislukte de lading, dan is de lijst leeg omdat er niets binnenkwam — niet omdat dit
+				// bericht weg is. "Mogelijk is het verwijderd" is dan de stelligste onwaarheid op het
+				// scherm, en staat bovendien onder een storingsmelding die het tegendeel zegt.
+				if (ladingMislukt || laadfoutGetoond) {
+					melding.textContent = "Wij konden uw berichten niet ophalen, dus ook dit bericht niet. Ververs de pagina om het opnieuw te proberen.";
+				}
+				melding.hidden = false;
+			}
 			return;
 		}
 
 		// Vul data-attributen zodat bindDetailPaginaActies() werkt.
 		detail.dataset.berichtId = bericht.id;
 		detail.dataset.afzenderId = bericht.magazijnId;
+		// Merkteken voor laadBijlagen: hier komen de gegevens uit het stelsel en valt er niets na
+		// te bootsen.
+		if (bericht.uitKeten) detail.dataset.uitKeten = "true";
 		detail.dataset.afzenderNaam = bericht.afzender;
 		if (bericht.heeftBijlage) detail.dataset.heeftBijlage = "true";
 

@@ -301,6 +301,7 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 			<h1 data-demo-onderwerp class="h3"></h1>
 			<p class="metadata" data-demo-meta></p>
 			<div class="berichtenbox-detail-body" data-demo-body></div>
+			<p class="visually-hidden" data-demo-inhoud-status role="status" aria-live="polite"></p>
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
