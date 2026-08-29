@@ -206,10 +206,26 @@ describe("maakState — de staat hoort bij één persona", () => {
 		expect(state.ruw.eersteBezoekGehad).toBe(false);
 	});
 
-	it("gooit een staat zonder persona weg zodra er wél een persona is", () => {
-		// Uit een oudere versie: van wie die staat was, valt niet meer te zeggen.
+	it("neemt een staat zonder persona aan in plaats van hem weg te gooien", () => {
+		// Uit een versie van vóór de scheiding, toen er één gedeelde staat was. Er is dus niet
+		// gewisseld — die staat is van wie er nu actief is. Hem weggooien zou het archief van een
+		// bezoeker wissen op het moment dat hij zijn pagina ververst, zonder dat er iets gebeurde
+		// waar hij om vroeg.
 		const state = maakState(metState({ gearchiveerd: { "msg-1": true } }), "koffiezaak");
-		expect(state.ruw.gearchiveerd).toEqual({});
+
+		expect(state.ruw.gearchiveerd).toEqual({ "msg-1": true });
+		expect(state.ruw.persona).toBe("koffiezaak");
+	});
+
+	it("gooit hem daarna wél weg als er echt gewisseld wordt", () => {
+		// Het aannemen mag maar één keer: zodra de staat een naam draagt, geldt de scheiding weer.
+		vi.spyOn(console, "info").mockImplementation(() => {});
+		const aangenomen = maakState(metState({ gearchiveerd: { "msg-1": true } }), "koffiezaak");
+		const opslag = metState({ ...aangenomen.ruw });
+
+		const na = maakState(opslag, "bloemenkweker");
+
+		expect(na.ruw.gearchiveerd).toEqual({});
 	});
 
 	it("laat een staat zonder persona staan als er geen persona's zijn", () => {

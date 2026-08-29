@@ -80,7 +80,7 @@ describe("een magazijn dat niet antwoordt", () => {
 		const inhoud = await metScenario("een").laad();
 
 		expect(inhoud.berichten.map((b) => b.id)).toEqual(["m3", "m4"]);
-		expect(inhoud.uitval).toEqual({ scenario: "een", uitgevallen: null });
+		expect(inhoud.uitval).toEqual({ scenario: "een", uitgevallen: null, bronnen: ["RDW"] });
 	});
 
 	it("levert bij 'geen' helemaal niets", async () => {
@@ -300,5 +300,110 @@ describe("de bezoeker herstelt de bronnen", () => {
 		bron.vergeetUitval();
 
 		expect(sessie._kluis["berichtenbox-bron-uitval"]).toBeUndefined();
+	});
+});
+
+/**
+ * De invariant, in plaats van nog een los geval.
+ *
+ * Vier reviewrondes vonden telkens een andere combinatie van vlag, scenario, bewaarde uitval en
+ * pagina waarin de melding iets anders zei dan de lijst liet zien. Elk geval apart dichtzetten
+ * leverde een volgende op. Dit is de regel waar ze allemaal onder vallen: `uitval` beschrijft
+ * precies het verschil tussen wat er is en wat er geleverd wordt — niet meer en niet minder.
+ */
+describe("wat de bron zegt en wat hij levert", () => {
+	const ALLE = ["m1", "m2", "m3", "m4"];
+
+	/** Elke combinatie van de invoeren die eerder los van elkaar gelezen werden. */
+	const gevallen = [];
+	["een", "geen", "later"].forEach((scenario) => {
+		[true, false].forEach((vlag) => {
+			[null, "rdw", "kvk"].forEach((bewaard) => {
+				gevallen.push({ scenario, vlag, bewaard });
+			});
+		});
+	});
+
+	gevallen.forEach(({ scenario, vlag, bewaard }) => {
+		it(`klopt bij scenario ${scenario}, vlag ${vlag ? "aan" : "uit"}, bewaarde uitval ${bewaard || "geen"}`, async () => {
+			const sessie = nepSessie(bewaard ? { "berichtenbox-bron-uitval": JSON.stringify({ id: bewaard, naam: bewaard.toUpperCase() }) } : {});
+			const bron = metScenario(scenario, { sessie, vlagAan: () => vlag });
+
+			const inhoud = await bron.laad();
+			const geleverd = inhoud.berichten.map((b) => b.id);
+			const gemist = ALLE.filter((id) => !geleverd.includes(id));
+
+			if (!inhoud.uitval) {
+				// Zwijgt de bron, dan mag er niets ontbreken. Hier viel eerder een bewaarde uitval
+				// met de vlag uit doorheen: berichten weg, melding null.
+				expect(gemist).toEqual([]);
+				return;
+			}
+
+			// Meldt de bron iets, dan moet er ook echt iets weg zijn — en exact van de genoemde
+			// afzenders. Hier viel eerder "X is zojuist onbereikbaar geworden" doorheen terwijl er
+			// niets verdween.
+			expect(gemist.length).toBeGreaterThan(0);
+
+			const afzenderVan = (id) => DATA.berichten.find((b) => b.id === id).afzender;
+			expect([...new Set(gemist.map(afzenderVan))].sort()).toEqual(inhoud.uitval.bronnen.slice().sort());
+		});
+	});
+
+	it("laat het archief van de bezoeker staan als diens bron uitvalt", async () => {
+		// m1 en m2 zijn allebei van de RDW; m1 heeft de bezoeker zelf gearchiveerd. Valt de RDW uit,
+		// dan verdwijnt m2 uit de inbox — maar m1 is al binnen en blijft van hem. Zonder deze
+		// zichtbaarheidscheck leegt een gesimuleerde storing ook het archief.
+		const bron = metScenario("een", {
+			zichtbaarheid: { statusVan: (id) => (id === "m1" ? "archief" : "inbox") },
+		});
+
+		const inhoud = await bron.laad();
+
+		expect(inhoud.berichten.map((b) => b.id)).toEqual(["m1", "m3", "m4"]);
+		expect(inhoud.uitval.bronnen).toEqual(["RDW"]);
+	});
+});
+
+describe("de wekker van een geplande uitval", () => {
+	it("blijft niet lopen nadat de vlag omging", async () => {
+		vi.useFakeTimers();
+		try {
+			const bron = metScenario("later");
+			await bron.laad();
+			bron.start(echteLuisteraar(bron._data, []));
+
+			const metEen = vi.getTimerCount();
+			expect(metEen).toBeGreaterThan(0);
+
+			// Elke keer dat de vlag omgaat, plant vergeetUitval() een nieuwe wekker. Wordt de oude
+			// niet afgezet, dan stapelen ze op: na drie keer togglen lopen er vier, die elk op hun
+			// eigen moment een magazijn omleggen. Het vlaggetje `uitvalGepland` wissen doet daar
+			// niets aan — een setTimeout stopt niet omdat je een variabele op false zet.
+			await bron.vergeetUitval();
+			await bron.vergeetUitval();
+			await bron.vergeetUitval();
+
+			expect(vi.getTimerCount()).toBe(metEen);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("is weg zodra de bezoeker de bron zelf herstelt", async () => {
+		vi.useFakeTimers();
+		try {
+			const bron = metScenario("later");
+			await bron.laad();
+			bron.start(echteLuisteraar(bron._data, []));
+			expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+			await bron.herstelBronnen();
+
+			// Niets meer te wachten: de bezoeker heeft gezegd dat het weer moet werken.
+			expect(vi.getTimerCount()).toBe(0);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

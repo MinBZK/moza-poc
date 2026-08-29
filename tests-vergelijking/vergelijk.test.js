@@ -86,13 +86,37 @@ function typ(selector, waarde) {
 	el.dispatchEvent(new window.Event("input", { bubbles: true }));
 }
 
-/** Eén scenario: het hele beeld van beide versies moet gelijk zijn. */
-function vergelijk(naam, pad, opties) {
+/**
+ * De staat draagt sinds de persona-scheiding de naam van zijn eigenaar. Main kent dat veld niet,
+ * dus dit verschil staat in élk scenario waarin de branch iets bewaart. Eén keer benoemen.
+ */
+const PERSONA_VELD = ["opslag.persona"];
+
+/**
+ * Eén scenario: het beeld van beide versies moet gelijk zijn, op de verschillen na die we
+ * bewust maken.
+ *
+ * `aanvaard` is geen filter maar een lijst: elk pad dat erin staat móet ook echt verschillen.
+ * Dat is het verschil tussen "we weten hiervan" en "we kijken hier niet meer". Verdwijnt een
+ * aanvaard verschil — omdat main het meekreeg of de branch het terugdraaide — dan valt dit
+ * scenario om en gaat iemand kijken waarom.
+ */
+function vergelijk(naam, pad, opties = {}) {
+	const { aanvaard = [], ...rest } = opties;
 	it(naam, async () => {
-		const { main, branch } = await naastElkaar(pad, opties);
+		const { main, branch } = await naastElkaar(pad, rest);
 		const uiteen = verschillen(main, branch);
 		if (uiteen.length) appendFileSync(RAPPORT, "\n## " + naam + "\n" + uiteen.slice(0, 25).join("\n") + "\n");
-		expect(uiteen).toEqual([]);
+
+		const raakt = (regel, pad) => regel.startsWith(pad + ":") || regel.startsWith(pad + " ");
+		const paden = [...PERSONA_VELD, ...aanvaard];
+
+		expect(uiteen.filter((regel) => !paden.some((pad) => raakt(regel, pad)))).toEqual([]);
+
+		// Alleen wat dit scenario zelf opgeeft moet er ook echt zijn. Het persona-veld niet: dat
+		// staat er alleen in scenario's waarin de branch iets te bewaren had.
+		const gemist = aanvaard.filter((pad) => !uiteen.some((regel) => raakt(regel, pad)));
+		expect(gemist, "aanvaard verschil dat er niet meer is").toEqual([]);
 	});
 }
 
@@ -125,10 +149,17 @@ describe("een bewaarde staat wordt hetzelfde uitgelegd", () => {
 	const MAP = { ...TWEEDE_BEZOEK, eigenMappen: ["Belastingen"], mapOverride: { "msg-0001": "Belastingen" } };
 
 	vergelijk("gearchiveerde berichten staan niet in de inbox", INBOX, { state: GEARCHIVEERD });
-	vergelijk("gearchiveerde berichten staan wél in het archief", ARCHIEF, { state: GEARCHIVEERD });
-	vergelijk("prullenbak wint van archief", PRULLENBAK, { state: VERWIJDERD });
-	vergelijk("een verwijderd bericht staat niet meer in het archief", ARCHIEF, { state: VERWIJDERD });
-	vergelijk("gelezen berichten tellen niet als ongelezen", INBOX, { state: GELEZEN });
+	// Main geeft archiefrijen zes cellen terwijl de thead er vijf koppen heeft: die zesde cel
+	// hangt onder geen enkele kop. De branch bouwt de actiekolom alleen waar hij bestaat.
+	vergelijk("gearchiveerde berichten staan wél in het archief", ARCHIEF, { aanvaard: ["rijen[0].cellen", "rijen[1].cellen"], state: GEARCHIVEERD });
+	// Dezelfde cel zonder kop.
+	vergelijk("prullenbak wint van archief", PRULLENBAK, { aanvaard: ["rijen[0].cellen"], state: VERWIJDERD });
+	// Op main blijft een verwijderd bericht in het archief staan. De branch haalt het weg en
+	// toont de lege staat, want dan valt er niets meer te tonen.
+	vergelijk("een verwijderd bericht staat niet meer in het archief", ARCHIEF, { aanvaard: ["rijen", "aantalRijen", "totaal", "legeStaat"], state: VERWIJDERD });
+	// Main laat de verborgen "Ongelezen."-tekst staan bij berichten die al gelezen zijn; een
+	// schermlezer noemt ze dan alsnog ongelezen.
+	vergelijk("gelezen berichten tellen niet als ongelezen", INBOX, { aanvaard: ["rijen[1].afzender", "rijen[2].afzender"], state: GELEZEN });
 	vergelijk("een markering blijft staan", INBOX, { state: GEMARKEERD });
 	vergelijk("een eigen map verandert de inbox niet", INBOX, { state: MAP });
 });
@@ -137,20 +168,35 @@ describe("zoeken, filteren en sorteren", () => {
 	vergelijk("zoeken op een afzender", INBOX, { handeling: async () => typ("[data-berichtenbox-search-input]", "belastingdienst") });
 	vergelijk("zoeken op een onderwerp", INBOX, { handeling: async () => typ("[data-berichtenbox-search-input]", "aanslag") });
 	vergelijk("zoeken met hoofdletters", INBOX, { handeling: async () => typ("[data-berichtenbox-search-input]", "RDW") });
-	vergelijk("zoeken zonder resultaat toont de lege staat", INBOX, { handeling: async () => typ("[data-berichtenbox-search-input]", "zzzzz") });
+	// Main laat een zoekopdracht zonder resultaat achter als een lege tabel zonder uitleg.
+	vergelijk("zoeken zonder resultaat toont de lege staat", INBOX, { aanvaard: ["legeStaat"], handeling: async () => typ("[data-berichtenbox-search-input]", "zzzzz") });
 	vergelijk("zoekterm weer wissen", INBOX, {
-		handeling: async () => { typ("[data-berichtenbox-search-input]", "rdw"); await tik(); typ("[data-berichtenbox-search-input]", ""); },
+		handeling: async () => {
+			typ("[data-berichtenbox-search-input]", "rdw");
+			await tik();
+			typ("[data-berichtenbox-search-input]", "");
+		},
 	});
 	vergelijk("sorteren op afzender", INBOX, { handeling: async () => klik("[data-sort='afzender']") });
 	vergelijk("sorteren op afzender, andersom", INBOX, {
-		handeling: async () => { klik("[data-sort='afzender']"); await tik(); klik("[data-sort='afzender']"); },
+		handeling: async () => {
+			klik("[data-sort='afzender']");
+			await tik();
+			klik("[data-sort='afzender']");
+		},
 	});
 	vergelijk("sorteren op onderwerp", INBOX, { handeling: async () => klik("[data-sort='onderwerp']") });
 	vergelijk("sorteren op datum", INBOX, { handeling: async () => klik("[data-sort='datum']") });
 	vergelijk("sorteren binnen een zoekresultaat", INBOX, {
-		handeling: async () => { typ("[data-berichtenbox-search-input]", "belastingdienst"); await tik(); klik("[data-sort='afzender']"); },
+		handeling: async () => {
+			typ("[data-berichtenbox-search-input]", "belastingdienst");
+			await tik();
+			klik("[data-sort='afzender']");
+		},
 	});
+	// Dezelfde cel zonder kop.
 	vergelijk("sorteren in het archief", ARCHIEF, {
+		aanvaard: ["rijen[0].cellen", "rijen[1].cellen", "rijen[2].cellen"],
 		state: { ...TWEEDE_BEZOEK, gearchiveerd: { "msg-0001": true, "msg-0002": true, "msg-0003": true } },
 		handeling: async () => klik("[data-sort='afzender']"),
 	});
@@ -159,10 +205,17 @@ describe("zoeken, filteren en sorteren", () => {
 describe("acties op een bericht", () => {
 	vergelijk("markeren", INBOX, { handeling: async () => klikInEersteRij("[data-mark-toggle]") });
 	vergelijk("markeren en weer terug", INBOX, {
-		handeling: async () => { klikInEersteRij("[data-mark-toggle]"); await tik(); klikInEersteRij("[data-mark-toggle]"); },
+		handeling: async () => {
+			klikInEersteRij("[data-mark-toggle]");
+			await tik();
+			klikInEersteRij("[data-mark-toggle]");
+		},
 	});
-	vergelijk("archiveren vanuit de rij", INBOX, { handeling: async () => klikInEersteRij("[data-row-actie='archiveren']") });
-	vergelijk("verwijderen vanuit de rij", INBOX, { handeling: async () => klikInEersteRij("[data-row-actie='verwijderen']") });
+	// Main laat de ongelezen-teller staan als een ongelezen bericht wordt weggezet; het cijfer
+	// in de menubalk klopt dan niet meer met de lijst.
+	vergelijk("archiveren vanuit de rij", INBOX, { aanvaard: ["opslag.aantalOngelezen"], handeling: async () => klikInEersteRij("[data-row-actie='archiveren']") });
+	// Dezelfde teller die op main niet meezakt.
+	vergelijk("verwijderen vanuit de rij", INBOX, { aanvaard: ["opslag.aantalOngelezen"], handeling: async () => klikInEersteRij("[data-row-actie='verwijderen']") });
 	vergelijk("doorsturen aanklikken", INBOX, { handeling: async () => klikInEersteRij("[data-row-actie='doorsturen']") });
 	vergelijk("het rijmenu openen", INBOX, { handeling: async () => klikInEersteRij(".row-actions-toggle") });
 });
@@ -187,7 +240,9 @@ describe("de voortgangsanimatie bij het eerste bezoek", () => {
 		}
 		const uiteen = verschillen(uit.main, uit.branch);
 		if (uiteen.length) appendFileSync(RAPPORT, "\n## voortgangsanimatie\n" + uiteen.slice(0, 25).join("\n") + "\n");
-		expect(uiteen).toEqual([]);
+		// Dit scenario bouwt zijn eigen beeld op en gaat dus langs vergelijk() heen; het persona-veld
+		// hoort hier net zo goed te mogen verschillen.
+		expect(uiteen.filter((regel) => !PERSONA_VELD.some((pad) => regel.startsWith(pad + ":")))).toEqual([]);
 	}, 30000);
 });
 
@@ -198,13 +253,16 @@ describe("paginering en filters", () => {
 			// jsdom kent geen layout, dus het aantal paginanummers valt laag uit. De knop "volgende"
 			// is er wél, en die brengt de bezoeker net zo goed naar pagina 2.
 			const knoppen = [...nav.querySelectorAll("a, button")];
-			const twee = knoppen.find((el) => el.textContent.trim() === "2")
-				|| knoppen.find((el) => /volgende/i.test(el.textContent + " " + (el.getAttribute("aria-label") || "")));
+			const twee = knoppen.find((el) => el.textContent.trim() === "2") || knoppen.find((el) => /volgende/i.test(el.textContent + " " + (el.getAttribute("aria-label") || "")));
 			if (!twee) throw new Error("geen pagina 2, wel: " + knoppen.map((k) => k.textContent.trim()).join("|"));
 			twee.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true }));
 		},
 	});
+	// Zet u op het Belastingdienst-portaal de schakelaar "toon alle overheidsorganisaties" aan, dan
+	// blijft de lijst op main leeg: de pagina heeft alleen Belastingdienst-rijen in de HTML staan en
+	// er komt niets bij. De branch haalt de lijst uit de datalaag en toont wél wat er dan bij hoort.
 	vergelijk("de organisatie-schakelaar van het portaal", BD_INBOX, {
+		aanvaard: ["rijen", "aantalRijen", "paginanav"],
 		handeling: async () => klik("[data-berichtenbox-org-toggle]"),
 	});
 });
@@ -214,6 +272,7 @@ describe("het zoekverschil dat we accepteren", () => {
 	// De branch zoekt in de afzender en het onderwerp uit de brongegevens. Dit scenario legt dat
 	// verschil vast in plaats van het te verbergen.
 	vergelijk("zoeken op 'ongelezen'", INBOX, {
+		aanvaard: ["legeStaat", "paginanav"],
 		handeling: async () => typ("[data-berichtenbox-search-input]", "ongelezen"),
 	});
 });
@@ -226,13 +285,7 @@ describe("de detailpagina", () => {
 });
 
 describe("pagina's die de berichtenbox alleen als markup hebben", () => {
-	for (const pad of [
-		"moza/belang-tuin/berichtenbox/index.html",
-		"moza/belang-vve/berichtenbox/index.html",
-		"moza/belang-winter/berichtenbox/index.html",
-		"mobu/namens-kind/berichtenbox/index.html",
-		"mobu/namens-mantelzorg/berichtenbox/index.html",
-	]) {
+	for (const pad of ["moza/belang-tuin/berichtenbox/index.html", "moza/belang-vve/berichtenbox/index.html", "moza/belang-winter/berichtenbox/index.html", "mobu/namens-kind/berichtenbox/index.html", "mobu/namens-mantelzorg/berichtenbox/index.html"]) {
 		vergelijk(pad, pad);
 	}
 });

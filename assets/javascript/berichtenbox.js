@@ -1139,7 +1139,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	function bindBronOnbereikbaar() {
 		const waarschuwingen = document.querySelectorAll("[data-bron-onbereikbaar], [data-geen-bronnen], [data-bron-uitval]");
-		if (!waarschuwingen.length) return;
 		waarschuwingen.forEach((w) => {
 			const retry = w.querySelector("[data-bron-retry]");
 			if (retry) {
@@ -2146,7 +2145,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			vlagAan: unhappyFlowAan,
 			// De nabootsing gaat over de lijst op de inbox. Archief en prullenbak tonen wat de bezoeker
 			// zelf wegzette, en een detailpagina moet zijn bericht gewoon kunnen vinden.
-			magUitvallen: () => !!document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])"),
+			// Kan déze pagina een uitval uitleggen? Zo niet, dan hoort ze er ook geen te tonen. De
+			// inbox legt het uit met de drie waarschuwingsblokken, de detailpagina met haar eigen
+			// "bericht onbeschikbaar". De Belastingdienst-inbox heeft de lijst wél maar geen van
+			// beide: daar zou een uitval kolomkoppen zonder rijen opleveren, zonder lege staat en
+			// zonder één woord waarom.
+			magUitvallen: () => (!!document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])") && !!document.querySelector("[data-bron-onbereikbaar]") && !!document.querySelector("[data-geen-bronnen]") && !!document.querySelector("[data-bron-uitval]")) || !!document.querySelector("[data-bericht-onbeschikbaar]"),
 			// Op de aanwezigheid van het voortgangsblok, niet op huidigeView(): die valt op elke
 			// detailpagina terug op "inbox", en dan draaide de animatie daar onzichtbaar — en verbruikte
 			// wel het eerste bezoek, zodat de bezoeker haar op de inbox nooit meer zag.

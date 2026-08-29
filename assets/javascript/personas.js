@@ -149,6 +149,19 @@
 		}
 		if (vorige === actiefId) return;
 
+		// Nog geen merk: dan is er ook geen vórige persona geweest die deze gegevens achterliet —
+		// ze zijn van wie er nu actief is. Wissen zou hier het archief en de gelezen-markeringen
+		// van een bestaande bezoeker weggooien op het moment dat hij de pagina ververst, zonder
+		// een woord erover: de melding hieronder gaat immers alleen af als er een vorige wás.
+		if (vorige === null) {
+			try {
+				localStorage.setItem(HERKOMST_KEY, actiefId);
+			} catch (e) {
+				console.error("[Personas] Kon niet vastleggen van wie de opgeslagen gegevens zijn.", e);
+			}
+			return;
+		}
+
 		try {
 			var teWissen = [];
 			for (var i = 0; i < localStorage.length; i++) {

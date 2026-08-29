@@ -99,6 +99,9 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	let scenario = "een";
 	let handmatigHersteld = false;
 	let uitvalGepland = false;
+	// De lopende wekker apart houden: het vlaggetje uitzetten stopt hem niet, en dan bracht een net
+	// hersteld magazijn zichzelf seconden later weer om zeep.
+	let uitvalWekker = null;
 	let meldWijziging = null;
 	let levertOpnieuw = null;
 
@@ -193,37 +196,32 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		schrijfZitting(UITVAL_KEY, bron ? JSON.stringify(bron) : null);
 	}
 
-	/** Magazijnen die bij het laden niet antwoorden. Bij "later" is dat er bij het laden geen. */
-	function geblokkeerdBijLaden(bericht) {
-		if (!unhappyAan()) return false;
-
-		// Alleen waar de lijst staat. Op een detailpagina zou het bericht anders onvindbaar zijn en
-		// meldt die pagina "bericht niet gevonden" — een andere oorzaak dan de werkelijke, en er staat
-		// daar geen blok dat het zou kunnen rechtzetten.
-		if (!magUitvallen()) return false;
-
-		// Alleen wat er binnenkomt. Wat de bezoeker zelf archiveerde of weggooide is van hem; dat uit
-		// zijn archief laten verdwijnen omdat een bron nu even stil is, klopt niet — en op die
-		// pagina's staat geen enkel blok dat het zou kunnen uitleggen.
+	/**
+	 * De uitvalstand van dit moment, in één keer bepaald.
+	 *
+	 * Eerder lazen drie plekken elk hun eigen deelverzameling van dezelfde vijf invoeren — de vlag,
+	 * het handmatig herstel, het scenario, de bewaarde uitval en of deze pagina er een lijst voor
+	 * heeft. Dan is het onvermijdelijk dat twee van de drie het oneens zijn, en zegt de melding iets
+	 * anders dan de lijst. Vier reviewrondes vonden telkens een andere combinatie.
+	 *
+	 * Hier worden ze één keer gelezen, en `blokkeert` is de enige die erover beslist.
+	 */
+	function uitvalStandNu() {
+		const actief = unhappyAan() && magUitvallen();
+		const scenario = actief ? huidigScenario() : null;
+		const gevallen = actief && scenario === "later" ? leesUitval() : null;
 		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
-		if (statusVan(bericht.id) !== "inbox") return false;
 
-		const magazijnId = bericht.magazijnId;
-		const sc = huidigScenario();
-		if (sc === "geen") return true;
-		if (sc === "een") return magazijnId === ONBEREIKBARE_BRON;
-		return false;
-	}
-
-	/** Wat er op dit moment aan uitval te melden valt. Null als er niets aan de hand is. */
-	function uitvalStand() {
-		if (!unhappyAan()) return null;
-		const sc = huidigScenario();
-		if (sc === "later") {
-			const gevallen = leesUitval();
-			return gevallen ? { scenario: "later", uitgevallen: gevallen } : null;
+		function blokkeert(bericht) {
+			if (!actief || !bericht) return false;
+			// Alleen wat er binnenkomt: wat de bezoeker zelf archiveerde of weggooide blijft van hem.
+			if (statusVan(bericht.id) !== "inbox") return false;
+			if (scenario === "geen") return true;
+			if (scenario === "een") return bericht.magazijnId === ONBEREIKBARE_BRON;
+			return !!gevallen && bericht.magazijnId === gevallen.id;
 		}
-		return { scenario: sc, uitgevallen: null };
+
+		return { actief, scenario, uitgevallen: gevallen, blokkeert };
 	}
 
 	let haaltOp = false;
@@ -444,7 +442,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 				}
 			}
 
-			return bouwLevering(eerderBinnengekomen);
+			return bouwLevering();
 		},
 
 		/**
@@ -456,8 +454,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		 */
 		herstelBronnen() {
 			handmatigHersteld = true;
-			uitvalGepland = false;
-			schrijfUitval(null);
+			stopUitvalWekker();
 			return leverOpnieuw();
 		},
 
@@ -465,8 +462,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		vergeetUitval() {
 			handmatigHersteld = false;
 			scenarioGekozen = false;
-			uitvalGepland = false;
-			schrijfUitval(null);
+			stopUitvalWekker();
 			schrijfZitting(SCENARIO_KEY, null);
 			// Opnieuw wapenen: plannUitval draait alleen vanuit start(), en die komt maar één keer
 			// langs. Zonder dit is de unhappy flow na één keer uitzetten dood bij scenario "later".
@@ -591,12 +587,23 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	 * die van een heel andere organisatie dan de bron die net uitviel. De melding ernaast noemde dan
 	 * de verkeerde helft.
 	 */
-	function bouwLevering(eerderBinnengekomen = []) {
+	/**
+	 * Wat de bron op dit moment levert, plus wat hij níet kon leveren.
+	 *
+	 * De melding is een functie van het verschil tussen alles en wat er geleverd wordt — geen
+	 * parallelle beschrijving van het scenario. Daardoor is "de melding klopt niet met de lijst" niet
+	 * meer op te schrijven: staat er niets in het verschil, dan valt er niets te melden.
+	 */
+	function bouwLevering() {
 		const magazijnen = (data.magazijnen || []).slice();
 		const bekendeIds = new Set(uitDeDataset.map((bericht) => bericht && bericht.id));
 		const bekendeMagazijnen = new Set(magazijnen.map((magazijn) => magazijn.id));
 
-		const terug = eerderBinnengekomen.filter((bericht) => {
+		// Eén plek die beslist of de binnengedruppelde berichten meedoen; twee aanroepers met een
+		// eigen antwoord lieten ze bij een uitval alsnog verschijnen met de vlag uit.
+		const bewaard = state && dynamischeBerichtenAan() ? state.ruw.nieuweBerichten.slice().reverse() : [];
+
+		const terug = bewaard.filter((bericht) => {
 			if (!bericht) return false;
 			if (bekendeIds.has(bericht.id)) return false;
 			if (!bekendeMagazijnen.has(bericht.magazijnId)) {
@@ -606,60 +613,85 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			return true;
 		});
 
-		// Een magazijn dat niet antwoordt, levert geen berichten. Ze hier weglaten in plaats van ze in
-		// de render-laag weg te filteren: dan is een nagebootste storing hetzelfde als een echte, en
-		// dat is precies wat de unhappy flow moet laten zien.
 		const alles = [...terug, ...uitDeDataset];
-		const mag = magUitvallen();
-		const gevallen = leesUitval();
-		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
+		const stand = uitvalStandNu();
 
-		const geleverd = alles.filter((bericht) => {
-			if (!bericht) return true;
-			if (geblokkeerdBijLaden(bericht)) return false;
-			// De bron die ná het laden wegviel, doet het nog steeds niet.
-			if (mag && gevallen && bericht.magazijnId === gevallen.id && statusVan(bericht.id) === "inbox") return false;
-			return true;
-		});
+		// Een magazijn dat niet antwoordt, levert geen berichten. Ze hier weglaten in plaats van ze in
+		// de render-laag weg te filteren: dan is een nagebootste storing hetzelfde als een echte.
+		const geleverd = [];
+		const weggelaten = [];
+		alles.forEach((bericht) => (stand.blokkeert(bericht) ? weggelaten : geleverd).push(bericht));
 
-		if (geleverd.length < alles.length) {
-			console.warn("[Berichtenbox] Gesimuleerde uitval (" + huidigScenario() + "): " + (alles.length - geleverd.length) + " bericht(en) niet geleverd.");
+		let uitval = null;
+		if (weggelaten.length) {
+			const namen = [...new Set(weggelaten.map((bericht) => bericht.afzender || bericht.magazijnId))];
+			console.warn("[Berichtenbox] Gesimuleerde uitval (" + stand.scenario + "): " + weggelaten.length + " bericht(en) niet geleverd door " + namen.join(", ") + ".");
+			uitval = { scenario: stand.scenario, uitgevallen: stand.uitgevallen, bronnen: namen };
 		}
 
 		return {
 			berichten: geleverd,
 			magazijnen,
 			mappen: (data.mappen || []).slice(),
-			// Wat deze bron niet kon leveren. De render-laag beslist hoe dat eruitziet; hier staat
-			// alleen wát er is.
-			uitval: uitvalStand(),
+			// Wat deze bron niet kon leveren. De render-laag beslist hoe dat eruitziet.
+			uitval,
 		};
+	}
+
+	/** Magazijnen waarvan nu iets in de inbox staat — de enige die zinnig kunnen uitvallen. */
+	function zichtbareBronnen() {
+		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
+		return [
+			...new Set(
+				bouwLevering()
+					.berichten.filter((bericht) => bericht && bericht.magazijnId && statusVan(bericht.id) === "inbox")
+					.map((bericht) => bericht.magazijnId)
+			),
+		];
+	}
+
+	/** Zet een geplande uitval af. Alleen het vlaggetje wissen laat de wekker gewoon aflopen. */
+	function stopUitvalWekker() {
+		if (uitvalWekker !== null) clearTimeout(uitvalWekker);
+		uitvalWekker = null;
+		uitvalGepland = false;
+		schrijfUitval(null);
 	}
 
 	function plannUitval(meld) {
 		if (!unhappyAan() || huidigScenario() !== "later") return;
-		// Alleen waar de lijst staat: op een detailpagina zouden de tellers stilletjes zakken zonder
-		// dat iets het uitlegt.
-		if (!magUitvallen()) return;
+		// Een uitval begínt op de inbox. Een detailpagina mag er wel één uitleggen die al liep,
+		// maar er zelf een starten laat de tellers stilletjes zakken op een pagina die de lijst
+		// niet eens toont.
+		if (!magOphalen()) return;
 		if (uitvalGepland) return;
 		if (leesUitval()) return;
 		uitvalGepland = true;
 
-		const kandidaten = [...new Set(uitDeDataset.filter((bericht) => bericht && bericht.magazijnId).map((bericht) => bericht.magazijnId))];
+		// Alleen bronnen waarvan nu daadwerkelijk iets in de inbox staat. Koos hij uit de rauwe
+		// dataset, dan kon "X is zojuist onbereikbaar geworden" verschijnen terwijl er niets
+		// verdween — de bezoeker leest een melding over een lijst die niet veranderd is.
+		const kandidaten = [...new Set(zichtbareBronnen())];
 		if (!kandidaten.length) return;
 
 		// Ergens tussen vier en twaalf seconden: lang genoeg om de lijst eerst compleet te zien.
 		const vertraging = 4000 + Math.floor(Math.random() * 8000);
-		setTimeout(() => {
+		uitvalWekker = setTimeout(() => {
+			uitvalWekker = null;
 			if (!unhappyAan() || huidigScenario() !== "later" || leesUitval()) return;
 
-			const id = kandidaten[Math.floor(Math.random() * kandidaten.length)];
+			// Opnieuw kijken: tussen het plannen en nu kan de bezoeker de laatste berichten van een
+			// bron gearchiveerd hebben.
+			const nu = zichtbareBronnen();
+			const id = kandidaten.find((kandidaat) => nu.includes(kandidaat)) || nu[0];
+			if (!id) return;
+
 			const voorbeeld = uitDeDataset.find((bericht) => bericht && bericht.magazijnId === id);
 			schrijfUitval({ id, naam: voorbeeld ? voorbeeld.afzender : id });
 
 			// Dezelfde bouwer als laad(): die weet ook van de binnengedruppelde berichten, en dat het
 			// archief van de bezoeker niet mee hoort te krimpen.
-			const mislukt = meld(bouwLevering(state ? state.ruw.nieuweBerichten.slice().reverse() : []));
+			const mislukt = meld(bouwLevering());
 
 			if (mislukt && mislukt.length) {
 				console.error("[Berichtenbox] De uitgevallen bron kon niet verwerkt worden; de lijst klopt mogelijk niet meer.");
