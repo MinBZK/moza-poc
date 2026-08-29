@@ -44,6 +44,9 @@
 	// geen backend, dan wacht élke bezoeker die tijd uit voordat de dataset in beeld komt.
 	const DEMO_LIMIET_MS = 1500;
 	const LIJST_LIMIET_MS = 30000;
+	// Eén bericht ophalen gaat langs één magazijn, niet langs allemaal. Duurt dat langer dan dit,
+	// dan is de bezoeker beter af met de mededeling dan met een blijvend "wordt opgehaald".
+	const INHOUD_LIMIET_MS = 10000;
 	const STILTE_LIMIET_MS = 30000;
 
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
@@ -56,6 +59,7 @@
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
+		weg: "Dit bericht is niet meer beschikbaar bij de organisatie die het stuurde.",
 	};
 
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
@@ -287,6 +291,30 @@
 		return respons.json();
 	}
 
+	/**
+	 * De inhoud van één bericht.
+	 *
+	 * De berichtenuitvraag levert alleen de kopgegevens — afzender, onderwerp, datum. De inhoud en
+	 * de bijlagen staan achter een eigen adres per bericht, en worden dus pas opgehaald wanneer de
+	 * bezoeker het bericht opent. Dat is niet alleen zuinig: het is ook wat er in een federatief
+	 * stelsel gebeurt, waar de inhoud bij de organisatie zelf blijft tot iemand erom vraagt.
+	 */
+	async function haalInhoud(ontvanger, berichtId) {
+		const respons = await metTijdslimiet("/api/v1/berichten/" + encodeURIComponent(berichtId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+
+		// Een bericht dat er in de lijst wel stond en hier niet meer, is iets anders dan een bron die
+		// niet antwoordt. Het eerste overkomt de bezoeker die een oude link opent; het tweede is een
+		// storing. Dat verschil hoort in de melding terecht te komen.
+		if (respons.status === 404) throw ketenFout("weg", "bericht bestaat niet meer (" + berichtId + ")");
+		if (!respons.ok) throw ketenFout("onbereikbaar", "berichtinhoud laden mislukt (" + respons.status + ")");
+
+		const bericht = await respons.json();
+		return {
+			inhoud: typeof bericht.inhoud === "string" ? bericht.inhoud : "",
+			bijlagen: Array.isArray(bericht.bijlagen) ? bericht.bijlagen : [],
+		};
+	}
+
 	// --- Vertaling ----------------------------------------------------------------------------
 
 	// Zonder berichtId is er geen sleutel voor de state en geen detailpagina; zo'n bericht laten we
@@ -504,6 +532,27 @@
 					return laatsteUitkomst;
 				}
 			);
+		},
+
+		/**
+		 * De inhoud van één bericht, of null als er niets op te halen valt.
+		 *
+		 * Werpt niet: de aanroeper is de detailpagina, en die moet iets kunnen tonen. Wat er misging
+		 * komt terug als `{ fout }` met een tekst voor de bezoeker, zodat een leeg bericht nooit
+		 * zonder uitleg op het scherm belandt.
+		 */
+		inhoudVan: async function (berichtId) {
+			// Zonder ronde is er geen ontvanger, en zonder ontvanger geen adres om het bij op te
+			// halen. Dat is geen fout: dit is een bericht uit de dataset, dat zijn inhoud al heeft.
+			if (!ontvangerVanRonde || !berichtId) return null;
+
+			try {
+				return await haalInhoud(ontvangerVanRonde, berichtId);
+			} catch (fout) {
+				const reden = redenVan(fout);
+				console.error("[Berichtenbox] berichtinhoud ophalen mislukt", fout);
+				return { fout: FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar };
+			}
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */

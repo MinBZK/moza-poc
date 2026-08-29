@@ -280,3 +280,38 @@ export function kolommen() {
 		cellen: eersteRij ? eersteRij.querySelectorAll("td").length : 0,
 	};
 }
+
+/**
+ * De generieke demo-detailpagina (`bericht-demo.html`), waar een bericht uit het stelsel op belandt.
+ *
+ * Die berichten hebben geen server-gerenderde detailpagina: die worden bij de build uit de dataset
+ * gegenereerd, en een bericht uit de keten zit daar niet in. Alleen de elementen die de render-laag
+ * aanraakt staan hier; de rest van de pagina doet er voor deze tests niet toe.
+ */
+export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
+	ruimDocumentListenersOp();
+	// De `.berichtenbox`-wrapper is geen opmaak maar een schakelaar: zonder die klasse stopt de
+	// hele IIFE na het markeer-gedeelte, en dan gebeurt er op deze pagina niets.
+	document.body.innerHTML = `
+		<article id="hoofd-inhoud" class="berichtenbox">
+		<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+			<p data-berichtenbox-storing-tekst></p>
+		</div>
+		<section class="berichtenbox-content" data-demo-detail>
+			<h1 data-demo-onderwerp class="h3"></h1>
+			<p class="metadata" data-demo-meta></p>
+			<div class="berichtenbox-detail-body" data-demo-body></div>
+			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
+				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
+			</section>
+		</section>
+		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>Dit bericht bestaat niet.</div>
+		</article>
+	`;
+	window.history.replaceState(null, "", "/moza/berichtenbox/bericht-demo/?id=" + encodeURIComponent(bericht.id));
+	window.berichtenboxData = dataset(berichten);
+	window.localStorage.clear();
+	window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true }));
+	return document;
+}

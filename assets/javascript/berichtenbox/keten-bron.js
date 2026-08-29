@@ -108,6 +108,18 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		},
 
 		/**
+		 * De inhoud van één bericht, pas opgehaald als de bezoeker het opent.
+		 *
+		 * De berichtenuitvraag levert kopgegevens; de inhoud blijft bij de organisatie tot iemand
+		 * erom vraagt. Dat is geen besparing maar het gedrag van het stelsel, en de detailpagina
+		 * hoort het dus ook zo te doen.
+		 */
+		async inhoudVan(berichtId) {
+			if (!keten || typeof keten.inhoudVan !== "function") return null;
+			return keten.inhoudVan(berichtId);
+		},
+
+		/**
 		 * Een volgende ronde — de knop "Opnieuw proberen" — levert een nieuwe lijst. Die gaat langs
 		 * dezelfde weg als elke andere bronwijziging.
 		 */

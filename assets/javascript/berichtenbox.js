@@ -1575,6 +1575,73 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}, 1500);
 	}
 
+	function tekstAlineas(tekst) {
+		return (tekst || "").split("\n\n").filter((alinea) => alinea.trim() !== "");
+	}
+
+	function schrijfAlineas(bodyEl, alineas) {
+		bodyEl.replaceChildren();
+		alineas.forEach((alinea) => {
+			const p = document.createElement("p");
+			p.textContent = alinea;
+			bodyEl.appendChild(p);
+		});
+	}
+
+	/**
+	 * Haalt de inhoud van één bericht na bij de bron die het leverde.
+	 *
+	 * De bezoeker ziet ondertussen dat er iets gebeurt. Komt er niets, dan staat er wat er misging —
+	 * een lege pagina laten staan zou hem laten denken dat het bericht zelf leeg is.
+	 */
+	function haalInhoudNa(bericht, bodyEl, detail) {
+		const bron = register.actief();
+		if (!bron || typeof bron.inhoudVan !== "function") {
+			schrijfAlineas(bodyEl, ["Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar."]);
+			return;
+		}
+
+		schrijfAlineas(bodyEl, ["De inhoud van dit bericht wordt opgehaald bij " + bericht.afzender + "…"]);
+		bodyEl.setAttribute("aria-busy", "true");
+
+		Promise.resolve(bron.inhoudVan(bericht.id))
+			.then((uitkomst) => {
+				bodyEl.removeAttribute("aria-busy");
+
+				if (uitkomst && uitkomst.fout) {
+					schrijfAlineas(bodyEl, [uitkomst.fout]);
+					return;
+				}
+
+				const alineas = tekstAlineas(uitkomst && uitkomst.inhoud);
+				if (!alineas.length) {
+					// De bron antwoordde, maar zonder inhoud. Dat is iets anders dan een storing, en
+					// hoort ook iets anders te zeggen.
+					schrijfAlineas(bodyEl, ["Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is bij de organisatie niet beschikbaar."]);
+					return;
+				}
+
+				schrijfAlineas(bodyEl, alineas);
+				toonNagekomenBijlagen(uitkomst.bijlagen, bericht, detail);
+			})
+			.catch((fout) => {
+				bodyEl.removeAttribute("aria-busy");
+				console.error("[Berichtenbox] Ophalen van de berichtinhoud mislukte onverwacht.", fout);
+				schrijfAlineas(bodyEl, ["Wij konden de inhoud van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen."]);
+			});
+	}
+
+	/** Bijlagen komen mee met de inhoud; de lijst wist er bij het laden nog niets van. */
+	function toonNagekomenBijlagen(bijlagen, bericht, detail) {
+		if (!Array.isArray(bijlagen) || !bijlagen.length) return;
+		const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
+		if (!bijlSec) return;
+
+		bijlSec.hidden = false;
+		const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
+		if (laden) laden.textContent = bijlagen.length === 1 ? "1 bijlage bij dit bericht van " + bericht.afzender : bijlagen.length + " bijlagen bij dit bericht van " + bericht.afzender;
+	}
+
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
 	function vulDemoDetailPagina() {
 		const detail = document.querySelector("[data-demo-detail]");
@@ -1638,20 +1705,19 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		const bodyEl = detail.querySelector("[data-demo-body]");
 		if (bodyEl) {
-			const alineas = (bericht.inhoud || "").split("\n\n").filter((alinea) => alinea.trim() !== "");
-			if (!alineas.length) {
-				// Voor een bericht uit het stelsel is dit de normale toestand: de berichtenuitvraag
-				// levert alleen de kopgegevens, de inhoud zit er niet bij. Benoem dat, in plaats van
-				// een lege pagina te tonen. Voor een bericht uit de dataset is een lege inhoud geen
-				// toestand maar een fout in de gegevens; die hoort in de console.
-				if (!bericht.uitKeten) console.error("[Berichtenbox] Bericht zonder inhoud in de dataset.", bericht.id);
-				alineas.push("Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.");
+			const alineas = tekstAlineas(bericht.inhoud);
+			if (alineas.length) {
+				schrijfAlineas(bodyEl, alineas);
+			} else if (bericht.uitKeten) {
+				// De berichtenuitvraag levert alleen de kopgegevens; de inhoud blijft bij de
+				// organisatie tot iemand erom vraagt. Nu vraagt de bezoeker erom.
+				haalInhoudNa(bericht, bodyEl, detail);
+			} else {
+				// Voor een bericht uit de dataset is een lege inhoud geen toestand maar een fout in
+				// de gegevens; die hoort in de console en niet stil op het scherm.
+				console.error("[Berichtenbox] Bericht zonder inhoud in de dataset.", bericht.id);
+				schrijfAlineas(bodyEl, ["Van dit bericht is de inhoud niet beschikbaar."]);
 			}
-			alineas.forEach((alinea) => {
-				const p = document.createElement("p");
-				p.textContent = alinea;
-				bodyEl.appendChild(p);
-			});
 		}
 
 		if (bericht.heeftBijlage) {

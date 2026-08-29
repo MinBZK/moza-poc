@@ -17,10 +17,11 @@ import { laadLive, maakOpslag, stackDraait, wachtOpRijen } from "./laad-live.js"
 // opgeslagen gegevens al van hem zijn. Ontbreekt een van die twee, dan wordt de staat weggegooid —
 // door state.js of door de opruimregel bij een wisseling — en telt het weer als eerste bezoek,
 // inclusief de ophaalanimatie van de dataset.
-const TWEEDE_BEZOEK = (persona) => maakOpslag({
-	"persona:gegevens-van": persona,
-	berichtenbox: JSON.stringify({ persona, eersteBezoekGehad: true }),
-});
+const TWEEDE_BEZOEK = (persona) =>
+	maakOpslag({
+		"persona:gegevens-van": persona,
+		berichtenbox: JSON.stringify({ persona, eersteBezoekGehad: true }),
+	});
 
 const rijen = () => [...document.querySelectorAll(".berichtenbox-row")].filter((r) => !r.hidden && !r.closest("[hidden]"));
 const storing = () => {
@@ -73,9 +74,10 @@ describe("een aangesloten persona", () => {
 });
 
 describe("een bericht uit het stelsel openen", () => {
-	it("zegt dat alleen de kopgegevens opgehaald zijn", async () => {
-		// De berichtenuitvraag levert geen inhoud, alleen afzender, onderwerp en datum. Een lege
-		// pagina zou dat verzwijgen.
+	it("haalt de inhoud na bij het stelsel", async () => {
+		// De berichtenuitvraag levert alleen afzender, onderwerp en datum; de inhoud staat achter een
+		// eigen adres per bericht. Deze test bewijst dat die tweede aanroep echt langs de keten gaat
+		// en niet langs een nagebootst antwoord — het draait tegen de lopende stack.
 		const opslag = TWEEDE_BEZOEK("proeftuin-drie");
 		const drie = await laadLive("/moza/berichtenbox/?persona=proeftuin-drie", { opslag });
 		opruimen.push(drie.ruimOp);
@@ -87,14 +89,24 @@ describe("een bericht uit het stelsel openen", () => {
 		const detail = await laadLive("/moza/berichtenbox/bericht-demo/?id=" + id + "&persona=proeftuin-drie", { opslag });
 		opruimen.push(detail.ruimOp);
 
+		// Eerst zegt de pagina dat ze bezig is, daarna staat de inhoud er. Op het eerste wachten is
+		// niet betrouwbaar te doen — de ronde kan sneller zijn dan de lus — dus wachten we op de
+		// eindtoestand: iets dat noch leeg is, noch de "wordt opgehaald"-tekst.
 		const tot = Date.now() + 20000;
 		let tekst = "";
-		while (Date.now() < tot && !tekst) {
+		while (Date.now() < tot && (!tekst || tekst.indexOf("wordt opgehaald") !== -1)) {
 			const body = document.querySelector("[data-demo-body]");
 			tekst = body ? body.textContent.trim() : "";
-			if (!tekst) await new Promise((r) => setTimeout(r, 100));
+			if (!tekst || tekst.indexOf("wordt opgehaald") !== -1) await new Promise((r) => setTimeout(r, 100));
 		}
-		expect(tekst).toContain("alleen de afzender, het onderwerp en de datum");
+
+		// De proeftuin-berichten zijn brieven van een overheidsorganisatie; ze openen met een
+		// aanhef en sluiten met een afzender. Geen letterlijke tekst hier: die staat in de stack en
+		// mag daar veranderen zonder dat deze test omvalt.
+		expect(tekst).not.toBe("");
+		expect(tekst).not.toContain("in dit prototype nog niet beschikbaar");
+		expect(tekst).toMatch(/Beste|Geachte/);
+		expect(tekst.length).toBeGreaterThan(80);
 	}, 60000);
 });
 
@@ -122,7 +134,6 @@ describe("een persona die niet aangesloten is", () => {
 		expect(gezien.every((verborgen) => verborgen === true)).toBe(true);
 		expect(blok.hidden).toBe(true);
 	}, 40000);
-
 
 	it("krijgt gewoon de dataset, zonder melding", async () => {
 		const kof = await laadLive("/moza/berichtenbox/?persona=koffiezaak", { opslag: TWEEDE_BEZOEK("koffiezaak") });
