@@ -1031,7 +1031,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst) return;
 
-		const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+		const criteria = huidigeCriteria();
+		const gevonden = filterBerichten(data.berichten, criteria);
 		const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
 		huidigePagina = venster.pagina;
 
@@ -1058,8 +1059,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Niet naast de gesimuleerde "geen bronnen"-melding: die verklaart de lege lijst al, en twee
 		// verklaringen naast elkaar spreken elkaar tegen. Alleen op de inbox: archief en prullenbak
 		// hebben dat blok niet, dus daar zou onderdrukken een lege pagina zonder woorden opleveren.
+		//
+		// Tenzij de bezoeker zelf een zoekterm intikte: dan is zíjn filter de reden dat er niets
+		// staat, en is de storingsmelding de verkeerde verklaring — hij leest dat de RDW plat ligt
+		// terwijl hij alleen maar op een woord zocht dat nergens in voorkomt.
+		const eigenFilter = !!(criteria.zoek && criteria.zoek.trim());
+		const uitvalVerklaartHet = huidigeView() === "inbox" && !eigenFilter && !!huidigeUitval();
 		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === "inbox" && !!huidigeUitval());
+		if (leeg) leeg.hidden = gevonden.length > 0 || uitvalVerklaartHet;
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== "inbox") lijst.hidden = gevonden.length === 0;
 

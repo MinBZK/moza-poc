@@ -143,3 +143,36 @@ describe("de detailpagina van een bericht waarvan de bron wegviel", () => {
 		expect(zichtbaar(".berichtenbox-detail-body")).toBe(true);
 	});
 });
+
+describe("een zoekopdracht zonder resultaat tijdens een storing", () => {
+	it("legt de lege lijst uit met het filter, niet met de storing", async () => {
+		zetVlag(true);
+		kiesScenario("een");
+		bouwPagina(BERICHTEN);
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "zzzzz";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+		await laatLaden();
+
+		expect(rijen()).toEqual([]);
+		// De bezoeker tikte een woord in dat nergens voorkomt. Dát is waarom er niets staat — niet
+		// dat de RDW plat ligt. Zonder deze uitzondering onderdrukt de storing de lege staat en
+		// leest hij een verklaring die niets met zijn handeling te maken heeft.
+		expect(zichtbaar("[data-berichtenbox-empty]")).toBe(true);
+	});
+
+	it("laat de storing wél de lege lijst verklaren zonder zoekterm", async () => {
+		zetVlag(true);
+		kiesScenario("geen");
+		bouwPagina(BERICHTEN);
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(rijen()).toEqual([]);
+		// Nu is de storing wél de reden, en zou "u heeft nog geen berichten" ernaast onwaar zijn.
+		expect(zichtbaar("[data-berichtenbox-empty]")).toBe(false);
+	});
+});
