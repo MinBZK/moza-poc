@@ -1587,6 +1587,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	function schrijfAlineas(bodyEl, alineas) {
+		// Er staat nu tekst, dus er wordt niet meer geladen. Hier en nergens anders: het opheffen zat
+		// in `afronden`, en dat draait alleen voor een bericht uit de keten. Een binnengedruppeld
+		// dataset-bericht landt óók op deze pagina, en bleef zo voorgoed als "aan het laden" gemerkt
+		// — een schermlezer mag de inhoud van zo'n subtree onderdrukken, dus de brief stond er wel
+		// en was er niet.
+		bodyEl.removeAttribute("aria-busy");
 		bodyEl.replaceChildren();
 		alineas.forEach((alinea) => {
 			const p = document.createElement("p");
@@ -1622,7 +1628,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		 * op iets dat nooit komt.
 		 */
 		const afronden = (alineas, gezegd, bijlagen, geantwoord) => {
-			bodyEl.removeAttribute("aria-busy");
 			schrijfAlineas(bodyEl, alineas);
 			// De bijlagen eerst afronden, want die kunnen nog iets aan de melding toevoegen: wie met
 			// een schermlezer leest zou anders horen dat alles goed ging en nooit vernemen dat de
@@ -1659,8 +1664,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (!alineas.length) {
 					// De bron antwoordde, maar zonder brieftekst. Dat is iets anders dan een storing, en
 					// hoort ook iets anders te zeggen. De bijlagen kunnen er wél zijn.
-					const geen = "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. " + bericht.afzender + " levert de inhoud niet mee; in dit prototype is die daarom niet te lezen.";
-					afronden([geen], "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen, true);
+					// Zit er wél een bijlage bij, dan is de brief niet weg maar zit hij daarin — dat is
+					// het gewone geval bij een beschikking. "Wij kregen alleen de kopgegevens" zou dan
+					// de bijlage eronder tegenspreken.
+					const metBijlage = Array.isArray(uitkomst.bijlagen) && uitkomst.bijlagen.length > 0;
+					const geen = metBijlage ? "De tekst van dit bericht staat in de bijlage." : "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. " + bericht.afzender + " levert de inhoud niet mee; in dit prototype is die daarom niet te lezen.";
+					afronden([geen], metBijlage ? "De tekst van dit bericht staat in de bijlage." : "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen, true);
 					return;
 				}
 
@@ -1701,23 +1710,29 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		};
 
 		if (!gekregen.length) {
-			// Er viel niets te tonen. Wat dát betekent hangt ervan af of de organisatie antwoordde:
-			// een geslaagd antwoord zonder bijlagen is geen storing, en "ververs de pagina" zou daar
-			// een lus zonder uitgang zijn. Deze twee samennemen was dezelfde fout als bij de 404 —
-			// een oorzaak beweren die het bewijs niet draagt.
-			if (!bericht.heeftBijlage || geantwoord) {
+			// Er viel niets te tonen. Wat dát betekent hangt van twee dingen af, en die drie gevallen
+			// samennemen was dezelfde fout als bij de 404: een oorzaak beweren die het bewijs niet
+			// draagt, of juist zwijgen waar iets te zeggen valt.
+			//
+			// Niets beloofd: er is niets weg, dus de sectie hoort er niet te staan.
+			if (!bericht.heeftBijlage) {
 				verbergLaden();
 				bijlSec.hidden = true;
 				return null;
 			}
 
+			// Beloofd en de organisatie antwoordde — maar zonder bijlagen. Geen storing, dus geen
+			// "ververs de pagina": dat zou een lus zonder uitgang zijn. Wél iets zeggen, want in de
+			// lijst stond een paperclip; zwijgend verdwijnen laat de bezoeker zoeken naar iets dat
+			// er niet blijkt te zijn. `aantalBijlagen` is een telling uit de berichtenuitvraag, geen
+			// gok, dus dit verschil is echt.
 			bijlSec.hidden = false;
-			const mis = "Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
+			const boodschap = geantwoord ? "Bij dit bericht zijn geen bijlagen meegeleverd." : "Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
 			if (laden) {
 				laden.hidden = false;
-				laden.textContent = mis;
+				laden.textContent = boodschap;
 			}
-			return mis;
+			return boodschap;
 		}
 
 		if (!lijst) return null;
@@ -1842,7 +1857,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// Voor een bericht uit de dataset is een lege inhoud geen toestand maar een fout in
 				// de gegevens; die hoort in de console en niet stil op het scherm.
 				console.error("[Berichtenbox] Bericht zonder inhoud in de dataset.", bericht.id);
-				schrijfAlineas(bodyEl, ["Van dit bericht is de inhoud niet beschikbaar."]);
+				schrijfAlineas(bodyEl, ["Van dit bericht is de inhoud niet beschikbaar. Ververs de pagina om het opnieuw te proberen."]);
 			}
 		}
 
@@ -2253,6 +2268,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		p.textContent = "Wij halen dit bericht op…";
 		bodyEl.appendChild(p);
 		bodyEl.setAttribute("aria-busy", "true");
+
+		// Ook een voorlopige kop. Een leeg <h1> laat de pagina naamloos voor wie hem met een
+		// schermlezer opent — precies in het venster waar deze melding voor bedoeld is.
+		const kop = detail.querySelector("[data-demo-onderwerp]");
+		if (kop && !kop.textContent.trim()) kop.textContent = "Bericht";
 	})();
 
 	// Plaatsvervanger voor een bericht dat niet te renderen is. Kolommenaantal volgt de kop, zodat

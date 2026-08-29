@@ -218,22 +218,80 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 
 	it("noemt het geen storing als de organisatie antwoordt zonder bijlagen", async () => {
 		// De teller in de lijst was verouderd, of de organisatie levert de bijlage niet mee. Er is
-		// niets misgegaan, en "ververs de pagina" zou hier een lus zonder uitgang zijn.
+		// niets misgegaan, en "ververs de pagina" zou hier een lus zonder uitgang zijn. Maar zwijgen
+		// mag ook niet: in de lijst stond een paperclip, en die telling komt uit de berichtenuitvraag.
 		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [] }));
 
 		await laadBerichtenbox();
 		await laatLaden();
 		await laatLaden();
 
-		const sectie = document.querySelector("[data-berichtenbox-attachments]");
-		expect(sectie.hidden).toBe(true);
-		expect(document.querySelector("[data-berichtenbox-attachments-loading]").textContent).toBe("");
+		const laden = document.querySelector("[data-berichtenbox-attachments-loading]");
+		expect(document.querySelector("[data-berichtenbox-attachments]").hidden).toBe(false);
+		expect(laden.textContent).toBe("Bij dit bericht zijn geen bijlagen meegeleverd.");
+		expect(laden.textContent).not.toContain("Ververs de pagina");
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toContain("geen bijlagen meegeleverd");
+	});
+
+	it("zegt niet dat alleen de kopgegevens er zijn als de brief in de bijlage zit", async () => {
+		// Het gewone geval bij een beschikking. "Wij kregen alleen de afzender, het onderwerp en de
+		// datum" zou de bijlage eronder tegenspreken — er is méér opgehaald, en de brief ís er.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "", bijlagen: [{ naam: "beschikking.pdf" }] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(tekst()).toBe("De tekst van dit bericht staat in de bijlage.");
+		expect(tekst()).not.toContain("alleen de afzender");
+	});
+
+	it("meldt ook aan een schermlezer dat de bijlagen niet opgehaald konden worden", async () => {
+		// Anders hoort die dat het ophalen mislukte en verneemt nooit dat de bijlagen er ook niet
+		// zijn — terwijl dat de reden is waarom de volgorde in afronden zo staat.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ fout: "Het ging mis." }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toContain("Wij konden de bijlagen van dit bericht niet ophalen");
+	});
+
+	it("haalt aria-busy weg bij een bericht dat zijn inhoud niet uit de keten haalt", async () => {
+		// Een binnengedruppeld dataset-bericht landt op dezelfde pagina. Bleef de markering staan,
+		// dan mag een schermlezer de inhoud van die subtree onderdrukken: de brief staat er wel en
+		// is er niet.
+		const uitDataset = bericht({ id: "msg-los", inhoud: "Alinea een.\n\nAlinea twee." });
+		window.BerichtenboxKeten = { bezig: false, aangesloten: false, melding: null, voortgang: null, berichten: async () => null, opWijziging: () => {} };
+		bouwDemoDetailPagina(uitDataset);
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const body = document.querySelector("[data-demo-body]");
+		expect(body.textContent).toContain("Alinea een.");
+		expect(body.hasAttribute("aria-busy")).toBe(false);
+	});
+
+	it("geeft een naamloze bijlage toch een regel", async () => {
+		// Het stelsel levert de naam niet altijd mee. Een leeg lijstitem laat de bezoeker raden of
+		// er iets misging of dat de bijlage zo heet.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{}] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect([...document.querySelectorAll("[data-berichtenbox-attachments-list] li")].map((li) => li.textContent)).toEqual(["Bijlage zonder naam"]);
 	});
 
 	it("houdt de bijlagensectie dicht bij een bericht zonder bijlagen", async () => {
-		// Anders staat de kop "Bijlage(n)" met een lege lijst op élk bericht.
-		window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "De brief.", bijlagen: [] }));
-		bouwDemoDetailPagina(KETEN_BERICHT);
+		// Anders staat de kop "Bijlage(n)" met een lege lijst op élk bericht. De sectie begint hier
+		// zíchtbaar: stond ze al dicht, dan droeg de fixture de assertie en bewees de test niets.
+		metBericht(KETEN_BERICHT, async () => ({ inhoud: "De brief.", bijlagen: [] }));
+		document.querySelector("[data-berichtenbox-attachments]").hidden = false;
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -265,6 +323,10 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const body = document.querySelector("[data-demo-body]");
 		expect(body.textContent.trim()).toBe("Wij halen dit bericht op…");
 		expect(body.getAttribute("aria-busy")).toBe("true");
+
+		// En een kop, want een leeg <h1> laat de pagina naamloos voor wie hem met een schermlezer
+		// opent — precies in het venster waar deze melding voor bedoeld is.
+		expect(document.querySelector("[data-demo-onderwerp]").textContent).toBe("Bericht");
 	});
 
 	it("laat de nagebootste bijlagen weg bij een bericht uit het stelsel", async () => {
