@@ -307,7 +307,10 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
 		</section>
-		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>Dit bericht bestaat niet.</div>
+		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
+			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
+			<p><a href="/moza/berichtenbox/" class="btn-cta">Terug naar Berichtenbox</a></p>
+		</div>
 		</article>
 	`;
 	window.history.replaceState(null, "", "/moza/berichtenbox/bericht-demo/?id=" + encodeURIComponent(bericht.id));

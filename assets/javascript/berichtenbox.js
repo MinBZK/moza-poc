@@ -1618,74 +1618,119 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (status) status.textContent = tekst;
 		};
 
-		const afronden = (alineas, gezegd) => {
+		/**
+		 * Eén uitgang, wat er ook terugkomt.
+		 *
+		 * Ook de bijlagen worden hier afgehandeld, en niet alleen op het geslaagde pad. Een brief die
+		 * volledig ín de bijlage zit levert `{ inhoud: "", bijlagen: [...] }` — dan hoort die bijlage
+		 * er te staan, niet te verdwijnen. En loopt het mis, dan hoort "Bijlagen ophalen bij RVO…"
+		 * niet eeuwig te blijven staan: een laadindicator die niet afloopt laat de bezoeker wachten
+		 * op iets dat nooit komt.
+		 */
+		const afronden = (alineas, gezegd, bijlagen) => {
 			bodyEl.removeAttribute("aria-busy");
 			schrijfAlineas(bodyEl, alineas);
 			zegHardop(gezegd);
+			rondBijlagenAf(bijlagen, bericht, detail);
 		};
 
 		Promise.resolve(bron.inhoudVan(bericht.id))
 			.then((uitkomst) => {
-				if (uitkomst && uitkomst.fout) {
-					afronden([uitkomst.fout], uitkomst.fout);
+				// Geen antwoord én geen fout: de bron heeft niets gevraagd. Dat is iets anders dan een
+				// organisatie die niets heeft, en hoort niet als zo'n uitspraak op het scherm te komen.
+				if (!uitkomst) {
+					console.error("[Berichtenbox] De bron gaf geen uitkomst voor de berichtinhoud.", bericht.id);
+					const niets = "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen.";
+					afronden([niets], "Het ophalen van de inhoud is mislukt.", null);
 					return;
 				}
 
-				const alineas = tekstAlineas(uitkomst && uitkomst.inhoud);
+				if (uitkomst.fout) {
+					// De melding kort en anders aankondigen dan hem voorlezen: hij staat al in de tekst,
+					// en wie de pagina lineair leest krijgt hem anders twee keer.
+					afronden([uitkomst.fout], "Het ophalen van de inhoud is mislukt.", uitkomst.bijlagen);
+					return;
+				}
+
+				const alineas = tekstAlineas(uitkomst.inhoud);
 				if (!alineas.length) {
-					// De bron antwoordde, maar zonder inhoud. Dat is iets anders dan een storing, en
-					// hoort ook iets anders te zeggen.
-					const geen = "Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is bij de organisatie niet beschikbaar.";
-					afronden([geen], geen);
+					// De bron antwoordde, maar zonder brieftekst. Dat is iets anders dan een storing, en
+					// hoort ook iets anders te zeggen. De bijlagen kunnen er wél zijn.
+					const geen = "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. Open het bericht bij " + bericht.afzender + " om de volledige inhoud te lezen.";
+					afronden([geen], "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen);
 					return;
 				}
 
-				afronden(alineas, "De inhoud van dit bericht is opgehaald.");
-				toonNagekomenBijlagen(uitkomst.bijlagen, bericht, detail);
+				afronden(alineas, "De inhoud van dit bericht is opgehaald.", uitkomst.bijlagen);
 			})
 			.catch((fout) => {
 				console.error("[Berichtenbox] Ophalen van de berichtinhoud mislukte onverwacht.", fout);
 				const mis = "Wij konden de inhoud van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
-				afronden([mis], mis);
+				afronden([mis], "Het ophalen van de inhoud is mislukt.", null);
 			});
 	}
 
 	/**
-	 * Bijlagen komen mee met de inhoud; de lijst wist er bij het laden nog niets van.
+	 * Sluit de bijlagen af, wat er ook uit het ophalen kwam.
+	 *
+	 * `vulDemoDetailPagina` zet bij een bericht met bijlagen "Bijlagen ophalen bij …" neer. Voor een
+	 * bericht uit het stelsel is dit de enige plek die dat ooit nog opruimt — de nabootsing die het
+	 * vroeger deed, slaat zo'n bericht juist over. Elke afloop moet hier dus langs, ook de mislukte:
+	 * een laadindicator die niet afloopt laat de bezoeker wachten op iets dat nooit komt.
 	 *
 	 * De namen komen op het scherm, het openen nog niet: het stelsel levert de bijlage zelf achter
-	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort de bezoeker te lezen — een naam
-	 * zonder link en zonder woord laat de bezoeker klikken op iets dat er niet is.
+	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort erbij te staan — een naam zonder
+	 * link en zonder woord laat de bezoeker klikken op iets dat er niet is.
 	 */
-	function toonNagekomenBijlagen(bijlagen, bericht, detail) {
-		if (!Array.isArray(bijlagen) || !bijlagen.length) return;
+	function rondBijlagenAf(bijlagen, bericht, detail) {
 		const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
-		const lijst = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-list]");
-		if (!bijlSec || !lijst) return;
+		if (!bijlSec) return;
+
+		const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
+		const lijst = bijlSec.querySelector("[data-berichtenbox-attachments-list]");
+		const gekregen = Array.isArray(bijlagen) ? bijlagen : [];
+
+		if (!gekregen.length) {
+			// Beloofd maar niet geleverd. Zwijgen zou de sectiekop "Bijlage(n)" laten staan boven
+			// niets, of de laadtekst laten hangen alsof er nog iets aankomt.
+			if (bericht.heeftBijlage && laden) {
+				laden.hidden = false;
+				laden.textContent = "Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
+				bijlSec.hidden = false;
+			} else {
+				if (laden) laden.hidden = true;
+				bijlSec.hidden = true;
+			}
+			return;
+		}
+
+		if (!lijst) return;
 
 		bijlSec.hidden = false;
-
-		// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven
-		// staan.
-		const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
 		if (laden) {
+			// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven.
 			laden.textContent = "";
 			laden.hidden = true;
 		}
 
 		lijst.replaceChildren();
-		bijlagen.forEach((bijlage) => {
+		gekregen.forEach((bijlage) => {
 			const li = document.createElement("li");
 			li.textContent = (bijlage && bijlage.naam) || "Bijlage zonder naam";
 			lijst.appendChild(li);
 		});
-
-		const uitleg = document.createElement("li");
-		uitleg.className = "metadata";
-		uitleg.textContent = "Bijlagen openen kan in dit prototype nog niet.";
-		lijst.appendChild(uitleg);
-
 		lijst.hidden = false;
+
+		// Ná de lijst en als gewone alinea: als lijstitem zou een schermlezer "lijst met 3 items"
+		// melden bij twee bijlagen.
+		let uitleg = bijlSec.querySelector("[data-bijlagen-uitleg]");
+		if (!uitleg) {
+			uitleg = document.createElement("p");
+			uitleg.className = "metadata";
+			uitleg.setAttribute("data-bijlagen-uitleg", "");
+			bijlSec.appendChild(uitleg);
+		}
+		uitleg.textContent = "Open het bericht bij " + bericht.afzender + " om de bijlagen te bekijken. In dit prototype kan dat nog niet.";
 	}
 
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
@@ -1710,8 +1755,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// Mislukte de lading, dan is de lijst leeg omdat er niets binnenkwam — niet omdat dit
 				// bericht weg is. "Mogelijk is het verwijderd" is dan de stelligste onwaarheid op het
 				// scherm, en staat bovendien onder een storingsmelding die het tegendeel zegt.
-				if (ladingMislukt || laadfoutGetoond) {
-					melding.textContent = "Wij konden uw berichten niet ophalen, dus ook dit bericht niet. Ververs de pagina om het opnieuw te proberen.";
+				//
+				// Alleen de tekst-alinea aanspreken, niet het blok: daaronder staat de knop terug naar
+				// de Berichtenbox. Die met `textContent` wegvagen liet de bezoeker juist op de
+				// unhappy flow achter zonder uitweg.
+				const uitleg = melding.querySelector("p");
+				if (uitleg && (ladingMislukt || laadfoutGetoond)) {
+					uitleg.textContent = "Wij konden uw berichten niet ophalen, dus ook dit bericht niet. Ververs de pagina om het opnieuw te proberen.";
 				}
 				melding.hidden = false;
 			}
@@ -1763,12 +1813,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const bodyEl = detail.querySelector("[data-demo-body]");
 		if (bodyEl) {
 			const alineas = tekstAlineas(bericht.inhoud);
-			if (alineas.length) {
-				schrijfAlineas(bodyEl, alineas);
-			} else if (bericht.uitKeten) {
+			if (bericht.uitKeten) {
 				// De berichtenuitvraag levert alleen de kopgegevens; de inhoud blijft bij de
 				// organisatie tot iemand erom vraagt. Nu vraagt de bezoeker erom.
+				//
+				// Ook als de lijst tóch inhoud meegaf: de bijlagen komen langs dezelfde weg, en die
+				// staan nooit in de lijst. Overslaan liet een bericht met bijlagen achter met een
+				// sectiekop, een laadtekst die nooit afliep en geen enkele bijlage.
 				haalInhoudNa(bericht, bodyEl, detail);
+			} else if (alineas.length) {
+				schrijfAlineas(bodyEl, alineas);
 			} else {
 				// Voor een bericht uit de dataset is een lege inhoud geen toestand maar een fout in
 				// de gegevens; die hoort in de console en niet stil op het scherm.

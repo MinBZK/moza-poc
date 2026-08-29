@@ -76,8 +76,10 @@ describe("een aangesloten persona", () => {
 describe("een bericht uit het stelsel openen", () => {
 	it("haalt de inhoud na bij het stelsel", async () => {
 		// De berichtenuitvraag levert alleen afzender, onderwerp en datum; de inhoud staat achter een
-		// eigen adres per bericht. Deze test bewijst dat die tweede aanroep echt langs de keten gaat
-		// en niet langs een nagebootst antwoord — het draait tegen de lopende stack.
+		// eigen adres per bericht. Deze test draait tegen de lopende stack en controleert dat er een
+		// echte brief op het scherm komt. Ze bewijst niet dát er een tweede aanroep was — zou de
+		// berichtenlijst ooit zelf inhoud meeleveren, dan slaagt ze zonder. Wie dat wil vastleggen,
+		// telt de aanroepen naar /api/v1/berichten/{id}.
 		const opslag = TWEEDE_BEZOEK("proeftuin-drie");
 		const drie = await laadLive("/moza/berichtenbox/?persona=proeftuin-drie", { opslag });
 		opruimen.push(drie.ruimOp);

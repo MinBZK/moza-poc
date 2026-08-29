@@ -115,7 +115,13 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		 * hoort het dus ook zo te doen.
 		 */
 		async inhoudVan(berichtId) {
-			if (!keten || typeof keten.inhoudVan !== "function") return null;
+			if (!keten || typeof keten.inhoudVan !== "function") {
+				// Een bedradingsfout, net als bij volgVoortgang en start hieronder. Stil null geven
+				// liet de render-laag zeggen dat de organisatie de inhoud niet heeft — terwijl er
+				// niets gevraagd is.
+				console.error("[Berichtenbox] Het keten-script kent geen inhoudVan; de berichtinhoud is niet op te halen.");
+				return { fout: "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen." };
+			}
 			return keten.inhoudVan(berichtId);
 		},
 

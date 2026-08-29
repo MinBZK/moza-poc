@@ -8,7 +8,8 @@
  *       geldtVoor:     async (persona) => boolean,   // is deze bron van toepassing?
  *       laad:          async () => ({ berichten, magazijnen, mappen }),
  *       start:         (meld) => {},                 // optioneel: gedrag ná het laden
- *       inhoudVan:     async (berichtId) => string,  // optioneel: inhoud naleveren
+ *       inhoudVan:     async (berichtId) => ({ inhoud, bijlagen }) | ({ fout }),  // optioneel: inhoud naleveren
+ *                      // Werpt niet: de detailpagina moet altijd iets kunnen tonen.
  *       volgVoortgang: (kijker) => {},               // optioneel: hoe ver het ophalen is
  *       herhaalOphalen: (klaar) => {},               // optioneel: nog een keer, op verzoek
  *       herstelBronnen: () => {},                    // optioneel: de bezoeker vraagt om herstel

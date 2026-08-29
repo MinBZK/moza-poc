@@ -117,7 +117,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 		await laatLaden();
 
-		expect(tekst()).toContain("bij de organisatie niet beschikbaar");
+		expect(tekst()).toContain("kregen wij alleen de afzender, het onderwerp en de datum");
 	});
 
 	it("toont bijlagen die pas met de inhoud meekwamen", async () => {
@@ -140,18 +140,22 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// De échte namen, niet de nagebootste. En erbij dat openen nog niet kan: een naam zonder
 		// link en zonder woord laat de bezoeker klikken op iets dat er niet is.
 		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
-		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf", "Bijlagen openen kan in dit prototype nog niet."]);
+		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf"]);
+
+		// De uitleg staat ná de lijst en niet erin: als lijstitem zou een schermlezer "lijst met drie
+		// items" melden bij twee bijlagen.
+		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toContain("om de bijlagen te bekijken");
 
 		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
 		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
 	});
 
-	it("vraagt niets na voor een bericht dat zijn inhoud al heeft", async () => {
-		// De spy moet op de áctieve bron zitten, anders bewijst hij niets: een keten die zich niet
-		// aangesloten meldt wordt sowieso nooit geraadpleegd, en dan is "niet aangeroepen" waar om
-		// de verkeerde reden. Dus: wél aangesloten, en een bericht dat zijn inhoud al bij zich draagt.
-		const metInhoud = { ...KETEN_BERICHT, id: "al-compleet", inhoud: "Eerste alinea.\n\nTweede alinea." };
-		const inhoudVan = vi.fn(async () => ({ inhoud: "Dit hoort nooit op het scherm te komen.", bijlagen: [] }));
+	it("vraagt ook na als de lijst al inhoud meegaf, want de bijlagen komen langs dezelfde weg", async () => {
+		// De bijlagen staan nooit in de berichtenlijst. Sloeg de detailpagina het ophalen over omdat
+		// er al tekst was, dan hield een bericht mét bijlagen een sectiekop over, een laadtekst die
+		// nooit afliep, en geen enkele bijlage.
+		const metInhoud = { ...KETEN_BERICHT, id: "al-compleet", inhoud: "Uit de lijst.", heeftBijlage: true };
+		const inhoudVan = vi.fn(async () => ({ inhoud: "De volledige brief.", bijlagen: [{ naam: "besluit.pdf" }] }));
 		window.BerichtenboxKeten = {
 			bezig: false,
 			aangesloten: true,
@@ -167,8 +171,36 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 		await laatLaden();
 
-		expect(tekst()).toBe("Eerste alinea. Tweede alinea.");
-		expect(inhoudVan).not.toHaveBeenCalled();
+		expect(inhoudVan).toHaveBeenCalledWith("al-compleet");
+		expect(tekst()).toBe("De volledige brief.");
+		expect([...document.querySelectorAll("[data-berichtenbox-attachments-list] li")].map((li) => li.textContent)).toEqual(["besluit.pdf"]);
+	});
+
+	it("laat de bijlagen staan als alleen de brieftekst ontbreekt", async () => {
+		// Een beschikking waarvan de brief volledig ín de PDF zit. De bijlage weglaten omdat er geen
+		// tekst is, is precies de tegenhanger van verzonnen bijlagen: nu verdwijnt de echte.
+		window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "", bijlagen: [{ naam: "beschikking.pdf" }] }));
+		bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect([...document.querySelectorAll("[data-berichtenbox-attachments-list] li")].map((li) => li.textContent)).toEqual(["beschikking.pdf"]);
+	});
+
+	it("laat de laadtekst van de bijlagen niet eeuwig staan als het ophalen mislukt", async () => {
+		// De nabootsing die dit vroeger opruimde slaat een keten-bericht juist over. Blijft deze weg,
+		// dan wacht de bezoeker op iets dat nooit komt.
+		window.BerichtenboxKeten = nepKeten(async () => ({ fout: "Het ging mis." }));
+		bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const laden = document.querySelector("[data-berichtenbox-attachments-loading]");
+		expect(laden.textContent).not.toContain("Bijlagen ophalen bij");
 	});
 
 	it("laat de nagebootste bijlagen weg bij een bericht uit het stelsel", async () => {
@@ -202,5 +234,55 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 
 		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toBe("De inhoud van dit bericht is opgehaald.");
+	});
+
+	it("laat de weg terug staan als het bericht niet gevonden wordt", async () => {
+		// Juist op de unhappy flow is die knop het enige dat de bezoeker verder helpt. De melding met
+		// textContent overschrijven vaagde hem weg, samen met de alinea eromheen.
+		// Een mislukte ophaalronde: dan is de lijst leeg omdat er niets binnenkwam, en herschrijft de
+		// pagina de melding — precies het moment waarop de knop verdween.
+		window.BerichtenboxKeten = { ...nepKeten(async () => ({ inhoud: "x", bijlagen: [] })), berichten: async () => null };
+		bouwDemoDetailPagina(KETEN_BERICHT, { berichten: [] });
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const blok = document.querySelector("[data-demo-niet-gevonden]");
+		expect(blok.hidden).toBe(false);
+		expect(blok.querySelector("p").textContent).toContain("Wij konden uw berichten niet ophalen");
+		expect(blok.querySelector("a.btn-cta")).not.toBeNull();
+	});
+
+	it("maakt van een leeg antwoord geen uitspraak over de organisatie", async () => {
+		// De bron gaf niets terug — geen inhoud en geen fout. Er is dan niets gevraagd, en dat is
+		// iets anders dan een organisatie die niets heeft. Zonder deze tak leest de bezoeker het
+		// tweede terwijl het eerste waar is.
+		window.BerichtenboxKeten = nepKeten(async () => null);
+		bouwDemoDetailPagina(KETEN_BERICHT);
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(tekst()).toContain("niet opvragen");
+		expect(tekst()).not.toContain("kregen wij alleen de afzender");
+	});
+
+	it("zegt het als het keten-script geen inhoudVan kent", async () => {
+		// Een bedradingsfout — bijvoorbeeld een gecacht ouder script naast een nieuwe module. Stil
+		// niets teruggeven liet de pagina zeggen dat de organisatie de inhoud niet heeft, terwijl er
+		// nooit iets gevraagd is.
+		const zonder = nepKeten(undefined);
+		delete zonder.inhoudVan;
+		window.BerichtenboxKeten = zonder;
+		bouwDemoDetailPagina(KETEN_BERICHT);
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(tekst()).toContain("niet opvragen");
+		expect(tekst()).not.toContain("kregen wij alleen de afzender");
 	});
 });

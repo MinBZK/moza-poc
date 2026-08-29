@@ -118,51 +118,56 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(aanroepen[aanroepen.length - 1].pad).toBe("/api/v1/berichten/" + encodeURIComponent("../../admin?x=1"));
 	});
 
-	it("noemt een 404 die zegt dat het bericht weg is, ook zo", async () => {
-		await startKeten([
-			["/api/demo/personas", PERSONAS],
-			["_ophalen", sseAntwoord()],
-			["/api/v1/berichten?", LIJST],
-			["/api/v1/berichten/", antwoord(404, { type: "urn:fbs:bericht-niet-gevonden", title: "Bericht niet gevonden" }, "application/problem+json")],
-		]);
+	// Drie vormen van 404 die het stelsel of een laag ertussen kan sturen. Ze krijgen bewust
+	// dezelfde tekst: er is geen afgesproken kenmerk waarmee "ingetrokken" van "onbereikbaar" te
+	// scheiden is, dus doen we ook niet alsof. Zodra dat kenmerk er is, hoort dit uiteen te vallen
+	// en horen deze drie tests uiteenlopende teksten te eisen.
+	const VORMEN_404 = [
+		["problem+json die zegt dat het bericht weg is", { type: "urn:fbs:bericht-niet-gevonden", title: "Bericht niet gevonden" }, "application/problem+json"],
+		["problem+json volgens de RFC-standaard", { type: "about:blank", title: "Not Found", detail: "Het bericht is ingetrokken door de afzender." }, "application/problem+json"],
+		["een kale HTML-foutpagina van een tussenliggende laag", "<html>Not Found</html>", "text/html"],
+	];
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+	VORMEN_404.forEach(([wat, body, soort]) => {
+		it("zegt bij een 404 (" + wat + ") wat wij wél weten", async () => {
+			await startKeten([
+				["/api/demo/personas", PERSONAS],
+				["_ophalen", sseAntwoord()],
+				["/api/v1/berichten?", LIJST],
+				["/api/v1/berichten/", antwoord(404, body, soort)],
+			]);
 
-		expect(uitkomst.fout).toContain("niet meer beschikbaar bij de organisatie");
+			const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+
+			// Wél: dat wij het niet konden ophalen, wat het kán zijn, en wat de bezoeker kan doen.
+			// Niet: dat het bericht zeker weg is — die stelligheid draagt een 404 niet.
+			expect(uitkomst.fout).toContain("Mogelijk is het ingetrokken");
+			expect(uitkomst.fout).toContain("Ververs de pagina");
+			expect(uitkomst.fout).not.toContain("bestaat niet meer");
+		});
 	});
 
-	it("noemt een kale 404 géén verdwenen bericht", async () => {
-		// Zo antwoordt een ingress die de route niet kent, of een backend van een andere versie.
-		// "Dit bericht bestaat niet meer" zou dan bij élk bericht op het scherm staan — de
-		// stelligste onwaarheid die deze pagina kan uitspreken, en niet te onderscheiden van waar.
+	it("spreekt bij een trage organisatie niet over het hele stelsel", async () => {
+		// De tijdslimiet van één bericht bij één organisatie. "De bronnen reageren niet meer" gaat
+		// over het hele stelsel en is hier onwaar: de lijst van de bezoeker staat er gewoon.
 		await startKeten([
 			["/api/demo/personas", PERSONAS],
 			["_ophalen", sseAntwoord()],
 			["/api/v1/berichten?", LIJST],
-			["/api/v1/berichten/", antwoord(404, "<html>Not Found</html>", "text/html")],
+			[
+				"/api/v1/berichten/",
+				() => {
+					const fout = new Error("te traag");
+					fout.name = "TimeoutError";
+					throw fout;
+				},
+			],
 		]);
 
 		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
 
-		expect(uitkomst.fout).not.toContain("niet meer beschikbaar");
-		expect(uitkomst.fout).toContain("Er gaat iets mis met het ophalen");
-	});
-
-	it("gelooft een 404 niet op zijn woord als hij niet van het stelsel komt", async () => {
-		// Geldige JSON die toevallig "bericht" noemt, maar met een gewone content-type: dat is een
-		// tussenliggende laag die zich voordoet als antwoord, niet het stelsel dat zegt dat het
-		// bericht weg is. Zonder de content-type-controle zou dit de bezoeker vertellen dat zijn
-		// bericht niet meer bestaat, op gezag van een ingress.
-		await startKeten([
-			["/api/demo/personas", PERSONAS],
-			["_ophalen", sseAntwoord()],
-			["/api/v1/berichten?", LIJST],
-			["/api/v1/berichten/", antwoord(404, { title: "Bericht niet gevonden" }, "application/json")],
-		]);
-
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
-
-		expect(uitkomst.fout).not.toContain("niet meer beschikbaar");
+		expect(uitkomst.fout).toContain("duurde te lang");
+		expect(uitkomst.fout).not.toContain("De bronnen reageren niet meer");
 	});
 
 	it("maakt van een serverfout een melding en geen uitworp", async () => {

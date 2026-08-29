@@ -59,7 +59,10 @@
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
-		weg: "Dit bericht is niet meer beschikbaar bij de organisatie die het stuurde. Ga terug naar uw Berichtenbox voor uw overige berichten.",
+		weg: "Wij konden dit bericht niet ophalen bij de organisatie die het stuurde. Mogelijk is het ingetrokken, of is de organisatie tijdelijk niet bereikbaar. Ververs de pagina om het opnieuw te proberen.",
+		// Eén bericht, één organisatie. "De bronnen reageren niet meer" gaat over het hele stelsel en
+		// is hier onwaar: de lijst van de bezoeker staat er gewoon.
+		traag: "Het ophalen van dit bericht duurde te lang. Ververs de pagina om het opnieuw te proberen.",
 	};
 
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
@@ -299,36 +302,22 @@
 	 * bezoeker het bericht opent. Dat is niet alleen zuinig: het is ook wat er in een federatief
 	 * stelsel gebeurt, waar de inhoud bij de organisatie zelf blijft tot iemand erom vraagt.
 	 */
-	/**
-	 * Zegt dit 404-antwoord zelf dat het bericht weg is?
-	 *
-	 * Het stelsel antwoordt met `application/problem+json`. Staat daar niets bruikbaars in — of is
-	 * het geen problem+json, wat op een tussenliggende laag wijst en niet op het stelsel — dan
-	 * weten we het niet, en dan is "onbereikbaar" het eerlijke antwoord.
-	 */
-	async function zegtWeg(respons) {
-		const soort = respons.headers.get("content-type") || "";
-		if (soort.indexOf("problem+json") === -1) return false;
-
-		try {
-			const probleem = await respons.json();
-			const tekst = ((probleem && (probleem.type || "")) + " " + (probleem && (probleem.title || ""))).toLowerCase();
-			return tekst.indexOf("bericht") !== -1;
-		} catch (fout) {
-			console.warn("[Berichtenbox] 404-antwoord niet te lezen; behandeld als onbereikbaar.", fout);
-			return false;
-		}
-	}
-
 	async function haalInhoud(ontvanger, berichtId) {
 		const respons = await metTijdslimiet("/api/v1/berichten/" + encodeURIComponent(berichtId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
 
 		// Een 404 zegt niet wat wij zouden willen dat hij zegt. Hij kan betekenen dat het bericht er
-		// niet meer is, maar net zo goed dat deze backend de route niet kent of het bericht niet aan
-		// déze ontvanger toekent. "Dit bericht bestaat niet meer" is dan de stelligste onwaarheid
-		// die deze pagina kan uitspreken, en van de waarheid niet te onderscheiden. Alleen als het
-		// antwoord zelf zegt dat het bericht weg is, nemen we dat over.
-		if (respons.status === 404) throw ketenFout((await zegtWeg(respons)) ? "weg" : "onbereikbaar", "bericht niet geleverd (404: " + berichtId + ")");
+		// niet meer is, maar net zo goed dat deze backend de route niet kent, dat een ingress iets
+		// anders routeert, of dat het bericht niet aan déze ontvanger toekomt — en die header is in
+		// de browser aan te passen.
+		//
+		// Er is geen afgesproken kenmerk om die gevallen uit elkaar te houden. Op het woord
+		// "bericht" in `type` of `title` afgaan lééK een verfijning, maar elke `type`-URI van deze
+		// resource bevat dat woord, en de RFC-standaard `{"type":"about:blank","title":"Not Found"}`
+		// bevat het juist niet. Dat is schijnzekerheid in twee richtingen tegelijk.
+		//
+		// Dus zeggen we wat we wél weten. Zodra het stelsel een kenmerk aanbiedt dat "ingetrokken"
+		// van "onbereikbaar" scheidt, kan het onderscheid terug — zie de open vraag in CLAUDE.md.
+		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + berichtId + ")");
 		if (!respons.ok) throw ketenFout("onbereikbaar", "berichtinhoud laden mislukt (" + respons.status + ")");
 
 		const bericht = await respons.json();
@@ -578,7 +567,9 @@
 			try {
 				return await haalInhoud(ontvangerVanRonde, berichtId);
 			} catch (fout) {
-				const reden = redenVan(fout);
+				// "stil" heet hier "traag": dat is de tijdslimiet van één bericht bij één organisatie,
+				// niet het stelsel dat er als geheel mee ophoudt.
+				const reden = redenVan(fout) === "stil" ? "traag" : redenVan(fout);
 				console.error("[Berichtenbox] berichtinhoud ophalen mislukt", fout);
 				return { fout: FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar };
 			}
