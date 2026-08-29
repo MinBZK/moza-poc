@@ -56,7 +56,10 @@ title: "MijnOverheid Zakelijk: Bericht"
 				</ul>
 			</div>
 
-			<p class="variant-c-only"><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
+			<!-- Nagebootst: dit opent een voorbeeld-PDF, niet het echte bericht. Voor een bericht uit
+			     het stelsel zou dat een verzonnen document zijn dat zich voordoet als het origineel,
+			     dus verbergt de render-laag dit blok daar (data-nagebootst). -->
+			<p class="variant-c-only" data-nagebootst><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
 				<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
 				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>

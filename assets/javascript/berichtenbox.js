@@ -1667,9 +1667,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					// Zit er wél een bijlage bij, dan is de brief niet weg maar zit hij daarin — dat is
 					// het gewone geval bij een beschikking. "Wij kregen alleen de kopgegevens" zou dan
 					// de bijlage eronder tegenspreken.
-					const metBijlage = Array.isArray(uitkomst.bijlagen) && uitkomst.bijlagen.length > 0;
-					const geen = metBijlage ? "De tekst van dit bericht staat in de bijlage." : "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. " + bericht.afzender + " levert de inhoud niet mee; in dit prototype is die daarom niet te lezen.";
-					afronden([geen], metBijlage ? "De tekst van dit bericht staat in de bijlage." : "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen, true);
+					// Zit de brief in de bijlage, dan is hij niet weg maar wél onleesbaar: bijlagen openen
+					// kan hier nog niet. Dat hoort in dezelfde zin, anders leest de bezoeker dat zijn
+					// tekst er is en ontdekt hij pas onder de lijst dat hij er niet bij kan.
+					const aantalBijlagen = Array.isArray(uitkomst.bijlagen) ? uitkomst.bijlagen.length : 0;
+					const geen = aantalBijlagen ? "De tekst van dit bericht staat in " + (aantalBijlagen === 1 ? "de bijlage" : "de bijlagen") + " hieronder. Bijlagen openen kan in dit prototype nog niet." : "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. " + bericht.afzender + " levert de inhoud niet mee; in dit prototype is die daarom niet te lezen.";
+					// Kort en anders dan de zichtbare tekst: wie de pagina lineair leest krijgt hem
+					// anders twee keer.
+					afronden([geen], aantalBijlagen ? "De brieftekst zit in de bijlage." : "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen, true);
 					return;
 				}
 
@@ -1789,8 +1794,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// Alleen de tekst-alinea aanspreken, niet het blok: daaronder staat de knop terug naar
 				// de Berichtenbox. Die met `textContent` wegvagen liet de bezoeker juist op de
 				// unhappy flow achter zonder uitweg.
+				// Niet alleen bij een mislukte lading. Een ronde die dééls lukt werpt niet — een
+				// magazijn dat niet antwoordt levert een mededeling, geen uitworp — en dan stond
+				// "Mogelijk is het verwijderd" onder een melding die de echte oorzaak al benoemde.
+				// Staat er iets in het meldingsblok, dan is de lijst niet te vertrouwen als bewijs
+				// dat dit bericht weg is.
+				const storing = document.querySelector("[data-berichtenbox-storing]");
+				const lijstOnbetrouwbaar = ladingMislukt || laadfoutGetoond || !!(storing && !storing.hidden);
+
 				const uitleg = melding.querySelector("p");
-				if (uitleg && (ladingMislukt || laadfoutGetoond)) {
+				if (uitleg && lijstOnbetrouwbaar) {
 					uitleg.textContent = "Wij konden uw berichten niet ophalen, dus ook dit bericht niet. Ververs de pagina om het opnieuw te proberen.";
 				}
 				melding.hidden = false;
@@ -1802,8 +1815,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		detail.dataset.berichtId = bericht.id;
 		detail.dataset.afzenderId = bericht.magazijnId;
 		// Merkteken voor laadBijlagen: hier komen de gegevens uit het stelsel en valt er niets na
-		// te bootsen.
-		if (bericht.uitKeten) detail.dataset.uitKeten = "true";
+		// te bootsen. Alles wat nagebootst is gaat dan weg — één plek, in plaats van per element:
+		// "Open origineel bericht" wijst naar een voorbeeld-PDF, en dat als origineel aanbieden bij
+		// een echt bericht is dezelfde onwaarheid als verzonnen bijlagen.
+		if (bericht.uitKeten) {
+			detail.dataset.uitKeten = "true";
+			document.querySelectorAll("[data-nagebootst]").forEach((el) => {
+				el.hidden = true;
+			});
+		}
 		detail.dataset.afzenderNaam = bericht.afzender;
 		if (bericht.heeftBijlage) detail.dataset.heeftBijlage = "true";
 

@@ -242,8 +242,12 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 		await laatLaden();
 
-		expect(tekst()).toBe("De tekst van dit bericht staat in de bijlage.");
-		expect(tekst()).not.toContain("alleen de afzender");
+		// En erbij dat openen nog niet kan: anders leest de bezoeker dat zijn tekst er is en ontdekt
+		// hij pas onder de lijst dat hij er niet bij kan.
+		expect(tekst()).toBe("De tekst van dit bericht staat in de bijlage hieronder. Bijlagen openen kan in dit prototype nog niet.");
+
+		// De aankondiging herhaalt de zichtbare zin niet woordelijk.
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toBe("De brieftekst zit in de bijlage. Er is één bijlage.");
 	});
 
 	it("meldt ook aan een schermlezer dat de bijlagen niet opgehaald konden worden", async () => {
@@ -273,6 +277,55 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const body = document.querySelector("[data-demo-body]");
 		expect(body.textContent).toContain("Alinea een.");
 		expect(body.hasAttribute("aria-busy")).toBe(false);
+	});
+
+	it("zegt niet 'mogelijk verwijderd' als een bron tijdens de ronde wegviel", async () => {
+		// Een ronde die dééls lukt werpt niet: een magazijn dat niet antwoordt levert een mededeling.
+		// De lijst is dan onvolledig, en dat dit bericht ontbreekt zegt niets over of het bestaat.
+		// Zonder deze regel stond "Mogelijk is het verwijderd" onder een melding die de echte
+		// oorzaak al benoemde.
+		metBericht(KETEN_BERICHT, async () => ({ inhoud: "x", bijlagen: [] }));
+		window.history.replaceState(null, "", "/moza/berichtenbox/bericht-demo/?id=staat-niet-in-de-lijst");
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		// Zoals de render-laag hem toont bij een bronmelding.
+		const storing = document.querySelector("[data-berichtenbox-storing]");
+		storing.hidden = false;
+		storing.querySelector("[data-berichtenbox-storing-tekst]").textContent = "RVO was tijdens het ophalen niet bereikbaar.";
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const blok = document.querySelector("[data-demo-niet-gevonden]");
+		expect(blok.hidden).toBe(false);
+		expect(blok.querySelector("p").textContent).not.toContain("Mogelijk is het verwijderd");
+		expect(blok.querySelector("a.btn-cta")).not.toBeNull();
+	});
+
+	it("spreekt over bijlagen in het meervoud als het er meer zijn", async () => {
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "", bijlagen: [{ naam: "a.pdf" }, { naam: "b.pdf" }] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(tekst()).toContain("staat in de bijlagen hieronder");
+	});
+
+	it("biedt geen nagebootste PDF aan als origineel bij een echt bericht", async () => {
+		// "Open origineel bericht" wijst naar een voorbeeld-PDF. Bij een bericht uit het stelsel is
+		// dat een verzonnen document dat zich voordoet als het origineel — dezelfde onwaarheid als
+		// verzonnen bijlagen, één element verderop.
+		metBericht(KETEN_BERICHT, async () => ({ inhoud: "De brief.", bijlagen: [] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-nagebootst]").hidden).toBe(true);
 	});
 
 	it("geeft een naamloze bijlage toch een regel", async () => {
