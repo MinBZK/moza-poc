@@ -2143,14 +2143,20 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// De unhappy-flow-vlag staat in een cookie; die leest de render-laag, de bron hoeft de
 			// pagina niet te kennen.
 			vlagAan: unhappyFlowAan,
-			// De nabootsing gaat over de lijst op de inbox. Archief en prullenbak tonen wat de bezoeker
-			// zelf wegzette, en een detailpagina moet zijn bericht gewoon kunnen vinden.
-			// Kan déze pagina een uitval uitleggen? Zo niet, dan hoort ze er ook geen te tonen. De
-			// inbox legt het uit met de drie waarschuwingsblokken, de detailpagina met haar eigen
-			// "bericht onbeschikbaar". De Belastingdienst-inbox heeft de lijst wél maar geen van
-			// beide: daar zou een uitval kolomkoppen zonder rijen opleveren, zonder lege staat en
-			// zonder één woord waarom.
-			magUitvallen: () => (!!document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])") && !!document.querySelector("[data-bron-onbereikbaar]") && !!document.querySelector("[data-geen-bronnen]") && !!document.querySelector("[data-bron-uitval]")) || !!document.querySelector("[data-bericht-onbeschikbaar]"),
+			// Kan déze pagina dít scenario uitleggen? Zo niet, dan hoort ze het ook niet te spelen.
+			//
+			// De inbox kan alle drie: zij heeft de waarschuwingsblokken voor "een" en "geen" én die
+			// voor "later". Een detailpagina kan er maar één — haar "bericht onbeschikbaar" gaat over
+			// de bron van dít bericht en spreekt dus alleen bij "later". Bij "een" en "geen" zou zij
+			// het bericht tonen terwijl de bron niets leverde, en onderweg de ongelezen-teller over
+			// een lege lijst herberekenen: een badge die daarna op élke andere pagina verkeerd staat.
+			// De Belastingdienst-inbox heeft de lijst wél maar geen van beide soorten blokken.
+			kanUitleggen: (scenario) => {
+				if (document.querySelector("[data-berichtenbox-list]:not([data-berichtenbox-view])")) {
+					return !!document.querySelector("[data-bron-onbereikbaar]") && !!document.querySelector("[data-geen-bronnen]") && !!document.querySelector("[data-bron-uitval]");
+				}
+				return scenario === "later" && !!document.querySelector("[data-bericht-onbeschikbaar]");
+			},
 			// Op de aanwezigheid van het voortgangsblok, niet op huidigeView(): die valt op elke
 			// detailpagina terug op "inbox", en dan draaide de animatie daar onzichtbaar — en verbruikte
 			// wel het eerste bezoek, zodat de bezoeker haar op de inbox nooit meer zag.

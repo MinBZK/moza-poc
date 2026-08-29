@@ -83,7 +83,7 @@ function tussenpoos() {
  *                              het aantal bronnen; tests zetten hem kort, want de duur is niet wat zij
  *                              toetsen.
  */
-export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null, vlagAan = () => false, sessie = () => sessionStorage, magUitvallen = () => true } = {}) {
+export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, meldStoring = (tekst) => console.error("[Berichtenbox] Geen meldStoring meegegeven; onzichtbaar gebleven: " + tekst), verbergMelding = () => {}, zichtbaarheid = {}, magAnimeren = () => false, duurMs = null, vlagAan = () => false, sessie = () => sessionStorage, kanUitleggen = () => true } = {}) {
 	let teller = 0;
 	let voortgangKijker = null;
 
@@ -207,15 +207,20 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	 * Hier worden ze één keer gelezen, en `blokkeert` is de enige die erover beslist.
 	 */
 	function uitvalStandNu() {
-		const actief = unhappyAan() && magUitvallen();
-		const scenario = actief ? huidigScenario() : null;
+		// Eerst het scenario, dan pas of deze pagina het kan uitleggen: een detailpagina kan wel
+		// "later" tonen maar niet "geen", dus zonder het scenario is die vraag niet te stellen.
+		const gekozen = unhappyAan() ? huidigScenario() : null;
+		const actief = gekozen !== null && kanUitleggen(gekozen);
+		const scenario = actief ? gekozen : null;
 		const gevallen = actief && scenario === "later" ? leesUitval() : null;
-		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
 
 		function blokkeert(bericht) {
 			if (!actief || !bericht) return false;
-			// Alleen wat er binnenkomt: wat de bezoeker zelf archiveerde of weggooide blijft van hem.
-			if (statusVan(bericht.id) !== "inbox") return false;
+			// Alleen wat de bezoeker zou zien. "Status inbox" is daar niet hetzelfde als: een bericht
+			// dat het org-filter tegenhoudt of dat niet voor deze persona bedoeld is, staat toch al
+			// niet in de lijst. Het alsnog weglaten levert een melding over een lijst die niet
+			// verandert — precies de tegenspraak die deze reeks moest sluiten.
+			if (!zouTonen(bericht)) return false;
 			if (scenario === "geen") return true;
 			if (scenario === "een") return bericht.magazijnId === ONBEREIKBARE_BRON;
 			return !!gevallen && bericht.magazijnId === gevallen.id;
@@ -638,13 +643,29 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		};
 	}
 
-	/** Magazijnen waarvan nu iets in de inbox staat — de enige die zinnig kunnen uitvallen. */
-	function zichtbareBronnen() {
+	/**
+	 * Zou dit bericht nu op het scherm staan?
+	 *
+	 * De vier predicaten die de render-laag aanreikt, op één plek. `ophaalAnimatie` telde er al mee;
+	 * de uitval-weg keek alleen naar de status en liet daardoor berichten weg die toch al niet in de
+	 * lijst stonden — met een melding erbij over een lijst die onveranderd bleef.
+	 */
+	function zouTonen(bericht) {
+		if (!bericht || !bericht.magazijnId) return false;
 		const statusVan = zichtbaarheid.statusVan || (() => "inbox");
+		const doorOrgFilter = zichtbaarheid.magazijnDoorOrgFilter || (() => true);
+		const toegestaan = zichtbaarheid.magazijnToegestaan || (() => true);
+		const relevant = zichtbaarheid.persoonRelevant || (() => true);
+
+		return statusVan(bericht.id) === "inbox" && doorOrgFilter(bericht.magazijnId) && toegestaan(bericht.magazijnId) && relevant(bericht);
+	}
+
+	/** Magazijnen waarvan nu iets zichtbaar is — de enige die zinnig kunnen uitvallen. */
+	function zichtbareBronnen() {
 		return [
 			...new Set(
 				bouwLevering()
-					.berichten.filter((bericht) => bericht && bericht.magazijnId && statusVan(bericht.id) === "inbox")
+					.berichten.filter(zouTonen)
 					.map((bericht) => bericht.magazijnId)
 			),
 		];
@@ -664,6 +685,7 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 		// maar er zelf een starten laat de tellers stilletjes zakken op een pagina die de lijst
 		// niet eens toont.
 		if (!magOphalen()) return;
+		if (!kanUitleggen("later")) return;
 		if (uitvalGepland) return;
 		if (leesUitval()) return;
 		uitvalGepland = true;

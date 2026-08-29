@@ -407,3 +407,68 @@ describe("de wekker van een geplande uitval", () => {
 		}
 	});
 });
+
+describe("de bron laat alleen weg wat de bezoeker ook zou zien", () => {
+	it("valt niet uit voor een bericht dat het org-filter al tegenhoudt", async () => {
+		// Alleen de Belastingdienst staat aan. Een RDW-bericht staat dus toch al niet in de lijst;
+		// de RDW laten uitvallen zou "De RDW is momenteel niet bereikbaar" opleveren boven een lijst
+		// waar niets uit weg is.
+		const bron = metScenario("een", {
+			zichtbaarheid: { magazijnDoorOrgFilter: (id) => id === "belastingdienst" },
+		});
+
+		const inhoud = await bron.laad();
+
+		expect(inhoud.berichten.map((b) => b.id)).toEqual(["m1", "m2", "m3", "m4"]);
+		expect(inhoud.uitval).toBeNull();
+	});
+
+	it("valt niet uit voor een bericht dat niet voor deze persona is", async () => {
+		const bron = metScenario("een", {
+			zichtbaarheid: { persoonRelevant: (bericht) => bericht.magazijnId !== "rdw" },
+		});
+
+		const inhoud = await bron.laad();
+
+		expect(inhoud.uitval).toBeNull();
+	});
+
+	it("kiest geen magazijn dat door het org-filter valt", async () => {
+		vi.useFakeTimers();
+		try {
+			// Alleen de KVK staat aan — en die staat níet vooraan in de dataset, waar de RDW zit.
+			// Dat onderscheid is het hele punt: koos de wekker uit de rauwe lijst, dan wees hij de
+			// RDW aan, viel er niets weg (die berichten stonden er toch al niet) en bleef het bij
+			// een storingsmelding zonder gevolgen. Met een fixture waarin de zichtbare bron
+			// toevallig ook de eerste is, is dat verschil niet te zien.
+			const bron = metScenario("later", {
+				zichtbaarheid: { magazijnDoorOrgFilter: (id) => id === "kvk" },
+			});
+			const gemeld = [];
+			await bron.laad();
+			bron.start(echteLuisteraar(bron._data, gemeld));
+
+			await vi.advanceTimersByTimeAsync(20000);
+
+			// Eerst dát er een uitval kwam: zonder deze regel is de test leeg zodra de wekker een
+			// magazijn kiest waarvan niets zichtbaar is, want dan valt er ook niets weg te laten.
+			const uitval = gemeld.map((w) => w.uitval).filter(Boolean);
+			expect(uitval.length).toBeGreaterThan(0);
+			uitval.forEach((u) => expect(u.bronnen).toEqual(["KVK"]));
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("laat niets weg op een pagina die het scenario niet kan uitleggen", async () => {
+		// Een detailpagina heeft geen waarschuwingsblokken voor "geen". Zou de bron daar tóch alles
+		// weglaten, dan staat de bezoeker voor een lege pagina zonder één woord erover — en zakt de
+		// ongelezen-teller mee, op elke ándere pagina zichtbaar als een badge die niet klopt.
+		const bron = metScenario("geen", { kanUitleggen: (scenario) => scenario === "later" });
+
+		const inhoud = await bron.laad();
+
+		expect(inhoud.berichten.map((b) => b.id)).toEqual(["m1", "m2", "m3", "m4"]);
+		expect(inhoud.uitval).toBeNull();
+	});
+});

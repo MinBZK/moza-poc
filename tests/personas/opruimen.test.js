@@ -17,10 +17,16 @@ function nepOpslag(begin = {}) {
 	const kluis = { ...begin };
 	return {
 		getItem: (k) => (k in kluis ? kluis[k] : null),
-		setItem: (k, v) => { kluis[k] = String(v); },
-		removeItem: (k) => { delete kluis[k]; },
+		setItem: (k, v) => {
+			kluis[k] = String(v);
+		},
+		removeItem: (k) => {
+			delete kluis[k];
+		},
 		key: (i) => Object.keys(kluis)[i] ?? null,
-		get length() { return Object.keys(kluis).length; },
+		get length() {
+			return Object.keys(kluis).length;
+		},
 		_kluis: kluis,
 	};
 }
@@ -133,12 +139,42 @@ describe("wisselen van persona", () => {
 		expect(opslag._kluis["persona:gegevens-van"]).toBe("bloemenkweker");
 	});
 
-	it("ruimt bij een eerste bezoek stil op", () => {
-		// Geen herkomst bekend: opruimen mag, maar er valt niets te melden.
+	it("ruimt stil op als er wél een persona gekozen was", () => {
+		// Geen herkomst bekend, maar er staat een keuze in de opslag: dan is er wel degelijk
+		// gewisseld, alleen weten we niet waarvandaan. Opruimen dus — en er valt niets te melden,
+		// want er is geen vorige naam om te noemen.
 		const opslag = nepOpslag({ ...GEGEVENS, persona: "koffiezaak" });
 		draaiPersonas(opslag);
 
+		// Dít is wat de titel belooft. Zonder deze regel bleef de test groen terwijl er niets
+		// opgeruimd werd.
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(opslag._kluis["read:msg-1"]).toBeUndefined();
 		expect(opslag._kluis["persona:gegevens-van"]).toBe("koffiezaak");
 		expect(console.info).not.toHaveBeenCalled();
+	});
+
+	it("neemt gegevens aan als niemand een persona koos", () => {
+		// Gegevens van vóór de scheiding, en de bezoeker kwam gewoon op de standaardpersona uit.
+		// Er is niet gewisseld, dus er valt niets weg te gooien: dit is zijn eigen archief.
+		const opslag = nepOpslag({ ...GEGEVENS });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeDefined();
+		expect(opslag._kluis["read:msg-1"]).toBe("true");
+		expect(opslag._kluis["persona:gegevens-van"]).toBeDefined();
+	});
+
+	it("ruimt tóch op als het merk niet weggeschreven kan worden", () => {
+		// Anders valt élke volgende wissel weer in de aanname-tak — het merk komt er immers nooit —
+		// en wordt er nooit meer opgeruimd. De guard hoort de veilige kant op te falen.
+		const opslag = nepOpslag({ ...GEGEVENS });
+		opslag.setItem = (sleutel) => {
+			if (sleutel === "persona:gegevens-van") throw new Error("vol");
+		};
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(console.error).toHaveBeenCalled();
 	});
 });

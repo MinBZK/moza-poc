@@ -149,17 +149,25 @@
 		}
 		if (vorige === actiefId) return;
 
-		// Nog geen merk: dan is er ook geen vórige persona geweest die deze gegevens achterliet —
-		// ze zijn van wie er nu actief is. Wissen zou hier het archief en de gelezen-markeringen
-		// van een bestaande bezoeker weggooien op het moment dat hij de pagina ververst, zonder
-		// een woord erover: de melding hieronder gaat immers alleen af als er een vorige wás.
-		if (vorige === null) {
+		// Nog geen merk, en niemand koos een persona: dan is er geen vórige geweest die deze
+		// gegevens achterliet — ze zijn van wie er nu actief is, want dat is de standaard. Wissen
+		// zou hier het archief en de gelezen-markeringen van een bestaande bezoeker weggooien op
+		// het moment dat hij zijn pagina ververst, zonder een woord erover: de melding hieronder
+		// gaat immers alleen af als er een vorige wás.
+		//
+		// Wél gekozen — via ?persona= of het Flags-paneel — dan is dat een wissel als elke andere
+		// en gaan de gegevens van wie er hiervoor zat gewoon weg. Anders draagt het archief van de
+		// een na één gedeelde link ineens de naam van de ander.
+		if (vorige === null && !personaUitUrl() && !leesActiefId()) {
 			try {
 				localStorage.setItem(HERKOMST_KEY, actiefId);
+				return;
 			} catch (e) {
-				console.error("[Personas] Kon niet vastleggen van wie de opgeslagen gegevens zijn.", e);
+				// Komt het merk er niet, dan valt élke volgende wissel weer in deze tak en wordt er
+				// nooit meer opgeruimd. Dan liever alsnog wissen: de guard hoort de veilige kant op
+				// te falen.
+				console.error("[Personas] Kon niet vastleggen van wie de opgeslagen gegevens zijn; toch maar opruimen.", e);
 			}
-			return;
 		}
 
 		try {

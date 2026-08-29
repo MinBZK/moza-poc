@@ -3,7 +3,7 @@
  * berichtenbox van één van beide versies op. Geen nagebouwde fixture: dit is de HTML
  * die Eleventy oplevert.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { JSDOM } from "jsdom";
 import { vi } from "vitest";
@@ -77,6 +77,10 @@ async function totGetekend(deadlineMs = 5000) {
 		await new Promise((r) => setTimeout(r, 5));
 	}
 
+	// Hardop, niet stilletjes uitlopen. Een lege pagina vergelijkt gelijk met een lege pagina; dat
+	// is precies hoe deze functie eerder wegkeek van een branch die niets tekende.
+	if (!getekend()) throw new Error("Er is binnen " + deadlineMs + " ms niets zichtbaars getekend.");
+
 	// En dan tot rust: een tweede tekening (paginanav, tellers) hoort er nog bij.
 	let vorige = null;
 	let stil = 0;
@@ -91,6 +95,9 @@ async function totGetekend(deadlineMs = 5000) {
 
 export async function laadPagina(versie, pad, { opslag = maakOpslag(), cookie = "" } = {}) {
 	const bouw = BOUW[versie];
+	if (!existsSync(bouw.site)) {
+		throw new Error("Geen gebouwde site voor '" + versie + "' op " + bouw.site + ". Bouw die werkmap eerst met `npm run build`, " + "of wijs met VGL_MAIN naar de werkmap van main. Zie tests-vergelijking/README.md.");
+	}
 	const html = readFileSync(bouw.site + "/" + pad, "utf8");
 
 	// Ontleden zonder scripts te draaien; daarna zetten we de inhoud in de globale jsdom.
