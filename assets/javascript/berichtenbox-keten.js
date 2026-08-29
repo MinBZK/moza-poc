@@ -59,7 +59,7 @@
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
-		weg: "Wij konden dit bericht niet ophalen bij de organisatie die het stuurde. Mogelijk is het ingetrokken, of is de organisatie tijdelijk niet bereikbaar. Ververs de pagina om het opnieuw te proberen.",
+		weg: "Wij konden dit bericht niet ophalen bij de organisatie die het stuurde. Ververs de pagina om het opnieuw te proberen, of ga terug naar uw Berichtenbox.",
 		// Eén bericht, één organisatie. "De bronnen reageren niet meer" gaat over het hele stelsel en
 		// is hier onwaar: de lijst van de bezoeker staat er gewoon.
 		traag: "Het ophalen van dit bericht duurde te lang. Ververs de pagina om het opnieuw te proberen.",
@@ -311,7 +311,7 @@
 		// de browser aan te passen.
 		//
 		// Er is geen afgesproken kenmerk om die gevallen uit elkaar te houden. Op het woord
-		// "bericht" in `type` of `title` afgaan lééK een verfijning, maar elke `type`-URI van deze
+		// "bericht" in `type` of `title` afgaan leek een verfijning, maar elke `type`-URI van deze
 		// resource bevat dat woord, en de RFC-standaard `{"type":"about:blank","title":"Not Found"}`
 		// bevat het juist niet. Dat is schijnzekerheid in twee richtingen tegelijk.
 		//

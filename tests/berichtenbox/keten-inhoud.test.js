@@ -141,9 +141,13 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 
 			// Wél: dat wij het niet konden ophalen, wat het kán zijn, en wat de bezoeker kan doen.
 			// Niet: dat het bericht zeker weg is — die stelligheid draagt een 404 niet.
-			expect(uitkomst.fout).toContain("Mogelijk is het ingetrokken");
+			expect(uitkomst.fout).toContain("Wij konden dit bericht niet ophalen");
+			// Twee uitwegen, want verversen helpt niet bij een backend die de route niet kent.
 			expect(uitkomst.fout).toContain("Ververs de pagina");
+			expect(uitkomst.fout).toContain("terug naar uw Berichtenbox");
+			// En geen oorzaak beweren die een 404 niet draagt.
 			expect(uitkomst.fout).not.toContain("bestaat niet meer");
+			expect(uitkomst.fout).not.toContain("ingetrokken");
 		});
 	});
 

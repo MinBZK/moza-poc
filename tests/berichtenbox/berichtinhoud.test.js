@@ -26,20 +26,32 @@ function tekst() {
 	return [...body.querySelectorAll("p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()).join(" ");
 }
 
-/** Een keten die zich aangesloten meldt en één bericht levert. */
-function nepKeten(inhoudVan) {
+/**
+ * Een keten die zich aangesloten meldt en één bericht levert.
+ *
+ * Het bericht is een parameter, want de render-laag leest het uit de bron en niet uit de pagina.
+ * Een vast bericht hier maakte `heeftBijlage: true` in de fixture onzichtbaar: de test bouwde de
+ * pagina met bijlagen, de bron leverde er een zonder, en de tak die getoetst werd draaide nooit.
+ */
+function nepKeten(inhoudVan, bericht = KETEN_BERICHT) {
 	return {
 		bezig: false,
 		aangesloten: true,
 		melding: null,
 		voortgang: null,
 		berichten: async () => ({
-			berichten: [KETEN_BERICHT],
-			magazijnen: [{ id: KETEN_BERICHT.magazijnId, naam: "RVO", type: "instantie" }],
+			berichten: [bericht],
+			magazijnen: [{ id: bericht.magazijnId, naam: "RVO", type: "instantie" }],
 		}),
 		opWijziging: () => {},
 		inhoudVan,
 	};
+}
+
+/** Bouwt pagina én bron met hetzelfde bericht, zodat ze niet uiteen kunnen lopen. */
+function metBericht(bericht, inhoudVan) {
+	window.BerichtenboxKeten = nepKeten(inhoudVan, bericht);
+	bouwDemoDetailPagina(bericht);
 }
 
 beforeEach(() => {
@@ -144,7 +156,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 
 		// De uitleg staat ná de lijst en niet erin: als lijstitem zou een schermlezer "lijst met drie
 		// items" melden bij twee bijlagen.
-		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toContain("om de bijlagen te bekijken");
+		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toBe("Bijlagen bekijken kan in dit prototype nog niet.");
 
 		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
 		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
@@ -179,8 +191,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 	it("laat de bijlagen staan als alleen de brieftekst ontbreekt", async () => {
 		// Een beschikking waarvan de brief volledig ín de PDF zit. De bijlage weglaten omdat er geen
 		// tekst is, is precies de tegenhanger van verzonnen bijlagen: nu verdwijnt de echte.
-		window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "", bijlagen: [{ naam: "beschikking.pdf" }] }));
-		bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "", bijlagen: [{ naam: "beschikking.pdf" }] }));
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -189,18 +200,71 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect([...document.querySelectorAll("[data-berichtenbox-attachments-list] li")].map((li) => li.textContent)).toEqual(["beschikking.pdf"]);
 	});
 
-	it("laat de laadtekst van de bijlagen niet eeuwig staan als het ophalen mislukt", async () => {
-		// De nabootsing die dit vroeger opruimde slaat een keten-bericht juist over. Blijft deze weg,
-		// dan wacht de bezoeker op iets dat nooit komt.
-		window.BerichtenboxKeten = nepKeten(async () => ({ fout: "Het ging mis." }));
-		bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+	it("zegt het als beloofde bijlagen niet geleverd zijn", async () => {
+		// De nabootsing die de laadtekst vroeger opruimde slaat een keten-bericht juist over. Blijft
+		// dit weg, dan wacht de bezoeker op iets dat nooit komt.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ fout: "Het ging mis." }));
 
 		await laadBerichtenbox();
 		await laatLaden();
 		await laatLaden();
 
 		const laden = document.querySelector("[data-berichtenbox-attachments-loading]");
-		expect(laden.textContent).not.toContain("Bijlagen ophalen bij");
+		expect(laden.hidden).toBe(false);
+		// De zin zelf vastleggen, niet alleen dat de laadtekst weg is: een lege string voldeed
+		// daaraan ook, en dan is de hele tak weg te halen zonder dat één test omvalt.
+		expect(laden.textContent).toBe("Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.");
+	});
+
+	it("noemt het geen storing als de organisatie antwoordt zonder bijlagen", async () => {
+		// De teller in de lijst was verouderd, of de organisatie levert de bijlage niet mee. Er is
+		// niets misgegaan, en "ververs de pagina" zou hier een lus zonder uitgang zijn.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const sectie = document.querySelector("[data-berichtenbox-attachments]");
+		expect(sectie.hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-attachments-loading]").textContent).toBe("");
+	});
+
+	it("houdt de bijlagensectie dicht bij een bericht zonder bijlagen", async () => {
+		// Anders staat de kop "Bijlage(n)" met een lege lijst op élk bericht.
+		window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "De brief.", bijlagen: [] }));
+		bouwDemoDetailPagina(KETEN_BERICHT);
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-attachments]").hidden).toBe(true);
+	});
+
+	it("kondigt de bijlagen mee aan voor wie de brief niet ziet", async () => {
+		// De bijlagenfout verschijnt buiten elke live-regio. Zonder dit hoort iemand met een
+		// schermlezer dat alles goed ging, en verneemt die nooit dat de bijlagen ontbreken.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{ naam: "a.pdf" }, { naam: "b.pdf" }] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).toBe("De inhoud van dit bericht is opgehaald. Er zijn 2 bijlagen.");
+	});
+
+	it("zet er meteen iets neer, ook voordat de bron gekozen is", async () => {
+		// De pagina wordt pas gevuld na de hele ophaalronde. Tot dan stond er een lege kaart zonder
+		// woord — bij een traag stelsel tientallen seconden lang.
+		window.BerichtenboxKeten = { ...nepKeten(async () => ({ inhoud: "x", bijlagen: [] })), bezig: true, berichten: () => new Promise(() => {}) };
+		bouwDemoDetailPagina(KETEN_BERICHT);
+
+		await laadBerichtenbox();
+
+		const body = document.querySelector("[data-demo-body]");
+		expect(body.textContent.trim()).toBe("Wij halen dit bericht op…");
+		expect(body.getAttribute("aria-busy")).toBe("true");
 	});
 
 	it("laat de nagebootste bijlagen weg bij een bericht uit het stelsel", async () => {
@@ -209,8 +273,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// meer maar een onwaarheid — met een werkende downloadknop erbij.
 		vi.useFakeTimers();
 		try {
-			window.BerichtenboxKeten = nepKeten(async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ naam: "besluit-2026.pdf" }] }));
-			bouwDemoDetailPagina({ ...KETEN_BERICHT, heeftBijlage: true });
+			metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ naam: "besluit-2026.pdf" }] }));
 
 			await laadBerichtenbox();
 			await vi.advanceTimersByTimeAsync(5000);

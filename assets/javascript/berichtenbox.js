@@ -1602,12 +1602,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * een lege pagina laten staan zou de indruk wekken dat het bericht zelf leeg is.
 	 */
 	function haalInhoudNa(bericht, bodyEl, detail) {
-		const bron = register.actief();
-		if (!bron || typeof bron.inhoudVan !== "function") {
-			schrijfAlineas(bodyEl, ["Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar."]);
-			return;
-		}
-
 		schrijfAlineas(bodyEl, ["Wij halen de inhoud van dit bericht op bij " + bericht.afzender + "…"]);
 		bodyEl.setAttribute("aria-busy", "true");
 
@@ -1627,28 +1621,37 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		 * niet eeuwig te blijven staan: een laadindicator die niet afloopt laat de bezoeker wachten
 		 * op iets dat nooit komt.
 		 */
-		const afronden = (alineas, gezegd, bijlagen) => {
+		const afronden = (alineas, gezegd, bijlagen, geantwoord) => {
 			bodyEl.removeAttribute("aria-busy");
 			schrijfAlineas(bodyEl, alineas);
-			zegHardop(gezegd);
-			rondBijlagenAf(bijlagen, bericht, detail);
+			// De bijlagen eerst afronden, want die kunnen nog iets aan de melding toevoegen: wie met
+			// een schermlezer leest zou anders horen dat alles goed ging en nooit vernemen dat de
+			// bijlagen ontbreken.
+			const overBijlagen = rondBijlagenAf(bijlagen, bericht, detail, geantwoord);
+			zegHardop(overBijlagen ? gezegd + " " + overBijlagen : gezegd);
 		};
 
-		Promise.resolve(bron.inhoudVan(bericht.id))
+		// Een bron zonder inhoudVan is een bedradingsfout, geen normale toestand. Ook die gaat langs
+		// afronden: anders blijft "Bijlagen ophalen bij…" hangen op precies de tak die dat beloofde
+		// te voorkomen.
+		const bron = register.actief();
+		const opvragen = bron && typeof bron.inhoudVan === "function" ? Promise.resolve(bron.inhoudVan(bericht.id)) : Promise.resolve({ fout: "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen." });
+
+		opvragen
 			.then((uitkomst) => {
 				// Geen antwoord én geen fout: de bron heeft niets gevraagd. Dat is iets anders dan een
 				// organisatie die niets heeft, en hoort niet als zo'n uitspraak op het scherm te komen.
 				if (!uitkomst) {
 					console.error("[Berichtenbox] De bron gaf geen uitkomst voor de berichtinhoud.", bericht.id);
 					const niets = "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen.";
-					afronden([niets], "Het ophalen van de inhoud is mislukt.", null);
+					afronden([niets], "Het ophalen van de inhoud is mislukt.", null, false);
 					return;
 				}
 
 				if (uitkomst.fout) {
 					// De melding kort en anders aankondigen dan hem voorlezen: hij staat al in de tekst,
 					// en wie de pagina lineair leest krijgt hem anders twee keer.
-					afronden([uitkomst.fout], "Het ophalen van de inhoud is mislukt.", uitkomst.bijlagen);
+					afronden([uitkomst.fout], "Het ophalen van de inhoud is mislukt.", uitkomst.bijlagen, false);
 					return;
 				}
 
@@ -1656,17 +1659,17 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (!alineas.length) {
 					// De bron antwoordde, maar zonder brieftekst. Dat is iets anders dan een storing, en
 					// hoort ook iets anders te zeggen. De bijlagen kunnen er wél zijn.
-					const geen = "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. Open het bericht bij " + bericht.afzender + " om de volledige inhoud te lezen.";
-					afronden([geen], "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen);
+					const geen = "Van dit bericht kregen wij alleen de afzender, het onderwerp en de datum. " + bericht.afzender + " levert de inhoud niet mee; in dit prototype is die daarom niet te lezen.";
+					afronden([geen], "Alleen de kopgegevens van dit bericht zijn opgehaald.", uitkomst.bijlagen, true);
 					return;
 				}
 
-				afronden(alineas, "De inhoud van dit bericht is opgehaald.", uitkomst.bijlagen);
+				afronden(alineas, "De inhoud van dit bericht is opgehaald.", uitkomst.bijlagen, true);
 			})
 			.catch((fout) => {
 				console.error("[Berichtenbox] Ophalen van de berichtinhoud mislukte onverwacht.", fout);
 				const mis = "Wij konden de inhoud van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
-				afronden([mis], "Het ophalen van de inhoud is mislukt.", null);
+				afronden([mis], "Het ophalen van de inhoud is mislukt.", null, false);
 			});
 	}
 
@@ -1682,36 +1685,46 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort erbij te staan — een naam zonder
 	 * link en zonder woord laat de bezoeker klikken op iets dat er niet is.
 	 */
-	function rondBijlagenAf(bijlagen, bericht, detail) {
+	function rondBijlagenAf(bijlagen, bericht, detail, geantwoord) {
 		const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
-		if (!bijlSec) return;
+		if (!bijlSec) return null;
 
 		const laden = bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
 		const lijst = bijlSec.querySelector("[data-berichtenbox-attachments-list]");
 		const gekregen = Array.isArray(bijlagen) ? bijlagen : [];
 
-		if (!gekregen.length) {
-			// Beloofd maar niet geleverd. Zwijgen zou de sectiekop "Bijlage(n)" laten staan boven
-			// niets, of de laadtekst laten hangen alsof er nog iets aankomt.
-			if (bericht.heeftBijlage && laden) {
-				laden.hidden = false;
-				laden.textContent = "Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
-				bijlSec.hidden = false;
-			} else {
-				if (laden) laden.hidden = true;
-				bijlSec.hidden = true;
+		const verbergLaden = () => {
+			if (laden) {
+				laden.textContent = "";
+				laden.hidden = true;
 			}
-			return;
+		};
+
+		if (!gekregen.length) {
+			// Er viel niets te tonen. Wat dát betekent hangt ervan af of de organisatie antwoordde:
+			// een geslaagd antwoord zonder bijlagen is geen storing, en "ververs de pagina" zou daar
+			// een lus zonder uitgang zijn. Deze twee samennemen was dezelfde fout als bij de 404 —
+			// een oorzaak beweren die het bewijs niet draagt.
+			if (!bericht.heeftBijlage || geantwoord) {
+				verbergLaden();
+				bijlSec.hidden = true;
+				return null;
+			}
+
+			bijlSec.hidden = false;
+			const mis = "Wij konden de bijlagen van dit bericht niet ophalen. Ververs de pagina om het opnieuw te proberen.";
+			if (laden) {
+				laden.hidden = false;
+				laden.textContent = mis;
+			}
+			return mis;
 		}
 
-		if (!lijst) return;
+		if (!lijst) return null;
 
 		bijlSec.hidden = false;
-		if (laden) {
-			// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven.
-			laden.textContent = "";
-			laden.hidden = true;
-		}
+		// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven.
+		verbergLaden();
 
 		lijst.replaceChildren();
 		gekregen.forEach((bijlage) => {
@@ -1721,7 +1734,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		});
 		lijst.hidden = false;
 
-		// Ná de lijst en als gewone alinea: als lijstitem zou een schermlezer "lijst met 3 items"
+		// Ná de lijst en als gewone alinea: als lijstitem zou een schermlezer "lijst met drie items"
 		// melden bij twee bijlagen.
 		let uitleg = bijlSec.querySelector("[data-bijlagen-uitleg]");
 		if (!uitleg) {
@@ -1730,7 +1743,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			uitleg.setAttribute("data-bijlagen-uitleg", "");
 			bijlSec.appendChild(uitleg);
 		}
-		uitleg.textContent = "Open het bericht bij " + bericht.afzender + " om de bijlagen te bekijken. In dit prototype kan dat nog niet.";
+		uitleg.textContent = "Bijlagen bekijken kan in dit prototype nog niet.";
+
+		return gekregen.length === 1 ? "Er is één bijlage." : "Er zijn " + gekregen.length + " bijlagen.";
 	}
 
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
@@ -2222,6 +2237,23 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// "u heeft nog geen berichten" tonen vlak voordat de berichten verschijnen.
 	const legeStaat = document.querySelector("[data-berichtenbox-empty]");
 	if (legeStaat) legeStaat.hidden = true;
+
+	// De demo-detailpagina wordt pas gevuld als de bron gekozen én geladen is. Bij de keten betekent
+	// dat: na de hele ophaalronde. Tot dan stond hier een kaart met een lege kop, lege metadata en
+	// een lege tekst — zonder woord, zonder laadindicator. Lokaal een tiende seconde, maar juist bij
+	// een traag stelsel — waar deze code voor bestaat — tientallen seconden een blanco scherm.
+	//
+	// Hier, vóór en los van de bronkeuze, zodat er meteen iets staat.
+	(function meldDatDePaginaLaadt() {
+		const detail = document.querySelector("[data-demo-detail]");
+		const bodyEl = detail && detail.querySelector("[data-demo-body]");
+		if (!bodyEl || bodyEl.textContent.trim()) return;
+
+		const p = document.createElement("p");
+		p.textContent = "Wij halen dit bericht op…";
+		bodyEl.appendChild(p);
+		bodyEl.setAttribute("aria-busy", "true");
+	})();
 
 	// Plaatsvervanger voor een bericht dat niet te renderen is. Kolommenaantal volgt de kop, zodat
 	// de tabel niet scheef trekt.
