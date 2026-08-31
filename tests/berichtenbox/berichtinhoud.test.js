@@ -162,6 +162,10 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const links = [...lijst.querySelectorAll("a")];
 		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1", "/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-2"]);
 		expect(links.map((a) => a.getAttribute("download"))).toEqual(["beschikking.pdf", "toelichting.pdf"]);
+		// Met het bijlage-icoon ervoor, hetzelfde als in de berichtenrij — en daarom geen
+		// opsommingsteken. Eén renderer tekent dit voor nagebootste én echte bijlagen; toen dat twee
+		// bouwers waren, kreeg de ene een icoon en de andere een bullet.
+		expect(links.every((a) => a.classList.contains("content-link") && a.querySelector("svg"))).toBe(true);
 
 		// En de eerste bijlage staat in dezelfde PDF-viewer die een dataset-bericht ook krijgt, met
 		// hetzelfde adres eronder als download. Anders oogt deze kant kaler zonder dat daar een

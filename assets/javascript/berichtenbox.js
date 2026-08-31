@@ -1475,148 +1475,163 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		laadBijlagen();
 	}
 
+	// Dezelfde paperclip als in de berichtenrij, zodat een bijlage er overal hetzelfde uitziet.
+	const BIJLAGE_ICOON_PAD = "M23.679 32a6.26 6.26 0 0 1-4.472-1.874L4.59 15.314c-3.453-3.5-3.453-9.192 0-12.691a8.786 8.786 0 0 1 12.523 0L28.152 13.81c.494.5.494 1.312 0 1.812a1.25 1.25 0 0 1-1.79 0L15.325 4.436a6.28 6.28 0 0 0-8.946 0c-2.465 2.5-2.465 6.565 0 9.065l14.618 14.812a3.767 3.767 0 0 0 5.367 0 3.89 3.89 0 0 0 .095-5.339L11.743 8.062a1.256 1.256 0 0 0-1.788 0 1.295 1.295 0 0 0 0 1.812l11.041 11.188c.494.5.494 1.311 0 1.813-.495.5-1.295.5-1.79 0L8.168 11.686a3.884 3.884 0 0 1 0-5.436 3.766 3.766 0 0 1 5.366-.001l14.619 14.813c2.464 2.499 2.464 6.565 0 9.064A6.27 6.27 0 0 1 23.679 32";
+	const BIJLAGE_WAARSCHUWING = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
+
+	/**
+	 * Tekent de bijlagen van dit bericht: de lijst, de viewer en de download-link.
+	 *
+	 * Eén renderer voor nagebootste en echte bijlagen. Wat verschilt is wie ze levert — de
+	 * nabootsing verzint namen en storingen, het stelsel heeft ze — niet hoe ze eruitzien. Twee
+	 * bouwers liepen onvermijdelijk uiteen: de een gaf een icoon en de ander een opsommingsteken,
+	 * de een een viewer en de ander niet.
+	 *
+	 * @param bijlagen [{ naam, adres, download?, nieuwTabblad?, fout?, opnieuw? }]
+	 */
+	function toonBijlagen(bijlagen, { tekstVersie = false } = {}) {
+		const bijlSec = document.querySelector("[data-berichtenbox-attachments]");
+		const lijst = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-list]");
+		const laden = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
+		if (!bijlSec || !lijst) return;
+
+		lijst.replaceChildren();
+		bijlagen.forEach((bijlage) => {
+			const li = document.createElement("li");
+			li.appendChild(bijlage.fout ? maakBijlageFout(bijlage) : maakBijlageRegel(bijlage));
+			lijst.appendChild(li);
+		});
+
+		if (laden) {
+			laden.textContent = "";
+			laden.hidden = true;
+		}
+		lijst.hidden = false;
+		bijlSec.hidden = false;
+
+		// De eerste bijlage die er echt is, in de viewer. Een storing heeft geen adres.
+		const eerste = bijlagen.find((b) => b.adres && !b.fout);
+		if (eerste) toonBijlageInViewer(eerste, { tekstVersie });
+	}
+
+	/**
+	 * Eén item: het bijlage-icoon met de naam ernaast, het patroon van de rest van het project.
+	 *
+	 * Zonder adres wordt het geen link maar gewone tekst. Dat de bijlage bestaat is dan waar — het
+	 * stelsel noemt hem — maar er is niets om heen te gaan, en een klik die nergens uitkomt is
+	 * erger dan een naam zonder link.
+	 */
+	function maakBijlageRegel(bijlage) {
+		const naam = bijlage.naam || "Bijlage zonder naam";
+		const icoon = maakBijlageIcoon();
+
+		if (!bijlage.adres) {
+			const span = document.createElement("span");
+			span.className = "content-link";
+			span.appendChild(icoon);
+			span.appendChild(document.createTextNode(naam));
+			return span;
+		}
+
+		const a = document.createElement("a");
+		a.className = "content-link";
+		a.href = bijlage.adres;
+		if (bijlage.download) a.setAttribute("download", bijlage.naam || "bijlage");
+		if (bijlage.nieuwTabblad) {
+			a.target = "_blank";
+			a.rel = "noopener";
+		}
+
+		a.appendChild(icoon);
+		a.appendChild(document.createTextNode(naam));
+		return a;
+	}
+
+	function maakBijlageIcoon() {
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("viewBox", "0 0 32 32");
+		svg.setAttribute("width", "16");
+		svg.setAttribute("height", "16");
+		svg.setAttribute("aria-hidden", "true");
+		const pad = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		pad.setAttribute("fill", "currentColor");
+		pad.setAttribute("fill-rule", "evenodd");
+		pad.setAttribute("d", BIJLAGE_ICOON_PAD);
+		svg.appendChild(pad);
+		return svg;
+	}
+
+	/** Een bijlage die niet geleverd is, met de knop die hem alsnog probeert te halen. */
+	function maakBijlageFout(bijlage) {
+		const blok = document.createElement("div");
+		blok.className = "feedback feedback-warning";
+		blok.setAttribute("role", "status");
+
+		const icoon = document.createElement("template");
+		icoon.innerHTML = BIJLAGE_WAARSCHUWING;
+		blok.appendChild(icoon.content.firstChild);
+
+		const binnen = document.createElement("div");
+		const tekst = document.createElement("p");
+		tekst.textContent = bijlage.fout;
+		binnen.appendChild(tekst);
+
+		if (typeof bijlage.opnieuw === "function") {
+			const actie = document.createElement("p");
+			const knop = document.createElement("button");
+			knop.type = "button";
+			knop.className = "link-button";
+			knop.textContent = "Opnieuw proberen";
+			knop.addEventListener("click", () => blok.replaceWith(maakBijlageRegel(bijlage.opnieuw())));
+			actie.appendChild(knop);
+			binnen.appendChild(actie);
+		}
+
+		blok.appendChild(binnen);
+		return blok;
+	}
+
+	/**
+	 * Bootst het ophalen van bijlagen na voor een bericht uit de dataset.
+	 *
+	 * Verzint alleen de gegevens — namen, en met de unhappy-flow-vlag ook storingen. Het tekenen doet
+	 * `toonBijlagen`, dezelfde renderer die een bericht uit het stelsel gebruikt.
+	 *
+	 * Een bericht uit de keten slaat dit over: daar zijn de bijlagen echt bekend, en verzonnen namen
+	 * zouden er anderhalve seconde later overheen komen.
+	 */
 	function laadBijlagen() {
-		// Nagebootste bijlagen horen bij een nagebootst bericht. Voor een bericht uit het stelsel
-		// zijn de bijlagen echt bekend — ze komen mee met de inhoud — en zou deze nabootsing ze
-		// anderhalve seconde later overschrijven met verzonnen namen die naar een voorbeeld-PDF
-		// wijzen. Dat levert een downloadknop op voor een bijlage die niet bestaat,
-		// óók onder de mededeling dat het bericht zelf niet meer beschikbaar is.
 		if (document.querySelector("[data-demo-detail][data-uit-keten]")) return;
 
 		const bijlSec = document.querySelector("[data-berichtenbox-attachments]");
-		const previewVooraf = document.querySelector("[data-berichtenbox-attachments-preview]");
-		// De PDF-viewer staat bij élk bericht (alleen zichtbaar in variant B); de
-		// "Bijlage(n)"-lijst alleen bij een bericht met een echte bijlage.
-		if (!bijlSec && !previewVooraf) return;
-		const laden = bijlSec ? bijlSec.querySelector("[data-berichtenbox-attachments-loading]") : null;
-		const lijst = bijlSec ? bijlSec.querySelector("[data-berichtenbox-attachments-list]") : null;
+		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
+		if (!bijlSec && !preview) return;
 
-		// Toon de PDF-laadindicator meteen (de viewer blijft verborgen). De
-		// vertraging hieronder fungeert als zichtbare laadtijd; zonder dit zou de
-		// lokale PDF zó snel laden dat de indicator alleen even flitst.
-		const pdfLadenVooraf = document.querySelector("[data-pdf-laden]");
-		if (pdfLadenVooraf) pdfLadenVooraf.hidden = false;
-		if (previewVooraf) previewVooraf.hidden = true;
+		// De laadindicator meteen aan; de vertraging hieronder is de zichtbare laadtijd. Zonder dat
+		// zou het lokale voorbeeldbestand zo snel klaar zijn dat de indicator alleen even flitst.
+		const pdfLaden = document.querySelector("[data-pdf-laden]");
+		if (pdfLaden) pdfLaden.hidden = false;
+		if (preview) preview.hidden = true;
 
 		setTimeout(() => {
-			// Voorbeeld-PDF voor zowel de bijlage-links als de preview (prototype).
 			const pdfHref = url("/assets/documents/voorbeeld-bijlage.pdf");
+			const namen = ["Beschikking.pdf", "Bijlage-specificatie.pdf", "Toelichting.pdf", "Overzicht.pdf"];
+			const gekozen = namen.slice(0, 1 + Math.floor(Math.random() * 3));
 
-			// Bijlagenlijst alleen opbouwen bij een bericht met een echte bijlage.
-			if (bijlSec && laden && lijst) {
-				const namen = ["Beschikking.pdf", "Bijlage-specificatie.pdf", "Toelichting.pdf", "Overzicht.pdf"];
-				const aantal = 1 + Math.floor(Math.random() * 3);
-				const gekozen = namen.slice(0, aantal);
-
-				while (lijst.firstChild) lijst.removeChild(lijst.firstChild);
-
-				// Unhappy-flow (feature flag): laat willekeurig 1 of meer bijlagen falen.
-				// Elke gefaalde bijlage krijgt een foutmelding met een eigen retry-knop.
-				const faalIndexen = new Set();
-				if (unhappyFlowAan()) {
-					const aantalFout = 1 + Math.floor(Math.random() * gekozen.length);
-					while (faalIndexen.size < aantalFout) {
-						faalIndexen.add(Math.floor(Math.random() * gekozen.length));
-					}
-				}
-
-				// Werkende bijlage-link.
-				function bijlageLink(naam) {
-					const a = document.createElement("a");
-					a.href = pdfHref;
-					a.target = "_blank";
-					a.rel = "noopener";
-					a.textContent = naam;
-					return a;
-				}
-				// Gefaalde bijlage: feedback-warning met retry die de bijlage alsnog "ophaalt".
-				const WARNING_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.38 19.64 13.67 2.47c-.73-1.3-2.6-1.3-3.34 0L.62 19.64c-.72 1.28.2 2.86 1.67 2.86h19.43c1.46 0 2.38-1.58 1.66-2.86z"/><path class="icon-color-inverse" d="M10.54 17.45c0-.44.12-.82.36-1.12.24-.31.6-.46 1.09-.46.48 0 .85.14 1.1.4.25.27.38.66.38 1.18 0 .43-.12.8-.36 1.09-.24.29-.6.44-1.09.44-.48 0-.85-.13-1.1-.39-.25-.25-.38-.63-.38-1.14zm.31-10.27 2.48-.2-.22 5.51v2.63l-2.27.05V7.18z"/></svg>';
-				function bijlageFout(naam) {
-					const feedback = document.createElement("div");
-					feedback.className = "feedback feedback-warning";
-					feedback.setAttribute("role", "status");
-					const icoon = document.createElement("template");
-					icoon.innerHTML = WARNING_ICON;
-					feedback.appendChild(icoon.content.firstChild);
-
-					const inner = document.createElement("div");
-					const tekst = document.createElement("p");
-					tekst.textContent = "Bijlage kon niet worden opgehaald.";
-					const actie = document.createElement("p");
-					const retry = document.createElement("button");
-					retry.type = "button";
-					retry.className = "link-button";
-					retry.textContent = "Opnieuw proberen";
-					retry.addEventListener("click", () => {
-						feedback.replaceWith(bijlageLink(naam));
-					});
-					actie.appendChild(retry);
-					inner.append(tekst, actie);
-					feedback.appendChild(inner);
-					return feedback;
-				}
-
-				// DOM-methoden i.p.v. innerHTML voorkomen XSS als bronnen ooit dynamisch worden.
-				gekozen.forEach((n, i) => {
-					const li = document.createElement("li");
-					li.appendChild(faalIndexen.has(i) ? bijlageFout(n) : bijlageLink(n));
-					lijst.appendChild(li);
-				});
-
-				laden.hidden = true;
-				lijst.hidden = false;
+			// Unhappy flow: laat willekeurig één of meer bijlagen falen, elk met een eigen knop.
+			const faalt = new Set();
+			if (unhappyFlowAan()) {
+				const aantalFout = 1 + Math.floor(Math.random() * gekozen.length);
+				while (faalt.size < aantalFout) faalt.add(Math.floor(Math.random() * gekozen.length));
 			}
 
-			// Preview van de bijlage in een ingesloten PDF-viewer (bij élk bericht).
-			// Verberg de thumbnail-zijbalk en toon op volle breedte.
-			const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
-			if (preview) {
-				// Laad-indicator (feedback-progress-stijl) tonen tot de PDF geladen is.
-				const pdfLaden = document.querySelector("[data-pdf-laden]");
-				if (pdfLaden) pdfLaden.hidden = false;
-				preview.hidden = true;
-				let getoond = false;
-				function toonPreview() {
-					if (getoond) return;
-					getoond = true;
-					// Onthul de viewer: start ingeklapt op de plek van de laadindicator
-					// en groei naar de eindpositie; de indicator vouwt tegelijk weg.
-					const reveal = preview.closest(".pdf-reveal");
-					preview.hidden = false;
-					if (reveal) {
-						reveal.setAttribute("data-collapsed", "");
-						void reveal.offsetHeight; // forceer reflow zodat de transitie loopt
-						reveal.removeAttribute("data-collapsed");
-					}
-					if (pdfLaden) {
-						pdfLaden.classList.add("feedback-progress--afgerond");
-						setTimeout(() => {
-							pdfLaden.hidden = true;
-						}, 340);
-					}
-				}
-				preview.addEventListener("load", toonPreview, { once: true });
-				// Safari vuurt 'load' niet betrouwbaar op <object> met PDF; de
-				// voorbeeld-PDF is lokaal en laadt snel, dus toon de viewer sowieso
-				// na een korte tijd zodat de indicator niet blijft doorlopen.
-				setTimeout(toonPreview, 1200);
-				// <object type="application/pdf"> geeft in alle browsers (incl. Safari)
-				// de native PDF-viewer met toolbar; <iframe> deed dat in Safari niet.
-				// De bron staat op het data-attribuut, niet op src.
-				preview.setAttribute("data", pdfHref + "#navpanes=0&view=FitH");
-			}
-			// Download PDF-link onder de preview.
-			const download = document.querySelector("[data-berichtenbox-pdf-download]");
-			if (download) {
-				download.href = pdfHref;
-				download.hidden = false;
-			}
-			// Optionele tekst-versie-link naast de download (indien aanwezig).
-			const tekstVersie = document.querySelector("[data-berichtenbox-tekst-download]");
-			if (tekstVersie) {
-				tekstVersie.href = url("/assets/documents/voorbeeld-bijlage.txt");
-				tekstVersie.hidden = false;
-			}
+			toonBijlagen(
+				gekozen.map((naam, i) => {
+					const gelukt = { naam, adres: pdfHref, nieuwTabblad: true };
+					return faalt.has(i) ? { ...gelukt, fout: "Bijlage kon niet worden opgehaald.", opnieuw: () => gelukt } : gelukt;
+				}),
+				{ tekstVersie: true }
+			);
 		}, 1500);
 	}
 
@@ -1793,42 +1808,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		if (!lijst) return null;
 
-		bijlSec.hidden = false;
-		// Het laad-element is een laadindicator; een blijvende tekst hoort daar niet in te blijven.
-		verbergLaden();
-
-		lijst.replaceChildren();
-		gekregen.forEach((bijlage) => {
-			const li = document.createElement("li");
-			const naam = (bijlage && bijlage.naam) || "Bijlage zonder naam";
-			const bijlageId = bijlage && bijlage.bijlageId;
-
-			// Zonder id valt er geen adres te maken. Dan wél de naam tonen: dat de bijlage bestaat is
-			// waar, alleen kunnen wij hem niet opvragen.
-			if (!bijlageId) {
-				li.textContent = naam;
-				lijst.appendChild(li);
-				return;
-			}
-
-			// Een gewone link, geen fetch: het stelsel eist de X-Ontvanger-header en die kan een
-			// browser bij een link niet meesturen — dus zet de proxy hem uit het ontvanger-cookie.
-			const a = document.createElement("a");
-			a.href = bijlageAdres(bijlage, bericht.id);
-			// Het stelsel stuurt "Content-Disposition: attachment" zonder bestandsnaam; deze geeft het
-			// bestand alsnog de naam die de organisatie eraan gaf.
-			a.setAttribute("download", naam);
-			a.textContent = naam;
-			li.appendChild(a);
-			lijst.appendChild(li);
-		});
-		lijst.hidden = false;
-
-		// De eerste bijlage ook in de viewer, met dezelfde download-link eronder — precies wat een
-		// bericht uit de dataset krijgt. Dat blok werd tot nu toe alleen door de nabootsing aangezet,
-		// en die slaat een keten-bericht over; daardoor oogde deze kant kaler zonder dat daar een
-		// reden voor was.
-		toonBijlageInViewer(gekregen[0], bericht.id);
+		// Dezelfde renderer als de nabootsing; alleen komen deze gegevens echt uit het stelsel.
+		toonBijlagen(
+			gekregen.map((bijlage) => ({
+				naam: (bijlage && bijlage.naam) || "Bijlage zonder naam",
+				adres: bijlageAdres(bijlage, bericht.id),
+				download: true,
+			})),
+			{ tekstVersie: false }
+		);
 
 		return gekregen.length === 1 ? "Er is één bijlage." : "Er zijn " + gekregen.length + " bijlagen.";
 	}
@@ -1842,8 +1830,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 *
 	 * "Lees tekst-versie" blijft verborgen; het stelsel levert geen tekstvariant.
 	 */
-	function toonBijlageInViewer(bijlage, berichtId) {
-		const adres = bijlageAdres(bijlage, berichtId);
+	/**
+	 * Toont één bijlage in de PDF-viewer, met de download-link eronder.
+	 *
+	 * Voor een echte bijlage kan dit alleen omdat de proxy de ontvanger uit het cookie in een header
+	 * omzet: een `<object data>` kan er zelf net zomin een meesturen als een `<a href>`.
+	 */
+	function toonBijlageInViewer(bijlage, { tekstVersie = false } = {}) {
+		const adres = bijlage && bijlage.adres;
 		if (!adres) return;
 
 		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
@@ -1872,8 +1866,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				}
 			};
 			preview.addEventListener("load", toonPreview, { once: true });
-			// Safari vuurt 'load' niet betrouwbaar op een <object> met PDF. Deze komt bovendien over
-			// het netwerk, dus ruimer dan de 1200 ms die de nabootsing met een lokaal bestand aanhoudt.
+			// Safari vuurt 'load' niet betrouwbaar op een <object> met PDF. Een bijlage uit het stelsel
+			// komt bovendien over het netwerk, vandaar ruimer dan bij het lokale voorbeeldbestand.
 			setTimeout(toonPreview, 3000);
 			preview.setAttribute("data", adres + "#navpanes=0&view=FitH");
 		}
@@ -1881,8 +1875,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const download = document.querySelector("[data-berichtenbox-pdf-download]");
 		if (download) {
 			download.href = adres;
-			download.setAttribute("download", (bijlage && bijlage.naam) || "bijlage.pdf");
+			download.setAttribute("download", bijlage.naam || "bijlage.pdf");
 			download.hidden = false;
+		}
+
+		// Alleen de nabootsing heeft een tekstvariant; het stelsel levert die niet, en de link zou
+		// een document beloven dat niet bestaat.
+		const tekst = document.querySelector("[data-berichtenbox-tekst-download]");
+		if (tekst) {
+			tekst.hidden = !tekstVersie;
+			if (tekstVersie) tekst.href = adres;
 		}
 	}
 

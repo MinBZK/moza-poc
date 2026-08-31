@@ -1676,6 +1676,12 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-md);
 	margin-block: var(--toepassing-space-md);
 }
+/* Bijlagen dragen hun eigen icoon; een opsommingsteken ernaast is dubbelop. Attribuutselector
+   omdat deze lijst geen eigen klasse heeft — zie [data-berichtenbox-toolbar] hierboven. */
+[data-berichtenbox-attachments-list] {
+	list-style: none;
+	padding-inline-start: 0;
+}
 .berichtenbox-attachments-loading {
 	color: var(--toepassing-color-text-subtle-1);
 	font-style: italic;
