@@ -167,14 +167,12 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// bouwers waren, kreeg de ene een icoon en de andere een bullet.
 		expect(links.every((a) => a.classList.contains("content-link") && a.querySelector("svg"))).toBe(true);
 
-		// En de eerste bijlage staat in dezelfde PDF-viewer die een dataset-bericht ook krijgt, met
-		// hetzelfde adres eronder als download. Anders oogt deze kant kaler zonder dat daar een
-		// reden voor is.
+		// Geen PDF-viewer: het stelsel stuurt zijn bijlagen met "Content-Disposition: attachment", en
+		// dan toont een browser ze niet in een ingesloten viewer — het kader bleef leeg. Een leeg
+		// kader is erger dan geen kader; de download-link in de lijst is de weg naar het document.
 		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
-		expect(preview.getAttribute("data")).toContain("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1");
-		const download = document.querySelector("[data-berichtenbox-pdf-download]");
-		expect(download.hidden).toBe(false);
-		expect(download.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1");
+		expect(preview.getAttribute("data")).toBeNull();
+		expect(document.querySelector(".berichtenbox-detail-pdf").hidden).toBe(true);
 
 		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
 		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
@@ -371,7 +369,9 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 		await laatLaden();
 
+		// Het hele PDF-blok blijft dicht, dus ook de tekst-versie — die het stelsel sowieso niet levert.
 		expect(document.querySelector("[data-berichtenbox-tekst-download]").hidden).toBe(true);
+		expect(document.querySelector(".berichtenbox-detail-pdf").hidden).toBe(true);
 	});
 
 	it("toont een bijlage zonder id wel, maar zonder link", async () => {
@@ -440,6 +440,26 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// En een kop, want een leeg <h1> laat de pagina naamloos voor wie hem met een schermlezer
 		// opent — precies in het venster waar deze melding voor bedoeld is.
 		expect(document.querySelector("[data-demo-onderwerp]").textContent).toBe("Bericht");
+	});
+
+	it("houdt de PDF-viewer wél voor een bericht uit de dataset", async () => {
+		// De andere kant van dezelfde regel. Een nagebootste bijlage is een lokaal bestand zonder
+		// "Content-Disposition: attachment", dus die kan een browser wél inline tonen — en dat is
+		// het verschil dat overblijft tussen beide soorten bericht.
+		vi.useFakeTimers();
+		try {
+			window.BerichtenboxKeten = { bezig: false, aangesloten: false, melding: null, voortgang: null, berichten: async () => null, opWijziging: () => {} };
+			bouwDemoDetailPagina(bericht({ id: "msg-lokaal", inhoud: "Een brief.", heeftBijlage: true }));
+
+			await laadBerichtenbox();
+			await vi.advanceTimersByTimeAsync(2000);
+
+			const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
+			expect(preview.getAttribute("data")).toContain("voorbeeld-bijlage.pdf");
+			expect(document.querySelector(".berichtenbox-detail-pdf").hidden).toBe(false);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it("laat de nagebootste bijlagen weg bij een bericht uit het stelsel", async () => {

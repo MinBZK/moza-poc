@@ -1489,7 +1489,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 *
 	 * @param bijlagen [{ naam, adres, download?, nieuwTabblad?, fout?, opnieuw? }]
 	 */
-	function toonBijlagen(bijlagen, { tekstVersie = false } = {}) {
+	function toonBijlagen(bijlagen, { tekstVersie = false, viewer = false } = {}) {
 		const bijlSec = document.querySelector("[data-berichtenbox-attachments]");
 		const lijst = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-list]");
 		const laden = bijlSec && bijlSec.querySelector("[data-berichtenbox-attachments-loading]");
@@ -1509,7 +1509,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		lijst.hidden = false;
 		bijlSec.hidden = false;
 
-		// De eerste bijlage die er echt is, in de viewer. Een storing heeft geen adres.
+		// De viewer alleen waar die kán werken. Het stelsel stuurt zijn bijlagen met
+		// `Content-Disposition: attachment`, en dan toont een browser ze niet in een ingesloten
+		// viewer — in de praktijk nagegaan: het kader bleef leeg. Een leeg kader is erger dan geen
+		// kader, dus blijft het dicht en is de download-link in de lijst de weg naar het document.
+		// Zodra het stelsel `inline` kan leveren, kan dit aan.
+		const pdfBlok = document.querySelector(".berichtenbox-detail-pdf");
+		if (!viewer) {
+			if (pdfBlok) pdfBlok.hidden = true;
+			return;
+		}
+
+		// De eerste bijlage die er echt is. Een storing heeft geen adres.
 		const eerste = bijlagen.find((b) => b.adres && !b.fout);
 		if (eerste) toonBijlageInViewer(eerste, { tekstVersie });
 	}
@@ -1630,7 +1641,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					const gelukt = { naam, adres: pdfHref, nieuwTabblad: true };
 					return faalt.has(i) ? { ...gelukt, fout: "Bijlage kon niet worden opgehaald.", opnieuw: () => gelukt } : gelukt;
 				}),
-				{ tekstVersie: true }
+				{ tekstVersie: true, viewer: true }
 			);
 		}, 1500);
 	}
@@ -1815,7 +1826,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				adres: bijlageAdres(bijlage, bericht.id),
 				download: true,
 			})),
-			{ tekstVersie: false }
+			// Geen viewer: het stelsel levert zijn bijlagen als download, niet als iets dat een
+			// browser inline wil tonen. Zie de toelichting in toonBijlagen.
+			{ tekstVersie: false, viewer: false }
 		);
 
 		return gekregen.length === 1 ? "Er is één bijlage." : "Er zijn " + gekregen.length + " bijlagen.";
