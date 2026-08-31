@@ -336,6 +336,43 @@ describe("berichtenbox.js — herstel na een storing", () => {
 		expect(melding.hidden).toBe(false);
 	});
 
+	it("toont geen bolletje in plaats van een bolletje met een streepje", async () => {
+		// De tellerregel is lopende tekst: "– berichten uit – bronnen" leest daar als "dit weten we
+		// niet". Een bolletje ís een getal, en een streepje erin ziet eruit als een waarde. Leeg
+		// laten laat het bolletje verdwijnen (`.badge:empty`), en dat is hier wat waar is.
+		//
+		// De storing moet ná een geslaagde weergave komen, anders staat er nog niets in de bolletjes
+		// en bewijst deze test niets: leegmaken wat al leeg was is niet te onderscheiden van niets doen.
+		const kapot = Array.from({ length: 10 }, (_, i) => ({
+			magazijnId: "gem",
+			afzender: "Gemeente",
+			onderwerp: "Kapot " + i,
+		}));
+		bouwPagina([bericht({ onderwerp: "Werkt", magazijnId: "werkt", afzender: "Werkende bron" })]);
+		const goed = window.berichtenboxData.berichten[0];
+		window.berichtenboxData.berichten = [...kapot, goed];
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "werkende";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
+		const bolletjes = document.querySelectorAll('[data-berichtenbox-count="ongelezen"], [data-berichtenbox-count="inbox"]');
+		expect(bolletjes.length).toBe(2);
+		expect(Array.from(bolletjes).some((el) => el.textContent !== "")).toBe(true);
+
+		// Terug naar de lijst die niet te renderen is.
+		zoek.value = "";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		bolletjes.forEach((el) => expect(el.textContent).toBe(""));
+
+		// De tellerregel houdt zijn streepje wél.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("–");
+	});
+
 	it("haalt de melding weg en zet de tellers terug zodra er weer een lijst staat", async () => {
 		// Het hele paginavenster moet onrenderbaar zijn, anders slaat de drempel niet aan en test
 		// dit niets: de vorige versie bleef groen ook zonder herstelNaLaadfout.

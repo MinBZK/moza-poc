@@ -2772,7 +2772,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// aantoonbaar onwaar zolang we niet weten wát er is.
 	const SIMULATIE_MELDINGEN = ["[data-bron-onbereikbaar]", "[data-geen-bronnen]", "[data-bron-uitval]"];
 
-	const TELLERS_OP_DE_PAGINA = ["[data-berichtenbox-counter-total]", "[data-berichtenbox-sources]", "[data-berichtenbox-counter-unread]", '[data-berichtenbox-count="inbox"]', '[data-berichtenbox-count="ongelezen"]'];
+	// De getallen in de tellerregel. Die staat er als lopende tekst — "– berichten uit – bronnen" —
+	// en een streepje leest daar als "dit weten we niet".
+	const TELLERS_OP_DE_PAGINA = ["[data-berichtenbox-counter-total]", "[data-berichtenbox-sources]", "[data-berichtenbox-counter-unread]"];
+
+	// De bolletjes. Die lezen anders: een bolletje ís een getal, en een streepje erin ziet eruit als
+	// een waarde in plaats van als het ontbreken ervan. Leegmaken laat ze verdwijnen (`.badge:empty`),
+	// en dat is hier de eerlijke weergave — er valt niets te tellen.
+	const BADGES_OP_DE_PAGINA = ['[data-berichtenbox-count="inbox"]', '[data-berichtenbox-count="ongelezen"]'];
 
 	function toonLaadfout() {
 		// Een bevroren balk boven "er gaat iets mis met het ophalen" is twee waarheden op één scherm.
@@ -2784,12 +2791,17 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// dan mist de bezoeker pagina 2 zonder dat iets uitlegt waarom.
 		voortgangKlaargezet = false;
 
-		// De tellers komen server-gerenderd met echte aantallen. Ze laten staan naast "we konden
-		// niets ophalen" laat de bezoeker het getal geloven en de zin voor een detail aanzien.
-		// state.aantalOngelezen blijft ongemoeid: die stuurt de badges op andere pagina's.
+		// Een getal laten staan naast "we konden niets ophalen" laat de bezoeker het geloven en de
+		// zin voor een detail aanzien. state.aantalOngelezen blijft ongemoeid: die stuurt de badges
+		// op andere pagina's.
 		TELLERS_OP_DE_PAGINA.forEach((kiezer) => {
 			const el = document.querySelector(kiezer);
 			if (el) el.textContent = "–";
+		});
+		BADGES_OP_DE_PAGINA.forEach((kiezer) => {
+			document.querySelectorAll(kiezer).forEach((el) => {
+				el.textContent = "";
+			});
 		});
 
 		// De gesimuleerde bronmeldingen gaan over een nagebootste situatie. "Berichten van overige
