@@ -452,6 +452,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : "";
 		});
 		state.aantalOngelezen = ongelezenAantal;
+
+		// Pas nu zichtbaar. De regel staat leeg en verborgen in de HTML, want bij het bouwen is niet
+		// te weten welke persona er kijkt — en bij een persona die zijn berichten uit het stelsel
+		// haalt zou het getal uit een bron komen die daar niet gebruikt wordt.
+		const tellerRegel = document.querySelector("[data-berichtenbox-tellers]");
+		if (tellerRegel) tellerRegel.hidden = false;
 		// Op dezelfde manier tellen als de lijst gevuld wordt; de sleutels van state.gearchiveerd
 		// rechtstreeks tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd is.
 		const navArchief = document.querySelector('[data-berichtenbox-count="archief"]');
@@ -1930,9 +1936,6 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const blok = document.querySelector("[data-berichtenbox-progress]");
 		if (!blok) return;
 
-		// Hier pas: er valt iets te melden.
-		blok.hidden = false;
-
 		const slot = (kiezer, waarde) => {
 			const el = document.querySelector(kiezer);
 			if (el) el.textContent = waarde;
@@ -1946,6 +1949,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		// "1 bronnen" en "1 berichten" staan er anders.
 		werkMeervoudBij();
+
+		// Hier pas: er staan getallen in. Voorzorg, geen waarneembare fout — vullen en tonen zitten
+		// in dezelfde taak, dus een browser schildert er niet tussendoor en geen test kan het
+		// onderscheid zien. Maar de volgorde die niets belooft wat er nog niet staat, is de juiste,
+		// en de HTML draagt sinds deze wijziging geen getallen meer om per ongeluk te tonen.
+		blok.hidden = false;
 	}
 
 	/**

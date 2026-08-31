@@ -33,6 +33,26 @@ describe("het ongelezen-getal in de navigatie", () => {
 		});
 	});
 
+	const paginas = ["moza/berichtenbox.html", "mijn-belastingdienst/berichtenbox.html"];
+
+	paginas.forEach((pad) => {
+		it(pad + " vult de tellers niet bij het bouwen", () => {
+			const bron = readFileSync(pad, "utf8").replace(/<!--[\s\S]*?-->/g, "");
+
+			// Alle <b>-slots die een aantal dragen: leeg in de HTML, gevuld door de render-laag.
+			const slots = bron.match(/<b data-berichtenbox-(counter-total|sources|counter-unread|progress-total)>[^<]*<\/b>/g) || [];
+			expect(slots.length).toBe(4);
+			slots.forEach((slot) => expect(slot).toMatch(/><\/b>$/));
+		});
+
+		it(pad + " houdt de tellerregel verborgen tot die klopt", () => {
+			const bron = readFileSync(pad, "utf8").replace(/<!--[\s\S]*?-->/g, "");
+			// Een regel met lege getallen leest als "  berichten uit   bronnen"; verborgen tot de
+			// render-laag hem invult.
+			expect(bron).toMatch(/<p class="metadata" hidden data-berichtenbox-tellers>/);
+		});
+	});
+
 	it("laat zien waarom: het dataset-getal klopt voor niemand", () => {
 		// Geen gedragstest maar de rekensom die de reden vastlegt. Gaan deze uit elkaar lopen omdat
 		// de dataset verandert, dan blijft de conclusie dezelfde: één getal kan niet voor iedereen

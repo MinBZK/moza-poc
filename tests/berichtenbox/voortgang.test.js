@@ -192,3 +192,20 @@ describe("een bron die niets te melden heeft", () => {
 		expect(zichtbaarMetRijen).toEqual([]);
 	});
 });
+
+describe("tellers en het voortgangsblok tonen geen getallen die ze nog niet hebben", () => {
+	it("toont de tellerregel pas als de aantallen kloppen, en dan gevuld", async () => {
+		const berichten = [1, 2, 3].map((n) => bericht({ id: "t" + n, magazijnId: "rdw", afzender: "RDW" }));
+		bouwPagina(berichten);
+
+		const regel = document.querySelector("[data-berichtenbox-tellers]");
+		expect(regel.hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-counter-total]").textContent).toBe("");
+
+		await laadBerichtenbox();
+		for (let i = 0; i < 6; i += 1) await laatLaden();
+
+		expect(regel.hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-counter-total]").textContent).toBe("3");
+	});
+});

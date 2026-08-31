@@ -494,10 +494,12 @@ describe("berichtenbox.js — een storing blijft een storing", () => {
 });
 
 describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
-	it("laat de server-gerenderde aantallen niet staan naast een storingsmelding", async () => {
+	it("zet geen aantallen neer naast een storingsmelding", async () => {
 		bouwPagina([bericht(), bericht(), bericht()]);
-		// De tellers staan nu op 3; dat is wat Eleventy erin zette.
-		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
+		// Leeg en verborgen zoals de templates het opleveren: bij het bouwen is niet te weten welke
+		// persona er kijkt, dus staat er nog geen getal.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("");
+		expect(document.querySelector("[data-berichtenbox-tellers]").hidden).toBe(true);
 
 		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
 			get() {
@@ -509,9 +511,12 @@ describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
 
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 		// "3 berichten uit 2 bronnen" naast "we konden niets ophalen" laat de bezoeker het getal
-		// geloven en de zin voor een detail aanzien.
-		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("3");
-		expect(tekstVan('[data-berichtenbox-count="inbox"]')).not.toBe("3");
+		// geloven en de zin voor een detail aanzien. De regel hoort dus verborgen te blijven.
+		expect(document.querySelector("[data-berichtenbox-tellers]").hidden).toBe(true);
+		// Geen getal: toonLaadfout zet er een streepje neer, wat "onbekend" zegt in plaats van iets
+		// te beweren. Wat het ook is, het mag geen aantal zijn.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toMatch(/\d/);
+		expect(tekstVan('[data-berichtenbox-count="inbox"]')).not.toMatch(/\d/);
 	});
 });
 

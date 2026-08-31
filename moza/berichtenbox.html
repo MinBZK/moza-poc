@@ -28,7 +28,11 @@ permalink: "/moza/berichtenbox/"
 					{% set nTotaal = berichtenboxData.berichten | length %}
 					{% set nBronnen = berichtenboxData.aantalMagazijnen %}
 					{% set nOngelezen = berichtenboxData.berichten | selectattr("isOngelezen") | length %}
-					<p class="metadata"><b data-berichtenbox-counter-total>{{ nTotaal }}</b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">{{ "bericht" if nTotaal == 1 else "berichten" }}</span> uit <b data-berichtenbox-sources>{{ nBronnen }}</b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">{{ "bron" if nBronnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-counter-unread>{{ nOngelezen }}</b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">{{ "bericht" if nOngelezen == 1 else "berichten" }}</span>.</p>
+					{# Leeg en verborgen tot berichtenbox.js ze vult. Hoeveel berichten er zijn, uit hoeveel bronnen en
+					   hoeveel ongelezen, hangt af van de persona — en die kiest de bezoeker pas in de browser. Een getal
+					   uit de dataset telt ook de berichten van ándere persona's mee, en bij een persona die zijn berichten
+					   uit het stelsel haalt komt het uit een bron die daar niet eens gebruikt wordt. #}
+					<p class="metadata" hidden data-berichtenbox-tellers><b data-berichtenbox-counter-total></b> <span data-meervoud="data-berichtenbox-counter-total" data-ev="bericht" data-mv="berichten">berichten</span> uit <b data-berichtenbox-sources></b> <span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>, <b data-berichtenbox-counter-unread></b> ongelezen <span data-meervoud="data-berichtenbox-counter-unread" data-ev="bericht" data-mv="berichten">berichten</span>.</p>
 
 					<div class="feedback feedback-warning" hidden data-bron-onbereikbaar role="status">
 						{% include "icon-feedback-warning.njk" %}
@@ -62,7 +66,7 @@ permalink: "/moza/berichtenbox/"
 
 				<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">
 					<p>Berichten worden opgehaald bij de bron…</p>
-					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total>{{ berichtenboxData.aantalMagazijnen }}</b> <span data-meervoud="data-berichtenbox-progress-total" data-ev="bron" data-mv="bronnen">{{ "bron" if berichtenboxData.aantalMagazijnen == 1 else "bronnen" }}</span>, <b data-berichtenbox-progress-found>0</b> <span data-meervoud="data-berichtenbox-progress-found" data-ev="bericht" data-mv="berichten">berichten</span> gevonden</p>
+					<p class="metadata"><b data-berichtenbox-progress-source>0</b> van <b data-berichtenbox-progress-total></b> <span data-meervoud="data-berichtenbox-progress-total" data-ev="bron" data-mv="bronnen">bronnen</span>, <b data-berichtenbox-progress-found>0</b> <span data-meervoud="data-berichtenbox-progress-found" data-ev="bericht" data-mv="berichten">berichten</span> gevonden</p>
 					<div class="progress-bar">
 						<div class="progress-bar-fill" data-berichtenbox-progress-bar></div>
 					</div>
