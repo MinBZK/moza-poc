@@ -560,7 +560,18 @@
 
 	// Alleen op pagina's die een berichtenbox tonen: elders is er niets te vervangen, en zou een
 	// persona zonder kvkNummer alleen console-ruis opleveren.
-	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() ? actiefKvkNummer() : null;
+	//
+	// En alleen voor een persona die het stelsel gebruikt. Dat is geen besparing maar iets dat de
+	// bezoeker merkt: de ronde begint met één vraag aan de demo-console, en staat die niet klaar dan
+	// hángt dat verzoek tot de tijdslimiet in plaats van te weigeren. Anderhalve seconde waarin de
+	// bron nog niet gekozen kan worden en er dus geen lijst staat — en omdat elke tab een eigen
+	// pagina is, kwam die wachttijd bij elke tabwissel terug, voor persona's die het stelsel niet
+	// eens gebruiken.
+	//
+	// De prijs staat er tegenover: hiermee is `_data/personas.json` de autoriteit over wie het
+	// stelsel gebruikt, en niet meer de demo-console. Kent die straks een nummer dat hier niet als
+	// `stelsel` gemerkt is, dan vragen we er niet naar en krijgt die persona de dataset.
+	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() && hoortBijStelsel() ? actiefKvkNummer() : null;
 
 	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
 	// ophaalde staat op de server (sessiecache per ontvanger, schuivende TTL), maar de

@@ -7,9 +7,12 @@ import { bericht, bouwPagina } from "./dom.js";
  * berichtenbox-keten.js zelf, zonder netwerk en zonder stack.
  *
  * Eén ding staat hier op het spel: wat de client meldt vóórdat hij iets weet. De ophaalronde begint
- * met een vraag aan de demo-console — kent de keten deze ontvanger? — en voor de meeste persona's is
- * het antwoord "nee". Meldt hij in die tussentijd al voortgang, dan zet de render-laag een balk op
- * nul op het scherm die even later zonder uitleg verdwijnt.
+ * met een vraag aan de demo-console — kent de keten deze ontvanger? Meldt hij in die tussentijd al
+ * voortgang, dan zet de render-laag een balk op nul op het scherm die even later zonder uitleg
+ * verdwijnt.
+ *
+ * Die ronde draait alleen voor een persona die als `stelsel` gemerkt staat. Voor elke andere is er
+ * niets te vragen, en wachten op een antwoord dat niet uitmaakt houdt de lijst tegen.
  */
 
 const KETEN = process.cwd() + "/assets/javascript/berichtenbox-keten.js";
@@ -50,6 +53,9 @@ afterEach(() => {
 });
 
 describe("berichtenbox-keten.js — wat er gemeld wordt vóór het eerste antwoord", () => {
+	// Alleen een stelsel-persona bevraagt de console; voor een andere is er geen tussentijd.
+	beforeEach(() => zetPersona({ id: "proeftuin-garage", stelsel: true, bedrijf: { kvkNummer: "90000014" } }));
+
 	it("meldt geen voortgang zolang er niets bevraagd is", async () => {
 		draaiMetHangendeConsole();
 		await Promise.resolve();
@@ -143,5 +149,36 @@ describe("berichtenbox-keten.js — een testaccount van het stelsel zonder stels
 		await draaiMetConsole(CONSOLE_ONBEREIKBAAR);
 
 		expect(window.BerichtenboxKeten.aangesloten).toBe(false);
+	});
+});
+
+/**
+ * De ronde begint met één vraag aan de demo-console. Staat die niet klaar, dan hangt dat verzoek tot
+ * de tijdslimiet, en zolang kan de bron niet gekozen worden en staat er geen lijst. Voor een persona
+ * die het stelsel niet gebruikt is dat wachten nergens voor: het antwoord verandert niets.
+ */
+describe("berichtenbox-keten.js — niets vragen wat niet uitmaakt", () => {
+	it("bevraagt de demo-console niet voor een gewone persona", async () => {
+		zetPersona();
+		const roep = vi.fn(() => new Promise(() => {}));
+
+		vi.stubGlobal("fetch", roep);
+		new Function(readFileSync(KETEN, "utf8")).call(window);
+		await Promise.resolve();
+
+		expect(roep).not.toHaveBeenCalled();
+		expect(window.BerichtenboxKeten.bezig).toBe(false);
+	});
+
+	it("bevraagt haar wel voor een testaccount van het stelsel", async () => {
+		zetPersona({ id: "proeftuin-garage", stelsel: true, bedrijf: { kvkNummer: "90000014" } });
+		const roep = vi.fn(() => new Promise(() => {}));
+
+		vi.stubGlobal("fetch", roep);
+		new Function(readFileSync(KETEN, "utf8")).call(window);
+		await Promise.resolve();
+
+		expect(roep).toHaveBeenCalledWith("/api/demo/personas", expect.anything());
+		expect(window.BerichtenboxKeten.bezig).toBe(true);
 	});
 });

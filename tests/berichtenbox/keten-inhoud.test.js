@@ -51,7 +51,7 @@ async function startKeten(perAdres) {
 	document.body.innerHTML = '<article class="berichtenbox"><table data-berichtenbox-list><tbody></tbody></table></article>';
 	window.history.replaceState(null, "", "/moza/berichtenbox/");
 	window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
-	window.Personas = { actief: () => ({ id: "proeftuin-een", bedrijf: { kvkNummer: "90000011" } }) };
+	window.Personas = { actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }) };
 
 	new Function(BRON).call(window);
 	await window.BerichtenboxKeten.berichten();
