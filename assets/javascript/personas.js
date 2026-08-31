@@ -473,6 +473,31 @@
 	}
 
 	// Bouw één keuze-item (radio) voor een persona.
+	/**
+	 * Waar de bezoeker na een persona-wissel terechtkomt.
+	 *
+	 * Meestal: dezelfde pagina, met de nieuwe persona erin. Maar niet binnen de berichtenbox — daar
+	 * hoort elke persona zijn eigen inbox te krijgen. Een bericht is van één persona: blijf je op de
+	 * detailpagina staan, dan zoekt de nieuwe persona een bericht dat niet van hem is, en bij een
+	 * persona die zijn berichten uit het stelsel haalt bestaat die pagina niet eens. Ook het archief
+	 * en de prullenbak tonen dan andermans wegzetsel, en een ?pagina= wijst naar een lijst met een
+	 * andere lengte.
+	 *
+	 * De inbox van dit portaal, dus: alles ná /berichtenbox/ valt weg. Dat werkt ook voor
+	 * /mijn-belastingdienst/ en voor de belang- en mobu-varianten, die elk hun eigen basis hebben.
+	 */
+	function naWisselNaar(persona) {
+		var params = new URLSearchParams(location.search);
+		params.set("persona", urlLabel(persona));
+
+		var merk = "/berichtenbox/";
+		var plek = location.pathname.indexOf(merk);
+		if (plek === -1) return location.pathname + "?" + params.toString();
+
+		// Alleen de persona meenemen: ?pagina= en filters gaan over de lijst die we net verlaten.
+		return location.pathname.slice(0, plek + merk.length) + "?persona=" + encodeURIComponent(urlLabel(persona));
+	}
+
 	function maakPersonaItem(persona, i, actief) {
 		var li = document.createElement("li");
 		var label = document.createElement("label");
@@ -483,9 +508,7 @@
 		radio.checked = persona.id === actief.id;
 		radio.addEventListener("change", function () {
 			slaActiefOp(persona.id);
-			var params = new URLSearchParams(location.search);
-			params.set("persona", urlLabel(persona));
-			location.search = params.toString();
+			location.href = naWisselNaar(persona);
 		});
 		label.appendChild(radio);
 		var kiezerLabel = persona.label || "Persona " + i;
@@ -576,9 +599,7 @@
 			var p = vindPersona(id) || vindPersonaOpLabel(id);
 			if (!p) return;
 			slaActiefOp(p.id);
-			var params = new URLSearchParams(location.search);
-			params.set("persona", urlLabel(p));
-			location.search = params.toString();
+			location.href = naWisselNaar(p);
 		},
 		personas: personas,
 	};
