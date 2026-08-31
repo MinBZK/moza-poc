@@ -66,4 +66,22 @@ describe("het ongelezen-getal in de navigatie", () => {
 		expect(perPersona.size).toBeGreaterThan(1);
 		expect(perPersona.has(data.aantalOngelezen)).toBe(false);
 	});
+
+	const wegzetPaginas = ["moza/berichtenbox/berichtenbox-archief.html", "moza/berichtenbox/berichtenbox-prullenbak.html", "mijn-belastingdienst/berichtenbox/berichtenbox-archief.html", "mijn-belastingdienst/berichtenbox/berichtenbox-prullenbak.html"];
+
+	wegzetPaginas.forEach((pad) => {
+		it(pad + " beweert niet dat u niets heeft voordat de rijen er zijn", () => {
+			const bron = readFileSync(pad, "utf8").replace(/<!--[\s\S]*?-->/g, "");
+
+			// Zichtbaar in de HTML stond er bij het openen "u heeft niets" tot het script de rijen
+			// erin zette. Voor wie wél iets gearchiveerd heeft is dat onwaar, en bij elke tabwissel
+			// kwam het opnieuw voorbij.
+			const leeg = bron.match(/<div class="feedback"[^>]*data-berichtenbox-empty>/);
+			expect(leeg).not.toBeNull();
+			expect(leeg[0]).toContain("hidden");
+
+			// En wie geen JavaScript heeft, hoort te lezen waarom de lijst leeg blijft.
+			expect(bron).toContain("<noscript>");
+		});
+	});
 });

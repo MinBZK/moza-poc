@@ -313,6 +313,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		verbergVoorVoortgang();
 	}
 
+	// Komt er geen ophaalronde, dan valt er ook niets op te wachten: het aantal ongelezen berichten
+	// verandert niet doordat u naar het archief gaat. Het bewaarde getal meteen tonen scheelt een
+	// bolletje dat bij elke tabwissel verdwijnt en terugkomt — en er komt niets achteraan dat het
+	// tegenspreekt, want de render schrijft zo hetzelfde getal.
+	if (!voortgangKlaargezet && typeof state.aantalOngelezen === "number") {
+		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
+			el.textContent = state.aantalOngelezen > 0 ? state.aantalOngelezen : "";
+		});
+	}
+
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
 	// doorgestreept oog (ongelezen) = "maak ongelezen". Icoon volgt het label/actie.
 	const SVG_OOG_PAD = "M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45";
