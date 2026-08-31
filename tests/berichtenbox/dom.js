@@ -301,6 +301,16 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 			<div class="berichtenbox-detail-body" data-demo-body></div>
 			<p class="visually-hidden" data-demo-inhoud-status role="status"></p>
 			<p class="variant-c-only" data-nagebootst><a href="/assets/documents/voorbeeld-bijlage.pdf">Open origineel bericht</a></p>
+			{/* De PDF-viewer met zijn download-links, zoals bericht-demo.html die heeft. Zonder dit
+			    bleef ongetoetst of een keten-bijlage dezelfde weergave krijgt als een uit de dataset. */}
+			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden></div>
+				<div class="pdf-reveal"><object data-berichtenbox-attachments-preview type="application/pdf" hidden></object></div>
+				<ul class="list-indent">
+					<li><a href="#" data-berichtenbox-pdf-download download hidden>Download PDF</a></li>
+					<li><a href="#" data-berichtenbox-tekst-download download hidden>Lees tekst-versie</a></li>
+				</ul>
+			</div>
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>

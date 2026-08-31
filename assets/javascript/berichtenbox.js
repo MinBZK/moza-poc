@@ -1737,6 +1737,19 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort erbij te staan — een naam zonder
 	 * link en zonder woord laat de bezoeker klikken op iets dat er niet is.
 	 */
+	/**
+	 * Het adres van één bijlage bij het stelsel, of null als er geen te maken is.
+	 *
+	 * Eén plek, want de lijst en de viewer moeten naar hetzelfde wijzen. Beide id's ontsnappen: ze
+	 * komen van buiten en horen in één padsegment te blijven. Geen pathPrefix — het stelsel zit bij
+	 * de proxy altijd op /api/, net als de andere aanroepen in berichtenbox-keten.js.
+	 */
+	function bijlageAdres(bijlage, berichtId) {
+		const bijlageId = bijlage && bijlage.bijlageId;
+		if (!bijlageId || !berichtId) return null;
+		return "/api/v1/berichten/" + encodeURIComponent(berichtId) + "/bijlagen/" + encodeURIComponent(bijlageId);
+	}
+
 	function rondBijlagenAf(bijlagen, bericht, detail, geantwoord) {
 		const bijlSec = detail.querySelector("[data-berichtenbox-attachments]");
 		if (!bijlSec) return null;
@@ -1800,12 +1813,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			// Een gewone link, geen fetch: het stelsel eist de X-Ontvanger-header en die kan een
 			// browser bij een link niet meesturen — dus zet de proxy hem uit het ontvanger-cookie.
-			// Beide id's ontsnappen: ze komen van buiten en horen in één padsegment te blijven.
 			const a = document.createElement("a");
-			a.className = "content-link";
-			// Zonder url(): die plakt de pathPrefix van de statische site ervoor, en het stelsel zit
-			// bij de proxy altijd op /api/. berichtenbox-keten.js roept zijn adressen net zo aan.
-			a.href = "/api/v1/berichten/" + encodeURIComponent(bericht.id) + "/bijlagen/" + encodeURIComponent(bijlageId);
+			a.href = bijlageAdres(bijlage, bericht.id);
 			// Het stelsel stuurt "Content-Disposition: attachment" zonder bestandsnaam; deze geeft het
 			// bestand alsnog de naam die de organisatie eraan gaf.
 			a.setAttribute("download", naam);
@@ -1815,18 +1824,66 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		});
 		lijst.hidden = false;
 
-		// Ná de lijst en als gewone alinea: als lijstitem zou een schermlezer "lijst met drie items"
-		// melden bij twee bijlagen.
-		let uitleg = bijlSec.querySelector("[data-bijlagen-uitleg]");
-		if (!uitleg) {
-			uitleg = document.createElement("p");
-			uitleg.className = "metadata";
-			uitleg.setAttribute("data-bijlagen-uitleg", "");
-			bijlSec.appendChild(uitleg);
-		}
-		uitleg.textContent = "Bijlagen worden opgehaald bij " + bericht.afzender + " op het moment dat u ze opent.";
+		// De eerste bijlage ook in de viewer, met dezelfde download-link eronder — precies wat een
+		// bericht uit de dataset krijgt. Dat blok werd tot nu toe alleen door de nabootsing aangezet,
+		// en die slaat een keten-bericht over; daardoor oogde deze kant kaler zonder dat daar een
+		// reden voor was.
+		toonBijlageInViewer(gekregen[0], bericht.id);
 
 		return gekregen.length === 1 ? "Er is één bijlage." : "Er zijn " + gekregen.length + " bijlagen.";
+	}
+
+	/**
+	 * Toont een échte bijlage in de PDF-viewer op de detailpagina.
+	 *
+	 * Dezelfde elementen die de nabootsing gebruikt, maar gevoed met het adres bij het stelsel in
+	 * plaats van met de voorbeeld-PDF. Dat kan alleen omdat de proxy de ontvanger uit het cookie in
+	 * een header omzet: een `<object data>` kan er zelf net zomin een meesturen als een `<a href>`.
+	 *
+	 * "Lees tekst-versie" blijft verborgen; het stelsel levert geen tekstvariant.
+	 */
+	function toonBijlageInViewer(bijlage, berichtId) {
+		const adres = bijlageAdres(bijlage, berichtId);
+		if (!adres) return;
+
+		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
+		const pdfLaden = document.querySelector("[data-pdf-laden]");
+
+		if (preview) {
+			if (pdfLaden) pdfLaden.hidden = false;
+			preview.hidden = true;
+
+			let getoond = false;
+			const toonPreview = () => {
+				if (getoond) return;
+				getoond = true;
+				const reveal = preview.closest(".pdf-reveal");
+				preview.hidden = false;
+				if (reveal) {
+					reveal.setAttribute("data-collapsed", "");
+					void reveal.offsetHeight;
+					reveal.removeAttribute("data-collapsed");
+				}
+				if (pdfLaden) {
+					pdfLaden.classList.add("feedback-progress--afgerond");
+					setTimeout(() => {
+						pdfLaden.hidden = true;
+					}, 340);
+				}
+			};
+			preview.addEventListener("load", toonPreview, { once: true });
+			// Safari vuurt 'load' niet betrouwbaar op een <object> met PDF. Deze komt bovendien over
+			// het netwerk, dus ruimer dan de 1200 ms die de nabootsing met een lokaal bestand aanhoudt.
+			setTimeout(toonPreview, 3000);
+			preview.setAttribute("data", adres + "#navpanes=0&view=FitH");
+		}
+
+		const download = document.querySelector("[data-berichtenbox-pdf-download]");
+		if (download) {
+			download.href = adres;
+			download.setAttribute("download", (bijlage && bijlage.naam) || "bijlage.pdf");
+			download.hidden = false;
+		}
 	}
 
 	// Vul de generieke demo-detailpagina met berichtdata uit state.

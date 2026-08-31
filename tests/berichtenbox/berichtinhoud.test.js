@@ -163,9 +163,14 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1", "/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-2"]);
 		expect(links.map((a) => a.getAttribute("download"))).toEqual(["beschikking.pdf", "toelichting.pdf"]);
 
-		// De uitleg staat ná de lijst en niet erin: als lijstitem zou een schermlezer "lijst met drie
-		// items" melden bij twee bijlagen.
-		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toContain("opgehaald bij RVO");
+		// En de eerste bijlage staat in dezelfde PDF-viewer die een dataset-bericht ook krijgt, met
+		// hetzelfde adres eronder als download. Anders oogt deze kant kaler zonder dat daar een
+		// reden voor is.
+		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
+		expect(preview.getAttribute("data")).toContain("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1");
+		const download = document.querySelector("[data-berichtenbox-pdf-download]");
+		expect(download.hidden).toBe(false);
+		expect(download.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1");
 
 		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
 		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
@@ -351,6 +356,18 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 
 		const link = document.querySelector("[data-berichtenbox-attachments-list] a");
 		expect(link.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/" + encodeURIComponent("../../admin?x=1"));
+	});
+
+	it("laat de tekst-versie verborgen: het stelsel levert er geen", async () => {
+		// De nabootsing biedt die wel aan. Voor een echt bericht zou dat een document beloven dat
+		// niet bestaat.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{ bijlageId: "b-1", naam: "a.pdf" }] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-tekst-download]").hidden).toBe(true);
 	});
 
 	it("toont een bijlage zonder id wel, maar zonder link", async () => {
