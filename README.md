@@ -233,6 +233,18 @@ docker build -f container/Containerfile -t moza .
 docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
 
+#### Architecturen
+
+De gepubliceerde images van `production.yml` (`latest`, `sha-…`) en `release.yml` (tags) zijn **multi-arch**: `linux/amd64` voor het ZAD-cluster en `linux/arm64` voor Apple Silicon. `docker pull` kiest zelf de juiste variant, dus op een Mac met M-processor draait de image zonder emulatie:
+
+```bash
+docker run --rm -p 8080:8080 ghcr.io/minbzk/moza-poc:latest
+```
+
+Beide varianten worden gebouwd op een runner van diezelfde architectuur (`ubuntu-latest` en `ubuntu-24.04-arm`, gratis voor publieke repositories), niet onder QEMU: geëmuleerd duurt de Storybook-build vele malen langer. Elke build pusht alleen een digest; een `merge`-job voegt die samen tot één manifest-lijst en levert de image-ref aan de deploy.
+
+De preview- (`pr<nr>`) en onderzoek-builds blijven `linux/amd64`-only. Die images draaien uitsluitend op ZAD, dus een tweede architectuur zou daar alleen buildtijd kosten.
+
 ---
 
 ## Storybook
