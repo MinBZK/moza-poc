@@ -84,6 +84,9 @@ function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 		<b data-berichtenbox-counter-unread></b> ongelezen
 	</p>
 	<nav><a href="#"><span data-berichtenbox-count="inbox"></span></a></nav>
+	{/* Het bolletje uit het menu, dat op élke pagina staat. Zonder dit hier bleef ongetoetst of
+	   het een onthouden getal toont op een pagina die het echte zo berekent. */}
+	<nav class="side-nav"><a href="#">Berichtenbox<span class="badge" data-berichtenbox-count="ongelezen"></span></a></nav>
 ${inbox ? MELDINGEN_INBOX : ""}
 ${STORING}
 

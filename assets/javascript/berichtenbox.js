@@ -26,10 +26,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 (function () {
 	"use strict";
 
-	// Werk de badges voor ongelezen berichten bij op alle pagina's vanuit
-	// localStorage (side-nav én hoofdnavigatie kunnen allebei een badge tonen).
+	// Het bolletje met ongelezen berichten, op pagina's die zélf geen berichtenbox tonen.
+	//
+	// Daar wordt niets ingeladen, dus is het laatst bekende aantal uit de bewaarde staat het enige
+	// dat we hebben — en niets komt het daarna tegenspreken. Op de berichtenbox zelf juist níet:
+	// daar wordt het echte aantal zo berekend, en een onthouden getal ervoor zetten laat het
+	// bolletje eerst iets anders tonen dan wat er even later staat. Dat onthouden getal kan ook nog
+	// eens verouderd zijn — uit een vorige versie, of van vóór een handeling in een ander tabblad.
 	try {
-		const navBadges = document.querySelectorAll('[data-berichtenbox-count="ongelezen"]');
+		const eigenLijst = document.querySelector("[data-berichtenbox-list]");
+		const navBadges = eigenLijst ? [] : document.querySelectorAll('[data-berichtenbox-count="ongelezen"]');
 		if (navBadges.length) {
 			const opgeslagen = JSON.parse(localStorage.getItem("berichtenbox") || "{}");
 			if (typeof opgeslagen.aantalOngelezen === "number") {
