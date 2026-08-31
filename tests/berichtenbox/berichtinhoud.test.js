@@ -136,7 +136,10 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// De lijst wist nog van geen bijlagen: die staan pas in het antwoord per bericht.
 		window.BerichtenboxKeten = nepKeten(async () => ({
 			inhoud: "Zie de bijlage.",
-			bijlagen: [{ naam: "beschikking.pdf" }, { naam: "toelichting.pdf" }],
+			bijlagen: [
+				{ bijlageId: "b-1", naam: "beschikking.pdf" },
+				{ bijlageId: "b-2", naam: "toelichting.pdf" },
+			],
 		}));
 		bouwDemoDetailPagina(KETEN_BERICHT);
 
@@ -154,9 +157,15 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
 		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf"]);
 
+		// Elke naam is een echte link naar de bijlage bij het stelsel, met de naam als bestandsnaam:
+		// het stelsel stuurt "Content-Disposition: attachment" zonder er een mee te geven.
+		const links = [...lijst.querySelectorAll("a")];
+		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1", "/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-2"]);
+		expect(links.map((a) => a.getAttribute("download"))).toEqual(["beschikking.pdf", "toelichting.pdf"]);
+
 		// De uitleg staat ná de lijst en niet erin: als lijstitem zou een schermlezer "lijst met drie
 		// items" melden bij twee bijlagen.
-		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toBe("Bijlagen bekijken kan in dit prototype nog niet.");
+		expect(bijlagen.querySelector("[data-bijlagen-uitleg]").textContent).toContain("opgehaald bij RVO");
 
 		// Het laad-element is een laadindicator en hoort geen blijvende tekst te houden.
 		expect(bijlagen.querySelector("[data-berichtenbox-attachments-loading]").hidden).toBe(true);
@@ -328,6 +337,36 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(document.querySelector("[data-nagebootst]").hidden).toBe(true);
 	});
 
+	it("ontsnapt een bijlage-id dat het adres zou kunnen breken", async () => {
+		// De id komt van buiten. Rauw in het pad zetten maakt er een heel ander adres van — met een
+		// schuine streep zelfs een ander eindpunt.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({
+			inhoud: "De brief.",
+			bijlagen: [{ bijlageId: "../../admin?x=1", naam: "raar.pdf" }],
+		}));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const link = document.querySelector("[data-berichtenbox-attachments-list] a");
+		expect(link.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/" + encodeURIComponent("../../admin?x=1"));
+	});
+
+	it("toont een bijlage zonder id wel, maar zonder link", async () => {
+		// Zonder id valt er geen adres te maken. Dat de bijlage bestaat is waar; hem als link tonen
+		// zou een klik opleveren die nergens heen gaat.
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{ naam: "zoek.pdf" }] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const item = document.querySelector("[data-berichtenbox-attachments-list] li");
+		expect(item.textContent).toBe("zoek.pdf");
+		expect(item.querySelector("a")).toBeNull();
+	});
+
 	it("geeft een naamloze bijlage toch een regel", async () => {
 		// Het stelsel levert de naam niet altijd mee. Een leeg lijstitem laat de bezoeker raden of
 		// er iets misging of dat de bijlage zo heet.
@@ -388,7 +427,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// meer maar een onwaarheid — met een werkende downloadknop erbij.
 		vi.useFakeTimers();
 		try {
-			metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ naam: "besluit-2026.pdf" }] }));
+			metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ bijlageId: "b-1", naam: "besluit-2026.pdf" }] }));
 
 			await laadBerichtenbox();
 			await vi.advanceTimersByTimeAsync(5000);

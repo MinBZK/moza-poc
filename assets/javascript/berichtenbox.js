@@ -1749,7 +1749,30 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		lijst.replaceChildren();
 		gekregen.forEach((bijlage) => {
 			const li = document.createElement("li");
-			li.textContent = (bijlage && bijlage.naam) || "Bijlage zonder naam";
+			const naam = (bijlage && bijlage.naam) || "Bijlage zonder naam";
+			const bijlageId = bijlage && bijlage.bijlageId;
+
+			// Zonder id valt er geen adres te maken. Dan wél de naam tonen: dat de bijlage bestaat is
+			// waar, alleen kunnen wij hem niet opvragen.
+			if (!bijlageId) {
+				li.textContent = naam;
+				lijst.appendChild(li);
+				return;
+			}
+
+			// Een gewone link, geen fetch: het stelsel eist de X-Ontvanger-header en die kan een
+			// browser bij een link niet meesturen — dus zet de proxy hem uit het ontvanger-cookie.
+			// Beide id's ontsnappen: ze komen van buiten en horen in één padsegment te blijven.
+			const a = document.createElement("a");
+			a.className = "content-link";
+			// Zonder url(): die plakt de pathPrefix van de statische site ervoor, en het stelsel zit
+			// bij de proxy altijd op /api/. berichtenbox-keten.js roept zijn adressen net zo aan.
+			a.href = "/api/v1/berichten/" + encodeURIComponent(bericht.id) + "/bijlagen/" + encodeURIComponent(bijlageId);
+			// Het stelsel stuurt "Content-Disposition: attachment" zonder bestandsnaam; deze geeft het
+			// bestand alsnog de naam die de organisatie eraan gaf.
+			a.setAttribute("download", naam);
+			a.textContent = naam;
+			li.appendChild(a);
 			lijst.appendChild(li);
 		});
 		lijst.hidden = false;
@@ -1763,7 +1786,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			uitleg.setAttribute("data-bijlagen-uitleg", "");
 			bijlSec.appendChild(uitleg);
 		}
-		uitleg.textContent = "Bijlagen bekijken kan in dit prototype nog niet.";
+		uitleg.textContent = "Bijlagen worden opgehaald bij " + bericht.afzender + " op het moment dat u ze opent.";
 
 		return gekregen.length === 1 ? "Er is één bijlage." : "Er zijn " + gekregen.length + " bijlagen.";
 	}

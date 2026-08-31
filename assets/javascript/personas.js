@@ -72,15 +72,21 @@
 	function slaActiefOp(id) {
 		try {
 			localStorage.setItem(LS_KEY, id);
-		} catch (e) { /* localStorage niet toegankelijk */ }
+		} catch (e) {
+			/* localStorage niet toegankelijk */
+		}
 	}
 
 	function vindPersona(id) {
-		return personas.find(function (p) { return p.id === id; });
+		return personas.find(function (p) {
+			return p.id === id;
+		});
 	}
 
 	function vindPersonaOpLabel(label) {
-		return personas.find(function (p) { return p.label === label; });
+		return personas.find(function (p) {
+			return p.label === label;
+		});
 	}
 
 	function urlLabel(persona) {
@@ -107,7 +113,11 @@
 			if (persona) return persona;
 		}
 		// 3. Fallback: de persona die als actief is gemarkeerd in de data.
-		return personas.find(function (p) { return p.actief; }) || personas[0];
+		return (
+			personas.find(function (p) {
+				return p.actief;
+			}) || personas[0]
+		);
 	}
 
 	// --- Persoonsgebonden opslag ---------------------------------------------------------------
@@ -120,19 +130,13 @@
 	// gereedschap van wie het prototype bekijkt, geen gegevens van een bedrijf, en blijven staan.
 	// `berichtenbox-keten` staat erbij als opruimwerk: die sleutel wordt niet meer geschreven, maar
 	// staat nog in browsers van vóór die wijziging.
-	var VAN_DE_PERSONA = [
-		/^berichtenbox$/,
-		/^berichtenbox-keten$/,
-		/^hidden:/,
-		/^read:/,
-		/^favorite:/,
-		/^dismissed:/,
-		/^unread:count$/,
-	];
+	var VAN_DE_PERSONA = [/^berichtenbox$/, /^berichtenbox-keten$/, /^hidden:/, /^read:/, /^favorite:/, /^dismissed:/, /^unread:count$/];
 	var HERKOMST_KEY = "persona:gegevens-van";
 
 	function hoortBijEenPersona(sleutel) {
-		return VAN_DE_PERSONA.some(function (patroon) { return patroon.test(sleutel); });
+		return VAN_DE_PERSONA.some(function (patroon) {
+			return patroon.test(sleutel);
+		});
 	}
 
 	/**
@@ -176,16 +180,30 @@
 				var sleutel = localStorage.key(i);
 				if (sleutel && hoortBijEenPersona(sleutel)) teWissen.push(sleutel);
 			}
-			teWissen.forEach(function (sleutel) { localStorage.removeItem(sleutel); });
+			teWissen.forEach(function (sleutel) {
+				localStorage.removeItem(sleutel);
+			});
 
 			// De gesimuleerde bronuitval hoort bij deze zitting én bij deze persona.
-			try { sessionStorage.removeItem("berichtenbox-bron-uitval"); } catch (e) { /* geen sessionStorage */ }
+			try {
+				sessionStorage.removeItem("berichtenbox-bron-uitval");
+			} catch (e) {
+				/* geen sessionStorage */
+			}
+
+			// De ontvanger waarmee de proxy bijlagen ophaalt. Blijft die van de vorige persona staan,
+			// dan haalt een klik op een bijlage het document van iemand anders op — of, waarschijnlijker,
+			// een 404 die niet te plaatsen is. De keten-bron zet hem opnieuw zodra de ronde loopt.
+			try {
+				document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+			} catch (e) {
+				/* geen cookies */
+			}
 
 			localStorage.setItem(HERKOMST_KEY, actiefId);
 
 			if (vorige) {
-				console.info("[Personas] Gewisseld van '" + vorige + "' naar '" + actiefId + "'; " +
-					teWissen.length + " opgeslagen gegeven(s) gewist.");
+				console.info("[Personas] Gewisseld van '" + vorige + "' naar '" + actiefId + "'; " + teWissen.length + " opgeslagen gegeven(s) gewist.");
 			}
 		} catch (e) {
 			// Blijft er iets staan, dan ziet de volgende persona gegevens die niet van hem zijn.
@@ -197,31 +215,56 @@
 		var p = persona.persoon;
 		var b = persona.bedrijf;
 		switch (sleutel) {
-			case "voornaam": return p.voornaam;
-			case "achternaam": return p.achternaam;
-			case "naam": return p.voornaam + " " + p.achternaam;
-			case "voornaam-bedrijf": return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
-			case "handelsnaam": return b.handelsnaam;
-			case "functies": return b.functies;
-			case "website": return b.website;
-			case "kvkNummer": return b.kvkNummer;
-			case "vestigingsnummer": return b.vestigingsnummer;
-			case "rsinNummer": return b.rsinNummer;
-			case "btwNummer": return b.btwNummer;
-			case "omzetbelastingnummer": return b.omzetbelastingnummer;
-			case "loonheffingennummer": return b.loonheffingennummer;
-			case "startdatum": return b.startdatum;
-			case "rechtsvorm": return b.rechtsvorm;
-			case "iban": return b.iban;
-			case "werkzamePersonenFulltime": return b.werkzamePersonenFulltime;
-			case "werkzamePersonenParttime": return b.werkzamePersonenParttime;
-			case "vestigingsadres": return b.vestigingsadres;
-			case "vestigingsadresVolledig": return b.vestigingsadresVolledig;
-			case "postadres": return b.postadres;
-			case "gemeente": return b.gemeente;
-			case "branche": return b.branche;
-			case "rol": return b.rol;
-			default: return "";
+			case "voornaam":
+				return p.voornaam;
+			case "achternaam":
+				return p.achternaam;
+			case "naam":
+				return p.voornaam + " " + p.achternaam;
+			case "voornaam-bedrijf":
+				return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
+			case "handelsnaam":
+				return b.handelsnaam;
+			case "functies":
+				return b.functies;
+			case "website":
+				return b.website;
+			case "kvkNummer":
+				return b.kvkNummer;
+			case "vestigingsnummer":
+				return b.vestigingsnummer;
+			case "rsinNummer":
+				return b.rsinNummer;
+			case "btwNummer":
+				return b.btwNummer;
+			case "omzetbelastingnummer":
+				return b.omzetbelastingnummer;
+			case "loonheffingennummer":
+				return b.loonheffingennummer;
+			case "startdatum":
+				return b.startdatum;
+			case "rechtsvorm":
+				return b.rechtsvorm;
+			case "iban":
+				return b.iban;
+			case "werkzamePersonenFulltime":
+				return b.werkzamePersonenFulltime;
+			case "werkzamePersonenParttime":
+				return b.werkzamePersonenParttime;
+			case "vestigingsadres":
+				return b.vestigingsadres;
+			case "vestigingsadresVolledig":
+				return b.vestigingsadresVolledig;
+			case "postadres":
+				return b.postadres;
+			case "gemeente":
+				return b.gemeente;
+			case "branche":
+				return b.branche;
+			case "rol":
+				return b.rol;
+			default:
+				return "";
 		}
 	}
 
@@ -379,18 +422,22 @@
 					break;
 				case "vestigingen":
 					items.forEach(function (item) {
-						container.appendChild(maakLijstItemMetDl(item.type, [
-							["Vestigingsnummer", item.nummer],
-							["Adres", item.adres]
-						]));
+						container.appendChild(
+							maakLijstItemMetDl(item.type, [
+								["Vestigingsnummer", item.nummer],
+								["Adres", item.adres],
+							])
+						);
 					});
 					break;
 				case "ubo":
 					items.forEach(function (item) {
-						container.appendChild(maakLijstItemMetDl(item.naam, [
-							["Aard van belang", item.aardVanBelang],
-							["Grootte van belang", item.groottevanBelang]
-						]));
+						container.appendChild(
+							maakLijstItemMetDl(item.naam, [
+								["Aard van belang", item.aardVanBelang],
+								["Grootte van belang", item.groottevanBelang],
+							])
+						);
 					});
 					break;
 			}
@@ -441,7 +488,7 @@
 			location.search = params.toString();
 		});
 		label.appendChild(radio);
-		var kiezerLabel = persona.label || ("Persona " + i);
+		var kiezerLabel = persona.label || "Persona " + i;
 		label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
 		li.appendChild(label);
 		return li;
@@ -522,7 +569,9 @@
 
 	// Publieke API voor debugging.
 	window.Personas = {
-		actief: function () { return actievePersona(); },
+		actief: function () {
+			return actievePersona();
+		},
 		wissel: function (id) {
 			var p = vindPersona(id) || vindPersonaOpLabel(id);
 			if (!p) return;

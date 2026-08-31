@@ -152,6 +152,26 @@
 		return "onbereikbaar";
 	}
 
+	/**
+	 * De ontvanger in een cookie, zodat de proxy er een X-Ontvanger-header van kan maken.
+	 *
+	 * Nodig omdat een `<a href>` en een `<object data>` geen eigen header meesturen: een bijlage is
+	 * een gewone URL die de browser zelf ophaalt. Alleen daarvoor; alle aanroepen die dit script
+	 * zelf doet, zetten de header gewoon zelf.
+	 *
+	 * Geen beveiliging — de bezoeker kan dit cookie net zo goed zelf zetten als de header. Wel
+	 * `SameSite=Strict`: dit hoort nooit mee te gaan met een verzoek dat een andere site opwekt.
+	 */
+	function zetOntvangerCookie(ontvanger) {
+		try {
+			// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is, en het stelsel
+			// verwacht "KVK:12345678". De dubbele punt mag in een cookiewaarde.
+			document.cookie = "ontvanger=" + ontvanger + "; path=/; SameSite=Strict";
+		} catch (fout) {
+			console.error("[Berichtenbox] De ontvanger kon niet in een cookie; bijlagen zijn niet op te halen.", fout);
+		}
+	}
+
 	function metTijdslimiet(pad, opties, limiet) {
 		return fetch(pad, Object.assign({ signal: AbortSignal.timeout(limiet) }, opties));
 	}
@@ -442,6 +462,7 @@
 
 			aangeslotenBevestigd = true;
 			ontvangerVanRonde = aangesloten.ontvanger;
+			zetOntvangerCookie(aangesloten.ontvanger);
 
 			uitvraag = await haalOp(aangesloten.ontvanger);
 			lijst = await haalLijst(aangesloten.ontvanger);

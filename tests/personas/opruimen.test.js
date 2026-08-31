@@ -139,6 +139,19 @@ describe("wisselen van persona", () => {
 		expect(opslag._kluis["persona:gegevens-van"]).toBe("bloemenkweker");
 	});
 
+	it("wist het ontvanger-cookie, zodat een bijlage niet van de vorige persona komt", () => {
+		// Dat cookie zegt de proxy namens wie hij bijlagen ophaalt. Blijft dat van de vorige staan,
+		// dan levert een klik op een bijlage het document van iemand anders — of een 404 die de
+		// bezoeker nergens kan plaatsen. De keten-bron zet hem opnieuw zodra zijn ronde loopt.
+		document.cookie = "ontvanger=KVK:90000011; path=/";
+		expect(document.cookie).toContain("ontvanger=KVK:90000011");
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
+	});
+
 	it("ruimt stil op als er wél een persona gekozen was", () => {
 		// Geen herkomst bekend, maar er staat een keuze in de opslag: dan is er wel degelijk
 		// gewisseld, alleen weten we niet waarvandaan. Opruimen dus — en er valt niets te melden,

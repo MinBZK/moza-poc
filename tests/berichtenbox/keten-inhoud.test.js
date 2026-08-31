@@ -87,6 +87,22 @@ afterEach(() => {
 });
 
 describe("de inhoud van één bericht ophalen bij het stelsel", () => {
+	it("zet de ontvanger in een cookie, zodat de proxy bijlagen kan ophalen", async () => {
+		// Een <a href> naar een bijlage kan geen eigen header meesturen; de proxy maakt er daarom een
+		// X-Ontvanger-header van. Zonder dit cookie antwoordt het stelsel met 400 en is elke
+		// bijlage-link stuk.
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+		]);
+
+		expect(document.cookie).toContain("ontvanger=" + ONTVANGER);
+		// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is en het stelsel verwacht
+		// "KVK:90000011". Ge-encodeerd zou daar "KVK%3A90000011" van maken.
+		expect(document.cookie).not.toContain("%3A");
+	});
+
 	it("vraagt het juiste adres op, met de ontvanger erbij", async () => {
 		const { aanroepen } = await startKeten([
 			["/api/demo/personas", PERSONAS],
