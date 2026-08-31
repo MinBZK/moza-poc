@@ -1646,5 +1646,59 @@
 		"buurt": "rotterdam",
 		"homepageSubsidies": ["duurzaam-advies-voucher"],
 		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-garage",
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 4 (met bijlagen)",
+		"persoon": {
+			"voornaam": "Rachid",
+			"achternaam": "van Dijk"
+		},
+		"bedrijf": {
+			"handelsnaam": "Garage Van Dijk B.V.",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000014",
+			"rsinNummer": "90000014",
+			"btwNummer": "NL00090000014",
+			"omzetbelastingnummer": "090000014B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Reparatie van auto's",
+			"vestigingsadres": "Industrieweg 8, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000014",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "45204",
+					"omschrijving": "Gespecialiseerde reparatie van auto's"
+				}
+			],
+			"vestigingsadresVolledig": "Industrieweg 8, 3044 AS Rotterdam",
+			"postadres": "Industrieweg 8, 3044 AS Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000014",
+					"type": "Hoofdvestiging",
+					"adres": "Industrieweg 8, 3044 AS Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
 	}
 ]
