@@ -50,7 +50,6 @@ const ONBEREIKBARE_BRON = "rdw";
 const UITVAL_KEY = "berichtenbox-bron-uitval";
 
 // Het gekozen scenario hoort bij de zitting: anders weten de inbox en de detailpagina iets anders.
-const SCENARIO_KEY = "berichtenbox-uitval-scenario";
 
 /** Staat de feature-flag "Dynamische berichten" aan? Standaard uit. */
 function dynamischeBerichtenAan() {
@@ -155,10 +154,8 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	 */
 	function huidigScenario() {
 		if (!scenarioGekozen) {
-			const bewaard = leesZitting(SCENARIO_KEY);
-			scenario = UNHAPPY_SCENARIOS.includes(bewaard) ? bewaard : UNHAPPY_SCENARIOS[Math.floor(Math.random() * UNHAPPY_SCENARIOS.length)];
+			scenario = UNHAPPY_SCENARIOS[Math.floor(Math.random() * UNHAPPY_SCENARIOS.length)];
 			scenarioGekozen = true;
-			if (bewaard !== scenario) schrijfZitting(SCENARIO_KEY, scenario);
 		}
 		return scenario;
 	}
@@ -209,10 +206,15 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 	function uitvalStandNu() {
 		// Eerst het scenario, dan pas of deze pagina het kan uitleggen: een detailpagina kan wel
 		// "later" tonen maar niet "geen", dus zonder het scenario is die vraag niet te stellen.
-		const gekozen = unhappyAan() ? huidigScenario() : null;
+		// Een bewaarde uitval ís het scenario "later", in uitvoering: anders was hij nooit
+		// weggeschreven. Hij hoeft dus niet nog eens door een nieuwe worp bevestigd te worden.
+		// Deed hij dat wél, dan hing het van de dobbelsteen af of een bericht van de weggevallen
+		// bron nog opende — en dat was de reden dat het scenario zelf bewaard moest worden.
+		const bewaardeUitval = unhappyAan() ? leesUitval() : null;
+		const gekozen = bewaardeUitval ? "later" : unhappyAan() ? huidigScenario() : null;
 		const actief = gekozen !== null && kanUitleggen(gekozen);
 		const scenario = actief ? gekozen : null;
-		const gevallen = actief && scenario === "later" ? leesUitval() : null;
+		const gevallen = actief && scenario === "later" ? bewaardeUitval : null;
 
 		function blokkeert(bericht) {
 			if (!actief || !bericht) return false;
@@ -468,7 +470,6 @@ export function datasetBron(data, { state, limiet = 5, magOphalen = () => true, 
 			handmatigHersteld = false;
 			scenarioGekozen = false;
 			stopUitvalWekker();
-			schrijfZitting(SCENARIO_KEY, null);
 			// Opnieuw wapenen: plannUitval draait alleen vanuit start(), en die komt maar één keer
 			// langs. Zonder dit is de unhappy flow na één keer uitzetten dood bij scenario "later".
 			if (meldWijziging) plannUitval(meldWijziging);

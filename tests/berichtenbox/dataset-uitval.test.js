@@ -184,19 +184,40 @@ describe("een bron die onderweg wegvalt", () => {
 	}, 20000);
 });
 
-describe("het scenario hoort bij de zitting", () => {
-	it("blijft hetzelfde op een volgende pagina, ook al zou de dobbelsteen anders vallen", async () => {
-		// Rolde elke pagina opnieuw, dan zei de inbox "deze bron is onbereikbaar" en toonde de
-		// detailpagina het bericht gewoon — twee van de drie keer.
-		const sessie = nepSessie();
-		vi.spyOn(Math, "random").mockReturnValue(0.01); // "een"
-		const inbox = datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie });
-		expect((await inbox.laad()).uitval.scenario).toBe("een");
+describe("het scenario en de bewaarde uitval", () => {
+	it("laat een bewaarde uitval gelden, wat de dobbelsteen ook zegt", async () => {
+		// Een weggevallen bron staat in de zitting; die is daarmee een feit. Werd hij nog eens
+		// getoetst aan een nieuwe worp, dan zei de inbox "deze bron is onbereikbaar" terwijl de
+		// detailpagina het bericht twee van de drie keer gewoon toonde — en dát was de reden dat
+		// het scenario zelf bewaard moest worden. De bewaarde uitval is nu zelfstandig, zoals op
+		// main, en dan hoeft de worp niet mee te reizen.
+		const sessie = nepSessie({ "berichtenbox-bron-uitval": JSON.stringify({ id: "rdw", naam: "RDW" }) });
 
-		// Een tweede pagina in dezelfde zitting; de dobbelsteen zou nu "geen" zeggen.
+		// De dobbelsteen zou hier "geen" zeggen; de bewaarde uitval hoort te winnen.
 		vi.spyOn(Math, "random").mockReturnValue(0.34);
-		const detail = datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie });
-		expect((await detail.laad()).uitval.scenario).toBe("een");
+		const inhoud = await datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie }).laad();
+
+		expect(inhoud.uitval.scenario).toBe("later");
+		expect(inhoud.uitval.uitgevallen.id).toBe("rdw");
+		expect(inhoud.berichten.map((b) => b.id)).toEqual(["m3", "m4"]);
+	});
+
+	it("loot per paginalading opnieuw", async () => {
+		// De persona's zonder stelsel zijn er om snel vormgeving te bekijken: verversen hoort een
+		// ander scenario te geven. Het scenario in de zitting bewaren maakte daar één worp van,
+		// die pas losliet als je het tabblad sloot.
+		const sessie = nepSessie();
+		const gezien = new Set();
+
+		for (const worp of [0.01, 0.34, 0.67]) {
+			vi.spyOn(Math, "random").mockReturnValue(worp);
+			const inhoud = await datasetBron(versDATA(), { vlagAan: () => true, sessie: () => sessie }).laad();
+			gezien.add(inhoud.uitval ? inhoud.uitval.scenario : "later");
+		}
+
+		expect([...gezien].sort()).toEqual(["een", "geen", "later"]);
+		// En niets over het scenario in de zitting achtergelaten.
+		expect(sessie._kluis["berichtenbox-uitval-scenario"]).toBeUndefined();
 	});
 
 	it("kiest opnieuw nadat de vlag is omgezet", async () => {
