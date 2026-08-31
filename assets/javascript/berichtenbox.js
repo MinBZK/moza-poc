@@ -1835,8 +1835,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (!voortgang) {
 					stopKlokken();
 					getoond = false;
-					lopendeBronnen.delete(bron);
-					if (!voortgangLoopt()) toonNaVoortgang();
+
+					// Alleen als deze bron ook echt liep. Een bron die meteen `null` meldt — het stelsel
+					// dat voor deze persona niet van toepassing is — zegt "ik heb niets te melden", niet
+					// "mijn ronde is klaar". Dat als het tweede lezen onthulde de lijst nog vóórdat de
+					// bron die wél animeert zijn eerste getal gaf: de rijen stonden een tel op het
+					// scherm en werden er meteen weer afgehaald. Precies de flits die de vroege
+					// verberging moest voorkomen, nu met twee bronnen in het spel.
+					const liep = lopendeBronnen.delete(bron);
+					if (liep && !voortgangLoopt()) toonNaVoortgang();
 
 					// De wachthond sloeg alarm en de ronde bleek toch af te ronden — een tabblad op de
 					// achtergrond zet requestAnimationFrame stil, dus dit is geen randgeval. Dan hoort

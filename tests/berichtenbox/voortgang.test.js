@@ -156,3 +156,39 @@ describe("als de animatie tóch niet komt", () => {
 		expect(voortgang().hidden).toBe(true);
 	});
 });
+
+describe("een bron die niets te melden heeft", () => {
+	it("laat de lijst niet even zien voordat de animerende bron begint", async () => {
+		// Het stelsel is niet van toepassing voor deze persona en meldt daarom meteen `null`. Dat
+		// betekent "ik heb niets te melden", niet "mijn ronde is klaar" — maar de render-laag las het
+		// als het tweede en toonde de lijst. Dat gebeurde vóórdat de dataset-bron zijn animatie
+		// startte, dus stonden de rijen een paar tellen op het scherm, waarna het voortgangsblok ze
+		// alsnog wegnam. Precies de flits die de vroege verberging moest voorkomen.
+		window.BerichtenboxKeten = {
+			bezig: false,
+			aangesloten: false,
+			melding: null,
+			voortgang: null,
+			berichten: async () => null,
+			// De echte keten meldt zich hier wél: een testdubbel die zwijgt verbergt deze fout.
+			opWijziging: (kijker) => kijker({ voortgang: null, melding: null }),
+		};
+
+		const berichten = [1, 2, 3].map((n) => bericht({ id: "m" + n, magazijnId: "rdw", afzender: "RDW" }));
+		bouwPagina(berichten, { state: { eersteBezoekGehad: false } });
+		window.localStorage.removeItem("berichtenbox");
+
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const body = lijst.querySelector("tbody");
+		const zichtbaarMetRijen = [];
+		new MutationObserver(() => {
+			if (!lijst.hidden && body.querySelectorAll("tr").length) zichtbaarMetRijen.push(true);
+		}).observe(document.querySelector(".berichtenbox-content"), { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
+
+		await laadBerichtenbox();
+		for (let i = 0; i < 6; i += 1) await laatLaden();
+
+		// Zolang de animatie loopt hoort er geen enkel moment te zijn waarop de rijen zichtbaar zijn.
+		expect(zichtbaarMetRijen).toEqual([]);
+	});
+});
