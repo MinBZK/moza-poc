@@ -298,7 +298,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// staan er weer tussen. Erger dan niets, dus dan liever de storingsweergave.
 				herstel: toonLaadfout,
 			},
-			toonBerichten
+			() => {
+				toonBerichten();
+				// De tellers zijn tijdens de ronde wel berekend maar niet getekend. Nu de lijst er
+				// staat, horen de aantallen erbij — anders blijven ze leeg tot de eerstvolgende
+				// handeling van de bezoeker.
+				render(huidigeView());
+			}
 		);
 	}
 
@@ -428,6 +434,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// zou die melding tegenspreken, en via state.aantalOngelezen ook de badges op andere
 		// pagina's een getal geven voor berichten die niemand kon zien.
 		if (ladingMislukt || laadfoutGetoond) return;
+
+		// Loopt er een ophaalronde, dan staat de lijst verborgen en zegt de balk dat we nog bezig
+		// zijn. Dan hoort er ook geen aantal op het scherm: "16 ongelezen" naast "berichten worden
+		// opgehaald" spreekt zichzelf tegen — we weten het blijkbaar al. De aantallen worden hier
+		// wél berekend en bewaard; alleen het tonen wacht, en toonNaVoortgang tekent ze zodra de
+		// lijst er ook is.
+		const wachtOpRonde = voortgangKlaargezet;
+
 		const tellerTotaal = document.querySelector("[data-berichtenbox-counter-total]");
 		let getoond = 0;
 		if (view === "inbox") {
@@ -438,32 +452,34 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// is: statusVan geeft de prullenbak voorrang, de teller zou het dubbel meenemen.
 			getoond = data.berichten.filter((b) => statusVan(b.id) === view).length;
 		}
-		if (tellerTotaal) tellerTotaal.textContent = getoond;
+		if (tellerTotaal && !wachtOpRonde) tellerTotaal.textContent = getoond;
 
 		// Aantal bronnen: aantal verschillende organisaties van de zichtbare inbox-berichten.
 		const tellerBronnen = document.querySelector("[data-berichtenbox-sources]");
 		if (tellerBronnen) {
 			const bronnen = new Set(data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).map((b) => b.magazijnId));
-			tellerBronnen.textContent = bronnen.size;
+			if (!wachtOpRonde) tellerBronnen.textContent = bronnen.size;
 		}
 
 		const ongelezenAantal = data.berichten.filter((b) => statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)).length;
 
 		const tellerOngelezen = document.querySelector("[data-berichtenbox-counter-unread]");
-		if (tellerOngelezen) tellerOngelezen.textContent = ongelezenAantal;
+		if (tellerOngelezen && !wachtOpRonde) tellerOngelezen.textContent = ongelezenAantal;
 
 		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
-		if (navInbox) navInbox.textContent = ongelezenAantal;
-		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
-			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : "";
-		});
+		if (navInbox && !wachtOpRonde) navInbox.textContent = ongelezenAantal;
+		if (!wachtOpRonde) {
+			document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
+				el.textContent = ongelezenAantal > 0 ? ongelezenAantal : "";
+			});
+		}
 		state.aantalOngelezen = ongelezenAantal;
 
 		// Pas nu zichtbaar. De regel staat leeg en verborgen in de HTML, want bij het bouwen is niet
 		// te weten welke persona er kijkt — en bij een persona die zijn berichten uit het stelsel
 		// haalt zou het getal uit een bron komen die daar niet gebruikt wordt.
 		const tellerRegel = document.querySelector("[data-berichtenbox-tellers]");
-		if (tellerRegel) tellerRegel.hidden = false;
+		if (tellerRegel && !wachtOpRonde) tellerRegel.hidden = false;
 		// Op dezelfde manier tellen als de lijst gevuld wordt; de sleutels van state.gearchiveerd
 		// rechtstreeks tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd is.
 		const navArchief = document.querySelector('[data-berichtenbox-count="archief"]');
