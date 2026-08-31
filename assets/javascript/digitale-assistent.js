@@ -361,7 +361,10 @@
 	// eigen session_id en gespreksgeschiedenis bij, zodat het gesprek van de
 	// vorige persona niet doorloopt.
 	function getComboKey() {
-		return getLLM() + ":" + getTransport() + ":" + getPersonaId();
+		// Het bord Wetten en regels voert per kaart een eigen gesprek: de regel-id
+		// in de sleutel houdt geschiedenis en sessie per regel apart.
+		var scope = window.MozaRegelScope && window.MozaRegelScope.id ? ":" + window.MozaRegelScope.id : "";
+		return getLLM() + ":" + getTransport() + ":" + getPersonaId() + scope;
 	}
 
 	function getAPIMode() {
@@ -606,6 +609,9 @@
 		var zaak = Object.assign({ aangemaaktOp: Date.now() }, payload);
 		if (!zaak.id) zaak.id = sleutel || "zaak-" + zaak.aangemaaktOp;
 		lijst.push(zaak);
+		// Het bord Wetten en regels leest zaken bij het renderen; in hetzelfde
+		// tabblad vuurt het storage-event niet, dus zelf aanstoten.
+		if (window.MozaRegelbordUI) window.MozaRegelbordUI.render();
 		try {
 			localStorage.setItem(KEY, JSON.stringify(lijst));
 		} catch (e) {
@@ -1225,6 +1231,23 @@
 		if (nieuwKnop) nieuwKnop.removeAttribute("aria-disabled");
 		if (bewaarKnop) bewaarKnop.removeAttribute("aria-disabled");
 	}
+
+	// Voor het bord Wetten en regels: een kaart stelt een vraag namens de
+	// ondernemer via hetzelfde pad als ?vraag=, en wisselt van gesprek per regel.
+	window.MozaChat = {
+		stel: function (vraag) {
+			if (!vraag) return;
+			input.value = vraag;
+			form.requestSubmit();
+		},
+		herlaad: function () {
+			var combo = getComboKey();
+			messages.innerHTML = chatHistory[combo] || "";
+			heeftGesprek = !!chatHistory[combo];
+			if (heeftGesprek) enableNieuwKnop();
+			else disableNieuwKnop();
+		},
+	};
 
 	function disableNieuwKnop() {
 		if (nieuwKnop) nieuwKnop.setAttribute("aria-disabled", "true");
