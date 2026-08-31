@@ -65,6 +65,15 @@
 		traag: "Het ophalen van dit bericht duurde te lang. Ververs de pagina om het opnieuw te proberen.",
 	};
 
+	// Geen storing bij een bron, maar een toestand van deze omgeving: er is niets kapot, er valt
+	// hier alleen niets op te halen. Toch een melding en geen stilte, want dit raakt alleen wie een
+	// testaccount van het stelsel koos, en die krijgt anders de gegenereerde dataset voorgeschoteld
+	// als zijn eigen post. Beide teksten zeggen wat er aan de hand is en wat de bezoeker kan doen.
+	const STELSEL_TEKSTEN = {
+		geenStelsel: "Dit testaccount haalt zijn berichten uit het Federatief Berichtenstelsel. Dat stelsel is in deze omgeving niet beschikbaar, dus wij kunnen uw berichten niet ophalen. Kies een ander testaccount om de berichtenbox met voorbeeldgegevens te bekijken.",
+		nietBekend: "Dit testaccount is bij het Federatief Berichtenstelsel niet bekend, dus daar zijn geen berichten voor op te halen. Kies een ander testaccount om de berichtenbox met voorbeeldgegevens te bekijken.",
+	};
+
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
 	// de gegenereerde dataset aantoonbaar niet zijn post en mag die niet meer getoond worden.
 	let aangeslotenBevestigd = false;
@@ -95,7 +104,7 @@
 	}
 
 	function toestand() {
-		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd };
+		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd || hoortBijStelsel() };
 	}
 
 	function meld(soort, tekst) {
@@ -396,6 +405,21 @@
 
 	// personas.js draait vóór dit bestand en bepaalt de actieve persona (?persona= > localStorage >
 	// actief). Die volgorde hier herhalen zou stil uit de pas kunnen lopen.
+	/**
+	 * Bestaat deze persona alleen om het stelsel mee te bekijken?
+	 *
+	 * Staat in `_data/personas.json` als `stelsel: true`. Nodig omdat de demo-console het antwoord
+	 * schuldig blijft zodra ze onbereikbaar is, en er dan niets is om op te staan: de dataset-bron
+	 * achteraan neemt het over en dient gegenereerde post op als de post van dit account. Voor een
+	 * gewone persona is dat juist wél de bedoeling, dus het verschil moet ergens vastliggen — en het
+	 * `proeftuin-`-voorvoegsel in de id is geen afspraak die code hoort te lezen.
+	 */
+	function hoortBijStelsel() {
+		if (!window.Personas || typeof window.Personas.actief !== "function") return false;
+		const persona = window.Personas.actief();
+		return !!(persona && persona.stelsel);
+	}
+
 	function actiefKvkNummer() {
 		if (!window.Personas || typeof window.Personas.actief !== "function") {
 			console.error("[Berichtenbox] keten overgeslagen: window.Personas ontbreekt.");
@@ -421,6 +445,12 @@
 		toonFout(reden);
 	}
 
+	// Zelfde weg als meldStoring, andere aanleiding: hier ging niets mis, hier is niets te halen.
+	function meldStelsel(sleutel) {
+		verbergVoortgang();
+		meld("storing", STELSEL_TEKSTEN[sleutel]);
+	}
+
 	function mislukt(fout) {
 		const reden = redenVan(fout);
 		console.error("[Berichtenbox] keten niet bereikbaar (" + reden + ")", fout);
@@ -443,6 +473,13 @@
 				mislukt(fout);
 				return null;
 			}
+			// Een testaccount van het stelsel heeft geen dataset achter zich die klopt. Zwijgen zou
+			// hier de post van een ander opdienen zonder dat iemand het kan zien.
+			if (hoortBijStelsel()) {
+				console.warn("[Berichtenbox] demo-console niet bereikbaar voor een testaccount van het stelsel.", fout);
+				meldStelsel("geenStelsel");
+				return null;
+			}
 			console.warn("[Berichtenbox] demo-console niet bereikbaar; de gegenereerde dataset blijft staan.", fout);
 			verbergVoortgang();
 			return null;
@@ -455,6 +492,13 @@
 				// gegenereerde dataset zetten. Bij een eerste ronde is de dataset juist wél correct.
 				if (aangeslotenBevestigd) {
 					throw ketenFout("onbereikbaar", "de demo-omgeving kent deze ontvanger niet meer");
+				}
+				// Hier is de console er wél, en zegt ze nee. Voor een testaccount van het stelsel is dat
+				// geen storing maar een antwoord, en het verklaart een lege berichtenbox.
+				if (hoortBijStelsel()) {
+					console.warn("[Berichtenbox] de demo-omgeving kent dit testaccount van het stelsel niet.", kvkNummer);
+					meldStelsel("nietBekend");
+					return null;
 				}
 				verbergVoortgang();
 				return null;
@@ -534,9 +578,19 @@
 			return ronde !== null;
 		},
 
-		/** Is deze persona aantoonbaar aangesloten op de keten? */
+		/**
+		 * Is deze persona op de keten aangesloten?
+		 *
+		 * Twee bronnen, en beide tellen. De demo-console bevestigt het — dat is het bewijs. Het
+		 * persona-bestand zegt het vooraf. Dat tweede is nodig omdat een onbereikbare console geen
+		 * bewijs oplevert, en de bron dan geen grond heeft om deze persona op te eisen; de dataset
+		 * neemt het over en de bezoeker ziet niet dat dit niet zijn post is.
+		 *
+		 * Binnen dit bestand blijft `aangeslotenBevestigd` het strengere begrip: dat beslist of een
+		 * verdwenen ontvanger een storing is of een normale eerste ronde.
+		 */
 		get aangesloten() {
-			return aangeslotenBevestigd;
+			return aangeslotenBevestigd || hoortBijStelsel();
 		},
 
 		/** De huidige melding, of null. `{ soort: "storing" | "mededeling", tekst }`. */

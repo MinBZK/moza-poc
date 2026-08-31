@@ -1433,6 +1433,7 @@
 	},
 	{
 		"id": "proeftuin-een",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 1",
@@ -1487,6 +1488,7 @@
 	},
 	{
 		"id": "proeftuin-twee",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 2",
@@ -1541,6 +1543,7 @@
 	},
 	{
 		"id": "proeftuin-drie",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 3",
@@ -1595,6 +1598,7 @@
 	},
 	{
 		"id": "proeftuin-veel",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming, veel organisaties",
@@ -1649,6 +1653,7 @@
 	},
 	{
 		"id": "proeftuin-garage",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 4 (met bijlagen)",
