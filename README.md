@@ -278,8 +278,8 @@ mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
 | `BACKEND_API` | de catch-all `/api/` en de terugval van `BACKEND_PROFIEL` en `BACKEND_API_2` | valt terug op `BACKEND_ORIGIN` |
 | `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
 | `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
-| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502**; onder `/api/v1/` met de variabelenaam erin, bij een bijlage-adres bewust zonder |
-| `BACKEND_PERSONAS` | `/api/demo/personas` — de testaccountlijst, een eigen publieke dienst | valt terug op `BACKEND_DEMO` |
+| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | default: de publieke omgeving van FBS. Expliciet leeggemaakt: **502**; onder `/api/v1/` met de variabelenaam erin, bij een bijlage-adres bewust zonder |
+| `BACKEND_PERSONAS` | `/api/demo/personas` — de testaccountlijst, een eigen publieke dienst | default: de publieke lijst van FBS; leeggemaakt valt hij terug op `BACKEND_DEMO` |
 | `BACKEND_DEMO` | de rest van `/api/demo/` — de demo-console | valt terug op `BACKEND_KETEN`, anders **502** |
 | `BACKEND_KETEN_HOST` | de `Host`-header naar de uitvraag | de host van de browser |
 | `BACKEND_DEMO_HOST` | de `Host`-header naar de demo-console | valt terug op `BACKEND_KETEN_HOST` |
@@ -296,6 +296,11 @@ Drie dingen om te weten bij het uitrollen:
   (`invalid URL prefix` in het logboek). `BACKEND_ORIGIN` leegmaken legt dus alleen `/chat`,
   `/health` en `/tools` stil; staat `BACKEND_API` dan op een werkende dienst, dan blijft alles onder
   `/api/` gewoon werken.
+- **De keten heeft een default naar de publieke omgeving van FBS.** Zonder die default toont elke
+  PR-preview een configuratie-502 voor de aangesloten persona's, want de deploy-action kan geen
+  runtime-env zetten. De default wijst nu naar een PR-omgeving van FBS omdat daar de gevulde dataset
+  staat; verdwijnt die, dan wijst hij naar een dood adres en leest dat als een storing. Het adres
+  staat in `container/Containerfile`, met de stabiele tegenhanger ernaast.
 - **Een configuratiefout is te herkennen aan `X-Proxy-Configuratie`.** Die header staat op het
   502-antwoord van elke guard en noemt de ontbrekende variabele. Een omgevallen upstream geeft óók
   een 502, maar zonder die header — daarmee kan de berichtenbox "deze omgeving is niet volledig
