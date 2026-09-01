@@ -135,7 +135,7 @@ In productie draait alles achter **één origin**: de nginx van de frontend **pr
 | Variabele        | Waar                                                                  | Betekenis                                                                                                                                                                     |
 | ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
-| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** de chat-endpoints naartoe stuurt (zie [Welke backend krijgt welk pad](#welke-backend-krijgt-welk-pad) voor de rest). Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
 De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuurt gewoon het KvK-nummer van de actieve persona mee, zie [Sessie-identiteit](#sessie-identiteit).
 
@@ -228,11 +228,18 @@ een header van (`location ~ ^/api/v1/berichten/.../bijlagen/...` in de template)
 aanroepen zetten de header gewoon zelf.
 
 Dat cookie is **geen** beveiliging — de bezoeker kan het net zo goed zelf zetten als de header, en
-het stelsel houdt zijn eigen controle. De waarde is wel een identiteit (een KvK-nummer of een BSN),
-dus hij reist zo min mogelijk mee: `path=/api/v1/berichten`, `SameSite=Strict`, `Secure` zodra de
-pagina over https gaat, en een half uur geldig. Elke pagina die bijlagen toont draait eerst een
-ophaalronde en zet hem daarbij opnieuw. Bij een persona-wissel wordt hij gewist, op het nieuwe én op
-het oude pad, want anders haalt een klik het document van de vorige persona op.
+het stelsel houdt zijn eigen controle. De waarde is wel een identiteit, dus het reist zo min
+mogelijk mee: `path=/api/v1/berichten`, `SameSite=Strict` en `Secure` zodra de pagina over https
+gaat. Geen vervaltijd, dus een sessiecookie: het leeft zolang het tabblad leeft. Een vaste vervaltijd
+brak precies het normale geval — een keten-bericht heeft geen eigen detailpagina, dus er is geen
+navigatie die een nieuwe ophaalronde afdwingt, en na afloop gaf elke bijlage een 400 zonder melding.
+
+Wat er in staat is bij deze persona's altijd `KVK:<nummer>`; de keten-bron matcht daar hard op. Kent
+het stelsel straks ook ontvangers op BSN, dan staat er een BSN in en telt dat als bijzonder
+persoonsgegeven.
+
+Bij een persona-wissel wordt het gewist, op het nieuwe én op het oude pad, want anders haalt een klik
+het document van de vorige persona op.
 
 Uit die identiteit volgt één regel voor de proxy-config: **zet `$http_cookie` nergens in een
 logformaat of debug-regel.** Het standaard nginx-logformaat doet dat niet, en zo hoort het te
@@ -268,7 +275,7 @@ mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
 | Variabele | Bedient | Leeg gelaten |
 | --- | --- | --- |
 | `BACKEND_ORIGIN` | `/chat`, `/chat/stream`, `/health`, `/tools` — de Digitale Assistent | default `http://dabackend:8000` |
-| `BACKEND_API` | de catch-all `/api/` en het eindpunt van de terugvallen hieronder | valt terug op `BACKEND_ORIGIN` |
+| `BACKEND_API` | de catch-all `/api/` en de terugval van `BACKEND_PROFIEL` en `BACKEND_API_2` | valt terug op `BACKEND_ORIGIN` |
 | `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
 | `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
 | `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502** met de naam van de variabele |
@@ -282,6 +289,10 @@ Twee dingen om te weten bij het uitrollen:
   die de variabelenaam noemt. Dat is met opzet: doorsturen naar de chat-backend leverde een 404 of
   een DNS-fout uit een dienst die deze paden niet kent, en dan is niet te zien dát er een variabele
   ontbreekt.
+- **Maak `BACKEND_ORIGIN` niet leeg.** Die is de bodem van elke terugval hierboven. Een lege
+  waarde gaf een kale 500 met `invalid URL prefix` in het logboek; nu antwoordt de proxy met een 502
+  die zegt welke variabele ontbreekt. Wil je de chat-backend niet gebruiken, laat `BACKEND_ORIGIN`
+  dan gewoon op zijn default staan en zet `BACKEND_API` op de dienst die de API's bedient.
 - **`/health` zegt niets over deze container.** Dat pad proxyt naar de Digitale-Assistent-backend.
   Draait die niet in de omgeving, richt een health-check dan niet op `/health` — die faalt dan
   terwijl de proeftuin het prima doet.
