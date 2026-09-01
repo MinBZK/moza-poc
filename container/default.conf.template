@@ -149,6 +149,7 @@ server {
         # als BACKEND_PROFIEL niet gezet is én de terugval erachter ook niet.
         default_type text/plain;
         if ($backend_profiel = "") {
+            add_header X-Proxy-Configuratie "BACKEND_PROFIEL" always;
             return 502 "BACKEND_PROFIEL is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_PROFIEL of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
         }
 
@@ -180,6 +181,7 @@ server {
         # als BACKEND_API_2 niet gezet is én de terugval erachter ook niet.
         default_type text/plain;
         if ($backend_api_2 = "") {
+            add_header X-Proxy-Configuratie "BACKEND_API_2" always;
             return 502 "BACKEND_API_2 is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API_2 of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
         }
 
@@ -215,6 +217,7 @@ server {
         types { }
         default_type text/plain;
         if ($backend_keten = "") {
+            add_header X-Proxy-Configuratie "BACKEND_KETEN" always;
             return 502 "Deze bijlage is nu niet op te halen. Probeer het later opnieuw of meld het bij de beheerder van deze proeftuin.";
         }
 
@@ -267,6 +270,7 @@ server {
     location = /api/demo/personas {
         default_type text/plain;
         if ($backend_personas = "") {
+            add_header X-Proxy-Configuratie "BACKEND_PERSONAS" always;
             return 502 "BACKEND_PERSONAS is niet gezet op deze container (en BACKEND_DEMO en BACKEND_KETEN evenmin), dus er is geen adres van de testaccountlijst. Zet een van die variabelen in de omgeving en start de container opnieuw.";
         }
 
@@ -286,6 +290,7 @@ server {
         # hierboven vult de eerste met de tweede.
         default_type text/plain;
         if ($backend_demo = "") {
+            add_header X-Proxy-Configuratie "BACKEND_DEMO" always;
             return 502 "BACKEND_DEMO is niet gezet op deze container (en BACKEND_KETEN evenmin), dus er is geen adres van de demo-console. Zet een van beide in de omgeving en start de container opnieuw.";
         }
 
@@ -302,6 +307,7 @@ server {
         # als BACKEND_API niet gezet is én de terugval erachter ook niet.
         default_type text/plain;
         if ($backend_api = "") {
+            add_header X-Proxy-Configuratie "BACKEND_API" always;
             return 502 "BACKEND_API is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
         }
 

@@ -59,6 +59,9 @@
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
+		// Geen storing bij een bron maar een onvolledig ingerichte omgeving. Verversen verandert daar
+		// per definitie niets aan, dus dat mag hier niet staan.
+		configuratie: "Deze proeftuin is niet volledig ingericht, waardoor uw berichten hier niet op te halen zijn. Verversen helpt niet; meld dit bij de beheerder van deze proeftuin.",
 		weg: "Wij konden dit bericht niet ophalen bij de organisatie die het stuurde. Ververs de pagina om het opnieuw te proberen, of ga terug naar uw Berichtenbox.",
 		// Eén bericht, één organisatie. "De bronnen reageren niet meer" gaat over het hele stelsel en
 		// is hier onwaar: de lijst van de bezoeker staat er gewoon.
@@ -161,6 +164,21 @@
 		return "onbereikbaar";
 	}
 
+	/**
+	 * Waarom een antwoord mislukte: een ontbrekende omgevingsvariabele, of een bron die zwijgt.
+	 *
+	 * Allebei een 502, dus aan de status alleen is het niet te zien. De proxy zet daarom op zijn
+	 * eigen foutantwoorden `X-Proxy-Configuratie` met de naam van de variabele die ontbreekt. Zonder
+	 * dat onderscheid leest een half ingerichte omgeving als een storing bij het stelsel, en krijgt
+	 * de bezoeker "ververs de pagina" te zien voor iets wat verversen nooit oplost.
+	 */
+	function redenVanRespons(respons, wat) {
+		const variabele = respons && respons.headers && typeof respons.headers.get === "function" ? respons.headers.get("X-Proxy-Configuratie") : null;
+		if (!variabele) return "onbereikbaar";
+		console.error("[Berichtenbox] " + wat + " kan niet: " + variabele + " is niet gezet op deze container. Zet die runtime-variabele in de omgeving; verversen helpt niet.");
+		return "configuratie";
+	}
+
 	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
 	// berichtenbox.js bouwt; een test houdt die afspraak vast.
 	const ONTVANGER_PAD = "/api/v1/berichten";
@@ -225,7 +243,7 @@
 			// opleveren, terwijl er nog geen bron bevraagd is.
 			throw ketenFout("onbereikbaar", "testaccounts opvragen mislukt (" + (fout && fout.name) + ")");
 		}
-		if (!respons.ok) throw ketenFout("onbereikbaar", "testaccounts opvragen mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de testaccounts opvragen"), "testaccounts opvragen mislukt (" + respons.status + ")");
 
 		const lijst = await respons.json();
 		if (!Array.isArray(lijst)) throw ketenFout("onbereikbaar", "testaccounts: onverwacht antwoord");
@@ -303,7 +321,7 @@
 		}
 		if (!respons.ok) {
 			clearTimeout(stilteKlok);
-			throw ketenFout("onbereikbaar", "ophalen mislukt (" + respons.status + ")");
+			throw ketenFout(redenVanRespons(respons, "de ophaalronde starten"), "ophalen mislukt (" + respons.status + ")");
 		}
 		if (!respons.body) {
 			clearTimeout(stilteKlok);
@@ -380,7 +398,7 @@
 
 	async function haalLijst(ontvanger) {
 		const respons = await metTijdslimiet("/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
-		if (!respons.ok) throw ketenFout("onbereikbaar", "berichten laden mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de berichtenlijst ophalen"), "berichten laden mislukt (" + respons.status + ")");
 		return respons.json();
 	}
 
@@ -408,7 +426,7 @@
 		// Dus zeggen we wat we wél weten. Zodra het stelsel een kenmerk aanbiedt dat "ingetrokken"
 		// van "onbereikbaar" scheidt, kan het onderscheid terug — zie de open vraag in CLAUDE.md.
 		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + berichtId + ")");
-		if (!respons.ok) throw ketenFout("onbereikbaar", "berichtinhoud laden mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de inhoud van dit bericht ophalen"), "berichtinhoud laden mislukt (" + respons.status + ")");
 
 		const bericht = await respons.json();
 		return {
@@ -531,6 +549,13 @@
 			// de normale toestand en valt er niets te melden; de dataset is dan de juiste inhoud.
 			// Alleen wie aantoonbaar aangesloten wás krijgt een storingsmelding.
 			if (aangeslotenBevestigd) {
+				mislukt(fout);
+				return null;
+			}
+			// Een ontbrekende variabele is geen storing en geen ontbrekend stelsel: de omgeving is
+			// half ingericht. "Kies een ander testaccount" zou hier een rondje sturen, want geen
+			// enkel testaccount gaat het doen.
+			if (redenVan(fout) === "configuratie") {
 				mislukt(fout);
 				return null;
 			}

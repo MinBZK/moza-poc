@@ -296,6 +296,10 @@ Drie dingen om te weten bij het uitrollen:
   (`invalid URL prefix` in het logboek). `BACKEND_ORIGIN` leegmaken legt dus alleen `/chat`,
   `/health` en `/tools` stil; staat `BACKEND_API` dan op een werkende dienst, dan blijft alles onder
   `/api/` gewoon werken.
+- **Een configuratiefout is te herkennen aan `X-Proxy-Configuratie`.** Die header staat op het
+  502-antwoord van elke guard en noemt de ontbrekende variabele. Een omgevallen upstream geeft óók
+  een 502, maar zonder die header — daarmee kan de berichtenbox "deze omgeving is niet volledig
+  ingericht" zeggen in plaats van "ververs de pagina", wat tegen een lege variabele nooit helpt.
 - **De testaccountlijst staat los van de demo-console.** `/api/demo/personas` is een eigen,
   publiek bereikbare deployment; de rest van de console (storingen schakelen, berichten opvoeren)
   zit achter een SSO-muur. Zo'n muur blokkeert ook server-side proxyen: deze container heeft geen

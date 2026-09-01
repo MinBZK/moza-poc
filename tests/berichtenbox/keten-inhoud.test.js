@@ -62,6 +62,40 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(gezet).not.toContain("%3A");
 	});
 
+	it("noemt een ontbrekende omgevingsvariabele, en vraagt niet om te verversen", async () => {
+		// De proxy geeft een 502 als een BACKEND_*-variabele niet gezet is, en zet de naam ervan in
+		// X-Proxy-Configuratie. Zonder dat onderscheid leest een half ingerichte omgeving als een
+		// storing bij het stelsel: "de bronnen reageren niet, ververs de pagina" — voor iets wat
+		// verversen nooit oplost. Op de proefomgeving van deze PR gebeurde precies dat.
+		const configuratieFout = {
+			ok: false,
+			status: 502,
+			headers: {
+				get: (naam) => (naam === "X-Proxy-Configuratie" ? "BACKEND_PERSONAS" : null),
+			},
+			json: async () => ({}),
+		};
+
+		await startKeten([["/api/demo/personas", configuratieFout]]);
+
+		const melding = window.BerichtenboxKeten.melding;
+		expect(melding.tekst).toContain("niet volledig ingericht");
+		expect(melding.tekst).not.toContain("Ververs de pagina");
+		// En de naam van de variabele hoort in de console te staan, want daar zoekt de ontwikkelaar.
+		expect(console.error).toHaveBeenCalledWith(expect.stringContaining("BACKEND_PERSONAS"));
+	});
+
+	it("blijft een gewone 502 als storing melden", async () => {
+		// Zonder het kenmerk van de proxy is een 502 een bron die omvalt, en dan is verversen wél
+		// het juiste advies. Beide gevallen zijn een 502; alleen de header scheidt ze.
+		const storing = { ok: false, status: 502, headers: { get: () => null }, json: async () => ({}) };
+
+		await startKeten([["/api/demo/personas", storing]]);
+
+		const melding = window.BerichtenboxKeten.melding;
+		expect(melding.tekst).not.toContain("niet volledig ingericht");
+	});
+
 	it("meldt welke testaccounts van het stelsel hier geen persona hebben", async () => {
 		// De persona's staan statisch in _data/personas.json, want er hangen bedrijfsgegevens aan die
 		// het stelsel niet levert. Die lijst met de hand bijhouden is prima, zolang je het merkt als
