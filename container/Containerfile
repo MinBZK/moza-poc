@@ -25,19 +25,24 @@ FROM nginxinc/nginx-unprivileged:alpine
 # BACKEND_ORIGIN is een RUNTIME env-var: zet 'm op het ZAD-component `proef` via de
 # ZAD-UI (de zad-actions/deploy-action kan geen runtime-env zetten). Default = het
 # interne cluster-adres van de backend.
-#
-# BACKEND_ORIGIN is het adres van die chat-backend en verder niets. BACKEND_API is de
-# standaard-upstream voor alles onder /api/. Leeg gelaten valt BACKEND_API terug op
-# BACKEND_ORIGIN, dus een omgeving die hem niet zet houdt het oude gedrag. Wie hem wel zet, haalt
-# de chat-backend uit het routeringspad van API's die er niets mee te maken hebben — nuttig in een
-# omgeving waar die backend helemaal niet draait.
 #  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
 #    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
 #  - NGINX_ENVSUBST_FILTER beperkt envsubst tot alle BACKEND_*-vars en de resolver, zodat
 #    nginx-eigen variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven — die zijn
 #    kleine letters en vallen dus buiten het patroon. Het patroon is bewust generiek: staat een
 #    backend-var er niet in, dan blijft zijn ${...} letterlijk in de config staan. Elke var
-#    hieronder heeft een lege default, zodat de fallback in de template werkt.
+#    hieronder heeft een lege default. Nodig is dat niet — nginx leest een niet-gesubstitueerde
+#    ${...} als een eigen, ongeïnitialiseerde variabele en dus als leeg, dus de terugval in de
+#    template vuurt dan ook (gemeten). Het staat er zodat de bedoelde waarde "leeg" expliciet is
+#    en niet per ongeluk uit dat gedrag volgt.
+#
+# BACKEND_ORIGIN is het adres van die chat-backend en verder niets. BACKEND_API is de
+# standaard-upstream voor alles onder /api/. Leeg gelaten valt BACKEND_API terug op
+# BACKEND_ORIGIN, dus alles onder /api/ gaat dan waar het vroeger ook heen ging. Wie hem wel zet,
+# haalt de chat-backend uit het routeringspad van API's die er niets mee te maken hebben — nuttig
+# in een omgeving waar die backend helemaal niet draait. Maak BACKEND_ORIGIN dan niet leeg: die is
+# de bodem van elke terugval, en een lege bodem levert een 502 met uitleg (geen kale 500, zie
+# container/geen-backend-origin.conf).
 # De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
 ENV BACKEND_ORIGIN=http://dabackend:8000 \
     BACKEND_API= \
@@ -51,6 +56,10 @@ ENV BACKEND_ORIGIN=http://dabackend:8000 \
     NGINX_ENVSUBST_FILTER='^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$'
 
 COPY container/default.conf.template /etc/nginx/templates/default.conf.template
+
+# Guards die vanuit meerdere locations ingesloten worden. Geen template: er staat geen ${...} in,
+# dus envsubst hoeft er niet langs.
+COPY container/geen-backend-origin.conf container/geen-backend-keten.conf /etc/nginx/
 COPY --from=site_builder /app/_site /usr/share/nginx/html
 
 EXPOSE 8080
