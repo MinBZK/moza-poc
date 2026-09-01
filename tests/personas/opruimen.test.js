@@ -13,6 +13,13 @@ import { readFileSync } from "node:fs";
 const PERSONAS = process.cwd() + "/assets/javascript/personas.js";
 const VLAGGEN = process.cwd() + "/assets/javascript/feature-flags.js";
 
+// Het pad waarop berichtenbox-keten.js het ontvanger-cookie zet, uit die bron gelezen en hier niet
+// overgeschreven. personas.js moet wissen wáár dat script zet, en die afspraak staat in twee
+// bestanden zonder gedeelde constante. Versmalt of verbreedt ONTVANGER_PAD daar zonder dat
+// personas.js meegaat, dan blijft de ontvanger van de vorige persona staan — en hoort dit rood te
+// worden in plaats van stil te blijven.
+const ONTVANGER_PAD = readFileSync(process.cwd() + "/assets/javascript/berichtenbox-keten.js", "utf8").match(/ONTVANGER_PAD = "([^"]+)"/)[1];
+
 function nepOpslag(begin = {}) {
 	const kluis = { ...begin };
 	return {
@@ -58,6 +65,12 @@ beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
 	window.history.replaceState({}, "", "/moza/berichtenbox/");
+
+	// De cookiejar van jsdom leeft per bestand, niet per test. Zonder dit ruimt de code onder test
+	// zijn eigen sporen op, en dat is circulair: regresseert het wissen, dan krijg je één rode test
+	// plus een vervuilde jar voor alles daarna.
+	document.cookie = "ontvanger=; path=" + ONTVANGER_PAD + "; Max-Age=0";
+	document.cookie = "ontvanger=; path=/; Max-Age=0";
 });
 
 afterEach(() => {
@@ -163,7 +176,7 @@ describe("wisselen van persona", () => {
 		// /moza/berichtenbox/ zou deze test niets zien en altijd slagen.
 		window.history.replaceState({}, "", "/api/v1/berichten/msg-1/bijlagen/b-1");
 		document.cookie = "ontvanger=KVK:11111111; path=/";
-		document.cookie = "ontvanger=KVK:90000011; path=/api/v1/berichten";
+		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
 		expect(document.cookie).toContain("KVK:90000011");
 
 		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
@@ -171,6 +184,22 @@ describe("wisselen van persona", () => {
 
 		expect(document.cookie).not.toContain("KVK:90000011");
 		expect(document.cookie).not.toContain("KVK:11111111");
+	});
+
+	it("wist het ontvanger-cookie ook als het opruimen van de opslag struikelt", () => {
+		// Dit is waarom het wissen vóór de localStorage-sweep staat en een eigen try heeft. Struikelt
+		// het opruimen van de opslag — geblokkeerde opslag, een quotum — dan mag de identiteit niet
+		// blijven staan: de opslag mag rommelig achterblijven, andermans bijlage niet.
+		window.history.replaceState({}, "", "/api/v1/berichten/msg-1/bijlagen/b-1");
+		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		opslag.removeItem = () => {
+			throw new Error("opslag geblokkeerd");
+		};
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
 	});
 
 	it("ruimt stil op als er wél een persona gekozen was", () => {

@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 // @vitest-environment-options { "url": "https://proeftuin.test/moza/berichtenbox/" }
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { ONTVANGER, PERSONAS, LIJST, sseAntwoord, startKeten, spionOpCookie, ruimKetenOp } from "./keten-harnas.js";
 
 /**
  * Het ontvanger-cookie op een https-pagina.
@@ -13,33 +12,14 @@ import { resolve } from "node:path";
  * níét te staan, want dan weigert de browser het cookie en is elke bijlage-link stuk.
  *
  * Op de proefomgeving en op ZAD gaat alles over https, dus dit is het pad dat een bezoeker raakt.
+ *
+ * Waarom hier op de geschreven tekst wordt getoetst en niet op wat `document.cookie` teruggeeft:
+ * jsdom accepteert een `Secure`-cookie ook op een http-pagina en geeft hem gewoon terug, terwijl
+ * een echte browser hem weigert. Terugleeslezen kan het verschil dus niet zien.
  */
 
-const BRON = readFileSync(resolve(process.cwd(), "assets/javascript/berichtenbox-keten.js"), "utf8");
-const ONTVANGER = "KVK:90000011";
-
-function sseAntwoord() {
-	const stroom = new ReadableStream({
-		start(regelaar) {
-			regelaar.enqueue(new TextEncoder().encode('data:{"event":"ophalen-gereed","totaalBerichten":0,"geslaagd":0,"mislukt":0,"totaalMagazijnen":0}\n\n'));
-			regelaar.close();
-		},
-	});
-	return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
-}
-
-function antwoord(body) {
-	return {
-		ok: true,
-		status: 200,
-		headers: { get: () => "application/json" },
-		json: async () => body,
-	};
-}
-
 afterEach(() => {
-	delete window.BerichtenboxKeten;
-	delete window.Personas;
+	ruimKetenOp();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
@@ -50,34 +30,15 @@ describe("het ontvanger-cookie op https", () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const geschreven = [];
-		const origineel = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
-		Object.defineProperty(document, "cookie", {
-			configurable: true,
-			get: () => origineel.get.call(document),
-			set: (waarde) => {
-				geschreven.push(waarde);
-				origineel.set.call(document, waarde);
-			},
-		});
-
-		vi.stubGlobal("fetch", async (pad) => {
-			if (pad.indexOf("/api/demo/personas") !== -1) {
-				return antwoord([{ id: "proeftuin-een", label: "Demo-onderneming 1", ontvanger: ONTVANGER, bron: "keten" }]);
-			}
-			if (pad.indexOf("_ophalen") !== -1) return sseAntwoord();
-			if (pad.indexOf("/api/v1/berichten?") !== -1) return antwoord({ berichten: [] });
-			throw new Error("onverwacht adres in de test: " + pad);
-		});
-
-		document.body.innerHTML = '<article class="berichtenbox"><table data-berichtenbox-list><tbody></tbody></table></article>';
-		window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
-		window.Personas = { actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }) };
-
+		const herstel = spionOpCookie(geschreven);
 		try {
-			new Function(BRON).call(window);
-			await window.BerichtenboxKeten.berichten();
+			await startKeten([
+				["/api/demo/personas", PERSONAS],
+				["_ophalen", sseAntwoord()],
+				["/api/v1/berichten?", LIJST],
+			]);
 		} finally {
-			delete document.cookie;
+			herstel();
 		}
 
 		expect(location.protocol).toBe("https:");

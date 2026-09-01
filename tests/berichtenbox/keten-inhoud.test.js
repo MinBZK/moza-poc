@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { BRON, ONTVANGER, BERICHT_ID, antwoord, sseAntwoord, PERSONAS, LIJST, startKeten, spionOpCookie, ruimKetenOp } from "./keten-harnas.js";
 
 /**
  * De transportkant van `inhoudVan`: wat er echt over de lijn gaat, en wat er terugkomt.
@@ -11,87 +10,10 @@ import { resolve } from "node:path";
  * meebrengen. Wat hier misgaat komt de bezoeker als tekst op zijn scherm tegen, dus het hoort
  * getoetst te worden tegen echte antwoorden.
  *
- * Het script is een klassieke IIFE die zich aan `window` hangt; we draaien hem per test opnieuw
- * tegen een verse `fetch`.
+ * Het script is een klassieke IIFE die zich aan `window` hangt; het harnas draait hem per test
+ * opnieuw tegen een verse `fetch`. Deze pagina staat op http — de tegenhanger over https staat in
+ * keten-cookie-https.test.js.
  */
-
-const BRON = readFileSync(resolve(process.cwd(), "assets/javascript/berichtenbox-keten.js"), "utf8");
-
-const ONTVANGER = "KVK:90000011";
-const BERICHT_ID = "1dc16f8f-653d-49ae-87a9-fb4b6e15c156";
-
-/** Eén antwoord van het stelsel, in de vorm die fetch teruggeeft. */
-function antwoord(status, body, soort = "application/json") {
-	return {
-		ok: status >= 200 && status < 300,
-		status,
-		headers: { get: (naam) => (naam.toLowerCase() === "content-type" ? soort : null) },
-		json: async () => {
-			if (typeof body === "string") throw new SyntaxError("geen JSON");
-			return body;
-		},
-	};
-}
-
-/**
- * Draait het keten-script met een persona die aangesloten is, zodat er een ontvanger bekend is.
- * Geeft de aanroepen aan fetch terug, zodat een test kan zien wát er is opgevraagd.
- */
-async function startKeten(perAdres) {
-	const aanroepen = [];
-
-	vi.stubGlobal("fetch", async (pad, opties) => {
-		aanroepen.push({ pad, headers: (opties && opties.headers) || {} });
-		for (const [patroon, geef] of perAdres) {
-			if (pad.indexOf(patroon) !== -1) return typeof geef === "function" ? geef(pad) : geef;
-		}
-		throw new Error("onverwacht adres in de test: " + pad);
-	});
-
-	document.body.innerHTML = '<article class="berichtenbox"><table data-berichtenbox-list><tbody></tbody></table></article>';
-	window.history.replaceState(null, "", "/moza/berichtenbox/");
-	window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
-	window.Personas = { actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }) };
-
-	new Function(BRON).call(window);
-	await window.BerichtenboxKeten.berichten();
-
-	return { aanroepen };
-}
-
-const PERSONAS = antwoord(200, [{ id: "proeftuin-een", label: "Demo-onderneming 1", ontvanger: ONTVANGER, bron: "keten" }]);
-const OPHALEN = antwoord(200, {});
-const LIJST = antwoord(200, { berichten: [] });
-
-/** De ophaalronde leest een SSE-stroom; die geven we als lege maar geldige stroom terug. */
-function sseAntwoord() {
-	const stroom = new ReadableStream({
-		start(regelaar) {
-			regelaar.enqueue(new TextEncoder().encode('data:{"event":"ophalen-gereed","totaalBerichten":0,"geslaagd":0,"mislukt":0,"totaalMagazijnen":0}\n\n'));
-			regelaar.close();
-		},
-	});
-	return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
-}
-
-/**
- * Vangt af wat er naar `document.cookie` geschreven wordt, inclusief de attributen.
- *
- * Lezen levert die niet op: `document.cookie` geeft alleen naam en waarde terug van de cookies die
- * voor het huidige pad gelden. De afspraak met de proxy zit juist in de attributen.
- */
-function spionOpCookie(regels) {
-	const origineel = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
-	Object.defineProperty(document, "cookie", {
-		configurable: true,
-		get: () => origineel.get.call(document),
-		set: (waarde) => {
-			regels.push(waarde);
-			origineel.set.call(document, waarde);
-		},
-	});
-	return () => delete document.cookie;
-}
 
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -99,8 +21,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	delete window.BerichtenboxKeten;
-	delete window.Personas;
+	// De cookiejar en de adresbalk van jsdom leven per bestand, niet per test: wat de ene test zet,
+	// ziet de volgende terug.
+	ruimKetenOp();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
@@ -156,27 +79,24 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(document.cookie).toContain("ontvanger=" + ONTVANGER);
 	});
 
-	it("ruimt een ontvanger op het oude pad op, zodat er niet twee cookies meegaan", async () => {
-		// Zittingen van vóór de versmalling hebben `ontvanger` op `path=/` staan. Blijft die staan,
-		// dan stuurt de browser twee cookies met dezelfde naam mee en pakt nginx de eerste — welke
-		// dat is, ligt niet vast. Dan haalt een bijlage-link het document van de vorige persona op.
-		const geschreven = [];
-		const herstel = spionOpCookie(geschreven);
-		try {
-			await startKeten([
-				["/api/demo/personas", PERSONAS],
-				["_ophalen", sseAntwoord()],
-				["/api/v1/berichten?", LIJST],
-			]);
-		} finally {
-			herstel();
-		}
+	it("laat na een ronde één ontvanger meereizen, niet twee", async () => {
+		// Zittingen van vóór de versmalling hebben `ontvanger` op `path=/` staan. Blijft die naast de
+		// nieuwe staan, dan reist bij elk verzoek een tweede identiteit mee — precies wat de
+		// versmalling weghaalt — en moet nginx kiezen welke hij als X-Ontvanger doorgeeft.
+		//
+		// Als gedrag en niet als schrijfvolgorde: we zetten de brede voorganger klaar en kijken wat
+		// de browser daarna naar een bijlage-adres meestuurt. Dat is wat de proxy te zien krijgt.
+		document.cookie = "ontvanger=KVK:11111111; path=/";
 
-		const opgeruimd = geschreven.find((regel) => regel.startsWith("ontvanger=;") && regel.includes("path=/;"));
-		expect(opgeruimd).toBe("ontvanger=; path=/; SameSite=Strict; Max-Age=0");
-		// En in die volgorde: eerst opruimen, dan zetten. Andersom wist de opruimactie het cookie dat
-		// we net gezet hadden, als het pad ooit gelijk zou zijn.
-		expect(geschreven.indexOf(opgeruimd)).toBeLessThan(geschreven.findIndex((regel) => regel.startsWith("ontvanger=" + ONTVANGER)));
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+		]);
+
+		window.history.replaceState(null, "", "/api/v1/berichten/" + BERICHT_ID + "/bijlagen/b-1");
+		expect(document.cookie.match(/ontvanger=/g)).toHaveLength(1);
+		expect(document.cookie).toContain("ontvanger=" + ONTVANGER);
 	});
 
 	it("vraagt het juiste adres op, met de ontvanger erbij", async () => {

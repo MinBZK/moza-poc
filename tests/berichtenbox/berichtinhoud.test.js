@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
 import { bericht, bouwDemoDetailPagina, laadBerichtenbox, laatLaden } from "./dom.js";
+
+// Het pad waarop berichtenbox-keten.js het ontvanger-cookie zet, uit die bron gelezen. Het cookie
+// moet meereizen naar het adres dat bijlageAdres() hieronder bouwt; die twee staan in verschillende
+// bestanden zonder gedeelde constante. Bewegen ze los van elkaar, dan mist de proxy de header
+// X-Ontvanger, antwoordt het stelsel met 400 en is elke bijlage-link stuk.
+const ONTVANGER_PAD = readFileSync(process.cwd() + "/assets/javascript/berichtenbox-keten.js", "utf8").match(/ONTVANGER_PAD = "([^"]+)"/)[1];
 
 /**
  * De inhoud van een bericht uit het stelsel, opgehaald op het moment dat de bezoeker het opent.
@@ -152,8 +159,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(bijlagen.hidden).toBe(false);
 		expect(lijst.hidden).toBe(false);
 
-		// De échte namen, niet de nagebootste. En erbij dat openen nog niet kan: een naam zonder
-		// link en zonder woord laat de bezoeker klikken op iets dat er niet is.
+		// De échte namen, niet de nagebootste.
 		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
 		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf"]);
 
@@ -166,6 +172,16 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// opsommingsteken. Eén renderer tekent dit voor nagebootste én echte bijlagen; toen dat twee
 		// bouwers waren, kreeg de ene een icoon en de andere een bullet.
 		expect(links.every((a) => a.classList.contains("content-link") && a.querySelector("svg"))).toBe(true);
+
+		// En het ontvanger-cookie reist mee naar dát adres. Niet als tekstvergelijking maar door de
+		// browser te laten beslissen: het cookie staat op ONTVANGER_PAD, de link komt uit
+		// bijlageAdres(), en alleen als het eerste het tweede dekt gaat hij mee. Zonder deze
+		// assertie kan elk van beide verschuiven zonder dat er iets rood wordt, terwijl dan elke
+		// bijlage een 400 uit het stelsel oplevert.
+		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
+		window.history.replaceState(null, "", links[0].getAttribute("href"));
+		expect(document.cookie).toContain("ontvanger=KVK:90000011");
+		document.cookie = "ontvanger=; path=" + ONTVANGER_PAD + "; Max-Age=0";
 
 		// Geen PDF-viewer: het stelsel stuurt zijn bijlagen met "Content-Disposition: attachment", en
 		// dan toont een browser ze niet in een ingesloten viewer — het kader bleef leeg. Een leeg
