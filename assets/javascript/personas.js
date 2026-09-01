@@ -149,9 +149,47 @@
 		try {
 			vorige = localStorage.getItem(HERKOMST_KEY);
 		} catch (e) {
-			return; // Zonder opslag valt er niets op te ruimen.
+			// Zonder opslag valt niet vast te stellen óf er gewisseld is. De opgeslagen gegevens
+			// zijn er dan ook niet, maar het cookie kan er wél staan — en dat is het enige dat
+			// andermans document oplevert. Dus dat gaat weg, en verder valt er niets op te ruimen.
+		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+		// `/api/v1/berichten` is waar `zetOntvangerCookie` in berichtenbox-keten.js hem zet, `/` is
+		// waar zittingen van vóór die versmalling hem hebben staan. De eerste regel doet niets als
+		// deze zitting nog geen ronde draaide; de tweede doet niets zodra die ronde wél liep, want
+		// dan heeft zetOntvangerCookie de `/`-variant zelf al opgeruimd.
+		try {
+			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+		} catch (e) {
+			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
+			// vorige, en dat hoort zichtbaar te zijn.
+			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
 		}
+			return;
+		}
+
+		// Zelfde persona als de vorige lading: niets gewisseld, en het cookie is van wie er nu zit.
+		// Hier niet wissen — dit is het gewone geval bij elke paginalading, en een tweede tabblad
+		// van dezelfde persona zou zijn bijlagen kwijtraken.
 		if (vorige === actiefId) return;
+
+		// Er is gewisseld, of we weten niet van wie de gegevens zijn. Het cookie gaat als eerste
+		// weg, vóór de return hieronder en vóór de sweep: bij een wissel naar een persona zonder
+		// stelsel draait er geen ophaalronde meer die het overschrijft, dus is dit de enige plek.
+		// En het mag niet vervallen doordat het opruimen van localStorage eerder struikelt.
+		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+		// `/api/v1/berichten` is waar `zetOntvangerCookie` in berichtenbox-keten.js hem zet, `/` is
+		// waar zittingen van vóór die versmalling hem hebben staan. De eerste regel doet niets als
+		// deze zitting nog geen ronde draaide; de tweede doet niets zodra die ronde wél liep, want
+		// dan heeft zetOntvangerCookie de `/`-variant zelf al opgeruimd.
+		try {
+			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+		} catch (e) {
+			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
+			// vorige, en dat hoort zichtbaar te zijn.
+			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
+		}
 
 		// Nog geen merk, en niemand koos een persona: dan is er geen vórige geweest die deze
 		// gegevens achterliet — ze zijn van wie er nu actief is, want dat is de standaard. Wissen
@@ -172,24 +210,6 @@
 				// te falen.
 				console.error("[Personas] Kon niet vastleggen van wie de opgeslagen gegevens zijn; toch maar opruimen.", e);
 			}
-		}
-
-		// Vóór de localStorage-sweep en in een eigen try: dit is de enige waarborg tegen het tonen
-		// van andermans bijlage, en die mag niet vervallen omdat het opruimen van localStorage
-		// eerder struikelt. Wisselt de bezoeker van een stelsel-persona naar een gewone, dan draait
-		// er geen ophaalronde meer die het cookie overschrijft — dan is dit de enige plek.
-		//
-		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
-		// `/api/v1/berichten` is waar de keten-bron hem zet, `/` is waar zittingen van vóór die
-		// versmalling hem hebben staan. Heeft deze zitting al een ronde gedraaid, dan heeft
-		// zetOntvangerCookie de `/`-variant zelf al opgeruimd en doet die tweede regel niets meer.
-		try {
-			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
-			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
-		} catch (e) {
-			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
-			// vorige, en dat hoort zichtbaar te zijn.
-			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
 		}
 
 		try {
