@@ -174,6 +174,24 @@
 			}
 		}
 
+		// Vóór de localStorage-sweep en in een eigen try: dit is de enige waarborg tegen het tonen
+		// van andermans bijlage, en die mag niet vervallen omdat het opruimen van localStorage
+		// eerder struikelt. Wisselt de bezoeker van een stelsel-persona naar een gewone, dan draait
+		// er geen ophaalronde meer die het cookie overschrijft — dan is dit de enige plek.
+		//
+		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+		// `/api/v1/berichten` is waar de keten-bron hem zet, `/` is waar zittingen van vóór die
+		// versmalling hem hebben staan. Heeft deze zitting al een ronde gedraaid, dan heeft
+		// zetOntvangerCookie de `/`-variant zelf al opgeruimd en doet die tweede regel niets meer.
+		try {
+			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+		} catch (e) {
+			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
+			// vorige, en dat hoort zichtbaar te zijn.
+			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
+		}
+
 		try {
 			var teWissen = [];
 			for (var i = 0; i < localStorage.length; i++) {
@@ -189,20 +207,6 @@
 				sessionStorage.removeItem("berichtenbox-bron-uitval");
 			} catch (e) {
 				/* geen sessionStorage */
-			}
-
-			// De ontvanger waarmee de proxy bijlagen ophaalt. Blijft die van de vorige persona staan,
-			// dan haalt een klik op een bijlage het document van iemand anders op — of, waarschijnlijker,
-			// een 404 die niet te plaatsen is. De keten-bron zet hem opnieuw zodra de ronde loopt.
-			//
-			// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
-			// `/api/v1/berichten` is waar de keten-bron hem nu zet, `/` is waar oudere zittingen hem
-			// hebben staan. Eén van de twee doet niets, en welke dat is weten we hier niet.
-			try {
-				document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
-				document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
-			} catch (e) {
-				/* geen cookies */
 			}
 
 			localStorage.setItem(HERKOMST_KEY, actiefId);

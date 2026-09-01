@@ -9,8 +9,8 @@
  *
  * Dit is de transportlaag, en verder niets: hij haalt op, en meldt wat hij ziet. Wat daarvan op het
  * scherm komt en waar, bepaalt `berichtenbox/keten-bron.js` — die maakt hier een bron van, zoals de
- * dataset er een is. Vandaar dat hier geen DOM in staat, op één plek na: `paginaStartRonde` kijkt
- * of dit de inbox is, want dat bepaalt óf er opgehaald wordt.
+ * dataset er een is. Vandaar dat hier geen DOM in staat, op één plek na: `paginaGebruiktKeten()`
+ * leest het pad van de pagina, want binnen het Belastingdienst-portaal wordt er niet opgehaald.
  *
  * Het draait vóór berichtenbox.js, zodat de ophaalronde zo vroeg mogelijk begint; de bron wacht die
  * af voordat hij zegt dat hij van toepassing is.
@@ -155,15 +155,15 @@
 	// Eén onderscheidbare reden per soort storing, zodat de melding kan zeggen wat er misging in
 	// plaats van overal "probeer het later opnieuw". Een fout zonder reden komt uit onze eigen
 	// code (JSON.parse, een onverwachte vorm) en is geen storing bij de bron.
-	// Waar het ontvanger-cookie voor geldt en hoe lang. Zie zetOntvangerCookie hieronder.
-	const ONTVANGER_PAD = "/api/v1/berichten";
-	const ONTVANGER_GELDIG_S = 30 * 60;
-
 	function redenVan(fout) {
 		if (fout && fout.reden) return fout.reden;
 		if (fout && (fout.name === "AbortError" || fout.name === "TimeoutError")) return "stil";
 		return "onbereikbaar";
 	}
+
+	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
+	// berichtenbox.js bouwt; een test houdt die afspraak vast.
+	const ONTVANGER_PAD = "/api/v1/berichten";
 
 	/**
 	 * De ontvanger in een cookie, zodat de proxy er een X-Ontvanger-header van kan maken.
@@ -174,26 +174,31 @@
 	 *
 	 * Geen beveiliging — de bezoeker kan dit cookie net zo goed zelf zetten als de header. Het
 	 * stelsel houdt zijn eigen controle. Maar de waarde is een identiteit, en die hoort zo weinig
-	 * mogelijk mee te reizen. Vandaar vier beperkingen:
+	 * mogelijk mee te reizen. Vandaar drie beperkingen:
 	 *
 	 * - `path=/api/v1/berichten`: alleen de aanroepen die hem nodig hebben. Met `path=/` ging hij
 	 *   mee met élk verzoek naar deze origin, inclusief elk plaatje en elk stylesheet.
 	 * - `SameSite=Strict`: nooit mee met een verzoek dat een andere site opwekt.
 	 * - `Secure` zodra de pagina over https gaat. Niet onvoorwaardelijk: een browser weigert een
 	 *   Secure-cookie op een gewone http-pagina, en dan werken bijlagen lokaal niet meer.
-	 * - `Max-Age`: een half uur. Elke pagina die bijlagen kan tonen draait eerst een ophaalronde en
-	 *   zet hem daarbij opnieuw, dus dit verloopt alleen bij een tabblad dat lang blijft staan.
+	 *
+	 * Geen `Max-Age`, dus een sessiecookie: hij leeft zolang het tabblad leeft. Een vaste vervaltijd
+	 * leek zuiniger, maar een keten-bericht heeft geen eigen detailpagina — het detail opent in
+	 * dezelfde pagina — dus er is geen navigatie die een nieuwe ophaalronde afdwingt en het cookie
+	 * ververst. Een berichtenbox die een uur openstaat verloor daardoor precies zijn bijlagen: de
+	 * brief stond er nog, en de bijlage bij die brief gaf een 400 uit het stelsel, zonder melding.
 	 */
 	function zetOntvangerCookie(ontvanger) {
 		try {
-			// Eerst de voorganger op `path=/` opruimen. Blijft die staan, dan stuurt de browser twee
-			// cookies met dezelfde naam mee en pakt nginx de eerste — welke dat is, ligt niet vast.
+			// Eerst de voorganger op `path=/` opruimen, van een zitting van vóór de versmalling.
+			// Niet omdat nginx anders de verkeerde zou pakken — RFC 6265 zet het langste pad eerst,
+			// dus het smalle wint — maar omdat het brede cookie anders bij élk verzoek naar deze
+			// origin blijft meereizen, en dat is precies wat we hier weghalen.
 			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
 
 			// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is, en het stelsel
 			// verwacht "KVK:12345678". De dubbele punt mag in een cookiewaarde.
-			document.cookie =
-				"ontvanger=" + ontvanger + "; path=" + ONTVANGER_PAD + "; SameSite=Strict; Max-Age=" + ONTVANGER_GELDIG_S + (locatieIsVeilig() ? "; Secure" : "");
+			document.cookie = "ontvanger=" + ontvanger + "; path=" + ONTVANGER_PAD + "; SameSite=Strict" + (locatieIsVeilig() ? "; Secure" : "");
 		} catch (fout) {
 			console.error("[Berichtenbox] De ontvanger kon niet in een cookie; bijlagen zijn niet op te halen.", fout);
 		}

@@ -1759,9 +1759,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * vroeger deed, slaat zo'n bericht juist over. Elke afloop moet hier dus langs, ook de mislukte:
 	 * een laadindicator die niet afloopt laat de bezoeker wachten op iets dat nooit komt.
 	 *
-	 * De namen komen op het scherm, het openen nog niet: het stelsel levert de bijlage zelf achter
-	 * een eigen adres dat dit prototype nog niet ophaalt. Dat hoort erbij te staan — een naam zonder
-	 * link en zonder woord laat de bezoeker klikken op iets dat er niet is.
+	 * De namen komen op het scherm mét een werkende downloadlink: `bijlageAdres()` hieronder bouwt
+	 * het adres bij het stelsel, en de proxy zet de ontvanger uit het cookie om in de header die het
+	 * stelsel eist. Valt er geen adres te maken, dan komt de naam er zonder link te staan met een
+	 * woord erbij — een naam zonder uitleg laat de bezoeker klikken op iets dat er niet is.
 	 */
 	/**
 	 * Het adres van één bijlage bij het stelsel, of null als er geen te maken is.
