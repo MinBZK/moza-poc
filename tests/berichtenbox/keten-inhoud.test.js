@@ -74,6 +74,25 @@ function sseAntwoord() {
 	return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
 }
 
+/**
+ * Vangt af wat er naar `document.cookie` geschreven wordt, inclusief de attributen.
+ *
+ * Lezen levert die niet op: `document.cookie` geeft alleen naam en waarde terug van de cookies die
+ * voor het huidige pad gelden. De afspraak met de proxy zit juist in de attributen.
+ */
+function spionOpCookie(regels) {
+	const origineel = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
+	Object.defineProperty(document, "cookie", {
+		configurable: true,
+		get: () => origineel.get.call(document),
+		set: (waarde) => {
+			regels.push(waarde);
+			origineel.set.call(document, waarde);
+		},
+	});
+	return () => delete document.cookie;
+}
+
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -91,16 +110,60 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		// Een <a href> naar een bijlage kan geen eigen header meesturen; de proxy maakt er daarom een
 		// X-Ontvanger-header van. Zonder dit cookie antwoordt het stelsel met 400 en is elke
 		// bijlage-link stuk.
-		await startKeten([
-			["/api/demo/personas", PERSONAS],
-			["_ophalen", sseAntwoord()],
-			["/api/v1/berichten?", LIJST],
-		]);
+		//
+		// Niet via `document.cookie` gelezen maar bij het schrijven afgevangen: het cookie geldt voor
+		// `/api/v1/berichten` en deze pagina staat op `/moza/berichtenbox/`, dus de browser geeft hem
+		// hier niet terug. Precies de bedoeling — en het is ook wat we willen toetsen, want de
+		// attributen zijn hier de afspraak met het stelsel en niet de waarde alleen.
+		const geschreven = [];
+		const herstel = spionOpCookie(geschreven);
+		try {
+			await startKeten([
+				["/api/demo/personas", PERSONAS],
+				["_ophalen", sseAntwoord()],
+				["/api/v1/berichten?", LIJST],
+			]);
+		} finally {
+			herstel();
+		}
 
-		expect(document.cookie).toContain("ontvanger=" + ONTVANGER);
+		const gezet = geschreven.find((regel) => regel.startsWith("ontvanger=" + ONTVANGER));
+		expect(gezet).toBeDefined();
 		// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is en het stelsel verwacht
 		// "KVK:90000011". Ge-encodeerd zou daar "KVK%3A90000011" van maken.
-		expect(document.cookie).not.toContain("%3A");
+		expect(gezet).not.toContain("%3A");
+		// Zo smal mogelijk: alleen de aanroepen die hem nodig hebben, nooit vanaf een andere site, en
+		// niet eeuwig. De waarde is een identiteit; die hoort niet mee te reizen met elk plaatje.
+		expect(gezet).toContain("path=/api/v1/berichten");
+		expect(gezet).toContain("SameSite=Strict");
+		expect(gezet).toContain("Max-Age=1800");
+		// Geen Secure op een http-pagina: de browser weigert het cookie dan, en dan is elke
+		// bijlage-link lokaal stuk. Op https hoort hij er wél te staan; zie keten-cookie-https.test.js.
+		expect(gezet).not.toContain("Secure");
+	});
+
+	it("ruimt een ontvanger op het oude pad op, zodat er niet twee cookies meegaan", async () => {
+		// Zittingen van vóór de versmalling hebben `ontvanger` op `path=/` staan. Blijft die staan,
+		// dan stuurt de browser twee cookies met dezelfde naam mee en pakt nginx de eerste — welke
+		// dat is, ligt niet vast. Dan haalt een bijlage-link het document van de vorige persona op.
+		const geschreven = [];
+		const herstel = spionOpCookie(geschreven);
+		try {
+			await startKeten([
+				["/api/demo/personas", PERSONAS],
+				["_ophalen", sseAntwoord()],
+				["/api/v1/berichten?", LIJST],
+			]);
+		} finally {
+			herstel();
+		}
+
+		const opgeruimd = geschreven.find((regel) => regel.startsWith("ontvanger=;") && regel.includes("path=/;"));
+		expect(opgeruimd).toBeDefined();
+		expect(opgeruimd).toContain("Max-Age=0");
+		// En in die volgorde: eerst opruimen, dan zetten. Andersom wist de opruimactie het cookie dat
+		// we net gezet hadden, als het pad ooit gelijk zou zijn.
+		expect(geschreven.indexOf(opgeruimd)).toBeLessThan(geschreven.findIndex((regel) => regel.startsWith("ontvanger=" + ONTVANGER)));
 	});
 
 	it("vraagt het juiste adres op, met de ontvanger erbij", async () => {

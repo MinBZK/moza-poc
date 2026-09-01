@@ -155,6 +155,10 @@
 	// Eén onderscheidbare reden per soort storing, zodat de melding kan zeggen wat er misging in
 	// plaats van overal "probeer het later opnieuw". Een fout zonder reden komt uit onze eigen
 	// code (JSON.parse, een onverwachte vorm) en is geen storing bij de bron.
+	// Waar het ontvanger-cookie voor geldt en hoe lang. Zie zetOntvangerCookie hieronder.
+	const ONTVANGER_PAD = "/api/v1/berichten";
+	const ONTVANGER_GELDIG_S = 30 * 60;
+
 	function redenVan(fout) {
 		if (fout && fout.reden) return fout.reden;
 		if (fout && (fout.name === "AbortError" || fout.name === "TimeoutError")) return "stil";
@@ -168,17 +172,35 @@
 	 * een gewone URL die de browser zelf ophaalt. Alleen daarvoor; alle aanroepen die dit script
 	 * zelf doet, zetten de header gewoon zelf.
 	 *
-	 * Geen beveiliging — de bezoeker kan dit cookie net zo goed zelf zetten als de header. Wel
-	 * `SameSite=Strict`: dit hoort nooit mee te gaan met een verzoek dat een andere site opwekt.
+	 * Geen beveiliging — de bezoeker kan dit cookie net zo goed zelf zetten als de header. Het
+	 * stelsel houdt zijn eigen controle. Maar de waarde is een identiteit, en die hoort zo weinig
+	 * mogelijk mee te reizen. Vandaar vier beperkingen:
+	 *
+	 * - `path=/api/v1/berichten`: alleen de aanroepen die hem nodig hebben. Met `path=/` ging hij
+	 *   mee met élk verzoek naar deze origin, inclusief elk plaatje en elk stylesheet.
+	 * - `SameSite=Strict`: nooit mee met een verzoek dat een andere site opwekt.
+	 * - `Secure` zodra de pagina over https gaat. Niet onvoorwaardelijk: een browser weigert een
+	 *   Secure-cookie op een gewone http-pagina, en dan werken bijlagen lokaal niet meer.
+	 * - `Max-Age`: een half uur. Elke pagina die bijlagen kan tonen draait eerst een ophaalronde en
+	 *   zet hem daarbij opnieuw, dus dit verloopt alleen bij een tabblad dat lang blijft staan.
 	 */
 	function zetOntvangerCookie(ontvanger) {
 		try {
+			// Eerst de voorganger op `path=/` opruimen. Blijft die staan, dan stuurt de browser twee
+			// cookies met dezelfde naam mee en pakt nginx de eerste — welke dat is, ligt niet vast.
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+
 			// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is, en het stelsel
 			// verwacht "KVK:12345678". De dubbele punt mag in een cookiewaarde.
-			document.cookie = "ontvanger=" + ontvanger + "; path=/; SameSite=Strict";
+			document.cookie =
+				"ontvanger=" + ontvanger + "; path=" + ONTVANGER_PAD + "; SameSite=Strict; Max-Age=" + ONTVANGER_GELDIG_S + (locatieIsVeilig() ? "; Secure" : "");
 		} catch (fout) {
 			console.error("[Berichtenbox] De ontvanger kon niet in een cookie; bijlagen zijn niet op te halen.", fout);
 		}
+	}
+
+	function locatieIsVeilig() {
+		return typeof location !== "undefined" && location.protocol === "https:";
 	}
 
 	function metTijdslimiet(pad, opties, limiet) {

@@ -194,7 +194,12 @@
 			// De ontvanger waarmee de proxy bijlagen ophaalt. Blijft die van de vorige persona staan,
 			// dan haalt een klik op een bijlage het document van iemand anders op — of, waarschijnlijker,
 			// een 404 die niet te plaatsen is. De keten-bron zet hem opnieuw zodra de ronde loopt.
+			//
+			// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+			// `/api/v1/berichten` is waar de keten-bron hem nu zet, `/` is waar oudere zittingen hem
+			// hebben staan. Eén van de twee doet niets, en welke dat is weten we hier niet.
 			try {
+				document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
 				document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
 			} catch (e) {
 				/* geen cookies */
