@@ -279,9 +279,11 @@ mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
 | `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
 | `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
 | `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502**; onder `/api/v1/` met de variabelenaam erin, bij een bijlage-adres bewust zonder |
-| `BACKEND_DEMO` | `/api/demo/` — de demo-console met de testaccounts | valt terug op `BACKEND_KETEN`, anders **502** |
+| `BACKEND_PERSONAS` | `/api/demo/personas` — de testaccountlijst, een eigen publieke dienst | valt terug op `BACKEND_DEMO` |
+| `BACKEND_DEMO` | de rest van `/api/demo/` — de demo-console | valt terug op `BACKEND_KETEN`, anders **502** |
 | `BACKEND_KETEN_HOST` | de `Host`-header naar de uitvraag | de host van de browser |
 | `BACKEND_DEMO_HOST` | de `Host`-header naar de demo-console | valt terug op `BACKEND_KETEN_HOST` |
+| `BACKEND_PERSONAS_HOST` | de `Host`-header naar de testaccountlijst | valt terug op `BACKEND_DEMO_HOST` |
 
 Drie dingen om te weten bij het uitrollen:
 
@@ -294,6 +296,11 @@ Drie dingen om te weten bij het uitrollen:
   (`invalid URL prefix` in het logboek). `BACKEND_ORIGIN` leegmaken legt dus alleen `/chat`,
   `/health` en `/tools` stil; staat `BACKEND_API` dan op een werkende dienst, dan blijft alles onder
   `/api/` gewoon werken.
+- **De testaccountlijst staat los van de demo-console.** `/api/demo/personas` is een eigen,
+  publiek bereikbare deployment; de rest van de console (storingen schakelen, berichten opvoeren)
+  zit achter een SSO-muur. Zo'n muur blokkeert ook server-side proxyen: deze container heeft geen
+  sessie en het cookie van de bezoeker geldt op een andere host, dus die paden geven een 403. Dat is
+  geen gemis — de berichtenbox roept alleen de lijst aan.
 - **`/health` zegt niets over deze container.** Dat pad proxyt naar de Digitale-Assistent-backend.
   Draait die niet in de omgeving, richt een health-check dan niet op `/health` — die faalt dan
   terwijl de proeftuin het prima doet.

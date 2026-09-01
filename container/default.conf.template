@@ -42,6 +42,13 @@ server {
     set $backend_keten "${BACKEND_KETEN}";
     set $backend_demo "${BACKEND_DEMO}";
 
+    # De testaccountlijst is een eigen dienst, los van de demo-console. Reden: die console zit achter
+    # een SSO-muur, en een muur op een component blokkeert ook server-side proxyen ernaartoe — deze
+    # container heeft geen sessie, en het cookie van de bezoeker geldt op een andere host. De lijst
+    # is daarom als aparte, publiek bereikbare deployment uitgerold. Leeg laten valt terug op de
+    # console, wat het gedrag is van vóór die splitsing.
+    set $backend_personas "${BACKEND_PERSONAS}";
+
     # Draait het stelsel buiten deze container achter een gedeelde ingress, dan routeert die op de
     # Host-header; doorgeven van de browser-host levert daar de verkeerde vhost of een 404 op. Zet
     # daarom de servernaam van de backend apart. Leeg laten betekent "gewoon de eigen host
@@ -49,6 +56,7 @@ server {
     # de proxy_pass-URL en is daarmee al goed.
     set $backend_keten_host "${BACKEND_KETEN_HOST}";
     set $backend_demo_host "${BACKEND_DEMO_HOST}";
+    set $backend_personas_host "${BACKEND_PERSONAS_HOST}";
 
     # Fallback to the generic backend_api when a specific backend isn't set
     if ($backend_api = "") {
@@ -75,11 +83,17 @@ server {
     if ($backend_demo = "") {
         set $backend_demo $backend_keten;
     }
+    if ($backend_personas = "") {
+        set $backend_personas $backend_demo;
+    }
     if ($backend_keten_host = "") {
         set $backend_keten_host $host;
     }
     if ($backend_demo_host = "") {
         set $backend_demo_host $backend_keten_host;
+    }
+    if ($backend_personas_host = "") {
+        set $backend_personas_host $backend_demo_host;
     }
 
     # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
@@ -242,8 +256,31 @@ server {
         proxy_ssl_server_name on;
     }
 
-    # Testaccounts van de demo-omgeving. Apart van /api/v1/, want dit is demonstratiegereedschap
-    # en geen dienst van het stelsel; buiten een demo-opstelling staat BACKEND_DEMO niet gezet.
+    # De testaccountlijst. Een exacte match, dus deze wint van de prefix /api/demo/ hieronder,
+    # ongeacht de volgorde in dit bestand.
+    #
+    # Dit is het enige pad onder /api/demo/ dat dit prototype aanroept, en het enige dat buiten de
+    # SSO-muur van de demo-console staat. De rest van die console — storingen aan- en uitzetten,
+    # berichten opvoeren — is bedieningsgereedschap voor wie de demo geeft, en daar komt deze
+    # container niet bij: een muur op een component blokkeert ook server-side proxyen. Dat is geen
+    # gemis, want de berichtenbox heeft er niets aan.
+    location = /api/demo/personas {
+        default_type text/plain;
+        if ($backend_personas = "") {
+            return 502 "BACKEND_PERSONAS is niet gezet op deze container (en BACKEND_DEMO en BACKEND_KETEN evenmin), dus er is geen adres van de testaccountlijst. Zet een van die variabelen in de omgeving en start de container opnieuw.";
+        }
+
+        proxy_pass $backend_personas$request_uri;
+        proxy_set_header Host $backend_personas_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+
+    # De rest van de demo-omgeving. Apart van /api/v1/, want dit is demonstratiegereedschap en geen
+    # dienst van het stelsel; buiten een demo-opstelling staat BACKEND_DEMO niet gezet. Staat de
+    # console achter een SSO-muur, dan komt deze proxy er niet bij en levert dit een 403 op — dit
+    # prototype roept er niets van aan, dus dat blijft zonder gevolg.
     location /api/demo/ {
         # Leeg betekent hier: noch BACKEND_DEMO noch BACKEND_KETEN is gezet, want de terugval
         # hierboven vult de eerste met de tweede.
