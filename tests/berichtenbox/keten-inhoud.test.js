@@ -24,6 +24,7 @@ beforeEach(() => {
 afterEach(() => {
 	// De cookiejar en de adresbalk van jsdom leven per bestand, niet per test: wat de ene test zet,
 	// ziet de volgende terug.
+	sessionStorage.clear();
 	ruimKetenOp();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
@@ -60,6 +61,59 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is en het stelsel verwacht
 		// "KVK:90000011". Ge-encodeerd zou daar "KVK%3A90000011" van maken.
 		expect(gezet).not.toContain("%3A");
+	});
+
+	it("draait geen tweede ophaalronde als de organisaties van deze zitting al bekend zijn", async () => {
+		// _ophalen bouwt de sessie bij het stelsel op; daarna levert de lijst diezelfde gegevens.
+		// Elke berichtenbox-pagina is een eigen document — inbox, archief, prullenbak — en die
+		// draaiden allemaal hun eigen ronde. Bij vijftien magazijnen loopt de eerste dan nog als de
+		// tweede begint, en antwoordt het stelsel terecht met 409.
+		sessionStorage.setItem(
+			"berichtenbox-keten-organisaties",
+			JSON.stringify({ ontvanger: ONTVANGER, organisaties: { "00000009000000000006": "Belastingdienst" } })
+		);
+
+		const { aanroepen } = await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			[
+				"/api/v1/berichten?",
+				antwoord(200, {
+					berichten: [{ berichtId: "m1", magazijnId: "00000009000000000006", onderwerp: "Een besluit", publicatietijdstip: "2026-02-19T10:00:00Z" }],
+				}),
+			],
+		]);
+
+		expect(aanroepen.some((a) => a.pad.indexOf("_ophalen") !== -1)).toBe(false);
+
+		// En de naam uit de bewaarde ronde komt terug op het scherm, want de lijst draagt als
+		// afzender hetzelfde nummer als magazijnId — twintig cijfers.
+		const uitkomst = await window.BerichtenboxKeten.berichten();
+		expect(uitkomst.berichten[0].afzender).toBe("Belastingdienst");
+	});
+
+	it("wacht op de ronde van een andere pagina in plaats van een storing te melden", async () => {
+		// Twee tabbladen die tegelijk opengaan: de tweede krijgt 409 op _ophalen, want één ontvanger
+		// heeft één ronde tegelijk. Het resultaat komt in dezelfde sessie terecht, dus wachten levert
+		// de bezoeker precies wat hij zocht; een storingsmelding zou zeggen dat er iets kapot is
+		// terwijl het werk gewoon loopt.
+		const bezet = { ok: false, status: 409, headers: { get: () => null }, json: async () => ({}) };
+		let lijstAanroepen = 0;
+		const lijst = () => {
+			lijstAanroepen += 1;
+			// De eerste keer is de ronde van de andere pagina nog bezig: geen sessie, dus 409.
+			if (lijstAanroepen === 1) return bezet;
+			return antwoord(200, { berichten: [] });
+		};
+
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", bezet],
+			["/api/v1/berichten?", lijst],
+		]);
+
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+		expect(lijstAanroepen).toBeGreaterThan(1);
 	});
 
 	it("scheidt de twee 409's van de uitvraag: een lopende ronde en een verlopen sessie", async () => {

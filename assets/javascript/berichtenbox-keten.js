@@ -49,6 +49,12 @@
 	const INHOUD_LIMIET_MS = 10000;
 	const STILTE_LIMIET_MS = 30000;
 
+	// Hoe lang we wachten op een ronde die een andere pagina al draait, en hoe vaak we tussendoor
+	// kijken of de lijst er is. Ruim genomen: een ronde langs vijftien magazijnen duurt seconden,
+	// maar een trage organisatie mag hem langer maken zonder dat de bezoeker een melding krijgt.
+	const WACHT_OP_RONDE_MS = 45000;
+	const WACHT_STAP_MS = 1500;
+
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
 	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
 	// geen knop is die dat doet: `opnieuw()` hieronder heeft geen enkele aanroeper. Zolang die knop er
@@ -185,6 +191,43 @@
 		if (!variabele) return "onbereikbaar";
 		console.error("[Berichtenbox] " + wat + " kan niet: " + variabele + " is niet gezet op deze container. Zet die runtime-variabele in de omgeving; verversen helpt niet.");
 		return "configuratie";
+	}
+
+	// De namen van de aangesloten organisaties, bewaard per ontvanger.
+	//
+	// `_ophalen` bouwt bij het stelsel de sessie op; daarna levert `GET /api/v1/berichten` die lijst
+	// zonder dat er iets opnieuw bevraagd hoeft te worden. Elke berichtenbox-pagina is hier een eigen
+	// document — inbox, archief, prullenbak — en die draaiden allemaal hun eigen ronde. Bij een
+	// ontvanger met vijftien magazijnen loopt de eerste dan nog wanneer de tweede begint, en dat
+	// antwoordt het stelsel terecht met 409: één ontvanger, één ronde tegelijk.
+	//
+	// Alleen de lijst gebruiken kan niet zomaar: die draagt als `afzender` hetzelfde nummer als
+	// `magazijnId`, en de leesbare naam staat uitsluitend in de gebeurtenissen van de ronde. Daarom
+	// bewaren we die namen; dan kan een volgende pagina de lijst nemen en toch "Belastingdienst"
+	// tonen in plaats van twintig cijfers. sessionStorage en niet localStorage: dit hoort bij deze
+	// zitting, net als de sessie bij het stelsel zelf.
+	const ORGANISATIES_SLEUTEL = "berichtenbox-keten-organisaties";
+
+	function bewaarOrganisaties(ontvanger, organisaties) {
+		if (!ontvanger || !organisaties || !Object.keys(organisaties).length) return;
+		try {
+			sessionStorage.setItem(ORGANISATIES_SLEUTEL, JSON.stringify({ ontvanger: ontvanger, organisaties: organisaties }));
+		} catch (fout) {
+			// Geen ramp: zonder deze namen draait de volgende pagina gewoon zijn eigen ronde.
+			console.warn("[Berichtenbox] de namen van de organisaties konden niet bewaard worden.", fout);
+		}
+	}
+
+	function bewaardeOrganisaties(ontvanger) {
+		try {
+			const rauw = sessionStorage.getItem(ORGANISATIES_SLEUTEL);
+			if (!rauw) return null;
+			const bewaard = JSON.parse(rauw);
+			// Op naam van deze ontvanger, anders zijn het de organisaties van een vorige persona.
+			return bewaard && bewaard.ontvanger === ontvanger && bewaard.organisaties ? bewaard.organisaties : null;
+		} catch (fout) {
+			return null;
+		}
 	}
 
 	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
@@ -325,6 +368,9 @@
 
 		if (respons.status === 409) {
 			clearTimeout(stilteKlok);
+			// Eén ontvanger, één ronde tegelijk. Dat is geen fout: een andere pagina van deze
+			// berichtenbox is bezig, en het resultaat komt in dezelfde sessie terecht. De aanroeper
+			// wacht die af in plaats van de bezoeker een storing te tonen.
 			throw ketenFout("bezig", "er loopt al een ophaalronde voor deze ontvanger");
 		}
 		if (!respons.ok) {
@@ -402,6 +448,26 @@
 		}
 
 		return { organisaties: organisaties, stil: stil, gevonden: gevonden };
+	}
+
+	/**
+	 * Wacht tot de ronde van een andere pagina klaar is, door de lijst te blijven proberen.
+	 *
+	 * Zolang die ronde loopt heeft de ontvanger nog geen gevulde sessie en antwoordt de lijst met
+	 * 409. Dat is hier geen fout maar "nog niet zover". Loopt de wachttijd af, dan gooien we alsnog
+	 * `bezig`: dan zegt de melding dat er al opgehaald wordt en dat verversen zo helpt.
+	 */
+	async function wachtOpLijst(ontvanger) {
+		const einde = Date.now() + WACHT_OP_RONDE_MS;
+		for (;;) {
+			await new Promise((klaar) => setTimeout(klaar, WACHT_STAP_MS));
+			try {
+				return await haalLijst(ontvanger);
+			} catch (fout) {
+				if (redenVan(fout) !== "geenSessie") throw fout;
+				if (Date.now() >= einde) throw ketenFout("bezig", "de ophaalronde van een andere pagina is niet op tijd klaar");
+			}
+		}
 	}
 
 	async function haalLijst(ontvanger) {
@@ -606,8 +672,37 @@
 			ontvangerVanRonde = aangesloten.ontvanger;
 			zetOntvangerCookie(aangesloten.ontvanger);
 
-			uitvraag = await haalOp(aangesloten.ontvanger);
-			lijst = await haalLijst(aangesloten.ontvanger);
+			// De sessie bij het stelsel is van de ontvanger en niet van deze pagina. Kennen we de
+			// organisaties van een eerdere ronde in deze zitting, dan is die sessie er waarschijnlijk
+			// nog en volstaat de lijst — geen tweede ronde, geen 409, en geen voortgangsbalk voor
+			// werk dat al gedaan is. Is de sessie tóch weg, dan zegt de lijst dat met een 409 en
+			// draaien we alsnog een ronde.
+			const bekend = bewaardeOrganisaties(aangesloten.ontvanger);
+			if (bekend) {
+				try {
+					lijst = await haalLijst(aangesloten.ontvanger);
+					uitvraag = { organisaties: bekend, stil: [], gevonden: null };
+				} catch (fout) {
+					if (redenVan(fout) !== "geenSessie") throw fout;
+					lijst = null;
+				}
+			}
+
+			if (!lijst) {
+				try {
+					uitvraag = await haalOp(aangesloten.ontvanger);
+					bewaarOrganisaties(aangesloten.ontvanger, uitvraag.organisaties);
+					lijst = await haalLijst(aangesloten.ontvanger);
+				} catch (fout) {
+					if (redenVan(fout) !== "bezig") throw fout;
+					// Een andere pagina van deze berichtenbox draait de ronde al — twee tabbladen die
+					// tegelijk opengaan, bijvoorbeeld. Het resultaat komt in dezelfde sessie terecht,
+					// dus wachten levert de bezoeker precies wat hij zocht. Een storingsmelding zou
+					// hier zeggen dat er iets kapot is terwijl het werk gewoon loopt.
+					lijst = await wachtOpLijst(aangesloten.ontvanger);
+					uitvraag = { organisaties: bewaardeOrganisaties(aangesloten.ontvanger) || {}, stil: [], gevonden: null };
+				}
+			}
 		} catch (fout) {
 			mislukt(fout);
 			return null;
