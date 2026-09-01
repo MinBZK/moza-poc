@@ -152,6 +152,27 @@ describe("wisselen van persona", () => {
 		expect(document.cookie).not.toContain("KVK:90000011");
 	});
 
+	it("wist het ontvanger-cookie ook op het smalle pad van de keten-bron", () => {
+		// De keten-bron zet het cookie op `path=/api/v1/berichten`, niet op `/`. Wordt alleen de
+		// brede variant gewist, dan blijft de ontvanger van de vorige persona staan en haalt een
+		// klik op een bijlage het document van iemand anders op. Dat is precies het geval waarin
+		// niets het meer overschrijft: bij een wissel naar een persona zonder stelsel draait er
+		// geen ophaalronde.
+		//
+		// Vanaf een bijlage-adres, want alleen daar geeft de browser het smalle cookie terug; vanaf
+		// /moza/berichtenbox/ zou deze test niets zien en altijd slagen.
+		window.history.replaceState({}, "", "/api/v1/berichten/msg-1/bijlagen/b-1");
+		document.cookie = "ontvanger=KVK:11111111; path=/";
+		document.cookie = "ontvanger=KVK:90000011; path=/api/v1/berichten";
+		expect(document.cookie).toContain("KVK:90000011");
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
+		expect(document.cookie).not.toContain("KVK:11111111");
+	});
+
 	it("ruimt stil op als er wél een persona gekozen was", () => {
 		// Geen herkomst bekend, maar er staat een keuze in de opslag: dan is er wel degelijk
 		// gewisseld, alleen weten we niet waarvandaan. Opruimen dus — en er valt niets te melden,

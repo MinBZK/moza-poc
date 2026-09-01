@@ -81,8 +81,9 @@ describe("het ontvanger-cookie op https", () => {
 		}
 
 		expect(location.protocol).toBe("https:");
+		// Exact, om dezelfde reden als in keten-inhoud.test.js: een prefix-assertie laat een
+		// verschoven pad of een teruggekeerde Max-Age door.
 		const gezet = geschreven.find((regel) => regel.startsWith("ontvanger=" + ONTVANGER));
-		expect(gezet).toBeDefined();
-		expect(gezet).toContain("Secure");
+		expect(gezet).toBe("ontvanger=" + ONTVANGER + "; path=/api/v1/berichten; SameSite=Strict; Secure");
 	});
 });

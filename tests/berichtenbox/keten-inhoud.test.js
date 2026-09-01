@@ -127,19 +127,33 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			herstel();
 		}
 
+		// In één keer exact, niet met losse toContain's: "path=/api/v1/berichtenXX" bevat
+		// "path=/api/v1/berichten" en "Max-Age=18000" bevat "Max-Age=1800", dus een prefix-assertie
+		// laat precies de fouten door die hier het gevaarlijkst zijn. Dit dekt en passant de
+		// afwezigheid van Secure (http) en van Max-Age (sessiecookie).
 		const gezet = geschreven.find((regel) => regel.startsWith("ontvanger=" + ONTVANGER));
-		expect(gezet).toBeDefined();
+		expect(gezet).toBe("ontvanger=" + ONTVANGER + "; path=/api/v1/berichten; SameSite=Strict");
 		// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is en het stelsel verwacht
 		// "KVK:90000011". Ge-encodeerd zou daar "KVK%3A90000011" van maken.
 		expect(gezet).not.toContain("%3A");
-		// Zo smal mogelijk: alleen de aanroepen die hem nodig hebben, nooit vanaf een andere site, en
-		// niet eeuwig. De waarde is een identiteit; die hoort niet mee te reizen met elk plaatje.
-		expect(gezet).toContain("path=/api/v1/berichten");
-		expect(gezet).toContain("SameSite=Strict");
-		expect(gezet).toContain("Max-Age=1800");
-		// Geen Secure op een http-pagina: de browser weigert het cookie dan, en dan is elke
-		// bijlage-link lokaal stuk. Op https hoort hij er wél te staan; zie keten-cookie-https.test.js.
-		expect(gezet).not.toContain("Secure");
+	});
+
+	it("stuurt het cookie mee naar het adres dat een bijlage-link gebruikt", async () => {
+		// Het smalle pad is alleen zinnig als het het adres dekt dat bijlageAdres() in
+		// berichtenbox.js bouwt. Dat is een afspraak tussen twee bestanden zonder gedeelde constante;
+		// hier houden we hem vast. Een assertie op de string "path=..." zou een typefout in het pad
+		// niet vangen, deze wel: de browser beslist zelf of hij het cookie meestuurt.
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+		]);
+
+		// Op de berichtenbox-pagina zelf hoort hij niet mee te gaan — dat is de hele versmalling.
+		expect(document.cookie).not.toContain(ONTVANGER);
+
+		window.history.replaceState(null, "", "/api/v1/berichten/" + BERICHT_ID + "/bijlagen/b-1");
+		expect(document.cookie).toContain("ontvanger=" + ONTVANGER);
 	});
 
 	it("ruimt een ontvanger op het oude pad op, zodat er niet twee cookies meegaan", async () => {
@@ -159,8 +173,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		}
 
 		const opgeruimd = geschreven.find((regel) => regel.startsWith("ontvanger=;") && regel.includes("path=/;"));
-		expect(opgeruimd).toBeDefined();
-		expect(opgeruimd).toContain("Max-Age=0");
+		expect(opgeruimd).toBe("ontvanger=; path=/; SameSite=Strict; Max-Age=0");
 		// En in die volgorde: eerst opruimen, dan zetten. Andersom wist de opruimactie het cookie dat
 		// we net gezet hadden, als het pad ooit gelijk zou zijn.
 		expect(geschreven.indexOf(opgeruimd)).toBeLessThan(geschreven.findIndex((regel) => regel.startsWith("ontvanger=" + ONTVANGER)));
