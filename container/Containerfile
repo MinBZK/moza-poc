@@ -25,6 +25,12 @@ FROM nginxinc/nginx-unprivileged:alpine
 # BACKEND_ORIGIN is een RUNTIME env-var: zet 'm op het ZAD-component `proef` via de
 # ZAD-UI (de zad-actions/deploy-action kan geen runtime-env zetten). Default = het
 # interne cluster-adres van de backend.
+#
+# BACKEND_ORIGIN is het adres van die chat-backend en verder niets. BACKEND_API is de
+# standaard-upstream voor alles onder /api/. Leeg gelaten valt BACKEND_API terug op
+# BACKEND_ORIGIN, dus een omgeving die hem niet zet houdt het oude gedrag. Wie hem wel zet, haalt
+# de chat-backend uit het routeringspad van API's die er niets mee te maken hebben — nuttig in een
+# omgeving waar die backend helemaal niet draait.
 #  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
 #    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
 #  - NGINX_ENVSUBST_FILTER beperkt envsubst tot alle BACKEND_*-vars en de resolver, zodat
@@ -34,6 +40,7 @@ FROM nginxinc/nginx-unprivileged:alpine
 #    hieronder heeft een lege default, zodat de fallback in de template werkt.
 # De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
 ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    BACKEND_API= \
     BACKEND_PROFIEL= \
     BACKEND_API_2= \
     BACKEND_KETEN= \
