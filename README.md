@@ -219,6 +219,25 @@ Staat het nummer niet in de allowlist van de backend — of is er geen persona �
 
 Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
 
+#### De ontvanger bij een bijlage uit het stelsel
+
+Een bijlage uit het Federatief Berichtenstelsel is een gewone URL die de browser zelf ophaalt, en
+het stelsel eist daarbij de header `X-Ontvanger`. Een `<a href>` en een `<object data>` kunnen die
+niet meesturen, dus zet `berichtenbox-keten.js` de ontvanger in een cookie en maakt de proxy er weer
+een header van (`location ~ ^/api/v1/berichten/.../bijlagen/...` in de template). Alle andere
+aanroepen zetten de header gewoon zelf.
+
+Dat cookie is **geen** beveiliging — de bezoeker kan het net zo goed zelf zetten als de header, en
+het stelsel houdt zijn eigen controle. De waarde is wel een identiteit (een KvK-nummer of een BSN),
+dus hij reist zo min mogelijk mee: `path=/api/v1/berichten`, `SameSite=Strict`, `Secure` zodra de
+pagina over https gaat, en een half uur geldig. Elke pagina die bijlagen toont draait eerst een
+ophaalronde en zet hem daarbij opnieuw. Bij een persona-wissel wordt hij gewist, op het nieuwe én op
+het oude pad, want anders haalt een klik het document van de vorige persona op.
+
+Uit die identiteit volgt één regel voor de proxy-config: **zet `$http_cookie` nergens in een
+logformaat of debug-regel.** Het standaard nginx-logformaat doet dat niet, en zo hoort het te
+blijven.
+
 #### Op een deployment
 
 Niets in te stellen aan de frontend-kant: er is geen build-variabele, geen repo-secret en geen build-arg voor de identiteit. Zet alleen op de **backend**-deployment `TEST_KVK_NUMMERS=85234567,62345681,56789012`. Ontbreekt die, dan antwoordt de assistent overal "log eerst in".
@@ -240,6 +259,32 @@ docker build -f container/Containerfile -t moza .
 # wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
 docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
+
+#### Welke backend krijgt welk pad
+
+De proxy bedient drie ongerelateerde diensten. Elke variabele is runtime-env op de container en
+mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
+
+| Variabele | Bedient | Leeg gelaten |
+| --- | --- | --- |
+| `BACKEND_ORIGIN` | `/chat`, `/chat/stream`, `/health`, `/tools` — de Digitale Assistent | default `http://dabackend:8000` |
+| `BACKEND_API` | de catch-all `/api/` en het eindpunt van de terugvallen hieronder | valt terug op `BACKEND_ORIGIN` |
+| `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
+| `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
+| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502** met de naam van de variabele |
+| `BACKEND_DEMO` | `/api/demo/` — de demo-console met de testaccounts | valt terug op `BACKEND_KETEN`, anders **502** |
+| `BACKEND_KETEN_HOST` | de `Host`-header naar de uitvraag | de host van de browser |
+| `BACKEND_DEMO_HOST` | de `Host`-header naar de demo-console | valt terug op `BACKEND_KETEN_HOST` |
+
+Twee dingen om te weten bij het uitrollen:
+
+- **Het stelsel valt niet terug.** Staat `BACKEND_KETEN` niet, dan antwoordt nginx zelf met een 502
+  die de variabelenaam noemt. Dat is met opzet: doorsturen naar de chat-backend leverde een 404 of
+  een DNS-fout uit een dienst die deze paden niet kent, en dan is niet te zien dát er een variabele
+  ontbreekt.
+- **`/health` zegt niets over deze container.** Dat pad proxyt naar de Digitale-Assistent-backend.
+  Draait die niet in de omgeving, richt een health-check dan niet op `/health` — die faalt dan
+  terwijl de proeftuin het prima doet.
 
 ---
 
