@@ -62,6 +62,26 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(gezet).not.toContain("%3A");
 	});
 
+	it("scheidt de twee 409's van de uitvraag: een lopende ronde en een verlopen sessie", async () => {
+		// De uitvraag geeft 409 in twee gevallen, met verschillende oorzaken en verschillende
+		// handelingen. Op _ophalen: er loopt al een ronde voor deze ontvanger — één ontvanger, één
+		// ronde tegelijk. Op de lijst: er is geen sessie meer, en dan helpt verversen wél, want dan
+		// draait de ronde opnieuw. Zonder dat onderscheid werd de tweede "er gaat iets mis bij de
+		// bronnen", terwijl er niets kapot is.
+		const conflict = { ok: false, status: 409, headers: { get: () => null }, json: async () => ({}) };
+
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", conflict],
+		]);
+
+		const melding = window.BerichtenboxKeten.melding;
+		expect(melding.tekst).toContain("niet meer klaargezet");
+		expect(melding.tekst).toContain("Ververs de pagina");
+		expect(melding.tekst).not.toContain("bij de bronnen");
+	});
+
 	it("noemt een ontbrekende omgevingsvariabele, en vraagt niet om te verversen", async () => {
 		// De proxy geeft een 502 als een BACKEND_*-variabele niet gezet is, en zet de naam ervan in
 		// X-Proxy-Configuratie. Zonder dat onderscheid leest een half ingerichte omgeving als een

@@ -55,7 +55,15 @@
 	// niet is, is verversen wat de bezoeker rest — en dat is ook wat de render-laag overal zegt.
 	const FOUT_TEKSTEN = {
 		onbereikbaar: "Er gaat iets mis met het ophalen van uw berichten bij de bronnen. Ververs de pagina om het opnieuw te proberen.",
-		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht een minuut en ververs dan de pagina.",
+		// Twee soorten 409 uit de uitvraag, met verschillende oorzaken en verschillende handelingen.
+		// "Worden momenteel al opgehaald": er loopt een ronde voor deze ontvanger — één ontvanger,
+		// één ronde tegelijk, bewaakt met een slot in de sessiecache. Twee minuten, want dat is de
+		// vangnet-TTL van dat slot (aggregation-lock-ttl=PT2M); blijft een slot staan doordat een pod
+		// midden in een ronde herstart, dan is het daarna vanzelf weer vrij.
+		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht twee minuten en ververs dan de pagina.",
+		// "Zijn nog niet opgehaald": er is geen sessie meer. Anders dan bij de andere meldingen helpt
+		// verversen hier echt, want dan draait de ophaalronde opnieuw en zet die de sessie terug.
+		geenSessie: "Uw berichten zijn niet meer klaargezet bij het stelsel. Ververs de pagina; dan halen wij ze opnieuw op.",
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
@@ -398,6 +406,10 @@
 
 	async function haalLijst(ontvanger) {
 		const respons = await metTijdslimiet("/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
+		// De uitvraag levert de lijst uit een sessie die de ophaalronde vult. Is die er niet meer —
+		// het slot verlopen, de sessie opgeruimd — dan antwoordt hij met 409, en dat is geen storing
+		// bij een bron maar een toestand die met verversen over gaat.
+		if (respons.status === 409) throw ketenFout("geenSessie", "de sessie met opgehaalde berichten bestaat niet meer");
 		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de berichtenlijst ophalen"), "berichten laden mislukt (" + respons.status + ")");
 		return respons.json();
 	}
