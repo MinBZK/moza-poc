@@ -14,15 +14,21 @@ export const ContactGegevensList = ({ identificatieNummer, identificatieType }: 
 	const aanhef = data?.data?.voorkeuren?.find(({ voorkeurType }) => voorkeurType === "Aanhef");
 	const taal = data?.data?.voorkeuren?.find(({ voorkeurType }) => voorkeurType === "WebsiteTaal");
 
-	if (status === "pending") return <div>Loading...</div>;
+	if (status === "pending")
+		return (
+			<div className="contactgegevens-spinner" role="status" aria-live="polite">
+				<div className="spinner" aria-hidden="true" />
+				<span className="visually-hidden">Gegevens worden geladen</span>
+			</div>
+		);
 
 	if (status === "error") {
 		return <div>Error!</div>;
 	}
 
 	return (
-		<div className="flex w-full flex-col gap-4 overflow-x-auto">
-			<div className="flex flex-col gap-0 bg-neutral-100 p-4">
+		<div className="contactgegevens-container">
+			<div className="contactgegevens-list">
 				<AanhefEditBox voorkeur={aanhef} idenType={identificatieType} idenValue={identificatieNummer} />
 				<hr className="my-3 border-neutral-300" />
 

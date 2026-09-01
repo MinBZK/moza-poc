@@ -56,14 +56,12 @@ export const TaalEditBox = ({ idenType, idenValue, voorkeur }: { idenType: compo
 				);
 			}}
 		>
-			<div className="grid grid-cols-[2fr_3fr_100px] items-start gap-4">
-				<label htmlFor="field-taal" className="font-bold">
-					Taalvoorkeur
-				</label>
+			<div className="contactgegeven-container">
+				<label htmlFor="field-taal">Taalvoorkeur</label>
 				<div>
 					{fieldState === "edit" ? (
-						<div className="flex flex-col gap-2">
-							<select ref={selectRef} className="w-full border border-gray-300 bg-white p-1" id="field-taal" value={newValue} onChange={(e) => setNewValue(e.target.value)}>
+						<div className="">
+							<select ref={selectRef} className="" id="field-taal" value={newValue} onChange={(e) => setNewValue(e.target.value)}>
 								<option value="">Selecteer een taal</option>
 								{taalValues.map((taal) => (
 									<option key={taal} value={taal}>
@@ -71,12 +69,12 @@ export const TaalEditBox = ({ idenType, idenValue, voorkeur }: { idenType: compo
 									</option>
 								))}
 							</select>
-							{errorMessage && <span className="text-sm text-red-500">{errorMessage}</span>}
+							{errorMessage && <span className="form-field-error">{errorMessage}</span>}
 						</div>
 					) : newValue ? (
 						<span>{newValue}</span>
 					) : (
-						<span className="text-neutral-500 italic">Niet opgegeven</span>
+						<span className="text-missing">Niet opgegeven</span>
 					)}
 				</div>
 				<div>
@@ -91,7 +89,7 @@ export const TaalEditBox = ({ idenType, idenValue, voorkeur }: { idenType: compo
 							Aanpassen
 						</EditBoxButton>
 					) : (
-						<div className="flex flex-col">
+						<div className="contactgegeven-save-actions">
 							<EditBoxButton type="submit">Opslaan</EditBoxButton>
 							<EditBoxButton
 								onClick={() => {

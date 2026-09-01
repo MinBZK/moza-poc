@@ -1,5 +1,7 @@
 ---
 title: "MijnOverheid Zakelijk: Contactvoorkeuren"
+styles:
+  - "/style/pages/contactvoorkeuren.css"
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -150,12 +152,12 @@ title: "MijnOverheid Zakelijk: Contactvoorkeuren"
 			const icon = data.type === "succes" ? iconSucces : iconInfo;
 			const cssClass = data.type === "succes" ? "feedback-success" : "feedback-info";
 			flashEl.innerHTML = `
-		<div class="feedback ${cssClass}">
-			${icon}
-			<div><p>${data.message}</p></div>
-			<button class="btn-close link-button"><i>Sluit notificatie</i></button>
-		</div>
-	`;
+	<div class="feedback ${cssClass}">
+		${icon}
+		<div><p>${data.message}</p></div>
+		<button class="btn-close link-button"><i>Sluit notificatie</i></button>
+	</div>
+`;
 			flashEl.hidden = false;
 			// E-mailadres bijwerken als het in de flash-data staat
 			if (data.email) {

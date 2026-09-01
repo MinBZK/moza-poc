@@ -175,16 +175,13 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 					{`Uw ${label.toLocaleLowerCase()} is succesvol geverifieerd.`}
 				</Notification>
 			)}
-			<div className="grid grid-cols-[2fr_3fr_100px] items-start gap-4">
-				<label htmlFor={`field-${name}-${id}`} className="font-bold">
-					{label}
-				</label>
+			<div className="contactgegeven-container">
+				<label htmlFor={`field-${name}-${id}`}>{label}</label>
 				<div>
 					{fieldState === "edit" ? (
-						<div className="flex flex-col gap-2">
+						<div className="contactgegeven-input-group">
 							<input
 								ref={inputRef}
-								className="w-full border border-gray-300 bg-white p-1"
 								id={`field-${name}-${id}`}
 								type={name === "Email" ? "email" : "text"}
 								name={name}
@@ -206,9 +203,9 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 							/>
 							<div role="alert">
 								{errorMessage && (
-									<div className="flex flex-row gap-2">
+									<div className="contactgegeven-form-error-message">
 										<InfoIcon />
-										<span className="text-sm text-red-500">{errorMessage}</span>
+										<span className="form-field-error">{errorMessage}</span>
 									</div>
 								)}
 							</div>
@@ -216,7 +213,7 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 					) : newValue ? (
 						<span>{newValue}</span>
 					) : (
-						<span className="text-neutral-500 italic">Niet opgegeven</span>
+						<span className="text-missing">Niet opgegeven</span>
 					)}
 				</div>
 				<div>
@@ -233,10 +230,8 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 							Aanpassen
 						</EditBoxButton>
 					) : (
-						<div className="flex flex-col gap-0">
-							<EditBoxButton type="submit">
-								<span className="hover:underline">Opslaan</span>
-							</EditBoxButton>
+						<div className="contactgegeven-save-actions">
+							<EditBoxButton type="submit">Opslaan</EditBoxButton>
 							<EditBoxButton
 								type="button"
 								onClick={() => {
@@ -247,7 +242,7 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 									setNewValue(contactGegeven?.waarde || "");
 								}}
 							>
-								<span className="hover:underline">Annuleren</span>
+								Annuleren
 							</EditBoxButton>
 						</div>
 					)}
@@ -255,7 +250,7 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 				{showResendSection && (
 					<>
 						<div />
-						<div className="flex flex-col gap-2">
+						<div className="contactgegeven-resend-section">
 							<Notification variant="warning">{`Uw ${label.toLocaleLowerCase()} is nog niet geverifieerd. U ontvangt nog geen notificaties. Er is een verificatiecode gestuurd naar ${newValue}.\nBekijk uw Ongewenste e-mail wanneer u niets binnen heeft gekregen.`}</Notification>
 							{resendSuccess && (
 								<Notification variant="success" onClose={() => setResendSuccess(false)}>
@@ -263,21 +258,21 @@ export const ContactEditBox = ({ label, name, idenType, idenValue, contactGegeve
 								</Notification>
 							)}
 							{resendError && <Notification variant="error">{resendError}</Notification>}
+							<button type="button" onClick={resendCountdown === 0 ? handleResendVerification : undefined} disabled={resendCountdown > 0} className={`self-center text-primary ml-auto text-right text-sm ${resendCountdown === 0 ? "cursor-pointer hover:underline" : "cursor-default"}`}>
+								{resendCountdown > 0 ? `Opnieuw verificatiecode aanvragen in ${resendCountdown} seconden` : "Opnieuw verificatiecode aanvragen"}
+							</button>
+							<div />
+							<div className="contactgegeven-verification-field-group ">
+								<label htmlFor={`verificationCode-field-${name}-${id}`} className="font-bold">
+									{"Verificatiecode:"}
+								</label>
+								<input ref={inputRef} id={`verificationCode-field-${name}-${id}`} className="w-1/4 border border-gray-300 bg-white px-1" placeholder="bv: 123456" maxLength={6} type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
+								<EditBoxButton icon={<CheckCircleIcon />} type="submit" onClick={() => setVerificationSubmitted(true)}>
+									Verifieer
+								</EditBoxButton>
+							</div>
+							<div />
 						</div>
-						<button type="button" onClick={resendCountdown === 0 ? handleResendVerification : undefined} className={`self-center text-primary ml-auto text-right text-sm ${resendCountdown === 0 ? "cursor-pointer hover:underline" : "cursor-default"}`}>
-							{resendCountdown > 0 ? `Opnieuw verificatiecode aanvragen in ${resendCountdown} seconden` : "Opnieuw verificatiecode aanvragen"}
-						</button>
-						<div />
-						<div className="flex flex-row items-center gap-3">
-							<label htmlFor={`verificationCode-field-${name}-${id}`} className="font-bold">
-								{"Verificatiecode:"}
-							</label>
-							<input ref={inputRef} id={`verificationCode-field-${name}-${id}`} className="w-1/4 border border-gray-300 bg-white px-1" placeholder="bv: 123456" maxLength={6} type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-							<EditBoxButton icon={<CheckCircleIcon />} type="submit" onClick={() => setVerificationSubmitted(true)}>
-								Verifieer
-							</EditBoxButton>
-						</div>
-						<div />
 					</>
 				)}
 			</div>

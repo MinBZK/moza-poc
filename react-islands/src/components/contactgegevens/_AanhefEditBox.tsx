@@ -53,20 +53,18 @@ export const AanhefEditBox = ({ idenType, idenValue, voorkeur }: { idenType: com
 				);
 			}}
 		>
-			<div className="grid grid-cols-[2fr_3fr_100px] items-start gap-4">
-				<label htmlFor="field-aanhef" className="font-bold">
-					Aanhef
-				</label>
+			<div className="contactgegeven-container">
+				<label htmlFor="field-aanhef">Aanhef</label>
 				<div>
 					{fieldState === "edit" ? (
-						<div className="flex flex-col gap-2">
-							<input ref={inputRef} className="w-full border border-gray-300 bg-white p-1" id="field-aanhef" type="text" placeholder="bv: Dhr. Jansen" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
-							{errorMessage && <span className="text-sm text-red-500">{errorMessage}</span>}
+						<div className="contact-gegeven-input-group">
+							<input ref={inputRef} className="" id="field-aanhef" type="text" placeholder="bv: Dhr. Jansen" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
+							{errorMessage && <span className="form-field-error">{errorMessage}</span>}
 						</div>
 					) : newValue ? (
 						<span>{newValue}</span>
 					) : (
-						<span className="text-neutral-500 italic">Niet opgegeven</span>
+						<span className="text-missing">Niet opgegeven</span>
 					)}
 				</div>
 				<div>
@@ -81,7 +79,7 @@ export const AanhefEditBox = ({ idenType, idenValue, voorkeur }: { idenType: com
 							Aanpassen
 						</EditBoxButton>
 					) : (
-						<div className="flex flex-col">
+						<div className="contactgegeven-save-actions">
 							<EditBoxButton type="submit">Opslaan</EditBoxButton>
 							<EditBoxButton
 								onClick={() => {

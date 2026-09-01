@@ -49,7 +49,7 @@ server {
         proxy_set_header Host $host;
     }
 
-    location = /livecheck {
+    location = /api/livecheck {
        return 200 '{"status":"ok"}';
        add_header Content-Type application/json;
     }
@@ -79,24 +79,6 @@ server {
        proxy_read_timeout 60s;
        proxy_request_buffering off;
        proxy_buffering off;
-    }
-
-    # Debug: test profiel endpoint - proxy to the real profiel service and forward response
-    location = /api/test-profiel {
-        proxy_pass https://profiel.mijnoverheidzakelijk.nl/api/profielservice/v1/partij;
-        proxy_http_version 1.1;
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Connection "";
-        proxy_pass_request_headers on;
-        proxy_buffering off;
-        proxy_request_buffering off;
-        proxy_ssl_server_name on;
-        proxy_ssl_session_reuse on;
-        proxy_connect_timeout 5s;
-        proxy_send_timeout 30s;
-        proxy_read_timeout 60s;
     }
 
     # --- Statische Eleventy-site ---
