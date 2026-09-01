@@ -35,9 +35,13 @@ PROEFTUIN_PAD=/pad/naar/moza-poc \
 
 `compose.proeftuin-lokaal.yaml` uit die repo werkt ook, maar beperkt `NGINX_ENVSUBST_FILTER` tot
 `BACKEND_(ORIGIN|PROFIEL|API_2|KETEN|DEMO)`. Onze `container/default.conf.template` gebruikt
-daarnaast `BACKEND_KETEN_HOST` en `BACKEND_DEMO_HOST`; die blijven dan letterlijk in de nginx-config
-staan en gaan zo als Host-header mee. Gebruik een overlay die alle `BACKEND_*` doorlaat, zoals de
-Containerfile hier ook doet.
+daarnaast `BACKEND_API`, `BACKEND_KETEN_HOST` en `BACKEND_DEMO_HOST`. Die blijven dan letterlijk in
+de nginx-config staan, en nginx leest zo'n niet-gesubstitueerde `${...}` als een eigen,
+ongeïnitialiseerde variabele — dus als leeg, waarna de terugval in de template vuurt. Gemeten: de
+browser-host gaat dan als `Host` mee, precies zoals bedoeld, en `/api/` komt bij `BACKEND_ORIGIN`
+uit. Het gaat dus niet stuk; wat je verliest is dat een gezette variabele stilzwijgend genegeerd
+wordt. Gebruik daarom een overlay die alle `BACKEND_*` doorlaat, zoals de Containerfile hier ook
+doet.
 
 ## Draaien
 

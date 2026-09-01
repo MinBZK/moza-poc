@@ -1761,8 +1761,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 *
 	 * De namen komen op het scherm mét een werkende downloadlink: `bijlageAdres()` hieronder bouwt
 	 * het adres bij het stelsel, en de proxy zet de ontvanger uit het cookie om in de header die het
-	 * stelsel eist. Valt er geen adres te maken, dan komt de naam er zonder link te staan met een
-	 * woord erbij — een naam zonder uitleg laat de bezoeker klikken op iets dat er niet is.
+	 * stelsel eist. Valt er geen adres te maken, dan komt de naam er als gewone tekst te staan,
+	 * zonder link — zie `maakBijlageRegel`, dat die tak zelf toelicht.
 	 */
 	/**
 	 * Het adres van één bijlage bij het stelsel, of null als er geen te maken is.

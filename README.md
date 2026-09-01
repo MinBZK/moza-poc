@@ -230,11 +230,11 @@ aanroepen zetten de header gewoon zelf.
 Dat cookie is **geen** beveiliging — de bezoeker kan het net zo goed zelf zetten als de header, en
 het stelsel houdt zijn eigen controle. De waarde is wel een identiteit, dus het reist zo min
 mogelijk mee: `path=/api/v1/berichten`, `SameSite=Strict` en `Secure` zodra de pagina over https
-gaat. Geen vervaltijd, dus een sessiecookie: het leeft zolang het tabblad leeft. Een vaste vervaltijd
-brak precies het normale geval — een keten-bericht heeft geen eigen detailpagina, dus er is geen
-navigatie die een nieuwe ophaalronde afdwingt, en na afloop gaf elke bijlage een 400 zonder melding.
+gaat. Geen vervaltijd, dus een sessiecookie: het leeft zolang de browserzitting duurt. Een vaste vervaltijd
+brak precies het normale geval: het cookie wordt alleen bij een paginalading gezet, en de inbox is
+een pagina die blijft openstaan. Na afloop gaf elke bijlage een 400 zonder melding.
 
-Wat er in staat is bij deze persona's altijd `KVK:<nummer>`; de keten-bron matcht daar hard op. Kent
+Wat er in staat is bij deze persona's altijd `KVK:<nummer>`; `berichtenbox-keten.js` matcht daar hard op. Kent
 het stelsel straks ook ontvangers op BSN, dan staat er een BSN in en telt dat als bijzonder
 persoonsgegeven.
 
@@ -278,21 +278,22 @@ mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
 | `BACKEND_API` | de catch-all `/api/` en de terugval van `BACKEND_PROFIEL` en `BACKEND_API_2` | valt terug op `BACKEND_ORIGIN` |
 | `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
 | `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
-| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502** met de naam van de variabele |
+| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | **502**; onder `/api/v1/` met de variabelenaam erin, bij een bijlage-adres bewust zonder |
 | `BACKEND_DEMO` | `/api/demo/` — de demo-console met de testaccounts | valt terug op `BACKEND_KETEN`, anders **502** |
 | `BACKEND_KETEN_HOST` | de `Host`-header naar de uitvraag | de host van de browser |
 | `BACKEND_DEMO_HOST` | de `Host`-header naar de demo-console | valt terug op `BACKEND_KETEN_HOST` |
 
-Twee dingen om te weten bij het uitrollen:
+Drie dingen om te weten bij het uitrollen:
 
 - **Het stelsel valt niet terug.** Staat `BACKEND_KETEN` niet, dan antwoordt nginx zelf met een 502
   die de variabelenaam noemt. Dat is met opzet: doorsturen naar de chat-backend leverde een 404 of
   een DNS-fout uit een dienst die deze paden niet kent, en dan is niet te zien dát er een variabele
   ontbreekt.
-- **Maak `BACKEND_ORIGIN` niet leeg.** Die is de bodem van elke terugval hierboven. Een lege
-  waarde gaf een kale 500 met `invalid URL prefix` in het logboek; nu antwoordt de proxy met een 502
-  die zegt welke variabele ontbreekt. Wil je de chat-backend niet gebruiken, laat `BACKEND_ORIGIN`
-  dan gewoon op zijn default staan en zet `BACKEND_API` op de dienst die de API's bedient.
+- **Elke route bewaakt zijn eigen variabele.** Is die leeg — en de terugval erachter ook — dan
+  antwoordt de proxy met een 502 die zegt welke variabele ontbreekt, in plaats van met een kale 500
+  (`invalid URL prefix` in het logboek). `BACKEND_ORIGIN` leegmaken legt dus alleen `/chat`,
+  `/health` en `/tools` stil; staat `BACKEND_API` dan op een werkende dienst, dan blijft alles onder
+  `/api/` gewoon werken.
 - **`/health` zegt niets over deze container.** Dat pad proxyt naar de Digitale-Assistent-backend.
   Draait die niet in de omgeving, richt een health-check dan niet op `/health` — die faalt dan
   terwijl de proeftuin het prima doet.

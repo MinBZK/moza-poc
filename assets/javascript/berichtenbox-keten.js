@@ -182,11 +182,12 @@
 	 * - `Secure` zodra de pagina over https gaat. Niet onvoorwaardelijk: een browser weigert een
 	 *   Secure-cookie op een gewone http-pagina, en dan werken bijlagen lokaal niet meer.
 	 *
-	 * Geen `Max-Age`, dus een sessiecookie: hij leeft zolang het tabblad leeft. Een vaste vervaltijd
-	 * leek zuiniger, maar een keten-bericht heeft geen eigen detailpagina — het detail opent in
-	 * dezelfde pagina — dus er is geen navigatie die een nieuwe ophaalronde afdwingt en het cookie
-	 * ververst. Een berichtenbox die een uur openstaat verloor daardoor precies zijn bijlagen: de
-	 * brief stond er nog, en de bijlage bij die brief gaf een 400 uit het stelsel, zonder melding.
+	 * Geen `Max-Age`, dus een sessiecookie: het leeft zolang de browserzitting duurt. Een vaste
+	 * vervaltijd leek zuiniger, maar het cookie wordt alleen bij een paginalading gezet, en de inbox
+	 * is een pagina die blijft openstaan — filteren, pagineren en een bericht in een nieuw tabblad
+	 * openen laten het oorspronkelijke document en zijn cookie ongemoeid. Na afloop van die
+	 * vervaltijd gaf elke bijlage een 400 uit het stelsel, zonder melding, terwijl de brief er nog
+	 * gewoon stond: die haalt de ontvanger uit het geheugen van dit script en verloopt nooit.
 	 */
 	function zetOntvangerCookie(ontvanger) {
 		try {

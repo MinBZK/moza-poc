@@ -2,8 +2,9 @@
 #
 # compose.proeftuin-lokaal.yaml uit de FBS-repo beperkt NGINX_ENVSUBST_FILTER tot
 # BACKEND_(ORIGIN|PROFIEL|API_2|KETEN|DEMO). Onze default.conf.template gebruikt daarnaast
-# BACKEND_KETEN_HOST en BACKEND_DEMO_HOST; die zouden dan letterlijk in de nginx-config blijven
-# staan en als Host-header meegaan.
+# BACKEND_API, BACKEND_KETEN_HOST en BACKEND_DEMO_HOST; die blijven dan letterlijk in de config
+# staan. Dat gaat niet stuk — nginx leest zo'n ${...} als een lege eigen variabele, dus de terugval
+# vuurt — maar een gezette waarde wordt dan stilzwijgend genegeerd.
 # In hostnet delen alle containers één netns, dus staat alles op 127.0.0.1 en resolveert
 # "berichtenuitvraag" niet.
 services:
