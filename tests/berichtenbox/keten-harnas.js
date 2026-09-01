@@ -75,7 +75,12 @@ export async function startKeten(perAdres) {
 	// harnas werkt in het http- en het https-bestand.
 	window.history.replaceState(null, "", "/moza/berichtenbox/");
 	window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
-	window.Personas = { actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }) };
+	// Inclusief `personas`, zoals de echte wisselaar die publiceert: de keten-bron vergelijkt de
+	// lijst van het stelsel daarmee om te melden welke testaccounts hier geen persona hebben.
+	window.Personas = {
+		actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }),
+		personas: [{ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }],
+	};
 
 	new Function(BRON).call(window);
 	await window.BerichtenboxKeten.berichten();

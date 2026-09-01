@@ -230,7 +230,40 @@
 		const lijst = await respons.json();
 		if (!Array.isArray(lijst)) throw ketenFout("onbereikbaar", "testaccounts: onverwacht antwoord");
 
+		meldOntbrekendeTestaccounts(lijst);
+
 		return lijst.find((p) => p && p.bron === "keten" && p.ontvanger === "KVK:" + kvkNummer) || null;
+	}
+
+	/**
+	 * Meldt welke testaccounts het stelsel aanbiedt waarvoor hier geen persona bestaat.
+	 *
+	 * De persona's staan statisch in `_data/personas.json`, want een persona is meer dan een
+	 * ontvanger: er hangen bedrijfsgegevens aan die de pagina Bedrijfsgegevens, het dashboard en de
+	 * assistent gebruiken, en die levert het stelsel niet. Die lijst met de hand bijhouden is prima,
+	 * zolang je merkt dat er iets bij gekomen is — vandaar deze melding.
+	 *
+	 * Ontvangers op BSN blijven bewust buiten MOZa: dit is de zakelijke kant, en die schrijft
+	 * ondernemingen aan op KVK-nummer. Ze worden apart gemeld, zodat het een keuze blijft en niet
+	 * als omissie leest.
+	 */
+	function meldOntbrekendeTestaccounts(lijst) {
+		if (!window.Personas || !Array.isArray(window.Personas.personas)) return;
+
+		const onze = window.Personas.personas.map((p) => (p && p.bedrijf && p.bedrijf.kvkNummer ? "KVK:" + p.bedrijf.kvkNummer : null)).filter(Boolean);
+		const ontbreekt = lijst.filter((p) => p && p.bron === "keten" && p.ontvanger && onze.indexOf(p.ontvanger) === -1);
+		if (!ontbreekt.length) return;
+
+		const beschrijf = (p) => (p.label || p.id || "naamloos") + " (" + p.ontvanger + ")";
+		const opBsn = ontbreekt.filter((p) => p.ontvanger.indexOf("BSN:") === 0);
+		const opKvk = ontbreekt.filter((p) => p.ontvanger.indexOf("BSN:") !== 0);
+
+		if (opKvk.length) {
+			console.warn("[Berichtenbox] Het stelsel biedt testaccounts waarvoor hier geen persona bestaat: " + opKvk.map(beschrijf).join(", ") + ". Voeg ze toe aan _data/personas.json, anders zijn ze niet te kiezen.");
+		}
+		if (opBsn.length) {
+			console.info("[Berichtenbox] Testaccounts van het stelsel met een BSN-ontvanger, bewust niet als persona overgenomen: " + opBsn.map(beschrijf).join(", ") + ". MOZa is de zakelijke kant en schrijft aan op KVK-nummer.");
+		}
 	}
 
 	// De ophaalronde is een Server-Sent-Events-stroom met voortgang per organisatie. EventSource kan

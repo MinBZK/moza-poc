@@ -18,6 +18,7 @@ import { BRON, ONTVANGER, BERICHT_ID, antwoord, sseAntwoord, PERSONAS, LIJST, st
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
+	vi.spyOn(console, "info").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -59,6 +60,30 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is en het stelsel verwacht
 		// "KVK:90000011". Ge-encodeerd zou daar "KVK%3A90000011" van maken.
 		expect(gezet).not.toContain("%3A");
+	});
+
+	it("meldt welke testaccounts van het stelsel hier geen persona hebben", async () => {
+		// De persona's staan statisch in _data/personas.json, want er hangen bedrijfsgegevens aan die
+		// het stelsel niet levert. Die lijst met de hand bijhouden is prima, zolang je het merkt als
+		// er iets bij komt — anders is een testaccount onbereikbaar zonder dat iemand het ziet.
+		const extra = antwoord(200, [
+			{ id: "proeftuin-een", label: "Demo-onderneming 1", ontvanger: ONTVANGER, bron: "keten" },
+			{ id: "nieuw", label: "Nieuwe onderneming", ontvanger: "KVK:90000099", bron: "keten" },
+			{ id: "bakkerij", label: "Bakkerij De Vroege Vogel", ontvanger: "BSN:999996666", bron: "keten" },
+		]);
+
+		await startKeten([
+			["/api/demo/personas", extra],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+		]);
+
+		// Een KVK-account dat we missen is werk: dat hoort hier een persona te krijgen.
+		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("KVK:90000099"));
+		// Een BSN-ontvanger is een keuze, geen omissie: MOZa is de zakelijke kant. Wel melden, maar
+		// niet als waarschuwing — anders gaat iemand hem alsnog toevoegen.
+		expect(console.info).toHaveBeenCalledWith(expect.stringContaining("BSN:999996666"));
+		expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("BSN:999996666"));
 	});
 
 	it("stuurt het cookie mee naar het adres dat een bijlage-link gebruikt", async () => {
