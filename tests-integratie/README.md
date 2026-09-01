@@ -24,6 +24,14 @@ podman system service --time=0 unix:///tmp/podman-run-1000/podman/podman.sock &
 DOCKER_HOST=unix:///tmp/podman-run-1000/podman/podman.sock demo/podman-up.sh
 ```
 
+Draait de stack al langer, dan ontbreekt `demo-personas` mogelijk: dat is een eigen dienst die pas
+later bij de demo is gekomen. Start hem erbij, anders komt `/api/demo/personas` nergens uit:
+
+```sh
+docker-compose -f compose.yaml -f compose.podman.yaml -f compose.podman-hostnet.yaml \
+               --profile demo up -d demo-personas
+```
+
 Daarna komt onze eigen build erin, in plaats van het gepubliceerde image:
 
 ```sh

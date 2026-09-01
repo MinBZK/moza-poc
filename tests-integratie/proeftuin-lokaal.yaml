@@ -17,9 +17,15 @@ services:
       NGINX_ENVSUBST_FILTER: '^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$$'
       BACKEND_ORIGIN: http://127.0.0.1:8086
       BACKEND_KETEN: http://127.0.0.1:8086
+      # De testaccountlijst is een eigen dienst (demo-personas, poort 8098), los van het
+      # bedieningspaneel op 8095. Online staat daar een SSO-muur voor het paneel en niet voor de
+      # lijst; lokaal houden we dezelfde scheiding aan, anders bewijst een lokale demo het verkeerde.
+      # Het paneel beantwoordt /api/demo/personas ook niet meer.
+      BACKEND_PERSONAS: http://127.0.0.1:8098
       BACKEND_DEMO: http://127.0.0.1:8095
       BACKEND_KETEN_HOST: ""
       BACKEND_DEMO_HOST: ""
+      BACKEND_PERSONAS_HOST: ""
       BACKEND_PROFIEL: ""
       BACKEND_API_2: ""
     volumes:
