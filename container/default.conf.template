@@ -131,7 +131,12 @@ server {
     # zijn CORS-regels toe op een aanroep die server-side gedaan wordt. De rest van de
     # binnenkomende headers gaat om dezelfde reden niet mee.
     location /api/profielservice/ {
-        include /etc/nginx/geen-backend-origin.conf;
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_profiel, en die is alleen leeg
+        # als BACKEND_PROFIEL niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_profiel = "") {
+            return 502 "BACKEND_PROFIEL is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_PROFIEL of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
 
         proxy_pass $backend_profiel$request_uri;
         proxy_http_version 1.1;
@@ -157,7 +162,12 @@ server {
     # Example: another API prefix that can point to a different backend
     # Set the env var BACKEND_API_2 to override, otherwise falls back to BACKEND_ORIGIN
     location /api/other/ {
-        include /etc/nginx/geen-backend-origin.conf;
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_api_2, en die is alleen leeg
+        # als BACKEND_API_2 niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_api_2 = "") {
+            return 502 "BACKEND_API_2 is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API_2 of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
 
         proxy_pass $backend_api_2$request_uri;
         proxy_set_header Host $host;
@@ -251,7 +261,12 @@ server {
 
     # Catch-all for /api to the generic API backend (BACKEND_API, anders BACKEND_ORIGIN)
     location /api/ {
-        include /etc/nginx/geen-backend-origin.conf;
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_api, en die is alleen leeg
+        # als BACKEND_API niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_api = "") {
+            return 502 "BACKEND_API is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
 
         proxy_pass $backend_api$request_uri;
         proxy_set_header Host $host;

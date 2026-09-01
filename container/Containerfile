@@ -40,9 +40,10 @@ FROM nginxinc/nginx-unprivileged:alpine
 # standaard-upstream voor alles onder /api/. Leeg gelaten valt BACKEND_API terug op
 # BACKEND_ORIGIN, dus alles onder /api/ gaat dan waar het vroeger ook heen ging. Wie hem wel zet,
 # haalt de chat-backend uit het routeringspad van API's die er niets mee te maken hebben — nuttig
-# in een omgeving waar die backend helemaal niet draait. Maak BACKEND_ORIGIN dan niet leeg: die is
-# de bodem van elke terugval, en een lege bodem levert een 502 met uitleg (geen kale 500, zie
-# container/geen-backend-origin.conf).
+# in een omgeving waar die backend helemaal niet draait. BACKEND_ORIGIN leegmaken legt dan alleen
+# /chat, /health en /tools stil, elk met een 502 die de variabele noemt in plaats van een kale 500
+# (zie container/geen-backend-origin.conf). BACKEND_KETEN en BACKEND_DEMO staan hier los van: die
+# vallen nergens op terug en bewaken zichzelf.
 # De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
 ENV BACKEND_ORIGIN=http://dabackend:8000 \
     BACKEND_API= \
