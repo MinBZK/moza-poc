@@ -15,6 +15,15 @@ title: "MijnOverheid Zakelijk: Bericht"
 
 	<section class="card">
 
+		<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+			{% include "icon-feedback-error.njk" %}
+			{% include "icon-feedback-info.njk" %}
+			<div>
+				<p data-berichtenbox-storing-tekst></p>
+			</div>
+		</div>
+
+
 		<section class="berichtenbox-content" data-demo-detail>
 			<h1 data-demo-onderwerp class="h3"></h1>
 

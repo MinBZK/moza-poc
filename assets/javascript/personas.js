@@ -110,6 +110,68 @@
 		return personas.find(function (p) { return p.actief; }) || personas[0];
 	}
 
+	// --- Persoonsgebonden opslag ---------------------------------------------------------------
+
+	// Tussen persona's bestaat geen verband: het zijn andere mensen bij andere bedrijven, met andere
+	// post en andere keuzes. Wat de een bewaarde, gearchiveerd of weggeklikt heeft, hoort de ander
+	// niet te zien. Vandaar dat de opslag bij een wisseling leeggaat.
+	//
+	// Alleen wat bij een persona hóórt. Vlaggen (`feature:`) en instellingen (`setting:`) zijn
+	// gereedschap van wie het prototype bekijkt, geen gegevens van een bedrijf, en blijven staan.
+	// `berichtenbox-keten` staat erbij als opruimwerk: die sleutel wordt niet meer geschreven, maar
+	// staat nog in browsers van vóór die wijziging.
+	var VAN_DE_PERSONA = [
+		/^berichtenbox$/,
+		/^berichtenbox-keten$/,
+		/^hidden:/,
+		/^read:/,
+		/^favorite:/,
+		/^dismissed:/,
+		/^unread:count$/,
+	];
+	var HERKOMST_KEY = "persona:gegevens-van";
+
+	function hoortBijEenPersona(sleutel) {
+		return VAN_DE_PERSONA.some(function (patroon) { return patroon.test(sleutel); });
+	}
+
+	/**
+	 * Wist de opgeslagen gegevens als ze bij een andere persona horen. Draait bij elke paginalading,
+	 * dus het werkt ook bij `?persona=` — die schrijft niets op en zou anders langs een hook op de
+	 * wisselaar heen glippen.
+	 */
+	function ruimOpBijWisseling(actiefId) {
+		var vorige;
+		try {
+			vorige = localStorage.getItem(HERKOMST_KEY);
+		} catch (e) {
+			return; // Zonder opslag valt er niets op te ruimen.
+		}
+		if (vorige === actiefId) return;
+
+		try {
+			var teWissen = [];
+			for (var i = 0; i < localStorage.length; i++) {
+				var sleutel = localStorage.key(i);
+				if (sleutel && hoortBijEenPersona(sleutel)) teWissen.push(sleutel);
+			}
+			teWissen.forEach(function (sleutel) { localStorage.removeItem(sleutel); });
+
+			// De gesimuleerde bronuitval hoort bij deze zitting én bij deze persona.
+			try { sessionStorage.removeItem("berichtenbox-bron-uitval"); } catch (e) { /* geen sessionStorage */ }
+
+			localStorage.setItem(HERKOMST_KEY, actiefId);
+
+			if (vorige) {
+				console.info("[Personas] Gewisseld van '" + vorige + "' naar '" + actiefId + "'; " +
+					teWissen.length + " opgeslagen gegeven(s) gewist.");
+			}
+		} catch (e) {
+			// Blijft er iets staan, dan ziet de volgende persona gegevens die niet van hem zijn.
+			console.error("[Personas] Opgeslagen gegevens van de vorige persona niet te wissen.", e);
+		}
+	}
+
 	function waarde(persona, sleutel) {
 		var p = persona.persoon;
 		var b = persona.bedrijf;
@@ -414,6 +476,12 @@
 
 	// Initialisatie.
 	var persona = actievePersona();
+
+	// Eerst opruimen, dan toepassen: alles wat hierna leest — de berichtenbox, de bewaarde
+	// actualiteiten, de ongelezen-teller — hoort de gegevens van déze persona te zien en niet die
+	// van de vorige.
+	ruimOpBijWisseling(persona.id);
+
 	pasToe(persona);
 	bouwKiezer();
 

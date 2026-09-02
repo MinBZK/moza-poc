@@ -29,6 +29,15 @@ eleventyComputed:
 		<section class="berichtenbox-content" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}" data-afzender-naam="{{ bericht.afzender }}"{% if bericht.heeftBijlage %} data-heeft-bijlage="true"{% endif %}>
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
 
+			<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+				{% include "icon-feedback-error.njk" %}
+				{% include "icon-feedback-info.njk" %}
+				<div>
+					<p data-berichtenbox-storing-tekst></p>
+				</div>
+			</div>
+
+
 			<p class="berichtenbox-detail-meta">
 				{{ bericht.afzender }} · {{ bericht.datum | datumNL }}
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}

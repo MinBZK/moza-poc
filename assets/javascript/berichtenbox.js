@@ -1,12 +1,27 @@
 /**
  * berichtenbox.js
  *
- * Client-side gedrag voor de FBS Berichtenbox-mock.
- * State (gelezen, archief, prullenbak, map-toewijzingen, eigen mappen)
- * wordt bewaard in localStorage onder de key "berichtenbox".
- * Statische lijst komt uit de server-gerenderde HTML; JS manipuleert
- * zichtbaarheid en klassen op basis van state.
+ * De render-laag van de Berichtenbox: dit bestand leest uit de datalaag en zet het op het scherm.
+ * Het muteert de bron nooit.
+ *
+ * De datalaag staat in `berichtenbox/` en kent geen DOM: `state.js` (de bewaarde staat in
+ * localStorage onder de key "berichtenbox" en de vragen daarover), `lijst.js` (filteren, sorteren
+ * en pagineren als pure functies), `bron.js` (het bronregister), `dataset-bron.js` (de gegenereerde
+ * dataset als bron) en `datum.js` (datumnotatie).
+ *
+ * Eén weg naar het scherm: `toonBerichten()` filtert de berichten, neemt het paginavenster en bouwt
+ * die rijen. De server-gerenderde rijen uit `_includes/berichtenbox-row.njk` blijven de basis voor
+ * bezoekers zonder JavaScript; draait JS wél, dan wordt de tbody één keer opnieuw opgebouwd.
+ *
+ * Wat u handmatig hoort na te lopen bij een wijziging staat in `docs/berichtenbox-regressietests.md`.
  */
+
+import { datumNL } from "./berichtenbox/datum.js";
+import { maakState, NIEUWE_BERICHTEN_LIMIET, LS_KEY as STATE_SLEUTEL } from "./berichtenbox/state.js";
+import { maakRegister } from "./berichtenbox/bron.js";
+import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lijst.js";
+import { datasetBron } from "./berichtenbox/dataset-bron.js";
+import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 (function() {
 	"use strict";
@@ -21,7 +36,35 @@
 				navBadges.forEach((badge) => { badge.textContent = opgeslagen.aantalOngelezen > 0 ? opgeslagen.aantalOngelezen : ''; });
 			}
 		}
-	} catch (e) { /* localStorage niet toegankelijk */ }
+	} catch (e) {
+		// De badge houdt dan het server-gerenderde aantal; beter dan geen badge, maar het hoort
+		// niet spoorloos te gebeuren.
+		console.warn('[Berichtenbox] Ongelezen-badge niet bij te werken uit de bewaarde state.', e);
+	}
+
+	// De actieve persona, in dezelfde volgorde als personas.js: ?persona= > localStorage > actief.
+	// Hier bovenaan, want twee dingen hangen eraan: welke berichten relevant zijn (berichten met
+	// een relevantVoor-tag horen bij één persona; zonder tag zijn ze generiek), en van wie de
+	// bewaarde staat is. Persona-wisseling herlaadt de pagina, dus één keer bepalen volstaat.
+	const actievePersonaId = (function () {
+		const personas = window.personasData;
+		if (!Array.isArray(personas) || !personas.length) return null;
+		const param = new URLSearchParams(location.search).get('persona');
+		if (param) {
+			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
+			if (gevonden) return gevonden.id;
+		}
+		try {
+			const opgeslagen = localStorage.getItem('persona');
+			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
+		} catch (e) {
+			// Zonder de bewaarde keuze valt de berichtenbox terug op de standaardpersona; dat is een
+			// andere postbus dan de bezoeker koos, dus het hoort in de console te staan.
+			console.warn('[Berichtenbox] Bewaarde persona niet te lezen; terug naar de standaard.', e);
+		}
+		const actief = personas.find((p) => p.actief);
+		return actief ? actief.id : personas[0].id;
+	})();
 
 	// Kebab-menu's in berichtenbox-rijen: openen/sluiten. Bewust vóór de data-guard,
 	// zodat het ook werkt op demo-berichtenboxen (mobu/belang) die geen volledige
@@ -63,28 +106,73 @@
 		// Geen volledige berichtenbox op deze pagina (bijv. de homepage-preview).
 		// De rest van de IIFE stopt hieronder; markeren regelen we hier apart en
 		// delen alleen de localStorage-state (key "berichtenbox", veld gemarkeerd).
+		// Geeft null als de bewaarde state er wel is maar onleesbaar. Dat is iets anders dan "er staat
+		// nog niets": bij onleesbaar mag er niet overheen geschreven worden, want dan zijn ook het
+		// archief, de prullenbak en de eigen mappen weg.
+		let gedeeldeStateOnleesbaar = false;
+
+		function leesGedeeldeState() {
+			let rauw;
+			try {
+				rauw = localStorage.getItem('berichtenbox');
+			} catch (e) {
+				console.error('[Berichtenbox] Opslag niet leesbaar; markering wordt niet bewaard.', e);
+				return null;
+			}
+			if (!rauw) return {};
+
+			try {
+				const ontleed = JSON.parse(rauw);
+				if (!ontleed || typeof ontleed !== 'object' || Array.isArray(ontleed)) {
+					throw new Error('state is geen object');
+				}
+				// Van een andere persona: niet lezen en niet aanvullen. Zelfde regel als in
+				// state.js — tussen persona's bestaat geen verband.
+				if ((ontleed.persona ?? null) !== (actievePersonaId ?? null)) return { persona: actievePersonaId };
+				return ontleed;
+			} catch (e) {
+				console.error('[Berichtenbox] Bewaarde state onleesbaar; markering wordt niet bewaard.', e);
+				gedeeldeStateOnleesbaar = true;
+				return null;
+			}
+		}
+
 		document.querySelectorAll('.berichtenbox-row[data-bericht-id] [data-mark-toggle]').forEach((knop) => {
 			const id = knop.closest('.berichtenbox-row').dataset.berichtId;
 			const vh = knop.querySelector('.visually-hidden');
-			function leesState() {
-				try { return JSON.parse(localStorage.getItem('berichtenbox') || '{}'); }
-				catch (e) { return {}; }
-			}
+
 			function toonMarkering(aan) {
 				knop.classList.toggle('is-marked', aan);
 				knop.setAttribute('aria-pressed', aan ? 'true' : 'false');
 				if (vh) vh.textContent = aan ? 'Markering verwijderen' : 'Markeren';
 			}
-			const opgeslagen = leesState().gemarkeerd || {};
+
+			const opgeslagen = (leesGedeeldeState() || {}).gemarkeerd || {};
 			if (id in opgeslagen) toonMarkering(!!opgeslagen[id]);
+
 			knop.addEventListener('click', () => {
 				const aan = !knop.classList.contains('is-marked');
-				toonMarkering(aan);
-				const s = leesState();
-				if (!s.gemarkeerd) s.gemarkeerd = {};
-				s.gemarkeerd[id] = aan;
-				try { localStorage.setItem('berichtenbox', JSON.stringify(s)); }
-				catch (e) { console.error('[Berichtenbox] Kon markering niet bewaren.', e); }
+				const s = leesGedeeldeState();
+
+				if (s) {
+					if (!s.gemarkeerd) s.gemarkeerd = {};
+					s.gemarkeerd[id] = aan;
+					try {
+						localStorage.setItem('berichtenbox', JSON.stringify(s));
+						toonMarkering(aan);
+						return;
+					} catch (e) {
+						console.error('[Berichtenbox] Kon markering niet bewaren.', e);
+					}
+				}
+
+				// Er is niets bewaard. De knop mag dan niet doen alsof van wel: deze pagina heeft geen
+				// meldingsblok, dus de knop zelf is het enige dat de waarheid kan vertellen. Niet
+				// blijvend uitschakelen — een volgende poging kan wel lukken.
+				toonMarkering(!aan);
+				knop.title = gedeeldeStateOnleesbaar
+					? 'Markeren lukte niet; uw eerder bewaarde berichtenbox is niet te lezen.'
+					: 'Markeren lukte niet; uw browser bewaart op dit moment niets.';
 			});
 		});
 		return;
@@ -93,29 +181,25 @@
 	const data = window.berichtenboxData;
 	if (!data || !Array.isArray(data.berichten) || !Array.isArray(data.mappen) || !Array.isArray(data.magazijnen)) {
 		console.error('[Berichtenbox] window.berichtenboxData ontbreekt of is incompleet; script gestopt.');
+
+		// Toen de rijen nog server-gerenderd waren, bleef er iets staan als dit misging. Nu komen ze
+		// uit de datalaag en houdt de bezoeker een lege tabel over waar niets bij staat. De melding
+		// hier niet via toonPaginaMelding: die leunt op variabelen die verderop pas bestaan.
+		// Alleen op een echte berichtenbox-pagina; de demo-postvakken hebben geen lijst en geen data,
+		// en daar is niets aan de hand.
+		if (document.querySelector('[data-berichtenbox-list]')) {
+			const blok = document.querySelector('[data-berichtenbox-storing]');
+			const slot = blok && blok.querySelector('[data-berichtenbox-storing-tekst]');
+			if (slot) slot.textContent = 'Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.';
+			if (blok) blok.hidden = false;
+
+			// "U heeft nog geen berichten" is aantoonbaar onwaar zolang we niet weten wát er is.
+			const leeg = document.querySelector('[data-berichtenbox-empty]');
+			if (leeg) leeg.hidden = true;
+		}
 		return;
 	}
 
-	// Persona-relevantie (Aanpak A). Bepaal de actieve persona (zelfde volgorde als
-	// personas.js: ?persona= > localStorage > actief) en toon berichten met een
-	// relevantVoor-tag alleen bij de juiste persona. Berichten zonder tag zijn
-	// generiek en verschijnen altijd. Persona-wisseling herlaadt de pagina, dus
-	// het volstaat dit één keer bij het laden te bepalen.
-	const actievePersonaId = (function () {
-		const personas = window.personasData;
-		if (!Array.isArray(personas) || !personas.length) return null;
-		const param = new URLSearchParams(location.search).get('persona');
-		if (param) {
-			const gevonden = personas.find((p) => p.label === param) || personas.find((p) => p.id === param);
-			if (gevonden) return gevonden.id;
-		}
-		try {
-			const opgeslagen = localStorage.getItem('persona');
-			if (opgeslagen && personas.some((p) => p.id === opgeslagen)) return opgeslagen;
-		} catch (e) { /* localStorage niet toegankelijk */ }
-		const actief = personas.find((p) => p.actief);
-		return actief ? actief.id : personas[0].id;
-	})();
 	function persoonRelevant(bericht) {
 		if (!bericht || !Array.isArray(bericht.relevantVoor) || !bericht.relevantVoor.length) return true;
 		return actievePersonaId != null && bericht.relevantVoor.indexOf(actievePersonaId) !== -1;
@@ -132,91 +216,78 @@
 	}
 	// Basis-URL van de berichtenbox waarin we ons bevinden, zodat berichten en
 	// acties binnen het juiste portaal (MOZa of Mijn Belastingdienst) blijven.
+	// Eén doorgang voor navigatie. jsdom voert `location.href = …` niet uit, dus zonder deze functie
+	// is in een test niet vast te stellen of de pagina wegnavigeert.
+	let navigatieDoel = null;
+	function navigeerNaar(pad) {
+		navigatieDoel = pad;
+		location.href = pad;
+	}
+
 	function berichtenboxBasis() {
 		return location.pathname.indexOf('/mijn-belastingdienst/') !== -1
 			? '/mijn-belastingdienst/berichtenbox/'
 			: '/moza/berichtenbox/';
 	}
-	const POLL_MIN_SEC = 5;
-	const NIEUWE_BERICHTEN_LIMIET = 5;
 
-	const LS_KEY = "berichtenbox";
+	// Dezelfde sleutel als de state-module. Het pre-guard-blok hierboven draait vóór `data` bestaat
+	// en houdt daarom zijn eigen letterlijke sleutel.
+	const LS_KEY = STATE_SLEUTEL;
 
-	const defaultState = {
-		eersteBezoekGehad: false,
-		gelezen: {},
-		ongelezenToegevoegd: {},
-		gearchiveerd: {},
-		verwijderd: {},
-		gemarkeerd: {},
-		mapOverride: {},
-		eigenMappen: [],
-		// Via polling binnengekomen berichten; bewaard zodat ze na reload zichtbaar blijven.
-		nieuweBerichten: [],
-		// A/B-test Belastingdienst-berichtenbox: ook berichten van andere organisaties tonen.
-		toonAndereOrganisaties: false,
-	};
+	// De state komt uit berichtenbox/state.js: één plek voor wat de bezoeker met zijn berichten
+	// heeft gedaan. `state` blijft de rauwe vorm, want er wordt op tientallen plekken rechtstreeks
+	// in geschreven; die schrijfacties lopen nog steeds via opslaan().
+	const stateModule = maakState(localStorage, actievePersonaId);
+	const state = stateModule.ruw;
+	const statusVan = (berichtId) => stateModule.statusVan(berichtId);
+	const isOngelezen = (id, origineel) => stateModule.isOngelezen(id, origineel);
+	const mapVan = (id, origineel) => stateModule.mapVan(id, origineel);
+	const isGemarkeerd = (id, origineel) => stateModule.isGemarkeerd(id, origineel);
 
-	function readState() {
-		try {
-			const raw = localStorage.getItem(LS_KEY);
-			if (!raw) return { ...defaultState };
-			const parsed = JSON.parse(raw);
-			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-				throw new Error('state is geen object');
-			}
-			const merged = { ...defaultState, ...parsed };
-			// Normaliseer types zodat writeState/render niet kunnen crashen op corrupte keys.
-			if (!Array.isArray(merged.nieuweBerichten)) merged.nieuweBerichten = [];
-			const bekendeMagazijnen = new Set(data.magazijnen.map((m) => m.id));
-			merged.nieuweBerichten = merged.nieuweBerichten
-				.filter((b) => bekendeMagazijnen.has(b.magazijnId))
-				.slice(-NIEUWE_BERICHTEN_LIMIET);
-			if (!Array.isArray(merged.eigenMappen)) merged.eigenMappen = [];
-			['gelezen','ongelezenToegevoegd','gearchiveerd','verwijderd','gemarkeerd','mapOverride'].forEach((k) => {
-				if (!merged[k] || typeof merged[k] !== 'object' || Array.isArray(merged[k])) merged[k] = {};
-			});
-			return merged;
-		} catch (e) {
-			console.warn('[Berichtenbox] State corrupt of niet toegankelijk; terugvallen op default.', e);
-			return { ...defaultState };
-		}
+	// De voortgangsanimatie verbergt de lijst zelf, maar dat gebeurt pas als de bron geladen is.
+	// Dit script is bovendien een module, dus het draait ná alle klassieke defer-scripts. In dat gat
+	// staan de server-gerenderde rijen op het scherm, en die flitsen dan voorbij vlak voordat de
+	// voortgang begint. Op main viel de beslissing synchroon, meteen na het renderen, en was dat gat
+	// er niet. Wat straks verborgen wordt, verbergen we daarom nu al: view, pagina en de bewaarde
+	// staat zijn hier alle drie bekend.
+	let voortgangKlaargezet = false;
+
+	/**
+	 * Ruimt de lijst op voor een bron die gaat melden hoe ver hij is. Het voortgangsblok zelf blijft
+	 * hier verborgen: dat verschijnt pas bij het eerste getal, in vulVoortgang.
+	 *
+	 * Anders staat er een balk op nul boven een lege pagina zolang de bron nog niets weet — en dat
+	 * kan seconden duren als het stelsel niet antwoordt. "0 van 14 bronnen" is dan geen voortgang
+	 * maar een bewering over bronnen die nooit bevraagd zijn.
+	 */
+	function verbergVoorVoortgang() {
+		const wrap = document.querySelector('[data-berichtenbox-progress]');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (!wrap || !lijst) return false;
+
+		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		lijst.hidden = true;
+		if (pagnav) pagnav.hidden = true;
+		voortgangKlaargezet = true;
+		return true;
 	}
 
-	function writeState(state) {
-		if (state.nieuweBerichten.length > NIEUWE_BERICHTEN_LIMIET) {
-			state.nieuweBerichten = state.nieuweBerichten.slice(-NIEUWE_BERICHTEN_LIMIET);
-		}
-		try {
-			localStorage.setItem(LS_KEY, JSON.stringify(state));
-		} catch (e) {
-			// QuotaExceededError of SecurityError (Safari private mode) — laat demo verder draaien.
-			console.error('[Berichtenbox] Kon state niet opslaan.', e);
-		}
+	/** De lijst weer tonen als de animatie tóch niet komt: een mislukte lading, of een andere pagina. */
+	function toonNaVoortgang() {
+		if (!voortgangKlaargezet) return;
+		voortgangKlaargezet = false;
+
+		const wrap = document.querySelector('[data-berichtenbox-progress]');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const pagnav = document.querySelector('.berichtenbox-content .pagination');
+		if (wrap) wrap.hidden = true;
+		if (lijst) lijst.hidden = false;
+		if (pagnav) pagnav.hidden = false;
 	}
 
-	const state = readState();
-
-	function statusVan(berichtId) {
-		if (state.verwijderd[berichtId]) return "prullenbak";
-		if (state.gearchiveerd[berichtId]) return "archief";
-		return "inbox";
-	}
-
-	function isOngelezen(berichtId, origineelOngelezen) {
-		if (state.ongelezenToegevoegd[berichtId]) return true;
-		if (state.gelezen[berichtId]) return false;
-		return origineelOngelezen;
-	}
-
-	function mapVan(berichtId, origineleMap) {
-		if (berichtId in state.mapOverride) return state.mapOverride[berichtId];
-		return origineleMap;
-	}
-
-	function isGemarkeerd(berichtId, origineelGemarkeerd) {
-		if (berichtId in state.gemarkeerd) return !!state.gemarkeerd[berichtId];
-		return !!origineelGemarkeerd;
+	// huidigeView en huidigePaginaUitUrl zijn functiedeclaraties, dus hier al bruikbaar.
+	if (huidigeView() === 'inbox' && huidigePaginaUitUrl() === 1 && !state.eersteBezoekGehad) {
+		verbergVoorVoortgang();
 	}
 
 	// Oog-iconen voor de gelezen/ongelezen-knop. Open oog (tonen) = "maak gelezen",
@@ -262,6 +333,7 @@
 		try {
 			return localStorage.getItem('feature:' + ORG_FEATURE) === 'true';
 		} catch (e) {
+			console.warn('[Berichtenbox] Vlag "Berichten van andere organisaties" niet leesbaar; behandeld als uit.', e);
 			return false;
 		}
 	}
@@ -294,6 +366,9 @@
 		return unhappyScenario;
 	}
 	function bronOnbereikbaar() {
+		// Op echte bronnen heeft de unhappy-flow-vlag geen betekenis: scenario "geen" blokkeert élk
+		// magazijn, en dat zou werkelijke post wegfilteren.
+		if (!simulatieMag()) return false;
 		if (bronHandmatigHersteld) return false;
 		return unhappyFlowAan();
 	}
@@ -366,52 +441,21 @@
 		return 'inbox';
 	}
 
-	const MAANDEN = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-
-	// Parse "YYYY-MM-DD" direct om timezone-drift te voorkomen (new Date() interpreteert UTC).
-	function datumNL(datumStr) {
-		if (!datumStr) return '';
-		const m = datumStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-		if (!m) return 'Onbekende datum';
-		const mnd = parseInt(m[2], 10);
-		if (mnd < 1 || mnd > 12) return 'Onbekende datum';
-		return parseInt(m[3], 10) + ' ' + MAANDEN[mnd - 1] + ' ' + parseInt(m[1], 10);
-	}
-
 	// Op andere views dan inbox worden statische rijen altijd verborgen; die views worden volledig door JS gevuld.
-	function pasStateToeOpRijen() {
-		const view = huidigeView();
-		const rijen = document.querySelectorAll('.berichtenbox-row');
-		rijen.forEach((rij) => {
-			const id = rij.dataset.berichtId;
-			const status = statusVan(id);
-			// Markeer-staat uit localStorage spiegelen naar de knop in de statische rij.
-			const markKnop = rij.querySelector('[data-mark-toggle]');
-			const gemarkeerd = isGemarkeerd(id, markKnop ? markKnop.classList.contains('is-marked') : false);
-			if (markKnop) {
-				markKnop.classList.toggle('is-marked', gemarkeerd);
-				markKnop.setAttribute('aria-pressed', gemarkeerd ? 'true' : 'false');
-			}
-			if (view === 'inbox') {
-				rij.hidden = status !== 'inbox';
-				const origineel = rij.classList.contains('is-unread');
-				const nu = isOngelezen(id, origineel);
-				rij.classList.toggle('is-unread', nu);
-			} else {
-				rij.hidden = true;
-			}
-		});
-	}
-
 	function render(view) {
+		// Staat er een storingsmelding, dan weten we niets over de aantallen. Ze alsnog schrijven
+		// zou die melding tegenspreken, en via state.aantalOngelezen ook de badges op andere
+		// pagina's een getal geven voor berichten die niemand kon zien.
+		if (ladingMislukt || laadfoutGetoond) return;
 		const tellerTotaal = document.querySelector('[data-berichtenbox-counter-total]');
 		let getoond = 0;
 		if (view === 'inbox') {
 			getoond = data.berichten.filter((b) => statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
-		} else if (view === 'archief') {
-			getoond = Object.keys(state.gearchiveerd).length;
-		} else if (view === 'prullenbak') {
-			getoond = Object.keys(state.verwijderd).length;
+		} else {
+			// Tellen op dezelfde manier waarop de lijst gevuld wordt. Rechtstreeks de sleutels van
+			// state.gearchiveerd tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd
+			// is: statusVan geeft de prullenbak voorrang, de teller zou het dubbel meenemen.
+			getoond = data.berichten.filter((b) => statusVan(b.id) === view).length;
 		}
 		if (tellerTotaal) tellerTotaal.textContent = getoond;
 
@@ -426,31 +470,25 @@
 			tellerBronnen.textContent = bronnen.size;
 		}
 
-		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
-		if (tellerOngelezen) {
-			const n = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
-			).length;
-			tellerOngelezen.textContent = n;
-		}
-
-		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
-		if (navInbox) {
-			navInbox.textContent = data.berichten.filter((b) =>
-				statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
-			).length;
-		}
 		const ongelezenAantal = data.berichten.filter((b) =>
 			statusVan(b.id) === 'inbox' && magazijnToegestaan(b.magazijnId) && persoonRelevant(b) && isOngelezen(b.id, b.isOngelezen)
 		).length;
+
+		const tellerOngelezen = document.querySelector('[data-berichtenbox-counter-unread]');
+		if (tellerOngelezen) tellerOngelezen.textContent = ongelezenAantal;
+
+		const navInbox = document.querySelector('[data-berichtenbox-count="inbox"]');
+		if (navInbox) navInbox.textContent = ongelezenAantal;
 		document.querySelectorAll('[data-berichtenbox-count="ongelezen"]').forEach((el) => {
 			el.textContent = ongelezenAantal > 0 ? ongelezenAantal : '';
 		});
 		state.aantalOngelezen = ongelezenAantal;
+		// Op dezelfde manier tellen als de lijst gevuld wordt; de sleutels van state.gearchiveerd
+		// rechtstreeks tellen wijkt af zodra een bericht zowel gearchiveerd als verwijderd is.
 		const navArchief = document.querySelector('[data-berichtenbox-count="archief"]');
-		if (navArchief) navArchief.textContent = Object.keys(state.gearchiveerd).length;
+		if (navArchief) navArchief.textContent = data.berichten.filter((b) => statusVan(b.id) === 'archief').length;
 		const navPrullenbak = document.querySelector('[data-berichtenbox-count="prullenbak"]');
-		if (navPrullenbak) navPrullenbak.textContent = Object.keys(state.verwijderd).length;
+		if (navPrullenbak) navPrullenbak.textContent = data.berichten.filter((b) => statusVan(b.id) === 'prullenbak').length;
 
 		const alleMappen = [...data.mappen, ...state.eigenMappen];
 		alleMappen.forEach((m) => {
@@ -458,7 +496,7 @@
 			if (!el) return;
 			const n = data.berichten.filter((b) => {
 				if (statusVan(b.id) !== 'inbox') return false;
-				const effMap = (b.id in state.mapOverride) ? state.mapOverride[b.id] : b.map;
+				const effMap = mapVan(b.id, b.map);
 				return effMap === m.slug;
 			}).length;
 			el.textContent = n;
@@ -481,15 +519,53 @@
 		});
 	}
 
-	function opslaan() {
-		writeState(state);
+	function opslaan(herstel) {
+		if (stateModule.bewaar()) {
+			// Weer ruimte: de melding hoort niet te blijven staan. QuotaExceededError is van nature
+			// tijdelijk — bewaar() krimpt zelf de lijst met binnengekomen berichten.
+			if (staandeMeldingEigenaar === 'opslag') verbergPaginaMelding('opslag');
+			return true;
+		}
+
+		// Terug naar wat er wél bewaard is. Zonder dit blijft het scherm de wijziging tonen als
+		// voltooid, en spreekt het de melding eronder tegen.
+		if (typeof herstel === 'function') herstel();
+
+		// Niet "hebben we het al eens gezegd", maar "staat het er nog". Een melding van een andere
+		// eigenaar kan de onze uit het slot hebben geduwd; dan heeft de bezoeker hem nooit gezien.
+		if (staandeMeldingEigenaar !== 'opslag') {
+			const reden = stateModule.waaromNietBewaard();
+			let tekst;
+			if (reden === 'vol') {
+				tekst = 'Uw wijziging is niet bewaard. Uw browser heeft er geen ruimte meer voor.';
+			} else if (reden === 'onleesbaar') {
+				// Overschrijven zou het archief, de prullenbak en de eigen mappen wissen; dat doen we
+				// bewust niet, en dan is "zet privénavigatie uit" een advies dat nergens op slaat.
+				tekst = 'Uw wijziging is niet bewaard. Uw eerder bewaarde berichtenbox is niet te lezen, en wij schrijven daar niet overheen.';
+			} else {
+				tekst = 'Uw wijziging is niet bewaard. Uw browser bewaart op dit moment niets voor deze site; zet privénavigatie uit of sta opslag toe.';
+			}
+			toonPaginaMelding(tekst, 'storing', 'opslag');
+		}
+		return false;
+	}
+
+	/**
+	 * Opslaan van iets wat de bezoeker niet zelf vroeg — het openen van een bericht markeert het als
+	 * gelezen. Mislukt dat, dan is "uw wijziging is niet bewaard" onwaar, en het zou de melding
+	 * opgebruiken die bij een échte actie hoort.
+	 */
+	function opslaanStil() {
+		if (stateModule.bewaar()) return true;
+		console.error('[Berichtenbox] Leesstatus kon niet worden bewaard.');
+		return false;
 	}
 
 	// ---- Client-side paginering ----
-	// Eleventy rendert alle berichten in één lijst; JS toont per pagina een venster
-	// zodat een dynamisch toegevoegd bericht echt naar de volgende pagina reflowt.
-	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan geen
-	// paginering (alles op één pagina).
+	// De datalaag levert alle berichten; toonBerichten rendert alleen het venster van de huidige
+	// pagina, zodat een nieuw binnengekomen bericht echt naar de volgende pagina doorschuift.
+	// Paginagrootte komt uit data-page-size op de lijst; ontbreekt die, dan staat alles op één
+	// pagina.
 	const PAGINA_GROOTTE = (function () {
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const n = parseInt(lijst && lijst.dataset.pageSize, 10);
@@ -502,37 +578,42 @@
 	}
 	let huidigePagina = huidigePaginaUitUrl();
 
-	// Hook die de huidige weergave opnieuw filtert/pagineert; gezet door de
-	// actieve view (inbox-filter of archief/prullenbak/map-render).
-	let herpagineerHuidigeView = function () {};
+	// Elke weergave loopt via dezelfde weg naar het scherm; de paginanavigatie heeft genoeg aan
+	// deze verwijzing. Functiedeclaraties zijn gehesen, dus dit mag hier al.
+	const herpagineerHuidigeView = toonBerichten;
+
+	// De rij die bij de laatste bronwijziging binnenkwam, zodat createRij die kan laten invaden.
+	let zojuistBinnengekomenId = null;
+
+	// Er staat een storingsmelding op het scherm; de gesimuleerde unhappy flow mag die niet wegpoetsen.
+	let laadfoutGetoond = false;
+	// De lading zelf is mislukt. Blijft staan tot een herlaad: niets op deze pagina kan de berichten
+	// alsnog binnenhalen, dus geen enkele latere render mag doen alsof er wél iets te zien is.
+	let ladingMislukt = false;
 
 	// Bij venster-resize de paginanav opnieuw opbouwen, zodat de ellipsis-truncatie
 	// meeschaalt met de beschikbare containerbreedte. Gedebounced tegen thrashing.
 	let resizeTimer = null;
 	window.addEventListener('resize', () => {
 		clearTimeout(resizeTimer);
-		resizeTimer = setTimeout(() => { herpagineerHuidigeView(); }, 150);
+		resizeTimer = setTimeout(() => {
+			// Tijdens een storing staat er geen lijst; paginanavigatie eronder zou werkende
+			// bladerknoppen suggereren voor iets wat niet te tonen is.
+			if (ladingMislukt || laadfoutGetoond) return;
+
+			// Alleen de ellipsis-truncatie van de paginanavigatie schaalt mee. De rijen opnieuw
+			// opbouwen zou een geopend kebab-menu sluiten en de toetsenbordfocus naar body gooien.
+			veilig({ log: 'Herberekenen van de paginanavigatie', bezoeker: 'De paginanavigatie klopt mogelijk niet meer. Ververs de pagina.' }, () => {
+				const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+				const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+				huidigePagina = venster.pagina;
+				bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+			});
+		}, 150);
 	});
 
 	// Toon alleen het venster van de huidige pagina uit `rijen` (al gefilterde,
 	// in volgorde staande rijen die zichtbaar horen te zijn) en bouw de paginanav.
-	function paginer(rijen) {
-		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
-		if (!Number.isFinite(PAGINA_GROOTTE)) {
-			if (pagnav) { pagnav.hidden = true; }
-			return;
-		}
-		const totaalPaginas = Math.max(1, Math.ceil(rijen.length / PAGINA_GROOTTE));
-		if (huidigePagina > totaalPaginas) huidigePagina = totaalPaginas;
-		if (huidigePagina < 1) huidigePagina = 1;
-		const start = (huidigePagina - 1) * PAGINA_GROOTTE;
-		const eind = start + PAGINA_GROOTTE;
-		rijen.forEach((rij, i) => {
-			rij.hidden = i < start || i >= eind;
-		});
-		bouwPaginaNav(totaalPaginas, pagnav);
-	}
-
 	function gaNaarPagina(nr) {
 		huidigePagina = nr;
 		const params = new URLSearchParams(location.search);
@@ -553,7 +634,9 @@
 			pagnav.hidden = true;
 			return;
 		}
-		pagnav.hidden = false;
+		// Niet tonen zolang de voortgangsanimatie op het scherm staat: de paginering hoort bij de
+		// lijst, en die is dan verborgen. De animatie zet hem zelf terug als ze klaar is.
+		pagnav.hidden = voortgangKlaargezet;
 
 		// Bouwt de nav met ten hoogste maxItems cijfercellen. Retourneert de <ol>.
 		function renderMet(maxItems) {
@@ -732,8 +815,16 @@
 			btn.innerHTML = mapIconSvg;
 			btn.appendChild(document.createTextNode(m.naam));
 			btn.addEventListener('click', () => {
+				const voorMap = state.mapOverride[berichtId];
 				state.mapOverride[berichtId] = m.slug;
-				opslaan();
+
+				// Niets doen alsof: het paneel sluiten en het maplabel zetten zou de wijziging als
+				// voltooid tonen terwijl er niets bewaard is.
+				if (!opslaan(() => {
+					if (voorMap === undefined) delete state.mapOverride[berichtId];
+					else state.mapOverride[berichtId] = voorMap;
+				})) return;
+
 				sluitVerplaatsPaneel();
 				render(huidigeView());
 				updateMapLabelDetail(m.slug);
@@ -746,11 +837,21 @@
 			if (!naam) return;
 			const slug = naam.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 			if (!slug) return;
+			const voorMappen = state.eigenMappen.slice();
+			const voorMap = state.mapOverride[berichtId];
 			if (!state.eigenMappen.some((m) => m.slug === slug)) {
 				state.eigenMappen.push({ slug, naam });
 			}
 			state.mapOverride[berichtId] = slug;
-			opslaan();
+
+			// Anders staat de nieuwe map in de zijbalk en op het bericht, en is hij na het
+			// verversen spoorloos.
+			if (!opslaan(() => {
+				state.eigenMappen = voorMappen;
+				if (voorMap === undefined) delete state.mapOverride[berichtId];
+				else state.mapOverride[berichtId] = voorMap;
+			})) return;
+
 			sluitVerplaatsPaneel();
 			render(huidigeView());
 			updateMapLabelDetail(slug);
@@ -829,14 +930,22 @@
 	function createRij(bericht) {
 		const ongelezen = isOngelezen(bericht.id, bericht.isOngelezen);
 		const gemarkeerd = isGemarkeerd(bericht.id, bericht.isGemarkeerd);
-		const effMap = mapVan(bericht.id, bericht.map);
 		const dynamisch = bericht.id.startsWith('msg-live-');
+		// Detailpagina's worden bij de build uit de dataset gegenereerd. Berichten uit het stelsel
+		// staan daar niet bij, dus die gaan naar dezelfde client-gevulde pagina als de binnengekomen
+		// demo-berichten; een link naar bericht/<id>/ zou een 404 opleveren.
+		const zonderEigenPagina = dynamisch || bericht.uitKeten === true;
+		// Alleen de rij die zojuist binnenkwam krijgt de fade-in; bij een volgende render is het
+		// geen nieuw bericht meer.
+		const zojuistBinnen = bericht.id === zojuistBinnengekomenId;
 
 		const tr = document.createElement('tr');
-		tr.className = 'berichtenbox-row' + (ongelezen ? ' is-unread' : '') + (dynamisch ? ' is-dynamic' : '');
+		tr.className = 'berichtenbox-row'
+			+ (ongelezen ? ' is-unread' : '')
+			+ (dynamisch ? ' is-dynamic' : '')
+			+ (zojuistBinnen ? ' is-new' : '');
 		tr.dataset.berichtId = bericht.id;
 		tr.dataset.afzenderId = bericht.magazijnId;
-		if (effMap) tr.dataset.map = effMap;
 
 		const tdMark = document.createElement('td');
 		tdMark.className = 'berichtenbox-row-mark';
@@ -856,7 +965,7 @@
 
 		const tdOnd = document.createElement('td');
 		tdOnd.className = 'berichtenbox-row-subject';
-		if (dynamisch) {
+		if (zonderEigenPagina) {
 			const a = document.createElement('a');
 			a.href = url(berichtenboxBasis() + 'bericht-demo/?id=' + encodeURIComponent(bericht.id));
 			a.textContent = bericht.onderwerp;
@@ -893,15 +1002,9 @@
 		}
 		tr.appendChild(tdBij);
 
-		const tdMap = document.createElement('td');
-		tdMap.className = 'berichtenbox-row-folder-label';
-		if (effMap) {
-			const spanMap = document.createElement('span');
-			spanMap.dataset.maplabel = '';
-			spanMap.textContent = effMap;
-			tdMap.appendChild(spanMap);
-		}
-		tr.appendChild(tdMap);
+		// De map-kolom staat uit: zowel de kop in de templates als de server-gerenderde rij heeft
+		// hem uitgecommentarieerd. Hem hier wél bouwen gaf een cel meer dan er koppen zijn, waardoor
+		// "Acties" onder de verkeerde kop viel en archief een kolom zonder kop kreeg.
 
 		// Acties-kolom alleen op berichtenboxen die de kolom tonen (marker-th in de
 		// thead). Zo krijgen dynamische rijen (live-berichten) dezelfde kebab als de
@@ -927,31 +1030,70 @@
 		return td;
 	}
 
-	function renderLijstVoorView(view) {
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		const leeg = document.querySelector('[data-berichtenbox-empty]');
-		if (!lijst) return;
-		let items = [];
-		if (view === 'archief') {
-			items = data.berichten.filter((b) => state.gearchiveerd[b.id]);
-		} else if (view === 'prullenbak') {
-			items = data.berichten.filter((b) => state.verwijderd[b.id]);
-		}
-		if (view === 'archief' || view === 'prullenbak') {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-			const rijen = items.map((b) => {
-				const rij = createRij(b);
-				tbody.appendChild(rij);
-				return rij;
-			});
-			lijst.hidden = items.length === 0;
-			if (leeg) leeg.hidden = items.length > 0;
-			// Deze views worden volledig uit data herbouwd; paginering werkt op die rijen.
-			herpagineerHuidigeView = function () { renderLijstVoorView(view); };
-			paginer(rijen);
-		}
+	// De criteria waarop de huidige weergave filtert. Het zoekveld en de afzendervinkjes staan in
+	// de DOM omdat de bezoeker ze daar invult; de rest komt uit de state en de URL.
+	function huidigeCriteria() {
+		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
+		const view = huidigeView();
+		// Het organisatiefilter, de persona-relevantie en de gesimuleerde bronuitval gaan over wat
+		// er bij dít portaal binnenkomt. Wat de bezoeker eenmaal gearchiveerd of weggegooid heeft,
+		// blijft van hem: die weergaven filteren alleen op waar het bericht staat.
+		const inbox = view === 'inbox';
+
+		return {
+			view,
+			zoek: zoekInput ? zoekInput.value : '',
+			// Geen afzenderfilter in de templates; lijst.js kan het, er is alleen geen bediening voor.
+			afzenders: new Set(),
+			map: inbox ? new URLSearchParams(location.search).get('map') : null,
+			magazijnToegestaan: inbox ? magazijnToegestaan : () => true,
+			persoonRelevant: inbox ? persoonRelevant : () => true,
+			state: stateModule,
+		};
 	}
+
+	// Eén weg naar het scherm, voor élke weergave: filter de berichten, neem het venster van de
+	// huidige pagina, bouw die rijen. Voorheen liep dit door de DOM-rijen en zocht per rij het
+	// bericht terug — daardoor waren de rijen een tweede waarheid naast de berichten.
+	function toonBerichten() {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (!lijst) return;
+
+		const gevonden = filterBerichten(data.berichten, huidigeCriteria());
+		const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
+		huidigePagina = venster.pagina;
+
+		const overgeslagen = rendersLijst(venster.items);
+		const gerenderd = venster.items.length - overgeslagen;
+
+		// Niets van wat er hoorde te staan is gelukt: dan is dit geen lege berichtenbox maar een
+		// storing, en die mag niet als "u heeft geen berichten" over de bühne gaan. Een eerder
+		// mislukte lading telt net zo hard: die lijst is leeg omdat er niets binnenkwam.
+		if (ladingMislukt || (venster.items.length > 0 && overgeslagen === venster.items.length)) {
+			toonLaadfout();
+			return;
+		}
+
+		// Staat er een storingsmelding en is er niets gerenderd dat het tegendeel bewijst, dan blijft
+		// die staan. Een filter dat nul resultaten oplevert zegt niets over de storing, en zou hem
+		// anders vervangen door "u heeft geen berichten".
+		if (laadfoutGetoond && gerenderd === 0) return;
+
+		// Er staat weer een lijst. Pas nú mag de storingsmelding weg — hem bovenaan wissen liet de
+		// demo-simulatie hem daarna alsnog verbergen, met een leeg scherm en geen woord tot gevolg.
+		herstelNaLaadfout();
+
+		// Niet naast de gesimuleerde "geen bronnen"-melding: die verklaart de lege lijst al, en twee
+		// verklaringen naast elkaar spreken elkaar tegen. Alleen op de inbox: archief en prullenbak
+		// hebben dat blok niet, dus daar zou onderdrukken een lege pagina zonder woorden opleveren.
+		const leeg = document.querySelector('[data-berichtenbox-empty]');
+		if (leeg) leeg.hidden = gevonden.length > 0 || (huidigeView() === 'inbox' && bronOnbereikbaar());
+		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
+		if (huidigeView() !== 'inbox') lijst.hidden = gevonden.length === 0;
+
+		bouwPaginaNav(venster.totaalPaginas, document.querySelector('[data-berichtenbox-pagination]'));
+	}
+
 
 	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
 	// databron (zodat herbouwde views mee-sorteren) en herordent de DOM-rijen op
@@ -963,24 +1105,17 @@
 		lijst.tHead.addEventListener('click', (e) => {
 			const btn = e.target.closest('button[data-sort]');
 			if (!btn) return;
-			const key = btn.dataset.sort;
 			const th = btn.closest('th');
 			const oplopend = th.getAttribute('aria-sort') !== 'ascending';
 			lijst.tHead.querySelectorAll('th[aria-sort]').forEach((t) => t.setAttribute('aria-sort', 'none'));
 			th.setAttribute('aria-sort', oplopend ? 'ascending' : 'descending');
-			const richting = oplopend ? 1 : -1;
-			data.berichten.sort((a, b) =>
-				richting * String(a[key] || '').localeCompare(String(b[key] || ''), 'nl', { numeric: true })
-			);
-			const volgorde = new Map(data.berichten.map((b, i) => [b.id, i]));
-			const tbody = lijst.tBodies[0];
-			if (tbody) {
-				Array.from(tbody.rows)
-					.sort((a, b) => (volgorde.get(a.dataset.berichtId) ?? 0) - (volgorde.get(b.dataset.berichtId) ?? 0))
-					.forEach((r) => tbody.appendChild(r));
-			}
+
+			// Sorteer de berichten; de rijen volgen bij het renderen. Voorheen werd de DOM apart
+			// herordend op berichtId, wat alleen klopte zolang de rijen en de berichten in de pas
+			// liepen.
+			data.berichten = sorteerBerichten(data.berichten, btn.dataset.sort, oplopend);
 			huidigePagina = 1;
-			herpagineerHuidigeView();
+			toonBerichten();
 		});
 	}
 
@@ -991,7 +1126,7 @@
 	function herrenderInbox() {
 		if (huidigeView() !== 'inbox') return;
 		huidigePagina = 1;
-		if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
+		toonBerichten();
 		render('inbox');
 	}
 	// Toon de waarschuwing alleen als de bron onbereikbaar is. De waarschuwing
@@ -999,6 +1134,10 @@
 	// progress-animatie tonen); berichtenbox.js stuurt de zichtbaarheid zelf,
 	// zodat de melding pas ná het ophalen bij de bronnen verschijnt.
 	function werkBronWaarschuwingBij() {
+		// De gesimuleerde uitval gaat over wat er binnenkomt; archief en prullenbak tonen wat de
+		// bezoeker zelf heeft weggezet en hebben er niets mee te maken.
+		if (huidigeView() !== 'inbox') return;
+		if (laadfoutGetoond) return;
 		const een = document.querySelector('[data-bron-onbereikbaar]');
 		const geen = document.querySelector('[data-geen-bronnen]');
 		const sc = bronOnbereikbaar() ? huidigUnhappyScenario() : null;
@@ -1008,6 +1147,7 @@
 	// "later"-scenario: toon de uitval-melding op de inbox zodra een bron is
 	// uitgevallen (geregistreerd in sessionStorage) en vul de naam in.
 	function werkBronUitvalBij() {
+		if (laadfoutGetoond) return;
 		const melding = document.querySelector('[data-bron-uitval]');
 		if (!melding) return;
 		const actief = bronOnbereikbaar() && huidigUnhappyScenario() === 'later';
@@ -1022,6 +1162,9 @@
 	// succesvolle load. Is het al gebeurd (sessionStorage), dan alleen tonen.
 	let uitvalGepland = false;
 	function plannBronUitval() {
+		// Een gesimuleerde storing naast een echte is niet van echt te onderscheiden, en de
+		// retry-knop erbij lost niets op.
+		if (laadfoutGetoond) return;
 		if (huidigeView() !== 'inbox') return;
 		if (!bronOnbereikbaar() || huidigUnhappyScenario() !== 'later') return;
 		if (leesBronUitval()) { werkBronUitvalBij(); return; }
@@ -1078,6 +1221,7 @@
 	// scenario, gedeeld via sessionStorage), toon dan een melding en verberg de
 	// berichtinhoud. De retry-knop herstelt de bron en toont het bericht weer.
 	function werkBerichtBeschikbaarheidBij() {
+		if (laadfoutGetoond) return;
 		const melding = document.querySelector('[data-bericht-onbeschikbaar]');
 		const content = document.querySelector('.berichtenbox-content[data-afzender-id]');
 		if (!melding || !content) return;
@@ -1113,89 +1257,18 @@
 		if (!lijst) return;
 
 		const zoekInput = document.querySelector('[data-berichtenbox-search-input]');
-		const afzenderPaneel = document.querySelector('[data-berichtenbox-sender-panel]');
-
-		if (afzenderPaneel) {
-			while (afzenderPaneel.firstChild) afzenderPaneel.removeChild(afzenderPaneel.firstChild);
-			const uniek = new Map();
-			data.berichten.forEach((b) => uniek.set(b.magazijnId, b.afzender));
-			[...uniek.entries()]
-				.sort((a, b) => a[1].localeCompare(b[1]))
-				.forEach(([id, naam]) => {
-					const label = document.createElement('label');
-					const cb = document.createElement('input');
-					cb.type = 'checkbox';
-					cb.value = id;
-					cb.dataset.afzenderCheck = '';
-					label.appendChild(cb);
-					label.appendChild(document.createTextNode(' ' + naam));
-					afzenderPaneel.appendChild(label);
-				});
-		}
-
 		function mapUitUrl() {
 			const params = new URLSearchParams(location.search);
 			return params.get('map');
 		}
 
-		// Alle berichten staan in de DOM; het map-filter in pasFilterToe verbergt de
-		// niet-passende rijen en de paginering toont het juiste venster.
-
-		function pasFilterToe() {
-			const zoek = (zoekInput ? zoekInput.value : '').trim().toLowerCase();
-			const gekozenAfzenders = new Set(
-				[...document.querySelectorAll('[data-afzender-check]:checked')].map((c) => c.value)
-			);
-			const mapFilter = mapUitUrl();
-			const zichtbareRijen = [];
-			document.querySelectorAll('.berichtenbox-row').forEach((rij) => {
-				if (statusVan(rij.dataset.berichtId) !== 'inbox') {
-					rij.hidden = true;
-					return;
-				}
-				if (!magazijnToegestaan(rij.dataset.afzenderId)) {
-					rij.hidden = true;
-					return;
-				}
-				// Persona-relevantie: verberg berichten met een relevantVoor-tag die
-				// niet bij de actieve persona hoort.
-				const bericht = data.berichten.find((b) => b.id === rij.dataset.berichtId);
-				if (bericht && !persoonRelevant(bericht)) {
-					rij.hidden = true;
-					return;
-				}
-				let match = true;
-				if (zoek) {
-					const afzEl = rij.querySelector('.berichtenbox-row-sender');
-					const ondEl = rij.querySelector('.berichtenbox-row-subject');
-					const tekst = ((afzEl ? afzEl.textContent : '') + ' ' + (ondEl ? ondEl.textContent : '')).toLowerCase();
-					if (!tekst.includes(zoek)) match = false;
-				}
-				if (gekozenAfzenders.size > 0) {
-					if (!gekozenAfzenders.has(rij.dataset.afzenderId)) match = false;
-				}
-				if (mapFilter) {
-					const dataMap = rij.dataset.map;
-					const overrideMap = state.mapOverride[rij.dataset.berichtId];
-					const effectieveMap = (rij.dataset.berichtId in state.mapOverride) ? overrideMap : dataMap;
-					if (effectieveMap !== mapFilter) match = false;
-				}
-				rij.hidden = !match;
-				if (match) zichtbareRijen.push(rij);
-			});
-			const leeg = document.querySelector('[data-berichtenbox-empty]');
-			if (leeg) leeg.hidden = zichtbareRijen.length > 0;
-			// Toon alleen het venster van de huidige pagina van de gematchte rijen.
-			paginer(zichtbareRijen);
-		}
-
-		// Bij inbox stuurt het filter de paginering aan.
-		herpagineerHuidigeView = pasFilterToe;
+		// Het filter is niet langer iets aparts: elke weergave loopt via dezelfde weg naar het
+		// scherm, en toonBerichten leest het zoekveld zelf uit.
+		const pasFilterToe = toonBerichten;
 
 		// Een nieuw filter zet de weergave terug naar pagina 1.
 		function filterVanafEerstePagina() { huidigePagina = 1; pasFilterToe(); }
 		if (zoekInput) zoekInput.addEventListener('input', filterVanafEerstePagina);
-		if (afzenderPaneel) afzenderPaneel.addEventListener('change', filterVanafEerstePagina);
 
 		// A/B-test: schakelaar om ook berichten van andere organisaties te tonen.
 		const orgToggle = document.querySelector('[data-berichtenbox-org-toggle]');
@@ -1203,8 +1276,14 @@
 			orgToggle.checked = andereOrgenFeatureAan() && !!state.toonAndereOrganisaties;
 			werkZoekPlaceholderBij();
 			orgToggle.addEventListener('change', () => {
+				const voorKeuze = state.toonAndereOrganisaties;
 				state.toonAndereOrganisaties = orgToggle.checked;
-				opslaan();
+
+				if (!opslaan(() => { state.toonAndereOrganisaties = voorKeuze; })) {
+					orgToggle.checked = voorKeuze;
+					return;
+				}
+
 				werkZoekPlaceholderBij();
 				huidigePagina = 1;
 				if (orgToggle.checked) {
@@ -1262,7 +1341,8 @@
 		// Herbereken de ongelezen-teller (met dit bericht als gelezen) zodat de
 		// badges direct kloppen, en sla de bijgewerkte telling op.
 		render(huidigeView());
-		opslaan();
+		// Stil: het openen van een bericht is geen wijziging die de bezoeker vroeg.
+		opslaanStil();
 
 		const berichtData = data.berichten.find((b) => b.id === berichtId);
 
@@ -1302,6 +1382,26 @@
 		content.querySelectorAll('[data-actie]').forEach((btn) => {
 			btn.addEventListener('click', () => {
 				const actie = btn.dataset.actie;
+				// Momentopname vóór de wijziging, zodat opslaan() het geheugen kan terugdraaien als er
+				// niets bewaard kan worden.
+				const voorGearchiveerd = state.gearchiveerd[berichtId];
+				const voorVerwijderd = state.verwijderd[berichtId];
+				const voorGelezen = state.gelezen[berichtId];
+				const voorOngelezen = state.ongelezenToegevoegd[berichtId];
+				const voorGemarkeerd = state.gemarkeerd[berichtId];
+				const zet = (pot, sleutel, waarde) => {
+					if (waarde === undefined) delete pot[sleutel];
+					else pot[sleutel] = waarde;
+				};
+				const herstelStatus = () => {
+					zet(state.gearchiveerd, berichtId, voorGearchiveerd);
+					zet(state.verwijderd, berichtId, voorVerwijderd);
+				};
+				const herstelLees = () => {
+					zet(state.gelezen, berichtId, voorGelezen);
+					zet(state.ongelezenToegevoegd, berichtId, voorOngelezen);
+				};
+
 				if (actie === 'archiveren') {
 					if (statusVan(berichtId) === 'archief') {
 						// Zit al in Archief: terugplaatsen in inbox.
@@ -1310,13 +1410,15 @@
 						state.gearchiveerd[berichtId] = true;
 						delete state.verwijderd[berichtId];
 					}
-					opslaan();
-					location.href = url(berichtenboxBasis());
+					// Bij een mislukte opslag blijven staan: de melding is op de inbox niet meer te lezen,
+					// en daar zou het bericht gewoon onaangeroerd staan.
+					if (!opslaan(herstelStatus)) return;
+					navigeerNaar(url(berichtenboxBasis()));
 				} else if (actie === 'verwijderen') {
 					state.verwijderd[berichtId] = true;
 					delete state.gearchiveerd[berichtId];
-					opslaan();
-					location.href = url(berichtenboxBasis());
+					if (!opslaan(herstelStatus)) return;
+					navigeerNaar(url(berichtenboxBasis()));
 				} else if (actie === 'markeer-ongelezen') {
 					// Toggle gelezen/ongelezen; geen navigatie, blijf op het bericht.
 					const wordtOngelezen = !isOngelezen(berichtId, false);
@@ -1327,15 +1429,20 @@
 						state.gelezen[berichtId] = true;
 						delete state.ongelezenToegevoegd[berichtId];
 					}
+					// De knop pas omzetten als het ook echt bewaard is; anders zegt de knop iets anders
+					// dan de melding eronder.
+					if (opslaan(herstelLees)) werkOngelezenKnopBij(btn, wordtOngelezen);
 					render(huidigeView());
-					opslaan();
-					werkOngelezenKnopBij(btn, wordtOngelezen);
+					// Ná render: die berekent state.aantalOngelezen. Stil, want de wijziging zelf is
+					// hierboven al bewaard of al teruggedraaid.
+					opslaanStil();
 				} else if (actie === 'markeren') {
 					// Toggle markering; geen navigatie, blijf op het bericht.
 					const nu = !isGemarkeerd(berichtId, false);
 					state.gemarkeerd[berichtId] = nu;
-					opslaan();
-					werkMarkeerKnopBij(btn, nu);
+					if (opslaan(() => zet(state.gemarkeerd, berichtId, voorGemarkeerd))) {
+						werkMarkeerKnopBij(btn, nu);
+					}
 				} else if (actie === 'verplaatsen') {
 					toonVerplaatsPaneel(berichtId, btn);
 				}
@@ -1549,7 +1656,16 @@
 
 		const bodyEl = detail.querySelector('[data-demo-body]');
 		if (bodyEl) {
-			bericht.inhoud.split('\n\n').forEach((alinea) => {
+			const alineas = (bericht.inhoud || '').split('\n\n').filter((alinea) => alinea.trim() !== '');
+			if (!alineas.length) {
+				// Voor een bericht uit het stelsel is dit de normale toestand: de berichtenuitvraag
+				// levert alleen de kopgegevens, de inhoud zit er niet bij. Benoem dat, in plaats van
+				// een lege pagina te tonen. Voor een bericht uit de dataset is een lege inhoud geen
+				// toestand maar een fout in de gegevens; die hoort in de console.
+				if (!bericht.uitKeten) console.error('[Berichtenbox] Bericht zonder inhoud in de dataset.', bericht.id);
+				alineas.push('Van dit bericht zijn alleen de afzender, het onderwerp en de datum opgehaald. De inhoud is in dit prototype nog niet beschikbaar.');
+			}
+			alineas.forEach((alinea) => {
 				const p = document.createElement('p');
 				p.textContent = alinea;
 				bodyEl.appendChild(p);
@@ -1574,15 +1690,85 @@
 		state.eigenMappen.forEach(voegMapToeAanZijbalk);
 	}
 
+	/**
+	 * Vult het voortgangsblok. Eén plek, want de getallen komen uit twee werelden: de nagebootste
+	 * animatie hieronder, en de echte ophaalronde van een bron die meldt hoe ver hij is.
+	 */
+	function vulVoortgang(bevraagd, klaar, gevonden) {
+		const blok = document.querySelector('[data-berichtenbox-progress]');
+		if (!blok) return;
+
+		// Hier pas: er valt iets te melden.
+		blok.hidden = false;
+
+		const slot = (kiezer, waarde) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.textContent = waarde;
+		};
+		slot('[data-berichtenbox-progress-total]', bevraagd);
+		slot('[data-berichtenbox-progress-source]', klaar);
+		slot('[data-berichtenbox-progress-found]', gevonden);
+
+		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
+		if (balk) balk.style.inlineSize = (bevraagd ? Math.round((klaar / bevraagd) * 100) : 0) + '%';
+
+		// "1 bronnen" en "1 berichten" staan er anders.
+		werkMeervoudBij();
+	}
+
+	/**
+	 * Echte voortgang van de bron die de berichten ophaalt. Zolang die meldt, staat zijn blok op het
+	 * scherm en blijft de lijst weg: dat zijn andere berichten dan die straks binnenkomen.
+	 *
+	 * Dit hangt aan álle geregistreerde bronnen en niet aan de gekozene, want de keuze valt pas als
+	 * de ronde klaar is — en dan is er geen voortgang meer te tonen.
+	 */
+	// Een ronde die binnen deze tijd klaar is, heeft geen balk nodig. Lokaal duurt een ophaalronde
+	// een tiende seconde; die even laten oplichten leest als een storing, niet als voortgang. Duurt
+	// het langer, dan hoort de bezoeker te zien dat er gewacht wordt.
+	const VOORTGANG_DREMPEL_MS = 300;
+
+	function volgEchteVoortgang(bronnen) {
+		bronnen.forEach((bron) => {
+			if (typeof bron.volgVoortgang !== 'function') return;
+
+			let wachter = null;
+			let laatste = null;
+			let getoond = false;
+
+			bron.volgVoortgang((voortgang) => {
+				laatste = voortgang;
+
+				// Geen voortgang meer: de ronde is klaar of afgebroken.
+				if (!voortgang) {
+					if (wachter) { clearTimeout(wachter); wachter = null; }
+					return;
+				}
+
+				if (getoond) {
+					vulVoortgang(voortgang.bevraagd, voortgang.klaar, voortgang.gevonden);
+					return;
+				}
+
+				// De lijst blijft voorlopig staan. Hem meteen weghalen zou bij een korte ronde een
+				// leeg vlak achterlaten waar niets voor in de plaats komt.
+				if (wachter) return;
+				wachter = setTimeout(() => {
+					wachter = null;
+					if (!laatste) return;
+					getoond = true;
+					verbergVoorVoortgang();
+					vulVoortgang(laatste.bevraagd, laatste.klaar, laatste.gevonden);
+				}, VOORTGANG_DREMPEL_MS);
+			});
+		});
+	}
+
 	function voortgangsAnimatie(opKlaar) {
 		const wrap = document.querySelector('[data-berichtenbox-progress]');
 		const lijst = document.querySelector('[data-berichtenbox-list]');
 		const pagnav = document.querySelector('.berichtenbox-content .pagination');
-		if (!wrap || !lijst) { opKlaar(); return; }
-
-		lijst.hidden = true;
-		if (pagnav) pagnav.hidden = true;
-		wrap.hidden = false;
+		if (!verbergVoorVoortgang()) { opKlaar(); return; }
 
 		// Respecteer het org-filter: bij alleen Belastingdienst is er 1 bron en het
 		// juiste aantal Belastingdienst-berichten; met andere organisaties alle bronnen.
@@ -1600,11 +1786,7 @@
 		const aankomendeBronnen = bereikteBronnen.size;
 		const totaalBerichten = bereikteBerichten.length;
 
-		const bronEl = document.querySelector('[data-berichtenbox-progress-source]');
-		const totaalEl = document.querySelector('[data-berichtenbox-progress-total]');
-		const gevondenEl = document.querySelector('[data-berichtenbox-progress-found]');
-		const balk = document.querySelector('[data-berichtenbox-progress-bar]');
-		if (totaalEl) totaalEl.textContent = totaalBronnen;
+		vulVoortgang(totaalBronnen, 0, 0);
 
 		// Simuleer SSE-gedrag: elke bereikbare bron arriveert op eigen moment. Trekken
 		// uit een zware-staart-verdeling (x^4) zodat de meeste bronnen snel antwoorden
@@ -1642,13 +1824,11 @@
 			const t = Math.min(1, (nu - start) / duur);
 			const bronnenBinnen = aantalVoor(bronTijden, t);
 			const berichtenBinnen = aantalVoor(berichtTijden, t);
-			if (bronEl) bronEl.textContent = bronnenBinnen;
-			if (gevondenEl) gevondenEl.textContent = berichtenBinnen;
-			werkMeervoudBij();
-			if (balk) balk.style.inlineSize = ((bronnenBinnen / totaalBronnen) * 100) + '%';
+			vulVoortgang(totaalBronnen, bronnenBinnen, berichtenBinnen);
 			if (t < 1) {
 				requestAnimationFrame(stap);
 			} else {
+				voortgangKlaargezet = false;
 				wrap.hidden = true;
 				lijst.hidden = false;
 				if (pagnav) pagnav.hidden = false;
@@ -1656,111 +1836,6 @@
 			}
 		}
 		requestAnimationFrame(stap);
-	}
-
-	let nieuwBerichtTeller = 0;
-
-	function voegNieuwBerichtToe() {
-		if (huidigeView() !== 'inbox') return;
-		if (!data.magazijnen.length) return;
-		if (state.nieuweBerichten.length >= NIEUWE_BERICHTEN_LIMIET) return;
-		nieuwBerichtTeller++;
-		const mag = data.magazijnen[Math.floor(Math.random() * data.magazijnen.length)];
-		const nu = new Date().toISOString().slice(0, 10);
-		const id = 'msg-live-' + Date.now() + '-' + nieuwBerichtTeller;
-		const onderwerpen = [
-			'Nieuw bericht ontvangen',
-			'Bevestiging ontvangst',
-			'Bericht beschikbaar',
-			'Actie mogelijk vereist',
-		];
-		const bericht = {
-			id,
-			magazijnId: mag.id,
-			afzender: mag.naam,
-			onderwerp: onderwerpen[Math.floor(Math.random() * onderwerpen.length)],
-			inhoud: 'Dit is een demo-bericht van ' + mag.naam + '.',
-			datum: nu,
-			isOngelezen: true,
-			map: null,
-			heeftBijlage: Math.random() < 0.3,
-		};
-		state.nieuweBerichten.push(bericht);
-		opslaan();
-
-		// Synchroniseer window-data zodat render/filter het nieuwe bericht meenemen.
-		data.berichten.unshift(bericht);
-
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst) {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			const tr = createRij(bericht);
-			tr.classList.add('is-new');
-			tbody.prepend(tr);
-
-			// Her-filter en -pagineer: het nieuwe bericht komt bovenaan pagina 1 en het
-			// onderste bericht schuift door naar de volgende pagina (echte reflow).
-			herpagineerHuidigeView();
-		}
-		render('inbox');
-
-		const live = document.querySelector('[data-berichtenbox-live]');
-		if (live) live.textContent = 'Nieuw bericht van ' + bericht.afzender + ': ' + bericht.onderwerp;
-	}
-
-	// Feature flag "Dynamische berichten": staat standaard uit (default-off). Alleen
-	// als de flag expliciet aan staat, druppelen er willekeurig nieuwe berichten binnen.
-	function dynamischeBerichtenAan() {
-		try {
-			return localStorage.getItem('feature:Dynamische berichten') === 'true';
-		} catch (e) {
-			return false;
-		}
-	}
-	function startPolling() {
-		if (!dynamischeBerichtenAan()) return;
-		if (huidigeView() !== 'inbox') return;
-		// Alleen op pagina 1 — nieuwe berichten landen bovenaan, op pagina 2+ zouden ze onzichtbaar zijn.
-		if (/\/pagina-\d+\/$/.test(location.pathname)) return;
-		// Niet op detail-pagina's (geen inbox-lijst om aan te prepender).
-		if (!document.querySelector('[data-berichtenbox-list]')) return;
-		const params = new URLSearchParams(location.search);
-		const pollParam = parseInt(params.get('poll'), 10);
-		let intervalSec = Number.isFinite(pollParam) && pollParam > 0 ? pollParam : 60;
-		if (intervalSec < POLL_MIN_SEC) intervalSec = POLL_MIN_SEC;
-		const intervalId = setInterval(() => {
-			try {
-				voegNieuwBerichtToe();
-			} catch (e) {
-				// Bij corrupte state zou polling elke tick opnieuw gooien; stop om console-spam te voorkomen.
-				console.error('[Berichtenbox] Polling gestopt door fout.', e);
-				clearInterval(intervalId);
-			}
-		}, intervalSec * 1000);
-	}
-
-	// Herstel eerder via polling binnengekomen berichten na reload. Staat de flag
-	// "Dynamische berichten" uit (standaard), dan worden ze niet hersteld maar juist
-	// opgeruimd — zo verdwijnen eerder binnengedruppelde "Dit is een demo-bericht".
-	if (!dynamischeBerichtenAan()) {
-		if (state.nieuweBerichten.length > 0) {
-			state.nieuweBerichten = [];
-			opslaan();
-		}
-	} else if (state.nieuweBerichten.length > 0) {
-		state.nieuweBerichten.forEach((b) => {
-			if (!data.berichten.some((x) => x.id === b.id)) {
-				data.berichten.unshift(b);
-			}
-		});
-		const lijst = document.querySelector('[data-berichtenbox-list]');
-		if (lijst && huidigeView() === 'inbox' && !(/\/pagina-\d+\/$/.test(location.pathname))) {
-			const tbody = lijst.querySelector('tbody') || lijst;
-			state.nieuweBerichten.forEach((b) => {
-				if (lijst.querySelector('[data-bericht-id="' + b.id + '"]')) return;
-				tbody.prepend(createRij(b));
-			});
-		}
 	}
 
 	document.querySelectorAll('[data-berichtenbox-reset]').forEach((link) => {
@@ -1783,9 +1858,17 @@
 		const rij = knop.closest('.berichtenbox-row');
 		if (!rij) return;
 		const id = rij.dataset.berichtId;
+		const voorGemarkeerd = state.gemarkeerd[id];
 		const nu = !isGemarkeerd(id, knop.classList.contains('is-marked'));
 		state.gemarkeerd[id] = nu;
-		opslaan();
+
+		// Knop pas omzetten als het bewaard is; anders toont hij een markering die na het verversen
+		// weg is.
+		if (!opslaan(() => {
+			if (voorGemarkeerd === undefined) delete state.gemarkeerd[id];
+			else state.gemarkeerd[id] = voorGemarkeerd;
+		})) return;
+
 		knop.classList.toggle('is-marked', nu);
 		knop.setAttribute('aria-pressed', nu ? 'true' : 'false');
 	});
@@ -1801,64 +1884,522 @@
 		const id = rij.dataset.berichtId;
 		if (!id) return; // demo-rijen zonder bericht-id: geen actie
 		const soort = actie.dataset.rowActie;
+		if (soort !== 'archiveren' && soort !== 'verwijderen') return;
+
+		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
+		const voorGearchiveerd = state.gearchiveerd[id];
+		const voorVerwijderd = state.verwijderd[id];
+		const herstel = () => {
+			if (voorGearchiveerd === undefined) delete state.gearchiveerd[id];
+			else state.gearchiveerd[id] = voorGearchiveerd;
+			if (voorVerwijderd === undefined) delete state.verwijderd[id];
+			else state.verwijderd[id] = voorVerwijderd;
+		};
+
 		if (soort === 'archiveren') {
 			state.gearchiveerd[id] = true;
 			delete state.verwijderd[id];
-			opslaan();
-		} else if (soort === 'verwijderen') {
+		} else {
 			state.verwijderd[id] = true;
 			delete state.gearchiveerd[id];
-			opslaan();
 		}
-		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
-		if (soort === 'archiveren' || soort === 'verwijderen') {
-			pasStateToeOpRijen();
-			huidigePagina = 1;
-			if (typeof herpagineerHuidigeView === 'function') herpagineerHuidigeView();
-			render(huidigeView());
-		}
+
+		// De rij pas laten verdwijnen als het ook bewaard is; anders komt hij na het verversen
+		// terug zonder dat iets dat verklaart.
+		if (!opslaan(herstel)) return;
+
+		huidigePagina = 1;
+		toonBerichten();
+		// Ná render: die berekent state.aantalOngelezen, en zonder deze tweede opslag houden de
+		// badges op andere pagina's het aantal van vóór deze actie vast. Stil: de wijziging zelf is
+		// hierboven al bewaard, dus "uw wijziging is niet bewaard" zou hier onwaar zijn.
+		render(huidigeView());
+		opslaanStil();
 	});
 
-	pasStateToeOpRijen();
-	werkMappenZichtbaarheidBij();
-	renderLijstVoorView(huidigeView());
-	render(huidigeView());
-	vulDemoDetailPagina();
-	bindDetailPaginaActies();
+	// De server-gerenderde rijen zijn de basis voor bezoekers zonder JavaScript. Draait JS wél, dan
+	// is de datalaag de enige waarheid en bouwen we de rijen opnieuw op — ook voor de dataset. Eén
+	// render-pad, één bron; anders zijn de rijen een tweede waarheid naast de berichten.
+	// Welke rij en welk element de aandacht hadden, zodat een herbouw van de tbody die niet weggooit.
+	function legFocusVast() {
+		const actief = document.activeElement;
+		const rij = actief && typeof actief.closest === 'function' ? actief.closest('.berichtenbox-row') : null;
+		const open = document.querySelector('.row-actions-toggle[aria-expanded="true"]');
+		const openRij = open ? open.closest('.berichtenbox-row') : null;
+
+		return {
+			focusId: rij ? rij.dataset.berichtId : null,
+			focusRol: rij ? rolVan(actief) : null,
+			openId: openRij ? openRij.dataset.berichtId : null,
+		};
+	}
+
+	function rolVan(el) {
+		if (el.matches('[data-mark-toggle]')) return '[data-mark-toggle]';
+		if (el.matches('.row-actions-toggle')) return '.row-actions-toggle';
+		if (el.matches('[data-row-actie]')) return '[data-row-actie="' + el.dataset.rowActie + '"]';
+		if (el.matches('a')) return '.berichtenbox-row-subject a';
+		return null;
+	}
+
+	function herstelFocus(vastgelegd) {
+		if (vastgelegd.openId) {
+			const rij = document.querySelector('.berichtenbox-row[data-bericht-id="' + vastgelegd.openId + '"]');
+			const toggle = rij && rij.querySelector('.row-actions-toggle');
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', 'true');
+				if (toggle.nextElementSibling) toggle.nextElementSibling.hidden = false;
+			}
+		}
+
+		if (!vastgelegd.focusId || !vastgelegd.focusRol) return;
+		const rij = document.querySelector('.berichtenbox-row[data-bericht-id="' + vastgelegd.focusId + '"]');
+		const doel = rij && rij.querySelector(vastgelegd.focusRol);
+		if (doel) doel.focus();
+	}
+
+	function rendersLijst(lijstBerichten) {
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const body = lijst && (lijst.querySelector('tbody') || lijst);
+		if (!body) return 0;
+
+		// De rijen worden vervangen, niet bijgewerkt. Zonder dit sluit een geopend rijmenu en valt
+		// de toetsenbordfocus terug naar de pagina, bij elk binnenkomend bericht en elke resize.
+		const vastgelegd = legFocusVast();
+
+		// Eén onbruikbaar bericht — zonder id is er geen sleutel voor de state en geen link naar de
+		// detailpagina — mag de rest van de lijst niet meenemen in zijn val. Overslaan en tellen;
+		// toonBerichten beslist of de bezoeker er iets van hoort te merken.
+		const rijen = [];
+		let overgeslagen = 0;
+		let eersteFout = null;
+
+		lijstBerichten.forEach((bericht) => {
+			try {
+				rijen.push(createRij(bericht));
+			} catch (fout) {
+				overgeslagen += 1;
+				// Een gat op de plek waar het bericht hoorde te staan. Stil overslaan zou een teller
+				// van "12 berichten" boven elf rijen opleveren, zonder dat iets dat verschil uitlegt.
+				rijen.push(maakOnleesbaarRij());
+				eersteFout = eersteFout || fout;
+			}
+		});
+
+		// Eén regel per render. Per bericht loggen betekent bij elke toetsaanslag in het zoekveld
+		// opnieuw de hele stapel in de console.
+		if (overgeslagen > 0) {
+			console.error('[Berichtenbox] ' + overgeslagen + ' bericht(en) konden niet worden getoond.', eersteFout);
+		}
+
+		body.replaceChildren(...rijen);
+		herstelFocus(vastgelegd);
+		return overgeslagen;
+	}
+
+	// De lege staat staat in de HTML zichtbaar, want zonder JavaScript is archief en prullenbak
+	// werkelijk leeg. Draait JS wél, dan volgt er zo een lijst; hem tot die tijd laten staan zou
+	// "u heeft nog geen berichten" tonen vlak voordat de berichten verschijnen.
+	const legeStaat = document.querySelector('[data-berichtenbox-empty]');
+	if (legeStaat) legeStaat.hidden = true;
+
+	// Plaatsvervanger voor een bericht dat niet te renderen is. Kolommenaantal volgt de kop, zodat
+	// de tabel niet scheef trekt.
+	function maakOnleesbaarRij() {
+		const tr = document.createElement('tr');
+		tr.className = 'berichtenbox-row is-unreadable';
+
+		const td = document.createElement('td');
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		const koppen = lijst && lijst.tHead ? lijst.tHead.querySelectorAll('th').length : 1;
+		td.colSpan = koppen || 1;
+		td.textContent = 'Wij kunnen dit bericht niet tonen. Ververs de pagina om het opnieuw te proberen.';
+		tr.appendChild(td);
+
+		return tr;
+	}
+
+	// Luisteraars staan bewust vóór het laden van de bron. Een trage of hangende bron mag nooit
+	// betekenen dat sorteren, het kebab-menu of de rij-acties dood zijn.
 	bindSortering();
 	bindBronOnbereikbaar();
 	bindBerichtBeschikbaarheid();
 
-	const isEerstePagina = !/\/pagina-\d+\/$/.test(location.pathname);
+	// De berichtenbox pagineert via ?pagina=; /pagina-N/ bestaat hier niet als route.
+	const isEerstePagina = huidigePaginaUitUrl() === 1;
 
-	if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad) {
-		voortgangsAnimatie(() => {
-			state.eersteBezoekGehad = true;
-			opslaan();
-			toonMappenZijbalk();
-			bindInboxFilters();
-			startPolling();
-			werkBronWaarschuwingBij();
-			plannBronUitval();
-		});
-	} else {
-		toonMappenZijbalk();
-		bindInboxFilters();
-		startPolling();
-		werkBronWaarschuwingBij();
-		plannBronUitval();
+	function startDemoGedrag() {
+		veilig({ log: 'De mappen-zijbalk', bezoeker: 'De mappen in de zijbalk zijn niet beschikbaar.' }, toonMappenZijbalk);
+		veilig({ log: 'Het filteren van de lijst', bezoeker: 'Zoeken en filteren werkt op dit moment niet.' }, bindInboxFilters);
+
+		// Een nagebootste storing bovenop echte berichten is niet van echt te onderscheiden, en het
+		// scenario "geen" blokkeert élk magazijn — dat zou werkelijke post wegfilteren zonder dat
+		// er iets over te zeggen valt. De gesimuleerde uitval hoort dus alleen bij de dataset.
+		if (!simulatieMag()) return;
+		veilig({ log: 'De bronwaarschuwing', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, werkBronWaarschuwingBij);
+		veilig({ log: 'De gesimuleerde bronuitval', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, plannBronUitval);
 	}
+
+	/** Alleen de gegenereerde dataset laat zich een storing aanpraten die er niet is. */
+	function simulatieMag() {
+		const bron = register.actief();
+		return !bron || bron.naam === 'dataset';
+	}
+
+	// Wat hier misgaat mag de pagina niet meesleuren: de luisteraars die hierna gebonden worden
+	// zijn het enige wat de bezoeker nog heeft als het renderen hapert.
+	// Eén onderdeel dat omvalt mag de rest niet meenemen, en de bezoeker hoort te merken dat er
+	// iets niet werkt in plaats van op een dode knop te blijven klikken.
+	function veilig(wat, doen) {
+		try {
+			doen();
+		} catch (fout) {
+			console.error('[Berichtenbox] ' + wat.log + ' mislukte.', fout);
+			toonPaginaMelding(wat.bezoeker);
+		}
+	}
+
+	function naEersteLading() {
+		// Apart afgeschermd: op een detailpagina hangen hier de knoppen Archiveren en Verwijderen
+		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
+		veilig({ log: 'Vullen van de detailpagina', bezoeker: 'Wij kunnen dit bericht niet volledig tonen.' }, vulDemoDetailPagina);
+		veilig({ log: 'Binden van de acties op de detailpagina', bezoeker: 'U kunt dit bericht nu niet archiveren, verwijderen of markeren.' }, bindDetailPaginaActies);
+
+		// Ook de ophaalanimatie is een nabootsing: zij verzint aankomsttijden per bron. Draait de
+		// keten, dan is er echte voortgang en hoort die nabootsing niet over het scherm te lopen.
+		if (huidigeView() === 'inbox' && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond && simulatieMag()) {
+			veilig({ log: 'De voortgangsanimatie', bezoeker: 'Niet alles op deze pagina werkt zoals bedoeld.' }, () => {
+				voortgangsAnimatie(() => {
+					state.eersteBezoekGehad = true;
+					// Stil: dit is administratie van de animatie, niets wat de bezoeker vroeg.
+					opslaanStil();
+					// Binnen de animatie-callback: de try hierboven is dan allang teruggekeerd.
+					startDemoGedrag();
+				});
+			});
+		} else {
+			// De animatie komt niet: een mislukte lading, een andere weergave, of niet het eerste
+			// bezoek. Wat we vooruitlopend verborgen hebben, hoort dan gewoon zichtbaar te zijn.
+			toonNaVoortgang();
+			startDemoGedrag();
+		}
+	}
+
+	// De datalaag bepaalt welke bron de berichten levert; de render-laag hieronder weet niet welke
+	// dat is. De volgorde is de voorrang: is de persona aangesloten op het Federatief
+	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
+	const register = maakRegister();
+	register.registreer(ketenBron(window.BerichtenboxKeten, { meldStoring: toonPaginaMelding }));
+	register.registreer(datasetBron(window.berichtenboxData, {
+		state: stateModule,
+		limiet: NIEUWE_BERICHTEN_LIMIET,
+		meldStoring: toonPaginaMelding,
+		// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
+		// onzichtbaar of misleidend.
+		magOphalen: () => huidigeView() === 'inbox'
+			&& huidigePaginaUitUrl() === 1
+			&& !!document.querySelector('[data-berichtenbox-list]'),
+	}));
+
+	// De weergave wordt pas bijgewerkt als álle rijen gebouwd zijn. Struikelt createRij over één
+	// bericht, dan blijft de vorige weergave staan in plaats van een halve nieuwe — en de melding
+	// hieronder vertelt de bezoeker dat er iets misging.
+	register.opWijziging((inhoud) => {
+		// Lege plekken er hier uit, één keer: filterBerichten en state houden er rekening mee dat ze
+		// voorkomen, render() niet — en één null zou anders alle andere berichten meenemen. Alleen
+		// écht lege plekken; een bericht met een onbruikbaar id gaat door naar createRij, die er een
+		// zichtbaar gat van maakt in plaats van het stil te laten verdwijnen.
+		const rauw = inhoud.nieuwBericht
+			? [inhoud.nieuwBericht, ...data.berichten]
+			: inhoud.berichten;
+		const volgende = rauw.filter((bericht) => !!bericht);
+		if (volgende.length < rauw.length) {
+			console.error('[Berichtenbox] ' + (rauw.length - volgende.length) + ' lege plek(ken) in de berichtenlijst overgeslagen.');
+		}
+
+		// Alles wat we straks moeten kunnen terugdraaien, in één keer vastgelegd — vóór er iets
+		// verandert. Een halve weergave naast een volledig bijgewerkte `data` is van een geslaagde
+		// render niet te onderscheiden, en dat is precies wat we willen voorkomen.
+		const vorige = {
+			// De al gefilterde lijst: terugdraaien mag geen lege plekken terugzetten waar render()
+			// niet tegen kan.
+			berichten: data.berichten.filter((bericht) => !!bericht),
+			magazijnen: data.magazijnen,
+			mappen: data.mappen,
+			pagina: huidigePagina,
+		};
+
+		// Het paginanummer blijft staan: de bezoeker die pagina 2 leest hoort daar niet weggetrokken
+		// te worden omdat er bovenaan pagina 1 iets binnenkwam.
+		if (inhoud.nieuwBericht) zojuistBinnengekomenId = inhoud.nieuwBericht.id;
+
+		data.berichten = volgende;
+		if (!inhoud.nieuwBericht) {
+			data.magazijnen = inhoud.magazijnen;
+			data.mappen = inhoud.mappen;
+		}
+
+		try {
+			werkMappenZichtbaarheidBij();
+			toonBerichten();
+			render(huidigeView());
+		} catch (fout) {
+			data.berichten = vorige.berichten;
+			data.magazijnen = vorige.magazijnen;
+			data.mappen = vorige.mappen;
+			huidigePagina = vorige.pagina;
+			zojuistBinnengekomenId = null;
+
+			// De rijen zijn mogelijk al vervangen voordat het misging. Alleen `data` terugzetten laat
+			// het scherm iets tonen wat nergens meer bestaat.
+			try {
+				toonBerichten();
+				render(huidigeView());
+			} catch (herstelFout) {
+				console.error('[Berichtenbox] Ook de vorige weergave was niet te herstellen.', herstelFout);
+				toonLaadfout();
+			}
+
+			throw fout;
+		}
+
+		// Pas ná een geslaagde render: de state hoort bij wat er op het scherm staat. De state is
+		// ingelezen voordat bekend was welke bron het zou worden, dus nu die vaststaat vallen
+		// bewaarde berichten van onbekende magazijnen alsnog af.
+		if (!inhoud.nieuwBericht) {
+			stateModule.beperkTot(data.magazijnen.map((m) => m.id));
+		}
+
+		// Eén render lang nieuw; daarna is het een gewone rij.
+		zojuistBinnengekomenId = null;
+
+		if (inhoud.nieuwBericht) {
+			const live = document.querySelector('[data-berichtenbox-live]');
+			if (live) {
+				live.textContent = 'Nieuw bericht van ' + inhoud.nieuwBericht.afzender + ': ' + inhoud.nieuwBericht.onderwerp;
+			}
+		}
+	});
+
+	// Staat er een echte storingsmelding? Dan mag de gesimuleerde unhappy flow die niet wegpoetsen:
+	// die gaat over een nagebootste bron, en de bezoeker zou de gegenereerde dataset voor zijn post
+	// aanzien.
+
+	// Draait toonLaadfout terug zodra er weer iets te zien is. Zonder dit bleef de tabel verborgen
+	// achter een melding die niemand meer weghaalde.
+	function herstelNaLaadfout() {
+		if (ladingMislukt) return;
+		if (!laadfoutGetoond) return;
+		laadfoutGetoond = false;
+
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (lijst && huidigeView() === 'inbox') lijst.hidden = false;
+
+		verbergPaginaMelding('lading');
+
+		// De gesimuleerde meldingen mogen weer meedoen nu er een lijst staat.
+		werkBronWaarschuwingBij();
+		werkBronUitvalBij();
+
+		// De tellers stonden op "–" zolang er niets te tonen was. toonBerichten rekent ze niet uit,
+		// dus zonder dit blijft "– berichten uit – bronnen" boven een werkende lijst staan.
+		render(huidigeView());
+	}
+
+	// Er is één meldingsslot per pagina. Een lichtere melding mag een zwaardere niet overschrijven:
+	// "de demo is uitgespeeld" over "uw wijziging is niet bewaard" heen zou de bezoeker doen denken
+	// dat zijn actie gelukt is.
+	const MELDING_ZWAARTE = { info: 1, storing: 2 };
+	let staandeMeldingZwaarte = 0;
+	let staandeMeldingEigenaar = null;
+
+	/**
+	 * Geeft terug of de melding ook echt zichtbaar werd. Een lichtere melding dringt niet voor een
+	 * zwaardere; die wordt onderdrukt en meldt dat met false, zodat een aanroeper die "we hebben het
+	 * al gezegd" wil onthouden dat niet doet voor iets wat niemand zag.
+	 */
+	function toonPaginaMelding(tekst, soort = 'storing', eigenaar = 'algemeen') {
+		const zwaarte = MELDING_ZWAARTE[soort] || MELDING_ZWAARTE.storing;
+		if (zwaarte < staandeMeldingZwaarte) return false;
+
+		const blok = document.querySelector('[data-berichtenbox-storing]');
+		if (!blok) {
+			console.error('[Berichtenbox] Geen meldingsblok op deze pagina; "' + tekst + '" blijft onzichtbaar.');
+			return false;
+		}
+
+		const slot = blok.querySelector('[data-berichtenbox-storing-tekst]');
+		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar && slot && slot.textContent) {
+			console.warn("[Berichtenbox] Melding van '" + staandeMeldingEigenaar + "' vervangen door die van '"
+				+ eigenaar + "': " + slot.textContent);
+		}
+		if (slot) slot.textContent = tekst;
+		blok.classList.toggle('feedback-error', soort === 'storing');
+		blok.classList.toggle('feedback-info', soort === 'info');
+
+		// Beide pictogrammen staan in het blok, in deze volgorde: eerst het storings-, dan het
+		// informatie-pictogram. Alleen de kleur wisselen liet een wit kruis op een blauwe schijf
+		// achter bij een mededeling.
+		const iconen = blok.querySelectorAll(':scope > svg');
+		if (iconen.length === 2) {
+			iconen[0].style.display = soort === 'info' ? 'none' : '';
+			iconen[1].style.display = soort === 'info' ? '' : 'none';
+		}
+		blok.hidden = false;
+		staandeMeldingZwaarte = zwaarte;
+		staandeMeldingEigenaar = eigenaar;
+		return true;
+	}
+
+	/**
+	 * Haalt alleen de eigen melding weg. Dat de lijst weer laadt zegt niets over een wijziging die
+	 * niet bewaard kon worden; die melding hoort te blijven staan.
+	 */
+	function verbergPaginaMelding(eigenaar = 'algemeen') {
+		if (staandeMeldingEigenaar && staandeMeldingEigenaar !== eigenaar) return;
+
+		staandeMeldingZwaarte = 0;
+		staandeMeldingEigenaar = null;
+
+		const blok = document.querySelector('[data-berichtenbox-storing]');
+		if (blok) blok.hidden = true;
+	}
+
+	// Er is geen lijst te tonen. De server-gerenderde rijen laten staan zou erger zijn dan niets:
+	// die negeren de state, dus gearchiveerde en verwijderde berichten staan er weer tussen en
+	// gelezen berichten zien er ongelezen uit. En "u heeft nog geen berichten gearchiveerd" is
+	// aantoonbaar onwaar zolang we niet weten wát er is.
+	const SIMULATIE_MELDINGEN = [
+		'[data-bron-onbereikbaar]',
+		'[data-geen-bronnen]',
+		'[data-bron-uitval]',
+	];
+
+	const TELLERS_OP_DE_PAGINA = [
+		'[data-berichtenbox-counter-total]',
+		'[data-berichtenbox-sources]',
+		'[data-berichtenbox-counter-unread]',
+		'[data-berichtenbox-count="inbox"]',
+		'[data-berichtenbox-count="ongelezen"]',
+	];
+
+	function toonLaadfout() {
+		laadfoutGetoond = true;
+
+		// De tellers komen server-gerenderd met echte aantallen. Ze laten staan naast "we konden
+		// niets ophalen" laat de bezoeker het getal geloven en de zin voor een detail aanzien.
+		// state.aantalOngelezen blijft ongemoeid: die stuurt de badges op andere pagina's.
+		TELLERS_OP_DE_PAGINA.forEach((kiezer) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.textContent = '–';
+		});
+
+		// De gesimuleerde bronmeldingen gaan over een nagebootste situatie. "Berichten van overige
+		// organisaties staan hieronder" boven een lege tabel is onzin, en hun retry-knop lost niets op.
+		SIMULATIE_MELDINGEN.forEach((kiezer) => {
+			const el = document.querySelector(kiezer);
+			if (el) el.hidden = true;
+		});
+		const lijst = document.querySelector('[data-berichtenbox-list]');
+		if (lijst) {
+			const body = lijst.querySelector('tbody') || lijst;
+			body.replaceChildren();
+			lijst.hidden = true;
+		}
+
+		const leeg = document.querySelector('[data-berichtenbox-empty]');
+		if (leeg) leeg.hidden = true;
+
+		const pagnav = document.querySelector('[data-berichtenbox-pagination]');
+		if (pagnav) pagnav.hidden = true;
+
+		toonPaginaMelding('Er gaat iets mis met het ophalen van uw berichten. Ververs de pagina om het opnieuw te proberen.', 'storing', 'lading');
+	}
+
+	if (stateModule.onleesbaar) {
+		toonPaginaMelding(
+			'Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.',
+			'storing',
+			'opslag'
+		);
+	}
+
+	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
+	// laten staan, inclusief berichten die de bezoeker allang gearchiveerd heeft.
+	let persona = null;
+	try {
+		if (window.Personas && typeof window.Personas.actief === 'function') persona = window.Personas.actief();
+	} catch (fout) {
+		console.error('[Berichtenbox] Actieve persona niet op te vragen; verder zonder.', fout);
+	}
+
+	// Vóór de keuze, niet erna: een bron die ophaalt meldt zijn voortgang terwijl geldtVoor nog
+	// wacht. Bronnen die niet gekozen worden, melden vanzelf niets.
+	volgEchteVoortgang(register.bronnen());
+
+	register.kies(persona)
+		.then((bron) => {
+			// Geen enkele bron van toepassing is geen stille uitkomst: dan is er niets te tonen en
+			// hoort de bezoeker dat te weten in plaats van naar oude rijen te kijken.
+			if (!bron) throw new Error('geen enkele bron kon de berichten leveren');
+			return bron.laad();
+		})
+		.then((inhoud) => {
+			const mislukt = register.meld(inhoud);
+			if (mislukt.length) throw mislukt[0];
+
+			// Een bron die onderweg omviel betekent dat deze lijst van een andere bron komt dan
+			// bedoeld. Er is nu maar één bron, dus dit kan nog niet gebeuren; zodra er een tweede
+			// bij komt hoort hier een eigen melding. Het bestaande waarschuwingsblok hergebruiken
+			// kan niet: dat noemt bij naam een organisatie die er niets mee te maken heeft.
+			const storingen = register.storingen();
+			storingen.forEach((storing) => {
+				console.error("[Berichtenbox] Bron '" + storing.bron + "' viel om; de lijst komt van een andere bron.", storing.fout);
+			});
+			if (storingen.length) {
+				toonPaginaMelding('Wij konden niet alle bronnen bereiken. Er ontbreken mogelijk berichten.');
+			}
+		})
+		.catch((fout) => {
+			console.error('[Berichtenbox] Berichten konden niet worden getoond.', fout);
+			// Leeg maken vóór de melding: anders bouwt een latere render de server-gerenderde
+			// dataset terug op onder een verborgen tabel, en die negeert de state.
+			data.berichten = [];
+			ladingMislukt = true;
+			toonLaadfout();
+		})
+		.finally(() => {
+			// Precies één keer, wat er ook gebeurd is: dit bindt luisteraars die niet twee keer
+			// gebonden mogen worden.
+			naEersteLading();
+
+			// Brongedrag start alleen als de lading gelukt is. Na een storing zou één binnendruppelend
+			// demo-bericht zich voordoen als de hele berichtenbox.
+			if (ladingMislukt) return;
+
+			const bron = register.actief();
+			if (bron && typeof bron.start === 'function') {
+				bron.start((wijziging) => {
+					const mislukt = register.meld(wijziging);
+					// Eén binnengekomen bericht dat niet te tonen is, is geen reden om een lijst die
+					// verder klopt van het scherm te halen. De rollback in de luisteraar heeft de
+					// vorige weergave al hersteld; de bron meldt het zelf en stopt met tikken.
+					return mislukt;
+				});
+			}
+		});
 
 	// Debug-handle; niet bedoeld voor productiegebruik.
 	window.Berichtenbox = {
 		state,
-		readState,
-		writeState,
+		bewaar: () => stateModule.bewaar(),
+		// Waarheen de pagina navigeerde. jsdom voert `location.href = …` niet uit, dus zonder dit is
+		// in een test niet vast te stellen of een mislukte opslag het wegnavigeren tegenhield.
+		navigatieDoel: () => navigatieDoel,
 		statusVan,
 		isOngelezen,
 		mapVan,
 		huidigeView,
-		pasStateToeOpRijen,
 		render,
 	};
 })();

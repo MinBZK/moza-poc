@@ -34,6 +34,14 @@ subNav:
 		<section role="tabpanel" id="berichtenbox-archief" aria-labelledby="tab-berichtenbox-archief">
 			<section class="berichtenbox-content">
 				<p class="metadata"><span data-berichtenbox-counter-total>0</span> gearchiveerde berichten</p>
+				<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+					{% include "icon-feedback-error.njk" %}
+					{% include "icon-feedback-info.njk" %}
+					<div>
+						<p data-berichtenbox-storing-tekst></p>
+					</div>
+				</div>
+
 				<table class="berichtenbox-list" data-berichtenbox-list data-berichtenbox-view="archief">
 					<thead>
 						<tr>

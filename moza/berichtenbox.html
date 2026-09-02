@@ -70,6 +70,25 @@ permalink: "/moza/berichtenbox/"
 
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
+				<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat. Anders verschijnt hier uw eerste bericht zodra een organisatie u schrijft.</div>
+
+				<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+					{% include "icon-feedback-error.njk" %}
+					{% include "icon-feedback-info.njk" %}
+					<div>
+						<p data-berichtenbox-storing-tekst></p>
+					</div>
+				</div>
+
+				<noscript>
+					<div class="feedback feedback-info">
+						{% include "icon-feedback-info.njk" %}
+						<div>
+							<p>Deze berichtenbox haalt uw berichten op bij verschillende overheidsorganisaties. Daarvoor is JavaScript nodig. Zet JavaScript aan en ververs deze pagina, of open een bericht rechtstreeks via de link die u heeft gekregen.</p>
+						</div>
+					</div>
+				</noscript>
+
 				<table data-berichtenbox-list data-page-size="10">
 					<thead>
 						<tr>
@@ -95,12 +114,7 @@ permalink: "/moza/berichtenbox/"
 							</th>
 						</tr>
 					</thead>
-					<tbody>
-						{% set rijActies = true %}
-						{% for bericht in berichtenboxData.berichten %}
-							{% include "berichtenbox-row.njk" %}
-						{% endfor %}
-					</tbody>
+					<tbody></tbody>
 				</table>
 
 				<nav class="pagination" data-berichtenbox-pagination hidden aria-label="Paginering"></nav>

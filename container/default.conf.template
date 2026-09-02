@@ -21,6 +21,50 @@ server {
     # (default http://dabackend:8000; op ZAD te zetten op het frontend-component).
     set $backend_origin "${BACKEND_ORIGIN}";
 
+    # Per-API runtime backends. Set these env vars at runtime if you want specific
+    # API prefixes to proxy to different backends. If empty, they fall back to
+    # $backend_origin below.
+    set $backend_profiel "${BACKEND_PROFIEL}";
+    set $backend_api_2 "${BACKEND_API_2}";
+
+    # Federatief Berichtenstelsel: de berichtenuitvraag levert de berichten, de demo-console de
+    # testaccounts. Twee backends, omdat alleen de eerste een dienst van het stelsel is.
+    set $backend_keten "${BACKEND_KETEN}";
+    set $backend_demo "${BACKEND_DEMO}";
+
+    # Draait het stelsel buiten deze container achter een gedeelde ingress, dan routeert die op de
+    # Host-header; doorgeven van de browser-host levert daar de verkeerde vhost of een 404 op. Zet
+    # daarom de servernaam van de backend apart. Leeg laten betekent "gewoon de eigen host
+    # doorgeven" (interne backend). Alleen de Host-header: de TLS-servernaam volgt $proxy_host uit
+    # de proxy_pass-URL en is daarmee al goed.
+    set $backend_keten_host "${BACKEND_KETEN_HOST}";
+    set $backend_demo_host "${BACKEND_DEMO_HOST}";
+
+    # Fallback to the generic backend_origin when a specific backend isn't set
+    # De profielservice is een publieke dienst, geen onderdeel van deze omgeving. Zonder
+    # BACKEND_PROFIEL viel dit terug op de generieke backend, en daar bestaat dit pad niet: het
+    # contactgegevens-blok kreeg dan een 404 in elke omgeving waar niemand de variabele gezet had.
+    # De terugval is daarom de dienst zelf; de variabele blijft voor wie naar een testopstelling
+    # wil wijzen.
+    if ($backend_profiel = "") {
+        set $backend_profiel https://profiel.mijnoverheidzakelijk.nl;
+    }
+    if ($backend_api_2 = "") {
+        set $backend_api_2 $backend_origin;
+    }
+    if ($backend_keten = "") {
+        set $backend_keten $backend_origin;
+    }
+    if ($backend_demo = "") {
+        set $backend_demo $backend_keten;
+    }
+    if ($backend_keten_host = "") {
+        set $backend_keten_host $host;
+    }
+    if ($backend_demo_host = "") {
+        set $backend_demo_host $backend_keten_host;
+    }
+
     # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
     # Browser praat alleen met deze origin; nginx proxyt server-side. Geen CORS.
     # Dekt /chat, /chat/stream (SSE) en DELETE /chat/<session_id>.
@@ -39,6 +83,7 @@ server {
         proxy_read_timeout 3600s;
     }
 
+    # Health/tools proxy to generic backend
     location = /health {
         proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
@@ -49,36 +94,91 @@ server {
         proxy_set_header Host $host;
     }
 
+    # Bereikbaarheid van deze container zelf, zonder een backend aan te spreken.
     location = /api/livecheck {
-       return 200 '{"status":"ok"}';
-       add_header Content-Type application/json;
+        return 200 '{"status":"ok"}';
+        add_header Content-Type application/json;
     }
 
-    # --- Per-API proxies ---
-    # Proxy /api/profielservice/ to the public profiel service
+    # --- Per-API proxies (configurable at runtime) ---
+    # De profielservice draait buiten deze container en kijkt naar de headers van de browser. Host
+    # volgt de upstream uit proxy_pass, Origin en Referer gaan er niet heen — anders past die dienst
+    # zijn CORS-regels toe op een aanroep die server-side gedaan wordt. De rest van de
+    # binnenkomende headers gaat om dezelfde reden niet mee.
     location /api/profielservice/ {
-       proxy_pass https://profiel.mijnoverheidzakelijk.nl$request_uri;
-       proxy_http_version 1.1;
-       # Present the request to the upstream as coming from the backend (server-to-server).
-       # Set Host to the target virtual host so SNI/virtual-hosting is correct and
-       # remove browser Origin/Referer headers so the backend doesn't apply CORS checks.
-       proxy_set_header Host profiel.mijnoverheidzakelijk.nl;
-       proxy_set_header Origin "";
-       proxy_set_header Referer "";
-       # Do not blindly forward all incoming headers (we control the headers above)
-       proxy_pass_request_headers off;
-       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-       proxy_set_header X-Forwarded-Proto $scheme;
-       # TLS and connection reuse
-       proxy_ssl_server_name on;
-       proxy_ssl_session_reuse on;
-       proxy_set_header Connection "";
-       # Timeouts tuned for upstream latency
-       proxy_connect_timeout 5s;
-       proxy_send_timeout 30s;
-       proxy_read_timeout 60s;
-       proxy_request_buffering off;
-       proxy_buffering off;
+        proxy_pass $backend_profiel$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header Origin "";
+        proxy_set_header Referer "";
+        proxy_pass_request_headers off;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # De upstream kan een gedeelde ingress zijn; zonder SNI wijst die de verbinding af.
+        proxy_ssl_server_name on;
+        proxy_ssl_session_reuse on;
+        proxy_set_header Connection "";
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
+        proxy_buffering off;
+    }
+
+    # Example: another API prefix that can point to a different backend
+    # Set the env var BACKEND_API_2 to override, otherwise falls back to BACKEND_ORIGIN
+    location /api/other/ {
+        proxy_pass $backend_api_2$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Berichtenbox: berichten uit het Federatief Berichtenstelsel ---
+    # Het ophalen is een Server-Sent-Events-stroom met voortgang per aangesloten organisatie.
+    # Zonder proxy_buffering off komt die voortgang pas aan het eind binnen en lijkt de pagina te
+    # hangen tot de traagste organisatie klaar is. Zelfde set als /chat hierboven, dat dezelfde
+    # stroom-vorm heeft. De ruime read-timeout dekt een ronde langs tientallen organisaties; de
+    # nginx-default van 60 seconden is daarvoor te krap.
+    #
+    # De browser stuurt de ontvanger mee in de header X-Ontvanger. Dat is geen authenticatie — de
+    # header is in de browser aan te passen — dus het stelsel moet zijn eigen allowlist hanteren.
+    location /api/v1/ {
+        proxy_pass $backend_keten$request_uri;
+        proxy_set_header Host $backend_keten_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        chunked_transfer_encoding off;
+        proxy_read_timeout 3600s;
+
+        # Staat BACKEND_KETEN op een https-URL (het stelsel draait buiten deze container), dan moet
+        # de servernaam mee in de TLS-handshake; zonder SNI wijst een gedeelde ingress de
+        # verbinding af.
+        proxy_ssl_server_name on;
+    }
+
+    # Testaccounts van de demo-omgeving. Apart van /api/v1/, want dit is demonstratiegereedschap
+    # en geen dienst van het stelsel; buiten een demo-opstelling staat BACKEND_DEMO niet gezet.
+    location /api/demo/ {
+        proxy_pass $backend_demo$request_uri;
+        proxy_set_header Host $backend_demo_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+
+    # Catch-all for /api to the generic backend (BACKEND_ORIGIN)
+    location /api/ {
+        proxy_pass $backend_origin$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # --- Statische Eleventy-site ---

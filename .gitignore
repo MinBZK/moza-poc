@@ -33,3 +33,5 @@ style-dictionary/node_modules/*
 .vscode/*
 # Uitzondering: gedeelde workspace-instellingen (Prettier + stylelint fix-on-save)
 !.vscode/settings.json
+# JetBrains IDE
+.idea/
