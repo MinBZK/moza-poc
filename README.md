@@ -41,6 +41,14 @@ npx @11ty/eleventy --serve
 
 De site is vervolgens te bekijken op [`localhost:8080`](http://localhost:8080).
 
+> Let op: voor sommige API-calls en integratietests draait er een lokale proxy-server die requests naar externe services kan doorsturen of mocken. Start deze in een aparte terminal met:
+>
+> ```bash
+> npm run proxy
+> ```
+>
+> Dit voert `server/proxy.js` uit en zorgt dat requests naar `/api/...` lokaal naar de juiste upstream worden geproxied (gebruikelijk voor ontwikkeling wanneer je services lokaal of via een test‑target draait).
+
 ### Includes
 
 Herhalende componenten staan in de `_includes` map:
@@ -283,6 +291,9 @@ npm install
 | `npm run build:tokens`    | Alleen Style Dictionary        | Handmatig tokens bouwen                                                                                                                                                                             |
 | `npm run storybook`       | Storybook dev server           | Componentenbibliotheek lokaal bekijken                                                                                                                                                              |
 | `npm run build-storybook` | Storybook productie-build      | Statische Storybook-site bouwen                                                                                                                                                                     |
+| `npm run proxy`           | node server/proxy.js           | Start de lokale proxy server die API-requests kan doorsturen of mocken (open een aparte terminal om deze te draaien tijdens ontwikkeling).                                                          |
+| `npm run vite:build`      | vite build                     |                                                                                                                                                                                                     |
+| `npm run format`          | prettier --write .             |                                                                                                                                                                                                     |
 
 ---
 

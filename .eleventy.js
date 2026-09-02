@@ -113,6 +113,8 @@ module.exports = function (eleventyConfig) {
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({
+		// 8080, net als op de andere branches. De lokale proxy voor de
+		// react-islands staat daarnaast op 8081 (zie helpers/pocFetch.ts).
 		port: 8080,
 		headers: {
 			"Cache-Control": "no-store",

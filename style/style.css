@@ -3018,3 +3018,9 @@ body.authorized {
 		}
 	}
 }
+
+.notificatie {
+	display: grid;
+	grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+	gap: 0.5rem;
+}

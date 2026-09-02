@@ -73,9 +73,11 @@ Het ontwerp is opgebouwd uit herbruikbare componenten die afzonderlijk ontwikkel
 
 Elk ontwerpvraagstuk wordt beantwoord met de eenvoudigst mogelijke technische oplossing. Complexiteit wordt pas toegevoegd wanneer eenvoud aantoonbaar tekortschiet.
 
-- **HTML en CSS waar het kan, JavaScript waar het moet**; standaard browsergedrag en semantische HTML lossen veel interactieproblemen op zonder aanvullende code. JavaScript wordt alleen toegevoegd wanneer de gewenste functionaliteit niet met HTML en CSS te realiseren is.
-- **Webplatform boven framework**; het ontwerp leunt op wat de browser al biedt. Frameworks en bibliotheken worden alleen ingezet als het webplatform aantoonbaar niet volstaat.
-- **Minder is beter te onderhouden**; elke extra laag technologie is een extra laag die begrepen, onderhouden en getest moet worden. Door de oplossing zo dicht mogelijk bij de basis te houden, blijft het prototype toegankelijk voor een breed team en is het eenvoudiger over te dragen voor uiteindelijke realisatie.
+Dit principe gaat over de **interface die de gebruiker ziet**: de pagina's, componenten en interacties in de browser. Daar is elke extra laag iets waar de gebruiker last van kan krijgen; in bijvoorbeeld laadtijd, toegankelijkheid, wat er stukgaat als JavaScript niet laadt. Dit geldt niet voor de laag eromheen zoals build-scripts, datatransformaties, koppelingen met backends en testopstellingen.
+
+- **HTML en CSS waar het kan, JavaScript waar het moet**; in de interface lossen standaard browsergedrag en semantische HTML veel interactieproblemen op zonder dat hier aanvullende code voor nodig is. JavaScript wordt alleen toegevoegd wanneer de gewenste functionaliteit niet met HTML en CSS te realiseren is.
+- **Platform boven framework**; het ontwerp leunt op wat de browser al biedt: native formuliervalidatie, `<details>`/`<summary>` voor in- en uitklapbare secties, CSS voor responsiviteit. Frameworks en bibliotheken worden in de interface alleen ingezet als het platform aantoonbaar niet volstaat.
+- **Minder is beter te onderhouden**; elke extra laag technologie is een extra laag die begrepen, onderhouden en getest moet worden. Door de oplossing zo dicht mogelijk bij de basis te houden, blijft het prototype toegankelijk voor een breed team en is het eenvoudiger over te dragen naar de uiteindelijke realisatie.
 
 ### 6. Prototypen als communicatiemiddel
 
