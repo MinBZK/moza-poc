@@ -1433,6 +1433,7 @@
 	},
 	{
 		"id": "proeftuin-een",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 1",
@@ -1487,6 +1488,7 @@
 	},
 	{
 		"id": "proeftuin-twee",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 2",
@@ -1541,6 +1543,7 @@
 	},
 	{
 		"id": "proeftuin-drie",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming 3",
@@ -1595,6 +1598,7 @@
 	},
 	{
 		"id": "proeftuin-veel",
+		"stelsel": true,
 		"actief": false,
 		"archief": false,
 		"label": "Aangesloten onderneming, veel organisaties",
@@ -1634,6 +1638,116 @@
 					"nummer": "000090000001",
 					"type": "Hoofdvestiging",
 					"adres": "Wilhelminakade 1, 3072 AP Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-concern",
+		"stelsel": true,
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming, landelijk concern",
+		"persoon": {
+			"voornaam": "Iris",
+			"achternaam": "de Waal"
+		},
+		"bedrijf": {
+			"handelsnaam": "Landelijk Concern N.V.",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000003",
+			"rsinNummer": "90000003",
+			"btwNummer": "NL00090000003",
+			"omzetbelastingnummer": "090000003B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Naamloze vennootschap",
+			"branche": "Holdings en concerndiensten",
+			"vestigingsadres": "Weena 500, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000003",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "64202",
+					"omschrijving": "Financiële holdings"
+				}
+			],
+			"vestigingsadresVolledig": "Weena 500, 3012 CN Rotterdam",
+			"postadres": "Weena 500, 3012 CN Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000003",
+					"type": "Hoofdvestiging",
+					"adres": "Weena 500, 3012 CN Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
+		"id": "proeftuin-garage",
+		"stelsel": true,
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 4 (met bijlagen)",
+		"persoon": {
+			"voornaam": "Rachid",
+			"achternaam": "van Dijk"
+		},
+		"bedrijf": {
+			"handelsnaam": "Garage Van Dijk B.V.",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000014",
+			"rsinNummer": "90000014",
+			"btwNummer": "NL00090000014",
+			"omzetbelastingnummer": "090000014B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Reparatie van auto's",
+			"vestigingsadres": "Industrieweg 8, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000014",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "45204",
+					"omschrijving": "Gespecialiseerde reparatie van auto's"
+				}
+			],
+			"vestigingsadresVolledig": "Industrieweg 8, 3044 AS Rotterdam",
+			"postadres": "Industrieweg 8, 3044 AS Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000014",
+					"type": "Hoofdvestiging",
+					"adres": "Industrieweg 8, 3044 AS Rotterdam"
 				}
 			],
 			"ubo": [],

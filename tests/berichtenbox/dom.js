@@ -41,6 +41,13 @@ const MELDINGEN_INBOX = `
 		</div>
 	</div>
 
+	<div class="feedback feedback-warning" hidden data-bron-uitval role="status">
+		<div>
+			<p data-bron-uitval-tekst><b data-bron-uitval-naam></b> is zojuist onbereikbaar geworden.</p>
+			<p><button class="link-button" type="button" data-bron-retry>Opnieuw proberen</button></p>
+		</div>
+	</div>
+
 	<div class="feedback feedback-error" hidden data-geen-bronnen role="status">
 		<div>
 			<p>Er gaat iets mis met het ophalen van berichten bij de verschillende bronnen. Probeer het later opnieuw.</p>
@@ -59,14 +66,9 @@ const STORING = `
 
 function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 	const inbox = view === "inbox";
-	// Server-gerenderd, met echte aantallen — net als in de templates. Op nul zetten zou verbergen
-	// dat een storing die getallen moet neutraliseren.
-	const bruikbaar = berichten.filter((b) => b && b.id);
-	const aantallen = {
-		totaal: bruikbaar.length,
-		bronnen: new Set(bruikbaar.map((b) => b.magazijnId)).size,
-		ongelezen: bruikbaar.filter((b) => b.isOngelezen).length,
-	};
+	// Leeg en verborgen, net als in de templates: bij het bouwen is niet te weten welke persona er
+	// kijkt, dus staat er geen getal in de HTML. De render-laag vult ze en maakt de regel zichtbaar.
+	// Ze hier wél invullen verborg dat verschil — en daarmee ook of de render-laag ze echt schrijft.
 	// Geen enkele weergave server-rendert nog rijen.
 	const rijen = "";
 	const lijstAttr = inbox ? ' data-page-size="10"' : ` data-berichtenbox-view="${view}"`;
@@ -75,13 +77,16 @@ function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 	return `
 <article class="berichtenbox">
 <div class="berichtenbox-content">
-	<p class="metadata">
-		<b data-berichtenbox-counter-total>${aantallen.totaal}</b> berichten uit
-		<b data-berichtenbox-sources>${aantallen.bronnen}</b>
+	<p class="metadata" hidden data-berichtenbox-tellers>
+		<b data-berichtenbox-counter-total></b> berichten uit
+		<b data-berichtenbox-sources></b>
 		<span data-meervoud="data-berichtenbox-sources" data-ev="bron" data-mv="bronnen">bronnen</span>,
-		<b data-berichtenbox-counter-unread>${aantallen.ongelezen}</b> ongelezen
+		<b data-berichtenbox-counter-unread></b> ongelezen
 	</p>
-	<nav><a href="#"><span data-berichtenbox-count="inbox">${aantallen.ongelezen}</span></a></nav>
+	<nav><a href="#"><span class="badge" data-berichtenbox-count="inbox"></span></a></nav>
+	{/* Het bolletje uit het menu, dat op élke pagina staat. Zonder dit hier bleef ongetoetst of
+	   het een onthouden getal toont op een pagina die het echte zo berekent. */}
+	<nav class="side-nav"><a href="#">Berichtenbox<span class="badge" data-berichtenbox-count="ongelezen"></span></a></nav>
 ${inbox ? MELDINGEN_INBOX : ""}
 ${STORING}
 
@@ -155,6 +160,16 @@ function detailHtml(bericht, { metStoringsblok = true } = {}) {
 		<h1 class="h3">${bericht.onderwerp}</h1>
 ${storing}
 		<p class="berichtenbox-detail-meta">${bericht.afzender}</p>
+
+		<!-- Staat in de echte template en ontbrak hier. Daardoor keerde werkBerichtBeschikbaarheidBij
+		     meteen af en bleef een crash op die weg ongezien. -->
+		<div class="feedback feedback-warning" hidden data-bericht-onbeschikbaar role="status">
+			<div>
+				<p><b data-bron-uitval-naam></b> is momenteel niet bereikbaar.</p>
+				<p><button class="link-button" type="button" data-bericht-retry>Opnieuw proberen</button></p>
+			</div>
+		</div>
+
 		<div class="berichtenbox-detail-body"><p>${bericht.inhoud}</p></div>
 		<div class="action-options">
 			<button class="icon-button" data-actie="markeren" aria-pressed="false">Markeren</button>
@@ -262,4 +277,54 @@ export function kolommen() {
 		koppen: lijst.tHead.querySelectorAll("th").length,
 		cellen: eersteRij ? eersteRij.querySelectorAll("td").length : 0,
 	};
+}
+
+/**
+ * De generieke demo-detailpagina (`bericht-demo.html`), waar een bericht uit het stelsel op belandt.
+ *
+ * Die berichten hebben geen server-gerenderde detailpagina: die worden bij de build uit de dataset
+ * gegenereerd, en een bericht uit de keten zit daar niet in. Alleen de elementen die de render-laag
+ * aanraakt staan hier; de rest van de pagina doet er voor deze tests niet toe.
+ */
+export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
+	ruimDocumentListenersOp();
+	// De `.berichtenbox`-wrapper is geen opmaak maar een schakelaar: zonder die klasse stopt de
+	// hele IIFE na het markeer-gedeelte, en dan gebeurt er op deze pagina niets.
+	document.body.innerHTML = `
+		<article id="hoofd-inhoud" class="berichtenbox">
+		<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+			<p data-berichtenbox-storing-tekst></p>
+		</div>
+		<section class="berichtenbox-content" data-demo-detail>
+			<h1 data-demo-onderwerp class="h3"></h1>
+			<p class="metadata" data-demo-meta></p>
+			<div class="berichtenbox-detail-body" data-demo-body></div>
+			<p class="visually-hidden" data-demo-inhoud-status role="status"></p>
+			<p class="variant-c-only" data-nagebootst><a href="/assets/documents/voorbeeld-bijlage.pdf">Open origineel bericht</a></p>
+			{/* De PDF-viewer met zijn download-links, zoals bericht-demo.html die heeft. Zonder dit
+			    bleef ongetoetst of een keten-bijlage dezelfde weergave krijgt als een uit de dataset. */}
+			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden></div>
+				<div class="pdf-reveal"><object data-berichtenbox-attachments-preview type="application/pdf" hidden></object></div>
+				<ul class="list-indent">
+					<li><a href="#" data-berichtenbox-pdf-download download hidden>Download PDF</a></li>
+					<li><a href="#" data-berichtenbox-tekst-download download hidden>Lees tekst-versie</a></li>
+				</ul>
+			</div>
+			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
+				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
+			</section>
+		</section>
+		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
+			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
+			<p><a href="/moza/berichtenbox/" class="btn-cta">Terug naar Berichtenbox</a></p>
+		</div>
+		</article>
+	`;
+	window.history.replaceState(null, "", "/moza/berichtenbox/bericht-demo/?id=" + encodeURIComponent(bericht.id));
+	window.berichtenboxData = dataset(berichten);
+	window.localStorage.clear();
+	window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true }));
+	return document;
 }

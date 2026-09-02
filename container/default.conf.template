@@ -19,11 +19,21 @@ server {
 
     # Backend-origin, runtime instelbaar via env BACKEND_ORIGIN
     # (default http://dabackend:8000; op ZAD te zetten op het frontend-component).
+    # Dit is het adres van de Digitale Assistent en verder niets: /chat, /chat/stream, /health en
+    # /tools. Wat er onder /api/ langskomt gaat naar $backend_api hieronder.
     set $backend_origin "${BACKEND_ORIGIN}";
+
+    # De standaard-upstream voor alles onder /api/ waar geen eigen backend voor gezet is. Apart van
+    # BACKEND_ORIGIN omdat dat twee dingen tegelijk deed: het adres van de chat-backend en het
+    # vangnet van elke API-route. Zolang er één backend was viel dat samen; met een chat-backend,
+    # een berichtenuitvraag en een demo-console niet meer, en betekende een vergeten variabele
+    # stelsel-verkeer naar de chat-backend. Leeg laten laat alles onder /api/ gaan waar het vroeger
+    # ook heen ging; voor /api/v1/ en /api/demo/ geldt dat niet meer, zie de guard verderop.
+    set $backend_api "${BACKEND_API}";
 
     # Per-API runtime backends. Set these env vars at runtime if you want specific
     # API prefixes to proxy to different backends. If empty, they fall back to
-    # $backend_origin below.
+    # $backend_api below.
     set $backend_profiel "${BACKEND_PROFIEL}";
     set $backend_api_2 "${BACKEND_API_2}";
 
@@ -32,6 +42,13 @@ server {
     set $backend_keten "${BACKEND_KETEN}";
     set $backend_demo "${BACKEND_DEMO}";
 
+    # De testaccountlijst is een eigen dienst, los van de demo-console. Reden: die console zit achter
+    # een SSO-muur, en een muur op een component blokkeert ook server-side proxyen ernaartoe — deze
+    # container heeft geen sessie, en het cookie van de bezoeker geldt op een andere host. De lijst
+    # is daarom als aparte, publiek bereikbare deployment uitgerold. Leeg laten valt terug op de
+    # console, wat het gedrag is van vóór die splitsing.
+    set $backend_personas "${BACKEND_PERSONAS}";
+
     # Draait het stelsel buiten deze container achter een gedeelde ingress, dan routeert die op de
     # Host-header; doorgeven van de browser-host levert daar de verkeerde vhost of een 404 op. Zet
     # daarom de servernaam van de backend apart. Leeg laten betekent "gewoon de eigen host
@@ -39,8 +56,12 @@ server {
     # de proxy_pass-URL en is daarmee al goed.
     set $backend_keten_host "${BACKEND_KETEN_HOST}";
     set $backend_demo_host "${BACKEND_DEMO_HOST}";
+    set $backend_personas_host "${BACKEND_PERSONAS_HOST}";
 
-    # Fallback to the generic backend_origin when a specific backend isn't set
+    # Fallback to the generic backend_api when a specific backend isn't set
+    if ($backend_api = "") {
+        set $backend_api $backend_origin;
+    }
     # De profielservice is een publieke dienst, geen onderdeel van deze omgeving. Zonder
     # BACKEND_PROFIEL viel dit terug op de generieke backend, en daar bestaat dit pad niet: het
     # contactgegevens-blok kreeg dan een 404 in elke omgeving waar niemand de variabele gezet had.
@@ -50,13 +71,20 @@ server {
         set $backend_profiel https://profiel.mijnoverheidzakelijk.nl;
     }
     if ($backend_api_2 = "") {
-        set $backend_api_2 $backend_origin;
+        set $backend_api_2 $backend_api;
     }
-    if ($backend_keten = "") {
-        set $backend_keten $backend_origin;
-    }
+
+    # Geen terugval voor het stelsel. Een niet-gezette BACKEND_KETEN betekende tot nu toe: stuur de
+    # berichtenuitvraag naar de chat-backend, die deze paden niet kent. De bezoeker zag dan een 404
+    # of een DNS-fout uit een dienst die er niets mee te maken heeft, en niemand kon zien dat er een
+    # variabele ontbrak. De locaties hieronder antwoorden daarom zelf met een 502 die de naam van de
+    # ontbrekende variabele noemt. De demo-console valt nog wel terug op de berichtenuitvraag: is er
+    # één van beide fout, dan is dat de minst verwarrende fout, want die kent hetzelfde stelsel.
     if ($backend_demo = "") {
         set $backend_demo $backend_keten;
+    }
+    if ($backend_personas = "") {
+        set $backend_personas $backend_demo;
     }
     if ($backend_keten_host = "") {
         set $backend_keten_host $host;
@@ -64,11 +92,16 @@ server {
     if ($backend_demo_host = "") {
         set $backend_demo_host $backend_keten_host;
     }
+    if ($backend_personas_host = "") {
+        set $backend_personas_host $backend_demo_host;
+    }
 
     # --- Same-origin reverse proxy naar de interne Digitale-Assistent-backend ---
     # Browser praat alleen met deze origin; nginx proxyt server-side. Geen CORS.
     # Dekt /chat, /chat/stream (SSE) en DELETE /chat/<session_id>.
     location /chat {
+        include /etc/nginx/geen-backend-origin.conf;
+
         proxy_pass $backend_origin$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -83,13 +116,19 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    # Health/tools proxy to generic backend
+    # Health/tools proxy to the Digitale-Assistent backend. Let op: dit zegt niets over deze
+    # container. Draait er geen chat-backend in de omgeving, richt een health-check dan niet hierop —
+    # die faalt dan terwijl de proeftuin het prima doet.
     location = /health {
+        include /etc/nginx/geen-backend-origin.conf;
+
         proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
     }
 
     location = /tools {
+        include /etc/nginx/geen-backend-origin.conf;
+
         proxy_pass $backend_origin$request_uri;
         proxy_set_header Host $host;
     }
@@ -106,6 +145,14 @@ server {
     # zijn CORS-regels toe op een aanroep die server-side gedaan wordt. De rest van de
     # binnenkomende headers gaat om dezelfde reden niet mee.
     location /api/profielservice/ {
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_profiel, en die is alleen leeg
+        # als BACKEND_PROFIEL niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_profiel = "") {
+            add_header X-Proxy-Configuratie "BACKEND_PROFIEL" always;
+            return 502 "BACKEND_PROFIEL is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_PROFIEL of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
+
         proxy_pass $backend_profiel$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host $proxy_host;
@@ -130,10 +177,57 @@ server {
     # Example: another API prefix that can point to a different backend
     # Set the env var BACKEND_API_2 to override, otherwise falls back to BACKEND_ORIGIN
     location /api/other/ {
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_api_2, en die is alleen leeg
+        # als BACKEND_API_2 niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_api_2 = "") {
+            add_header X-Proxy-Configuratie "BACKEND_API_2" always;
+            return 502 "BACKEND_API_2 is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API_2 of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
+
         proxy_pass $backend_api_2$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Berichtenbox: een bijlage ophalen ---
+    # Apart van /api/v1/ hieronder om één reden: een <a href> en een <object data> kunnen geen
+    # eigen header meesturen, en het stelsel eist X-Ontvanger. Zonder die header antwoordt het met
+    # 400. De browser zet de ontvanger daarom in een cookie en de proxy maakt er weer een header
+    # van. Zelfde afspraak als bij de Digitale Assistent, waar de backend X-Test-User injecteert.
+    #
+    # In het cookie en niet in de URL: de ontvanger hoort bij de zitting, niet bij het adres van
+    # het document. Anders staat in elke gekopieerde link, in de geschiedenis en in elk logboek wie
+    # het opvroeg.
+    #
+    # Dit maakt niets veiliger — een cookie is net zo goed door de bezoeker te zetten als een
+    # header. Het stelsel moet zijn eigen allowlist hanteren; zie de opmerking hieronder.
+    location ~ ^/api/v1/berichten/[^/]+/bijlagen/[^/]+$ {
+        # Eigen guard, om twee redenen anders dan die van /api/v1/ hieronder.
+        #
+        # Een lege types-tabel, want mime.types gaat vóór default_type: het laatste padsegment is
+        # een bijlage-id uit het stelsel, en eindigt dat toevallig op ".pdf", dan zou de browser
+        # deze foutmelding als PDF aangeboden krijgen. Gemeten, geen theorie.
+        #
+        # En een tekst voor de bezoeker in plaats van voor de beheerder. Dit adres staat in een
+        # <a href>, dus de browser toont dit antwoord zelf. De naam van een omgevingsvariabele
+        # hoort niet in beeld bij iemand die op een bijlage klikt; die staat in het antwoord van
+        # /api/v1/, dat alleen een ontwikkelaar in de netwerktab ziet.
+        types { }
+        default_type text/plain;
+        if ($backend_keten = "") {
+            add_header X-Proxy-Configuratie "BACKEND_KETEN" always;
+            return 502 "Deze bijlage is nu niet op te halen. Probeer het later opnieuw of meld het bij de beheerder van deze proeftuin.";
+        }
+
+        # $uri en niet $request_uri: een queryparameter hoort hier niet bij en gaat niet mee.
+        proxy_pass $backend_keten$uri;
+        proxy_set_header Host $backend_keten_host;
+        proxy_set_header X-Ontvanger $cookie_ontvanger;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
     }
 
     # --- Berichtenbox: berichten uit het Federatief Berichtenstelsel ---
@@ -146,6 +240,8 @@ server {
     # De browser stuurt de ontvanger mee in de header X-Ontvanger. Dat is geen authenticatie — de
     # header is in de browser aan te passen — dus het stelsel moet zijn eigen allowlist hanteren.
     location /api/v1/ {
+        include /etc/nginx/geen-backend-keten.conf;
+
         proxy_pass $backend_keten$request_uri;
         proxy_set_header Host $backend_keten_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -163,9 +259,41 @@ server {
         proxy_ssl_server_name on;
     }
 
-    # Testaccounts van de demo-omgeving. Apart van /api/v1/, want dit is demonstratiegereedschap
-    # en geen dienst van het stelsel; buiten een demo-opstelling staat BACKEND_DEMO niet gezet.
+    # De testaccountlijst. Een exacte match, dus deze wint van de prefix /api/demo/ hieronder,
+    # ongeacht de volgorde in dit bestand.
+    #
+    # Dit is het enige pad onder /api/demo/ dat dit prototype aanroept, en het enige dat buiten de
+    # SSO-muur van de demo-console staat. De rest van die console — storingen aan- en uitzetten,
+    # berichten opvoeren — is bedieningsgereedschap voor wie de demo geeft, en daar komt deze
+    # container niet bij: een muur op een component blokkeert ook server-side proxyen. Dat is geen
+    # gemis, want de berichtenbox heeft er niets aan.
+    location = /api/demo/personas {
+        default_type text/plain;
+        if ($backend_personas = "") {
+            add_header X-Proxy-Configuratie "BACKEND_PERSONAS" always;
+            return 502 "BACKEND_PERSONAS is niet gezet op deze container (en BACKEND_DEMO en BACKEND_KETEN evenmin), dus er is geen adres van de testaccountlijst. Zet een van die variabelen in de omgeving en start de container opnieuw.";
+        }
+
+        proxy_pass $backend_personas$request_uri;
+        proxy_set_header Host $backend_personas_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_ssl_server_name on;
+    }
+
+    # De rest van de demo-omgeving. Apart van /api/v1/, want dit is demonstratiegereedschap en geen
+    # dienst van het stelsel; buiten een demo-opstelling staat BACKEND_DEMO niet gezet. Staat de
+    # console achter een SSO-muur, dan komt deze proxy er niet bij en levert dit een 403 op — dit
+    # prototype roept er niets van aan, dus dat blijft zonder gevolg.
     location /api/demo/ {
+        # Leeg betekent hier: noch BACKEND_DEMO noch BACKEND_KETEN is gezet, want de terugval
+        # hierboven vult de eerste met de tweede.
+        default_type text/plain;
+        if ($backend_demo = "") {
+            add_header X-Proxy-Configuratie "BACKEND_DEMO" always;
+            return 502 "BACKEND_DEMO is niet gezet op deze container (en BACKEND_KETEN evenmin), dus er is geen adres van de demo-console. Zet een van beide in de omgeving en start de container opnieuw.";
+        }
+
         proxy_pass $backend_demo$request_uri;
         proxy_set_header Host $backend_demo_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -173,9 +301,17 @@ server {
         proxy_ssl_server_name on;
     }
 
-    # Catch-all for /api to the generic backend (BACKEND_ORIGIN)
+    # Catch-all for /api to the generic API backend (BACKEND_API, anders BACKEND_ORIGIN)
     location /api/ {
-        proxy_pass $backend_origin$request_uri;
+        # Snel falen in plaats van een kale 500. Deze location proxyt naar $backend_api, en die is alleen leeg
+        # als BACKEND_API niet gezet is én de terugval erachter ook niet.
+        default_type text/plain;
+        if ($backend_api = "") {
+            add_header X-Proxy-Configuratie "BACKEND_API" always;
+            return 502 "BACKEND_API is niet gezet op deze container en de terugval erachter evenmin, dus er is geen adres voor dit pad. Zet BACKEND_API of BACKEND_ORIGIN in de omgeving en start de container opnieuw.";
+        }
+
+        proxy_pass $backend_api$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;

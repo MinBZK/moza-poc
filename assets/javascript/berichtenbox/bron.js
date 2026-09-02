@@ -4,12 +4,35 @@
  * Een bron is een object met:
  *
  *     {
- *       naam:      "keten",
- *       geldtVoor: async (persona) => boolean,   // is deze bron van toepassing?
- *       laad:      async () => ({ berichten, magazijnen, mappen }),
- *       start:     (meld) => {},                 // optioneel: gedrag ná het laden
- *       inhoudVan: async (berichtId) => string,  // optioneel: inhoud naleveren
+ *       naam:          "keten",
+ *       geldtVoor:     async (persona) => boolean,   // is deze bron van toepassing?
+ *       laad:          async () => ({ berichten, magazijnen, mappen }),
+ *       start:         (meld) => {},                 // optioneel: gedrag ná het laden
+ *       inhoudVan:     async (berichtId) => ({ inhoud, bijlagen }) | ({ fout }),  // optioneel: inhoud naleveren
+ *                      // Werpt niet: de detailpagina moet altijd iets kunnen tonen.
+ *       volgVoortgang: (kijker) => {},               // optioneel: hoe ver het ophalen is
+ *       herhaalOphalen: (klaar) => {},               // optioneel: nog een keer, op verzoek
+ *       herstelBronnen: () => {},                    // optioneel: de bezoeker vraagt om herstel
+ *       vergeetUitval: () => {},                     // optioneel: begin opnieuw met een schone lei
  *     }
+ *
+ * `volgVoortgang` meldt `{ bevraagd, klaar, gevonden }` zolang er opgehaald wordt, en `null` zodra
+ * er niets meer te melden valt. Of die getallen gemeten zijn of nagebootst, hoort de render-laag
+ * niet te kunnen zien. Let op: de render-laag abonneert zich hierop vóór de bronkeuze — `geldtVoor`
+ * wacht een ophaalronde af, en daarna is de voortgang voorbij.
+ *
+ * `herhaalOphalen` is er voor de bezoeker die erom vraagt: een hersteld magazijn, een verruimd
+ * organisatiefilter. Wie het niet aanbiedt, wordt niet gevraagd.
+ *
+ * Het veld `uitval` in het antwoord van `laad` — en in elke wijziging die een bron meldt — zegt wat
+ * die bron níet kon leveren. Een bron die niet antwoordt levert immers geen berichten; dat weglaten
+ * is de eerlijke vorm, en de render-laag beslist hoe het eruitziet. Bewust alleen als veld en niet
+ * als functie: een functie zou ná de lading een verse toestand kunnen verzinnen, en dan staat er een
+ * melding over een bron boven een lijst waar die bron gewoon in staat.
+ *
+ * `herstelBronnen` en `vergeetUitval` horen bij die uitval: de eerste onder de knop "Opnieuw
+ * proberen", de tweede onder het uitzetten van de vlag. Allebei moeten ze de lijst opnieuw leveren —
+ * de bron liet die berichten weg, dus alleen de bron kan ze teruggeven.
  *
  * De volgorde van registreren is de voorrang: de eerste bron waarvoor `geldtVoor` waar is, wint.
  * De dataset-bron hoort daarom achteraan — die is altijd van toepassing en vangt op wat geen

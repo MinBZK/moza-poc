@@ -209,7 +209,7 @@ Deze pagina's delen het script maar hebben geen volledige dataset. Ze horen onge
 ## C. Verschillen met main, en waarom
 
 Gemeten met `npm run test:vergelijk`, niet geredeneerd. Vier ervan zijn fouten op `main` die deze
-branch oplost; twee zijn gevolg van de opzet en vragen om een akkoord.
+branch oplost; de rest is gevolg van de opzet en vraagt om een akkoord.
 
 ### Wat deze branch rechtzet
 
@@ -223,6 +223,13 @@ branch oplost; twee zijn gevolg van de opzet en vragen om een akkoord.
 - [ ] **De badge werd verkeerd bewaard.** Archiveert of verwijdert u een ongelezen bericht, dan
       toont `main` op het scherm 15 en schrijft het 16 naar localStorage. Op de volgende pagina
       staat de badge daardoor één te hoog. De branch bewaart wat u ziet.
+- [ ] **Wisselen van persona wiste het archief van wie niet gewisseld was.** De persona-scheiding
+      merkt de bewaarde gegevens met de naam van hun eigenaar. Gegevens van vóór die scheiding
+      dragen geen naam — en die werden weggegooid, zowel door `personas.js` als door de
+      berichtenbox-state. Voor een bezoeker die niets anders deed dan zijn pagina verversen,
+      verdwenen zo zijn archief, zijn gelezen-markeringen en zijn markeringen, zonder een woord
+      erover: de melding erbij ging alleen af als er een vórige persona was. Ongemerkte gegevens
+      worden nu aangenomen door wie er actief is; wisselen daarna gooit ze wél weg.
 - [ ] **Een bericht kon in het archief én in de prullenbak staan.** Archiveert u een bericht en
       gooit u het daarna weg, dan blijft het op `main` ook in het archief staan. De branch geeft de
       prullenbak voorrang, zoals de bewaarde staat het al beschreef.
@@ -241,6 +248,10 @@ branch oplost; twee zijn gevolg van de opzet en vragen om een akkoord.
       geeft het er nul en verschijnt de lege staat. U zoekt nu in de afzender en het onderwerp.
 - [ ] **Alleen de zichtbare pagina staat in de HTML.** Zoeken in de pagina met Ctrl+F vindt daardoor
       alleen berichten op de huidige pagina, niet op alle pagina's.
+- [ ] **De bewaarde staat draagt de naam van zijn persona.** In localStorage staat nu een veld
+      `persona`. Daaraan is te zien van wie de gegevens zijn, zodat ze bij een wissel weg kunnen —
+      persona's hebben geen enkel verband met elkaar. `main` kent dat veld niet, dus het verschil
+      staat in elk vergelijkingsscenario waarin de branch iets bewaart.
 - [ ] **Het script is een ES-module.** Modulescripts draaien ná alle klassieke `defer`-scripts, dus
       de berichtenbox komt later op gang dan de andere scripts op de pagina.
 

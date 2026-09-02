@@ -9,8 +9,8 @@
  *
  * Dit is de transportlaag, en verder niets: hij haalt op, en meldt wat hij ziet. Wat daarvan op het
  * scherm komt en waar, bepaalt `berichtenbox/keten-bron.js` — die maakt hier een bron van, zoals de
- * dataset er een is. Vandaar dat hier geen DOM in staat, op één plek na: `paginaStartRonde` kijkt
- * of dit de inbox is, want dat bepaalt óf er opgehaald wordt.
+ * dataset er een is. Vandaar dat hier geen DOM in staat, op één plek na: `paginaGebruiktKeten()`
+ * leest het pad van de pagina, want binnen het Belastingdienst-portaal wordt er niet opgehaald.
  *
  * Het draait vóór berichtenbox.js, zodat de ophaalronde zo vroeg mogelijk begint; de bron wacht die
  * af voordat hij zegt dat hij van toepassing is.
@@ -32,7 +32,6 @@
 (function () {
 	"use strict";
 
-
 	// De demo-console is een kleine lijst en hoort meteen te antwoorden. De berichtenlijst mag wat
 	// langer duren. De ophaalronde zelf krijgt geen harde limiet maar een stiltebewaking: een ronde
 	// langs tientallen organisaties mag lang duren, stilte niet.
@@ -45,15 +44,51 @@
 	// geen backend, dan wacht élke bezoeker die tijd uit voordat de dataset in beeld komt.
 	const DEMO_LIMIET_MS = 1500;
 	const LIJST_LIMIET_MS = 30000;
+	// Eén bericht ophalen gaat langs één magazijn, niet langs allemaal. Duurt dat langer dan dit,
+	// dan is de bezoeker beter af met de mededeling dan met een blijvend "wordt opgehaald".
+	const INHOUD_LIMIET_MS = 10000;
 	const STILTE_LIMIET_MS = 30000;
 
+	// Hoe lang we wachten op een ronde die een andere pagina al draait, en hoe vaak we tussendoor
+	// kijken of de lijst er is. Ruim genomen: een ronde langs vijftien magazijnen duurt seconden,
+	// maar een trage organisatie mag hem langer maken zonder dat de bezoeker een melding krijgt.
+	const WACHT_OP_RONDE_MS = 45000;
+	const WACHT_STAP_MS = 1500;
+
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
+	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
+	// geen knop is die dat doet: `opnieuw()` hieronder heeft geen enkele aanroeper. Zolang die knop er
+	// niet is, is verversen wat de bezoeker rest — en dat is ook wat de render-laag overal zegt.
 	const FOUT_TEKSTEN = {
-		onbereikbaar: "Er gaat iets mis met het ophalen van uw berichten bij de bronnen. Probeer het later opnieuw.",
-		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht een minuut en probeer het opnieuw.",
-		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Probeer het opnieuw.",
-		stil: "De bronnen reageren niet meer. Probeer het opnieuw.",
+		onbereikbaar: "Er gaat iets mis met het ophalen van uw berichten bij de bronnen. Ververs de pagina om het opnieuw te proberen.",
+		// Twee soorten 409 uit de uitvraag, met verschillende oorzaken en verschillende handelingen.
+		// "Worden momenteel al opgehaald": er loopt een ronde voor deze ontvanger — één ontvanger,
+		// één ronde tegelijk, bewaakt met een slot in de sessiecache. Twee minuten, want dat is de
+		// vangnet-TTL van dat slot (aggregation-lock-ttl=PT2M); blijft een slot staan doordat een pod
+		// midden in een ronde herstart, dan is het daarna vanzelf weer vrij.
+		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht twee minuten en ververs dan de pagina.",
+		// "Zijn nog niet opgehaald": er is geen sessie meer. Anders dan bij de andere meldingen helpt
+		// verversen hier echt, want dan draait de ophaalronde opnieuw en zet die de sessie terug.
+		geenSessie: "Uw berichten zijn niet meer klaargezet bij het stelsel. Ververs de pagina; dan halen wij ze opnieuw op.",
+		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
+		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
+		// Geen storing bij een bron maar een onvolledig ingerichte omgeving. Verversen verandert daar
+		// per definitie niets aan, dus dat mag hier niet staan.
+		configuratie: "Deze proeftuin is niet volledig ingericht, waardoor uw berichten hier niet op te halen zijn. Verversen helpt niet; meld dit bij de beheerder van deze proeftuin.",
+		weg: "Wij konden dit bericht niet ophalen bij de organisatie die het stuurde. Ververs de pagina om het opnieuw te proberen, of ga terug naar uw Berichtenbox.",
+		// Eén bericht, één organisatie. "De bronnen reageren niet meer" gaat over het hele stelsel en
+		// is hier onwaar: de lijst van de bezoeker staat er gewoon.
+		traag: "Het ophalen van dit bericht duurde te lang. Ververs de pagina om het opnieuw te proberen.",
+	};
+
+	// Geen storing bij een bron, maar een toestand van deze omgeving: er is niets kapot, er valt
+	// hier alleen niets op te halen. Toch een melding en geen stilte, want dit raakt alleen wie een
+	// testaccount van het stelsel koos, en die krijgt anders de gegenereerde dataset voorgeschoteld
+	// als zijn eigen post. Beide teksten zeggen wat er aan de hand is en wat de bezoeker kan doen.
+	const STELSEL_TEKSTEN = {
+		geenStelsel: "Dit testaccount haalt zijn berichten uit het Federatief Berichtenstelsel. Dat stelsel is in deze omgeving niet beschikbaar, dus wij kunnen uw berichten niet ophalen. Kies een ander testaccount om de berichtenbox met voorbeeldgegevens te bekijken.",
+		nietBekend: "Dit testaccount is bij het Federatief Berichtenstelsel niet bekend, dus daar zijn geen berichten voor op te halen. Kies een ander testaccount om de berichtenbox met voorbeeldgegevens te bekijken.",
 	};
 
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
@@ -70,8 +105,8 @@
 	// Zonder die scheiding schrijft dit script in dezelfde meldingsblokken als de gesimuleerde
 	// bronuitval, en is voor de bezoeker niet meer te zien wat echt is en wat nagebootst.
 
-	let melding = null;    // { soort: "storing" | "mededeling", tekst }
-	let voortgang = null;  // { bevraagd, klaar, gevonden }
+	let melding = null; // { soort: "storing" | "mededeling", tekst }
+	let voortgang = null; // { bevraagd, klaar, gevonden }
 	let laatsteUitkomst = null;
 	const kijkers = [];
 
@@ -86,7 +121,7 @@
 	}
 
 	function toestand() {
-		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd };
+		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd || hoortBijStelsel() };
 	}
 
 	function meld(soort, tekst) {
@@ -101,17 +136,13 @@
 	// Organisaties die tijdens de ronde niet antwoordden. Een mededeling en geen storing: er staat
 	// wél een lijst, hij is alleen niet volledig.
 	function toonUitval(namen) {
-		meld("mededeling", namen.length > 1
-			? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ")
-				+ ". Berichten van deze organisaties ontbreken mogelijk."
-			: namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+		meld("mededeling", namen.length > 1 ? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk." : namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
 	}
 
 	// De ronde telde meer berichten dan de lijst teruggaf: meer dan één pagina, of onderweg iets
 	// kwijtgeraakt. Stil inslikken zou een halve postbus als een volledige presenteren.
 	function toonOnvolledig(getoond, gevonden) {
-		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond
-			+ " opgehaald. Probeer het opnieuw om de rest op te halen.");
+		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond + " opgehaald. Probeer het opnieuw om de rest op te halen.");
 	}
 
 	function verbergMeldingen() {
@@ -147,6 +178,106 @@
 		return "onbereikbaar";
 	}
 
+	/**
+	 * Waarom een antwoord mislukte: een ontbrekende omgevingsvariabele, of een bron die zwijgt.
+	 *
+	 * Allebei een 502, dus aan de status alleen is het niet te zien. De proxy zet daarom op zijn
+	 * eigen foutantwoorden `X-Proxy-Configuratie` met de naam van de variabele die ontbreekt. Zonder
+	 * dat onderscheid leest een half ingerichte omgeving als een storing bij het stelsel, en krijgt
+	 * de bezoeker "ververs de pagina" te zien voor iets wat verversen nooit oplost.
+	 */
+	function redenVanRespons(respons, wat) {
+		const variabele = respons && respons.headers && typeof respons.headers.get === "function" ? respons.headers.get("X-Proxy-Configuratie") : null;
+		if (!variabele) return "onbereikbaar";
+		console.error("[Berichtenbox] " + wat + " kan niet: " + variabele + " is niet gezet op deze container. Zet die runtime-variabele in de omgeving; verversen helpt niet.");
+		return "configuratie";
+	}
+
+	// De namen van de aangesloten organisaties, bewaard per ontvanger.
+	//
+	// `_ophalen` bouwt bij het stelsel de sessie op; daarna levert `GET /api/v1/berichten` die lijst
+	// zonder dat er iets opnieuw bevraagd hoeft te worden. Elke berichtenbox-pagina is hier een eigen
+	// document — inbox, archief, prullenbak — en die draaiden allemaal hun eigen ronde. Bij een
+	// ontvanger met vijftien magazijnen loopt de eerste dan nog wanneer de tweede begint, en dat
+	// antwoordt het stelsel terecht met 409: één ontvanger, één ronde tegelijk.
+	//
+	// Alleen de lijst gebruiken kan niet zomaar: die draagt als `afzender` hetzelfde nummer als
+	// `magazijnId`, en de leesbare naam staat uitsluitend in de gebeurtenissen van de ronde. Daarom
+	// bewaren we die namen; dan kan een volgende pagina de lijst nemen en toch "Belastingdienst"
+	// tonen in plaats van twintig cijfers. sessionStorage en niet localStorage: dit hoort bij deze
+	// zitting, net als de sessie bij het stelsel zelf.
+	const ORGANISATIES_SLEUTEL = "berichtenbox-keten-organisaties";
+
+	function bewaarOrganisaties(ontvanger, organisaties) {
+		if (!ontvanger || !organisaties || !Object.keys(organisaties).length) return;
+		try {
+			sessionStorage.setItem(ORGANISATIES_SLEUTEL, JSON.stringify({ ontvanger: ontvanger, organisaties: organisaties }));
+		} catch (fout) {
+			// Geen ramp: zonder deze namen draait de volgende pagina gewoon zijn eigen ronde.
+			console.warn("[Berichtenbox] de namen van de organisaties konden niet bewaard worden.", fout);
+		}
+	}
+
+	function bewaardeOrganisaties(ontvanger) {
+		try {
+			const rauw = sessionStorage.getItem(ORGANISATIES_SLEUTEL);
+			if (!rauw) return null;
+			const bewaard = JSON.parse(rauw);
+			// Op naam van deze ontvanger, anders zijn het de organisaties van een vorige persona.
+			return bewaard && bewaard.ontvanger === ontvanger && bewaard.organisaties ? bewaard.organisaties : null;
+		} catch (fout) {
+			return null;
+		}
+	}
+
+	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
+	// berichtenbox.js bouwt; een test houdt die afspraak vast.
+	const ONTVANGER_PAD = "/api/v1/berichten";
+
+	/**
+	 * De ontvanger in een cookie, zodat de proxy er een X-Ontvanger-header van kan maken.
+	 *
+	 * Nodig omdat een `<a href>` en een `<object data>` geen eigen header meesturen: een bijlage is
+	 * een gewone URL die de browser zelf ophaalt. Alleen daarvoor; alle aanroepen die dit script
+	 * zelf doet, zetten de header gewoon zelf.
+	 *
+	 * Geen beveiliging — de bezoeker kan dit cookie net zo goed zelf zetten als de header. Het
+	 * stelsel houdt zijn eigen controle. Maar de waarde is een identiteit, en die hoort zo weinig
+	 * mogelijk mee te reizen. Vandaar drie beperkingen:
+	 *
+	 * - `path=/api/v1/berichten`: alleen de aanroepen die hem nodig hebben. Met `path=/` ging hij
+	 *   mee met élk verzoek naar deze origin, inclusief elk plaatje en elk stylesheet.
+	 * - `SameSite=Strict`: nooit mee met een verzoek dat een andere site opwekt.
+	 * - `Secure` zodra de pagina over https gaat. Niet onvoorwaardelijk: een browser weigert een
+	 *   Secure-cookie op een gewone http-pagina, en dan werken bijlagen lokaal niet meer.
+	 *
+	 * Geen `Max-Age`, dus een sessiecookie: het leeft zolang de browserzitting duurt. Een vaste
+	 * vervaltijd leek zuiniger, maar het cookie wordt alleen bij een paginalading gezet, en de inbox
+	 * is een pagina die blijft openstaan — filteren, pagineren en een bericht in een nieuw tabblad
+	 * openen laten het oorspronkelijke document en zijn cookie ongemoeid. Na afloop van die
+	 * vervaltijd gaf elke bijlage een 400 uit het stelsel, zonder melding, terwijl de brief er nog
+	 * gewoon stond: die haalt de ontvanger uit het geheugen van dit script en verloopt nooit.
+	 */
+	function zetOntvangerCookie(ontvanger) {
+		try {
+			// Eerst de voorganger op `path=/` opruimen, van een zitting van vóór de versmalling.
+			// Niet omdat nginx anders de verkeerde zou pakken — RFC 6265 zet het langste pad eerst,
+			// dus het smalle wint — maar omdat het brede cookie anders bij élk verzoek naar deze
+			// origin blijft meereizen, en dat is precies wat we hier weghalen.
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+
+			// Rauw, niet ge-encodeerd: nginx geeft de waarde door zoals hij is, en het stelsel
+			// verwacht "KVK:12345678". De dubbele punt mag in een cookiewaarde.
+			document.cookie = "ontvanger=" + ontvanger + "; path=" + ONTVANGER_PAD + "; SameSite=Strict" + (locatieIsVeilig() ? "; Secure" : "");
+		} catch (fout) {
+			console.error("[Berichtenbox] De ontvanger kon niet in een cookie; bijlagen zijn niet op te halen.", fout);
+		}
+	}
+
+	function locatieIsVeilig() {
+		return typeof location !== "undefined" && location.protocol === "https:";
+	}
+
 	function metTijdslimiet(pad, opties, limiet) {
 		return fetch(pad, Object.assign({ signal: AbortSignal.timeout(limiet) }, opties));
 	}
@@ -163,12 +294,45 @@
 			// opleveren, terwijl er nog geen bron bevraagd is.
 			throw ketenFout("onbereikbaar", "testaccounts opvragen mislukt (" + (fout && fout.name) + ")");
 		}
-		if (!respons.ok) throw ketenFout("onbereikbaar", "testaccounts opvragen mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de testaccounts opvragen"), "testaccounts opvragen mislukt (" + respons.status + ")");
 
 		const lijst = await respons.json();
 		if (!Array.isArray(lijst)) throw ketenFout("onbereikbaar", "testaccounts: onverwacht antwoord");
 
+		meldOntbrekendeTestaccounts(lijst);
+
 		return lijst.find((p) => p && p.bron === "keten" && p.ontvanger === "KVK:" + kvkNummer) || null;
+	}
+
+	/**
+	 * Meldt welke testaccounts het stelsel aanbiedt waarvoor hier geen persona bestaat.
+	 *
+	 * De persona's staan statisch in `_data/personas.json`, want een persona is meer dan een
+	 * ontvanger: er hangen bedrijfsgegevens aan die de pagina Bedrijfsgegevens, het dashboard en de
+	 * assistent gebruiken, en die levert het stelsel niet. Die lijst met de hand bijhouden is prima,
+	 * zolang je merkt dat er iets bij gekomen is — vandaar deze melding.
+	 *
+	 * Ontvangers op BSN blijven bewust buiten MOZa: dit is de zakelijke kant, en die schrijft
+	 * ondernemingen aan op KVK-nummer. Ze worden apart gemeld, zodat het een keuze blijft en niet
+	 * als omissie leest.
+	 */
+	function meldOntbrekendeTestaccounts(lijst) {
+		if (!window.Personas || !Array.isArray(window.Personas.personas)) return;
+
+		const onze = window.Personas.personas.map((p) => (p && p.bedrijf && p.bedrijf.kvkNummer ? "KVK:" + p.bedrijf.kvkNummer : null)).filter(Boolean);
+		const ontbreekt = lijst.filter((p) => p && p.bron === "keten" && p.ontvanger && onze.indexOf(p.ontvanger) === -1);
+		if (!ontbreekt.length) return;
+
+		const beschrijf = (p) => (p.label || p.id || "naamloos") + " (" + p.ontvanger + ")";
+		const opBsn = ontbreekt.filter((p) => p.ontvanger.indexOf("BSN:") === 0);
+		const opKvk = ontbreekt.filter((p) => p.ontvanger.indexOf("BSN:") !== 0);
+
+		if (opKvk.length) {
+			console.warn("[Berichtenbox] Het stelsel biedt testaccounts waarvoor hier geen persona bestaat: " + opKvk.map(beschrijf).join(", ") + ". Voeg ze toe aan _data/personas.json, anders zijn ze niet te kiezen.");
+		}
+		if (opBsn.length) {
+			console.info("[Berichtenbox] Testaccounts van het stelsel met een BSN-ontvanger, bewust niet als persona overgenomen: " + opBsn.map(beschrijf).join(", ") + ". MOZa is de zakelijke kant en schrijft aan op KVK-nummer.");
+		}
 	}
 
 	// De ophaalronde is een Server-Sent-Events-stroom met voortgang per organisatie. EventSource kan
@@ -204,11 +368,14 @@
 
 		if (respons.status === 409) {
 			clearTimeout(stilteKlok);
+			// Eén ontvanger, één ronde tegelijk. Dat is geen fout: een andere pagina van deze
+			// berichtenbox is bezig, en het resultaat komt in dezelfde sessie terecht. De aanroeper
+			// wacht die af in plaats van de bezoeker een storing te tonen.
 			throw ketenFout("bezig", "er loopt al een ophaalronde voor deze ontvanger");
 		}
 		if (!respons.ok) {
 			clearTimeout(stilteKlok);
-			throw ketenFout("onbereikbaar", "ophalen mislukt (" + respons.status + ")");
+			throw ketenFout(redenVanRespons(respons, "de ophaalronde starten"), "ophalen mislukt (" + respons.status + ")");
 		}
 		if (!respons.body) {
 			clearTimeout(stilteKlok);
@@ -269,7 +436,9 @@
 		} finally {
 			clearTimeout(stilteKlok);
 			// De stroom afsluiten, anders loopt de backend elke resterende organisatie nog af.
-			lezer.cancel().catch(() => { /* stroom al dicht */ });
+			lezer.cancel().catch(() => {
+				/* stroom al dicht */
+			});
 		}
 
 		// Een stroom die eindigt zonder "ophalen-gereed" is afgebroken. Die zou een halve lijst als
@@ -281,14 +450,67 @@
 		return { organisaties: organisaties, stil: stil, gevonden: gevonden };
 	}
 
+	/**
+	 * Wacht tot de ronde van een andere pagina klaar is, door de lijst te blijven proberen.
+	 *
+	 * Zolang die ronde loopt heeft de ontvanger nog geen gevulde sessie en antwoordt de lijst met
+	 * 409. Dat is hier geen fout maar "nog niet zover". Loopt de wachttijd af, dan gooien we alsnog
+	 * `bezig`: dan zegt de melding dat er al opgehaald wordt en dat verversen zo helpt.
+	 */
+	async function wachtOpLijst(ontvanger) {
+		const einde = Date.now() + WACHT_OP_RONDE_MS;
+		for (;;) {
+			await new Promise((klaar) => setTimeout(klaar, WACHT_STAP_MS));
+			try {
+				return await haalLijst(ontvanger);
+			} catch (fout) {
+				if (redenVan(fout) !== "geenSessie") throw fout;
+				if (Date.now() >= einde) throw ketenFout("bezig", "de ophaalronde van een andere pagina is niet op tijd klaar");
+			}
+		}
+	}
+
 	async function haalLijst(ontvanger) {
-		const respons = await metTijdslimiet(
-			"/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE,
-			{ headers: { "X-Ontvanger": ontvanger } },
-			LIJST_LIMIET_MS
-		);
-		if (!respons.ok) throw ketenFout("onbereikbaar", "berichten laden mislukt (" + respons.status + ")");
+		const respons = await metTijdslimiet("/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
+		// De uitvraag levert de lijst uit een sessie die de ophaalronde vult. Is die er niet meer —
+		// het slot verlopen, de sessie opgeruimd — dan antwoordt hij met 409, en dat is geen storing
+		// bij een bron maar een toestand die met verversen over gaat.
+		if (respons.status === 409) throw ketenFout("geenSessie", "de sessie met opgehaalde berichten bestaat niet meer");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de berichtenlijst ophalen"), "berichten laden mislukt (" + respons.status + ")");
 		return respons.json();
+	}
+
+	/**
+	 * De inhoud van één bericht.
+	 *
+	 * De berichtenuitvraag levert alleen de kopgegevens — afzender, onderwerp, datum. De inhoud en
+	 * de bijlagen staan achter een eigen adres per bericht, en worden dus pas opgehaald wanneer de
+	 * bezoeker het bericht opent. Dat is niet alleen zuinig: het is ook wat er in een federatief
+	 * stelsel gebeurt, waar de inhoud bij de organisatie zelf blijft tot iemand erom vraagt.
+	 */
+	async function haalInhoud(ontvanger, berichtId) {
+		const respons = await metTijdslimiet("/api/v1/berichten/" + encodeURIComponent(berichtId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+
+		// Een 404 zegt niet wat wij zouden willen dat hij zegt. Hij kan betekenen dat het bericht er
+		// niet meer is, maar net zo goed dat deze backend de route niet kent, dat een ingress iets
+		// anders routeert, of dat het bericht niet aan déze ontvanger toekomt — en die header is in
+		// de browser aan te passen.
+		//
+		// Er is geen afgesproken kenmerk om die gevallen uit elkaar te houden. Op het woord
+		// "bericht" in `type` of `title` afgaan leek een verfijning, maar elke `type`-URI van deze
+		// resource bevat dat woord, en de RFC-standaard `{"type":"about:blank","title":"Not Found"}`
+		// bevat het juist niet. Dat is schijnzekerheid in twee richtingen tegelijk.
+		//
+		// Dus zeggen we wat we wél weten. Zodra het stelsel een kenmerk aanbiedt dat "ingetrokken"
+		// van "onbereikbaar" scheidt, kan het onderscheid terug — zie de open vraag in CLAUDE.md.
+		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + berichtId + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de inhoud van dit bericht ophalen"), "berichtinhoud laden mislukt (" + respons.status + ")");
+
+		const bericht = await respons.json();
+		return {
+			inhoud: typeof bericht.inhoud === "string" ? bericht.inhoud : "",
+			bijlagen: Array.isArray(bericht.bijlagen) ? bericht.bijlagen : [],
+		};
 	}
 
 	// --- Vertaling ----------------------------------------------------------------------------
@@ -332,13 +554,29 @@
 		return !inBelastingdienstPortaal();
 	}
 
-	// Alleen de inbox bevraagt de bronnen. Archief, prullenbak en de detailpagina's hebben genoeg
-	// aan de cache van de vorige ronde; die herkennen we aan data-berichtenbox-view.
+	// Elke berichtenbox-pagina draait zijn eigen ronde — zie de toelichting bij de start hieronder.
+	// Dat geldt ook voor een detailpagina: zonder ronde is er geen ontvanger, en dan valt de inhoud
+	// van een bericht niet op te vragen.
 
 	// --- Persona ------------------------------------------------------------------------------
 
 	// personas.js draait vóór dit bestand en bepaalt de actieve persona (?persona= > localStorage >
 	// actief). Die volgorde hier herhalen zou stil uit de pas kunnen lopen.
+	/**
+	 * Bestaat deze persona alleen om het stelsel mee te bekijken?
+	 *
+	 * Staat in `_data/personas.json` als `stelsel: true`. Nodig omdat de demo-console het antwoord
+	 * schuldig blijft zodra ze onbereikbaar is, en er dan niets is om op te staan: de dataset-bron
+	 * achteraan neemt het over en dient gegenereerde post op als de post van dit account. Voor een
+	 * gewone persona is dat juist wél de bedoeling, dus het verschil moet ergens vastliggen — en het
+	 * `proeftuin-`-voorvoegsel in de id is geen afspraak die code hoort te lezen.
+	 */
+	function hoortBijStelsel() {
+		if (!window.Personas || typeof window.Personas.actief !== "function") return false;
+		const persona = window.Personas.actief();
+		return !!(persona && persona.stelsel);
+	}
+
 	function actiefKvkNummer() {
 		if (!window.Personas || typeof window.Personas.actief !== "function") {
 			console.error("[Berichtenbox] keten overgeslagen: window.Personas ontbreekt.");
@@ -364,6 +602,12 @@
 		toonFout(reden);
 	}
 
+	// Zelfde weg als meldStoring, andere aanleiding: hier ging niets mis, hier is niets te halen.
+	function meldStelsel(sleutel) {
+		verbergVoortgang();
+		meld("storing", STELSEL_TEKSTEN[sleutel]);
+	}
+
 	function mislukt(fout) {
 		const reden = redenVan(fout);
 		console.error("[Berichtenbox] keten niet bereikbaar (" + reden + ")", fout);
@@ -386,6 +630,20 @@
 				mislukt(fout);
 				return null;
 			}
+			// Een ontbrekende variabele is geen storing en geen ontbrekend stelsel: de omgeving is
+			// half ingericht. "Kies een ander testaccount" zou hier een rondje sturen, want geen
+			// enkel testaccount gaat het doen.
+			if (redenVan(fout) === "configuratie") {
+				mislukt(fout);
+				return null;
+			}
+			// Een testaccount van het stelsel heeft geen dataset achter zich die klopt. Zwijgen zou
+			// hier de post van een ander opdienen zonder dat iemand het kan zien.
+			if (hoortBijStelsel()) {
+				console.warn("[Berichtenbox] demo-console niet bereikbaar voor een testaccount van het stelsel.", fout);
+				meldStelsel("geenStelsel");
+				return null;
+			}
 			console.warn("[Berichtenbox] demo-console niet bereikbaar; de gegenereerde dataset blijft staan.", fout);
 			verbergVoortgang();
 			return null;
@@ -399,15 +657,52 @@
 				if (aangeslotenBevestigd) {
 					throw ketenFout("onbereikbaar", "de demo-omgeving kent deze ontvanger niet meer");
 				}
+				// Hier is de console er wél, en zegt ze nee. Voor een testaccount van het stelsel is dat
+				// geen storing maar een antwoord, en het verklaart een lege berichtenbox.
+				if (hoortBijStelsel()) {
+					console.warn("[Berichtenbox] de demo-omgeving kent dit testaccount van het stelsel niet.", kvkNummer);
+					meldStelsel("nietBekend");
+					return null;
+				}
 				verbergVoortgang();
 				return null;
 			}
 
 			aangeslotenBevestigd = true;
 			ontvangerVanRonde = aangesloten.ontvanger;
+			zetOntvangerCookie(aangesloten.ontvanger);
 
-			uitvraag = await haalOp(aangesloten.ontvanger);
-			lijst = await haalLijst(aangesloten.ontvanger);
+			// De sessie bij het stelsel is van de ontvanger en niet van deze pagina. Kennen we de
+			// organisaties van een eerdere ronde in deze zitting, dan is die sessie er waarschijnlijk
+			// nog en volstaat de lijst — geen tweede ronde, geen 409, en geen voortgangsbalk voor
+			// werk dat al gedaan is. Is de sessie tóch weg, dan zegt de lijst dat met een 409 en
+			// draaien we alsnog een ronde.
+			const bekend = bewaardeOrganisaties(aangesloten.ontvanger);
+			if (bekend) {
+				try {
+					lijst = await haalLijst(aangesloten.ontvanger);
+					uitvraag = { organisaties: bekend, stil: [], gevonden: null };
+				} catch (fout) {
+					if (redenVan(fout) !== "geenSessie") throw fout;
+					lijst = null;
+				}
+			}
+
+			if (!lijst) {
+				try {
+					uitvraag = await haalOp(aangesloten.ontvanger);
+					bewaarOrganisaties(aangesloten.ontvanger, uitvraag.organisaties);
+					lijst = await haalLijst(aangesloten.ontvanger);
+				} catch (fout) {
+					if (redenVan(fout) !== "bezig") throw fout;
+					// Een andere pagina van deze berichtenbox draait de ronde al — twee tabbladen die
+					// tegelijk opengaan, bijvoorbeeld. Het resultaat komt in dezelfde sessie terecht,
+					// dus wachten levert de bezoeker precies wat hij zocht. Een storingsmelding zou
+					// hier zeggen dat er iets kapot is terwijl het werk gewoon loopt.
+					lijst = await wachtOpLijst(aangesloten.ontvanger);
+					uitvraag = { organisaties: bewaardeOrganisaties(aangesloten.ontvanger) || {}, stil: [], gevonden: null };
+				}
+			}
 		} catch (fout) {
 			mislukt(fout);
 			return null;
@@ -421,9 +716,7 @@
 				console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", lijst);
 			}
 
-			const berichten = ruw
-				.filter(bruikbaar)
-				.map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
+			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
 			const overgeslagen = ruw.length - berichten.length;
 			if (overgeslagen > 0) {
 				console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen.");
@@ -441,8 +734,7 @@
 			verbergMeldingen();
 
 			if (ruw.length >= LIJST_GROOTTE) {
-				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE
-					+ " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
+				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
 			} else if (berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
 			} else if (uitvraag.stil.length > 0) {
@@ -461,7 +753,18 @@
 
 	// Alleen op pagina's die een berichtenbox tonen: elders is er niets te vervangen, en zou een
 	// persona zonder kvkNummer alleen console-ruis opleveren.
-	const kvkNummer = (window.berichtenboxData && paginaGebruiktKeten()) ? actiefKvkNummer() : null;
+	//
+	// En alleen voor een persona die het stelsel gebruikt. Dat is geen besparing maar iets dat de
+	// bezoeker merkt: de ronde begint met één vraag aan de demo-console, en staat die niet klaar dan
+	// hángt dat verzoek tot de tijdslimiet in plaats van te weigeren. Anderhalve seconde waarin de
+	// bron nog niet gekozen kan worden en er dus geen lijst staat — en omdat elke tab een eigen
+	// pagina is, kwam die wachttijd bij elke tabwissel terug, voor persona's die het stelsel niet
+	// eens gebruiken.
+	//
+	// De prijs staat er tegenover: hiermee is `_data/personas.json` de autoriteit over wie het
+	// stelsel gebruikt, en niet meer de demo-console. Kent die straks een nummer dat hier niet als
+	// `stelsel` gemerkt is, dan vragen we er niet naar en krijgt die persona de dataset.
+	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() && hoortBijStelsel() ? actiefKvkNummer() : null;
 
 	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
 	// ophaalde staat op de server (sessiecache per ontvanger, schuivende TTL), maar de
@@ -475,16 +778,34 @@
 
 	window.BerichtenboxKeten = {
 		/** Loopt er een ophaalronde? Synchroon bekend, dus de bron kan er meteen op beslissen. */
-		get bezig() { return ronde !== null; },
+		get bezig() {
+			return ronde !== null;
+		},
 
-		/** Is deze persona aantoonbaar aangesloten op de keten? */
-		get aangesloten() { return aangeslotenBevestigd; },
+		/**
+		 * Is deze persona op de keten aangesloten?
+		 *
+		 * Twee bronnen, en beide tellen. De demo-console bevestigt het — dat is het bewijs. Het
+		 * persona-bestand zegt het vooraf. Dat tweede is nodig omdat een onbereikbare console geen
+		 * bewijs oplevert, en de bron dan geen grond heeft om deze persona op te eisen; de dataset
+		 * neemt het over en de bezoeker ziet niet dat dit niet zijn post is.
+		 *
+		 * Binnen dit bestand blijft `aangeslotenBevestigd` het strengere begrip: dat beslist of een
+		 * verdwenen ontvanger een storing is of een normale eerste ronde.
+		 */
+		get aangesloten() {
+			return aangeslotenBevestigd || hoortBijStelsel();
+		},
 
 		/** De huidige melding, of null. `{ soort: "storing" | "mededeling", tekst }`. */
-		get melding() { return melding; },
+		get melding() {
+			return melding;
+		},
 
 		/** De voortgang van de lopende ronde, of null. `{ bevraagd, klaar, gevonden }`. */
-		get voortgang() { return voortgang; },
+		get voortgang() {
+			return voortgang;
+		},
 
 		/**
 		 * De berichten van de lopende of laatst gedraaide ronde, of null als er niets te leveren
@@ -492,14 +813,45 @@
 		 */
 		berichten: function () {
 			if (!ronde) return Promise.resolve(laatsteUitkomst);
-			return ronde.then(function (uitkomst) {
-				if (uitkomst) laatsteUitkomst = uitkomst;
-				return laatsteUitkomst;
-			}, function (fout) {
-				console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
-				meldStoring("verwerking");
-				return laatsteUitkomst;
-			});
+			return ronde.then(
+				function (uitkomst) {
+					if (uitkomst) laatsteUitkomst = uitkomst;
+					return laatsteUitkomst;
+				},
+				function (fout) {
+					console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
+					meldStoring("verwerking");
+					return laatsteUitkomst;
+				}
+			);
+		},
+
+		/**
+		 * De inhoud van één bericht, of null als er niets op te halen valt.
+		 *
+		 * Werpt niet: de aanroeper is de detailpagina, en die moet iets kunnen tonen. Wat er misging
+		 * komt terug als `{ fout }` met een tekst voor de bezoeker, zodat een leeg bericht nooit
+		 * zonder uitleg op het scherm belandt.
+		 */
+		inhoudVan: async function (berichtId) {
+			// Zonder ronde is er geen ontvanger, en zonder ontvanger geen adres om het bij op te
+			// halen. Voor de aanroeper is dat iets anders dan "de organisatie heeft niets": er is
+			// niets gevraagd. Dat verschil moet zichtbaar blijven, anders staat er straks een
+			// uitspraak over een organisatie die nooit iets gevraagd is.
+			if (!ontvangerVanRonde || !berichtId) {
+				console.warn("[Berichtenbox] Geen ontvanger van een ophaalronde; de inhoud is niet op te vragen.", berichtId);
+				return { fout: "Wij konden de inhoud van dit bericht niet opvragen. Ververs de pagina om het opnieuw te proberen." };
+			}
+
+			try {
+				return await haalInhoud(ontvangerVanRonde, berichtId);
+			} catch (fout) {
+				// "stil" heet hier "traag": dat is de tijdslimiet van één bericht bij één organisatie,
+				// niet het stelsel dat er als geheel mee ophoudt.
+				const reden = redenVan(fout) === "stil" ? "traag" : redenVan(fout);
+				console.error("[Berichtenbox] berichtinhoud ophalen mislukt", fout);
+				return { fout: FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar };
+			}
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */
@@ -516,7 +868,9 @@
 		},
 
 		/**
-		 * Draait de ophaalronde opnieuw. Hangt onder de "Opnieuw proberen"-knop van de melding.
+		 * Draait de ophaalronde opnieuw. Bedoeld voor een "Opnieuw proberen"-knop bij de melding — die
+		 * knop bestaat nog niet, dus dit heeft op dit moment geen aanroeper. Bewaard omdat de knop er
+		 * hoort te komen; zolang dat niet zo is, zeggen de teksten hierboven "ververs de pagina".
 		 * Alleen het kvk-nummer is nodig: draaiRonde vraagt de ontvanger zelf opnieuw op, zodat de
 		 * knop ook werkt wanneer de vorige poging al bij de demo-omgeving strandde. Geeft false als
 		 * er niets te herhalen valt.
@@ -525,18 +879,21 @@
 			if (!kvkNummer) return false;
 
 			verbergMeldingen();
-			// Meteen laten zien dat er iets gebeurt; de demo-omgeving mag er vijf seconden over doen.
-			toonVoortgang(0, 0, 0);
+			// Geen "0 van 0 bronnen": dat is geen voortgang maar een bewering over bronnen die nog
+			// niemand bevraagd heeft. De eerste gebeurtenis uit de stroom meldt zich vanzelf.
 			ronde = draaiRonde(kvkNummer);
-			ronde.then(function (uitkomst) {
-				if (uitkomst) {
-					laatsteUitkomst = uitkomst;
-					laatWeten();
+			ronde.then(
+				function (uitkomst) {
+					if (uitkomst) {
+						laatsteUitkomst = uitkomst;
+						laatWeten();
+					}
+				},
+				function (fout) {
+					console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
+					meldStoring("verwerking");
 				}
-			}, function (fout) {
-				console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
-				meldStoring("verwerking");
-			});
+			);
 			return true;
 		},
 	};

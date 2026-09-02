@@ -65,10 +65,7 @@ describe("prullenbak", () => {
 
 describe("Belastingdienst-portaal", () => {
 	it("toont standaard alleen berichten van de Belastingdienst", async () => {
-		await laad([
-			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
-			bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }),
-		], { pad: "/mijn-belastingdienst/berichtenbox/", view: "inbox" });
+		await laad([bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }), bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" })], { pad: "/mijn-belastingdienst/berichtenbox/", view: "inbox" });
 		expect(rijen()).toHaveLength(1);
 		expect(rijen()[0].textContent).toContain("Belastingdienst");
 	});
@@ -171,7 +168,9 @@ describe("organisatie-schakelaar van het Belastingdienst-portaal", () => {
 		});
 		vi.stubGlobal("localStorage", {
 			getItem: (k) => (k === "feature:Berichten van andere organisaties" ? "true" : JSON.stringify({ eersteBezoekGehad: true })),
-			setItem: () => { throw new Error("QuotaExceededError"); },
+			setItem: () => {
+				throw new Error("QuotaExceededError");
+			},
 			removeItem: () => {},
 			clear: () => {},
 		});

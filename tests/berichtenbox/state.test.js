@@ -5,7 +5,9 @@ function nepOpslag(inhoud = {}) {
 	const kluis = { ...inhoud };
 	return {
 		getItem: (sleutel) => (sleutel in kluis ? kluis[sleutel] : null),
-		setItem: (sleutel, waarde) => { kluis[sleutel] = String(waarde); },
+		setItem: (sleutel, waarde) => {
+			kluis[sleutel] = String(waarde);
+		},
 		_kluis: kluis,
 	};
 }
@@ -55,13 +57,21 @@ describe("maakState — inlezen", () => {
 	it("noemt de reden waarom er niet bewaard kon worden", () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		const vol = nepOpslag();
-		vol.setItem = () => { const e = new Error("vol"); e.name = "QuotaExceededError"; throw e; };
+		vol.setItem = () => {
+			const e = new Error("vol");
+			e.name = "QuotaExceededError";
+			throw e;
+		};
 		const state = maakState(vol);
 		state.bewaar();
 		expect(state.waaromNietBewaard()).toBe("vol");
 
 		const geweigerd = nepOpslag();
-		geweigerd.setItem = () => { const e = new Error("nee"); e.name = "SecurityError"; throw e; };
+		geweigerd.setItem = () => {
+			const e = new Error("nee");
+			e.name = "SecurityError";
+			throw e;
+		};
 		const tweede = maakState(geweigerd);
 		tweede.bewaar();
 		expect(tweede.waaromNietBewaard()).toBe("geweigerd");
@@ -81,10 +91,12 @@ describe("maakState — inlezen", () => {
 
 describe("maakState — vragen over een bericht", () => {
 	it("geeft prullenbak voorrang op archief", () => {
-		const state = maakState(metState({
-			gearchiveerd: { "msg-1": true },
-			verwijderd: { "msg-1": true },
-		}));
+		const state = maakState(
+			metState({
+				gearchiveerd: { "msg-1": true },
+				verwijderd: { "msg-1": true },
+			})
+		);
 		expect(state.statusVan("msg-1")).toBe("prullenbak");
 	});
 
@@ -94,10 +106,12 @@ describe("maakState — vragen over een bericht", () => {
 	});
 
 	it("laat handmatig op ongelezen zetten winnen van gelezen", () => {
-		const state = maakState(metState({
-			gelezen: { "msg-1": true },
-			ongelezenToegevoegd: { "msg-1": true },
-		}));
+		const state = maakState(
+			metState({
+				gelezen: { "msg-1": true },
+				ongelezenToegevoegd: { "msg-1": true },
+			})
+		);
 		expect(state.isOngelezen("msg-1", false)).toBe(true);
 	});
 
@@ -123,23 +137,27 @@ describe("maakState — binnengedruppelde berichten", () => {
 	it("houdt bij het inlezen nog alle magazijnen aan", () => {
 		// Bij het inlezen is nog niet bekend welke bron gekozen wordt. Hier al wegfilteren tegen de
 		// verkeerde lijst is onomkeerbaar: beperkTot kan alleen verder inperken, nooit herstellen.
-		const state = maakState(metState({
-			nieuweBerichten: [
-				{ id: "a", magazijnId: "van-een-andere-bron" },
-				{ id: "b", magazijnId: "blijft" },
-			],
-		}));
+		const state = maakState(
+			metState({
+				nieuweBerichten: [
+					{ id: "a", magazijnId: "van-een-andere-bron" },
+					{ id: "b", magazijnId: "blijft" },
+				],
+			})
+		);
 		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["a", "b"]);
 	});
 
 	it("gooit berichten van onbekende magazijnen weg zodra de bron bekend is", () => {
 		const waarschuwing = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const state = maakState(metState({
-			nieuweBerichten: [
-				{ id: "a", magazijnId: "weg" },
-				{ id: "b", magazijnId: "blijft" },
-			],
-		}));
+		const state = maakState(
+			metState({
+				nieuweBerichten: [
+					{ id: "a", magazijnId: "weg" },
+					{ id: "b", magazijnId: "blijft" },
+				],
+			})
+		);
 		state.beperkTot(["blijft"]);
 		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["b"]);
 		expect(waarschuwing).toHaveBeenCalled();
@@ -156,9 +174,11 @@ describe("maakState — binnengedruppelde berichten", () => {
 	});
 
 	it("overleeft een null tussen de bewaarde berichten", () => {
-		const state = maakState(metState({
-			nieuweBerichten: [null, { id: "b", magazijnId: "blijft" }],
-		}));
+		const state = maakState(
+			metState({
+				nieuweBerichten: [null, { id: "b", magazijnId: "blijft" }],
+			})
+		);
 		expect(state.ruw.nieuweBerichten.map((b) => b.id)).toEqual(["b"]);
 	});
 });
@@ -186,10 +206,26 @@ describe("maakState — de staat hoort bij één persona", () => {
 		expect(state.ruw.eersteBezoekGehad).toBe(false);
 	});
 
-	it("gooit een staat zonder persona weg zodra er wél een persona is", () => {
-		// Uit een oudere versie: van wie die staat was, valt niet meer te zeggen.
+	it("neemt een staat zonder persona aan in plaats van hem weg te gooien", () => {
+		// Uit een versie van vóór de scheiding, toen er één gedeelde staat was. Er is dus niet
+		// gewisseld — die staat is van wie er nu actief is. Hem weggooien zou het archief van een
+		// bezoeker wissen op het moment dat hij zijn pagina ververst, zonder dat er iets gebeurde
+		// waar hij om vroeg.
 		const state = maakState(metState({ gearchiveerd: { "msg-1": true } }), "koffiezaak");
-		expect(state.ruw.gearchiveerd).toEqual({});
+
+		expect(state.ruw.gearchiveerd).toEqual({ "msg-1": true });
+		expect(state.ruw.persona).toBe("koffiezaak");
+	});
+
+	it("gooit hem daarna wél weg als er echt gewisseld wordt", () => {
+		// Het aannemen mag maar één keer: zodra de staat een naam draagt, geldt de scheiding weer.
+		vi.spyOn(console, "info").mockImplementation(() => {});
+		const aangenomen = maakState(metState({ gearchiveerd: { "msg-1": true } }), "koffiezaak");
+		const opslag = metState({ ...aangenomen.ruw });
+
+		const na = maakState(opslag, "bloemenkweker");
+
+		expect(na.ruw.gearchiveerd).toEqual({});
 	});
 
 	it("laat een staat zonder persona staan als er geen persona's zijn", () => {
@@ -228,7 +264,9 @@ describe("maakState — bewaren", () => {
 		// De aanroeper moet dit kunnen weten: anders ziet de bezoeker zijn bericht verdwijnen en
 		// staat het na het verversen gewoon weer in de inbox.
 		const opslag = nepOpslag();
-		opslag.setItem = () => { throw new Error("QuotaExceededError"); };
+		opslag.setItem = () => {
+			throw new Error("QuotaExceededError");
+		};
 		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
 		const state = maakState(opslag);
 		expect(state.bewaar()).toBe(false);

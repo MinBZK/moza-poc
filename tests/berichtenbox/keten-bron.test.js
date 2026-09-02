@@ -42,11 +42,17 @@ describe("ketenBron — is deze bron van toepassing", () => {
 		// die verzonnen berichten in plaats van zijn eigen post.
 		let losmaken;
 		const keten = nepKeten({ bezig: true });
-		keten.berichten = () => new Promise((klaar) => { losmaken = () => klaar(UITKOMST); });
+		keten.berichten = () =>
+			new Promise((klaar) => {
+				losmaken = () => klaar(UITKOMST);
+			});
 
 		const bron = ketenBron(keten);
 		let beantwoord = false;
-		const vraag = bron.geldtVoor().then((antwoord) => { beantwoord = true; return antwoord; });
+		const vraag = bron.geldtVoor().then((antwoord) => {
+			beantwoord = true;
+			return antwoord;
+		});
 
 		await Promise.resolve();
 		expect(beantwoord).toBe(false);

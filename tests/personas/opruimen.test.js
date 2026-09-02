@@ -13,14 +13,27 @@ import { readFileSync } from "node:fs";
 const PERSONAS = process.cwd() + "/assets/javascript/personas.js";
 const VLAGGEN = process.cwd() + "/assets/javascript/feature-flags.js";
 
+// Het pad waarop berichtenbox-keten.js het ontvanger-cookie zet, uit die bron gelezen en hier niet
+// overgeschreven. personas.js moet wissen wáár dat script zet, en die afspraak staat in twee
+// bestanden zonder gedeelde constante. Versmalt of verbreedt ONTVANGER_PAD daar zonder dat
+// personas.js meegaat, dan blijft de ontvanger van de vorige persona staan — en hoort dit rood te
+// worden in plaats van stil te blijven.
+const ONTVANGER_PAD = readFileSync(process.cwd() + "/assets/javascript/berichtenbox-keten.js", "utf8").match(/ONTVANGER_PAD = "([^"]+)"/)[1];
+
 function nepOpslag(begin = {}) {
 	const kluis = { ...begin };
 	return {
 		getItem: (k) => (k in kluis ? kluis[k] : null),
-		setItem: (k, v) => { kluis[k] = String(v); },
-		removeItem: (k) => { delete kluis[k]; },
+		setItem: (k, v) => {
+			kluis[k] = String(v);
+		},
+		removeItem: (k) => {
+			delete kluis[k];
+		},
 		key: (i) => Object.keys(kluis)[i] ?? null,
-		get length() { return Object.keys(kluis).length; },
+		get length() {
+			return Object.keys(kluis).length;
+		},
 		_kluis: kluis,
 	};
 }
@@ -52,6 +65,12 @@ beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
 	window.history.replaceState({}, "", "/moza/berichtenbox/");
+
+	// De cookiejar van jsdom leeft per bestand, niet per test. Zonder dit ruimt de code onder test
+	// zijn eigen sporen op, en dat is circulair: regresseert het wissen, dan krijg je één rode test
+	// plus een vervuilde jar voor alles daarna.
+	document.cookie = "ontvanger=; path=" + ONTVANGER_PAD + "; Max-Age=0";
+	document.cookie = "ontvanger=; path=/; Max-Age=0";
 });
 
 afterEach(() => {
@@ -133,12 +152,92 @@ describe("wisselen van persona", () => {
 		expect(opslag._kluis["persona:gegevens-van"]).toBe("bloemenkweker");
 	});
 
-	it("ruimt bij een eerste bezoek stil op", () => {
-		// Geen herkomst bekend: opruimen mag, maar er valt niets te melden.
+	it("wist het ontvanger-cookie, zodat een bijlage niet van de vorige persona komt", () => {
+		// Dat cookie zegt de proxy namens wie hij bijlagen ophaalt. Blijft dat van de vorige staan,
+		// dan levert een klik op een bijlage het document van iemand anders — of een 404 die de
+		// bezoeker nergens kan plaatsen. De keten-bron zet hem opnieuw zodra zijn ronde loopt.
+		document.cookie = "ontvanger=KVK:90000011; path=/";
+		expect(document.cookie).toContain("ontvanger=KVK:90000011");
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
+	});
+
+	it("wist het ontvanger-cookie ook op het smalle pad van de keten-bron", () => {
+		// De keten-bron zet het cookie op `path=/api/v1/berichten`, niet op `/`. Wordt alleen de
+		// brede variant gewist, dan blijft de ontvanger van de vorige persona staan en haalt een
+		// klik op een bijlage het document van iemand anders op. Dat is precies het geval waarin
+		// niets het meer overschrijft: bij een wissel naar een persona zonder stelsel draait er
+		// geen ophaalronde.
+		//
+		// Vanaf een bijlage-adres, want alleen daar geeft de browser het smalle cookie terug; vanaf
+		// /moza/berichtenbox/ zou deze test niets zien en altijd slagen.
+		window.history.replaceState({}, "", "/api/v1/berichten/msg-1/bijlagen/b-1");
+		document.cookie = "ontvanger=KVK:11111111; path=/";
+		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
+		expect(document.cookie).toContain("KVK:90000011");
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
+		expect(document.cookie).not.toContain("KVK:11111111");
+	});
+
+	it("wist het ontvanger-cookie ook als het opruimen van de opslag struikelt", () => {
+		// Dit is waarom het wissen vóór de localStorage-sweep staat en een eigen try heeft. Struikelt
+		// het opruimen van de opslag — geblokkeerde opslag, een quotum — dan mag de identiteit niet
+		// blijven staan: de opslag mag rommelig achterblijven, andermans bijlage niet.
+		window.history.replaceState({}, "", "/api/v1/berichten/msg-1/bijlagen/b-1");
+		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
+
+		const opslag = nepOpslag({ ...GEGEVENS, "persona:gegevens-van": "bloemenkweker", persona: "koffiezaak" });
+		opslag.removeItem = () => {
+			throw new Error("opslag geblokkeerd");
+		};
+		draaiPersonas(opslag);
+
+		expect(document.cookie).not.toContain("KVK:90000011");
+	});
+
+	it("ruimt stil op als er wél een persona gekozen was", () => {
+		// Geen herkomst bekend, maar er staat een keuze in de opslag: dan is er wel degelijk
+		// gewisseld, alleen weten we niet waarvandaan. Opruimen dus — en er valt niets te melden,
+		// want er is geen vorige naam om te noemen.
 		const opslag = nepOpslag({ ...GEGEVENS, persona: "koffiezaak" });
 		draaiPersonas(opslag);
 
+		// Dít is wat de titel belooft. Zonder deze regel bleef de test groen terwijl er niets
+		// opgeruimd werd.
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(opslag._kluis["read:msg-1"]).toBeUndefined();
 		expect(opslag._kluis["persona:gegevens-van"]).toBe("koffiezaak");
 		expect(console.info).not.toHaveBeenCalled();
+	});
+
+	it("neemt gegevens aan als niemand een persona koos", () => {
+		// Gegevens van vóór de scheiding, en de bezoeker kwam gewoon op de standaardpersona uit.
+		// Er is niet gewisseld, dus er valt niets weg te gooien: dit is zijn eigen archief.
+		const opslag = nepOpslag({ ...GEGEVENS });
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeDefined();
+		expect(opslag._kluis["read:msg-1"]).toBe("true");
+		expect(opslag._kluis["persona:gegevens-van"]).toBeDefined();
+	});
+
+	it("ruimt tóch op als het merk niet weggeschreven kan worden", () => {
+		// Anders valt élke volgende wissel weer in de aanname-tak — het merk komt er immers nooit —
+		// en wordt er nooit meer opgeruimd. De guard hoort de veilige kant op te falen.
+		const opslag = nepOpslag({ ...GEGEVENS });
+		opslag.setItem = (sleutel) => {
+			if (sleutel === "persona:gegevens-van") throw new Error("vol");
+		};
+		draaiPersonas(opslag);
+
+		expect(opslag._kluis.berichtenbox).toBeUndefined();
+		expect(console.error).toHaveBeenCalled();
 	});
 });

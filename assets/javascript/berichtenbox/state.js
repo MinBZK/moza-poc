@@ -23,14 +23,7 @@ export const LS_KEY = "berichtenbox";
 /** Meer dan dit aantal binnengedruppelde berichten bewaren heeft geen demo-waarde. */
 export const NIEUWE_BERICHTEN_LIMIET = 5;
 
-const SLEUTELS_MET_OBJECT = [
-	"gelezen",
-	"ongelezenToegevoegd",
-	"gearchiveerd",
-	"verwijderd",
-	"gemarkeerd",
-	"mapOverride",
-];
+const SLEUTELS_MET_OBJECT = ["gelezen", "ongelezenToegevoegd", "gearchiveerd", "verwijderd", "gemarkeerd", "mapOverride"];
 
 function defaults() {
 	return {
@@ -60,10 +53,7 @@ function opschonen(berichten) {
 
 	const over = bruikbaar.slice(-NIEUWE_BERICHTEN_LIMIET);
 	if (over.length < bruikbaar.length) {
-		console.warn(
-			"[Berichtenbox] " + (bruikbaar.length - over.length) +
-			" bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten."
-		);
+		console.warn("[Berichtenbox] " + (bruikbaar.length - over.length) + " bewaard(e) bericht(en) boven de limiet van " + NIEUWE_BERICHTEN_LIMIET + " weggelaten.");
 	}
 
 	return over;
@@ -121,16 +111,18 @@ export function maakState(opslag, persona = null) {
 
 	let { waarden: ruw, onleesbaar } = lees(opslag);
 
-	// Een staat zonder persona komt uit een oudere versie: van wie die was, is niet meer te zeggen.
-	// Bij een bekende persona gaat hij daarom weg. Draait er geen personas.js — dan is de actieve
-	// persona null — dan valt er niets te verwarren en blijft hij staan.
+	// Een staat die al iemands naam draagt en die van een ánder is, gaat weg: tussen persona's
+	// bestaat geen verband, en het archief van de een hoort niet bij de ander te verschijnen.
+	//
+	// Een staat zónder naam is iets anders. Die komt uit een versie van vóór deze scheiding, toen
+	// er maar één staat was — en die was dus van wie er nu actief is; er is niet gewisseld. Hem
+	// weggooien wist het archief en de gelezen-markeringen van een bezoeker die alleen maar zijn
+	// pagina ververste. We nemen hem daarom aan, net als personas.js met dezelfde gegevens doet.
 	const vanWie = ruw.persona ?? null;
 	const nu = persona ?? null;
 
-	if (!onleesbaar && vanWie !== nu) {
-		if (vanWie !== null) {
-			console.info("[Berichtenbox] Bewaarde staat hoort bij '" + vanWie + "'; die van '" + nu + "' begint leeg.");
-		}
+	if (!onleesbaar && vanWie !== null && vanWie !== nu) {
+		console.info("[Berichtenbox] Bewaarde staat hoort bij '" + vanWie + "'; die van '" + nu + "' begint leeg.");
 		ruw = defaults();
 	}
 	ruw.persona = nu;
@@ -178,10 +170,7 @@ export function maakState(opslag, persona = null) {
 			ruw.nieuweBerichten = ruw.nieuweBerichten.filter((bericht) => bekend.has(bericht.magazijnId));
 
 			if (ruw.nieuweBerichten.length < voor) {
-				console.warn(
-					"[Berichtenbox] " + (voor - ruw.nieuweBerichten.length) +
-					" bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet."
-				);
+				console.warn("[Berichtenbox] " + (voor - ruw.nieuweBerichten.length) + " bewaard(e) bericht(en) horen bij een magazijn dat de actieve bron niet kent; niet teruggezet.");
 			}
 		},
 

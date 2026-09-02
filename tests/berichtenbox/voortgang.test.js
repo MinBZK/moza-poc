@@ -11,9 +11,7 @@ import { bericht, bouwPagina, laadBerichtenbox, laatLaden } from "./dom.js";
  * die horen ook niet even te verschijnen om meteen weer weg te gaan.
  */
 
-const BERICHTEN = Array.from({ length: 12 }, (_, i) =>
-	bericht({ id: "msg-" + i, magazijnId: i % 3 === 0 ? "rdw" : "belastingdienst", datum: "2026-04-0" + ((i % 9) + 1) })
-);
+const BERICHTEN = Array.from({ length: 12 }, (_, i) => bericht({ id: "msg-" + i, magazijnId: i % 3 === 0 ? "rdw" : "belastingdienst", datum: "2026-04-0" + ((i % 9) + 1) }));
 
 const lijst = () => document.querySelector("[data-berichtenbox-list]");
 const voortgang = () => document.querySelector("[data-berichtenbox-progress]");
@@ -78,21 +76,28 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 		await laad();
 		kijker.disconnect();
 
+		// Zonder deze regel slaagt every() ook als de render-laag de nav helemaal niet meer aanraakt.
+		expect(zichtbaarGeweest.length).toBeGreaterThan(0);
 		expect(zichtbaarGeweest.every((verborgen) => verborgen === true)).toBe(true);
 		expect(nav.hidden).toBe(true);
 	});
 
-	it("laat de lijst ná het laden verborgen tot de animatie klaar is", async () => {
+	it("laat de lijst ná het laden verborgen tot de ronde klaar is", async () => {
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
 
 		expect(lijst().hidden).toBe(true);
-		expect(voortgang().hidden).toBe(false);
 		expect(pagnav().hidden).toBe(true);
+
+		// De balk zelf komt pas als de ronde na de drempel nog loopt; een ronde die meteen klaar
+		// is, hoort niemand te zien. De nagebootste duurt ruim langer dan dat.
+		await new Promise((r) => setTimeout(r, 550));
+		expect(voortgang().hidden).toBe(false);
+		expect(lijst().hidden).toBe(true);
 	});
 
-	it("zet lijst en navigatie terug zodra de animatie klaar is", async () => {
+	it("zet lijst en navigatie terug zodra de ronde klaar is", async () => {
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
@@ -107,12 +112,16 @@ describe("bij het eerste bezoek staat de lijst nooit even te knipperen", () => {
 	}, 20000);
 
 	it("bewaart dat het eerste bezoek gehad is", async () => {
+		// De bron bewaart dat zelf, aan het eind van de ronde. Wachten tot het er staat, niet tot de
+		// balk weg is: die is er misschien nooit geweest.
 		bouwPagina(BERICHTEN);
 		window.localStorage.setItem("berichtenbox", JSON.stringify({}));
 		await laad();
-		for (let i = 0; i < 400 && !voortgang().hidden; i += 1) await new Promise((r) => setTimeout(r, 25));
 
-		expect(JSON.parse(window.localStorage.getItem("berichtenbox")).eersteBezoekGehad).toBe(true);
+		const bewaard = () => JSON.parse(window.localStorage.getItem("berichtenbox") || "{}").eersteBezoekGehad;
+		for (let i = 0; i < 400 && !bewaard(); i += 1) await new Promise((r) => setTimeout(r, 25));
+
+		expect(bewaard()).toBe(true);
 	}, 20000);
 });
 
@@ -145,5 +154,58 @@ describe("als de animatie tóch niet komt", () => {
 
 		expect(lijst().hidden).toBe(false);
 		expect(voortgang().hidden).toBe(true);
+	});
+});
+
+describe("een bron die niets te melden heeft", () => {
+	it("laat de lijst niet even zien voordat de animerende bron begint", async () => {
+		// Het stelsel is niet van toepassing voor deze persona en meldt daarom meteen `null`. Dat
+		// betekent "ik heb niets te melden", niet "mijn ronde is klaar" — maar de render-laag las het
+		// als het tweede en toonde de lijst. Dat gebeurde vóórdat de dataset-bron zijn animatie
+		// startte, dus stonden de rijen een paar tellen op het scherm, waarna het voortgangsblok ze
+		// alsnog wegnam. Precies de flits die de vroege verberging moest voorkomen.
+		window.BerichtenboxKeten = {
+			bezig: false,
+			aangesloten: false,
+			melding: null,
+			voortgang: null,
+			berichten: async () => null,
+			// De echte keten meldt zich hier wél: een testdubbel die zwijgt verbergt deze fout.
+			opWijziging: (kijker) => kijker({ voortgang: null, melding: null }),
+		};
+
+		const berichten = [1, 2, 3].map((n) => bericht({ id: "m" + n, magazijnId: "rdw", afzender: "RDW" }));
+		bouwPagina(berichten, { state: { eersteBezoekGehad: false } });
+		window.localStorage.removeItem("berichtenbox");
+
+		const lijst = document.querySelector("[data-berichtenbox-list]");
+		const body = lijst.querySelector("tbody");
+		const zichtbaarMetRijen = [];
+		new MutationObserver(() => {
+			if (!lijst.hidden && body.querySelectorAll("tr").length) zichtbaarMetRijen.push(true);
+		}).observe(document.querySelector(".berichtenbox-content"), { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
+
+		await laadBerichtenbox();
+		for (let i = 0; i < 6; i += 1) await laatLaden();
+
+		// Zolang de animatie loopt hoort er geen enkel moment te zijn waarop de rijen zichtbaar zijn.
+		expect(zichtbaarMetRijen).toEqual([]);
+	});
+});
+
+describe("tellers en het voortgangsblok tonen geen getallen die ze nog niet hebben", () => {
+	it("toont de tellerregel pas als de aantallen kloppen, en dan gevuld", async () => {
+		const berichten = [1, 2, 3].map((n) => bericht({ id: "t" + n, magazijnId: "rdw", afzender: "RDW" }));
+		bouwPagina(berichten);
+
+		const regel = document.querySelector("[data-berichtenbox-tellers]");
+		expect(regel.hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-counter-total]").textContent).toBe("");
+
+		await laadBerichtenbox();
+		for (let i = 0; i < 6; i += 1) await laatLaden();
+
+		expect(regel.hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-counter-total]").textContent).toBe("3");
 	});
 });

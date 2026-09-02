@@ -56,7 +56,20 @@ subNav:
 						{# Wordt gevuld door JS op basis van localStorage #}
 					</tbody>
 				</table>
-				<div class="feedback" data-berichtenbox-empty>U heeft nog geen berichten gearchiveerd.</div>
+				{# Verborgen: zonder dit stond er bij het openen "u heeft niets" totdat het script de rijen
+				   erin zette — een bewering die voor de meeste bezoekers onwaar is, en die bij elke tabwissel
+				   opnieuw voorbijkwam. De render-laag toont hem zodra vaststaat dat er werkelijk niets is.
+				   Wie geen JavaScript heeft leest het noscript-blok hieronder. #}
+				<div class="feedback" hidden data-berichtenbox-empty>U heeft nog geen berichten gearchiveerd.</div>
+
+				<noscript>
+					<div class="feedback feedback-info">
+						{% include "icon-feedback-info.njk" %}
+						<div>
+							<p>Wat u gearchiveerd heeft, wordt in uw browser bewaard. Daarvoor is JavaScript nodig. Zet JavaScript aan en ververs deze pagina, of ga terug naar <a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">uw Berichtenbox</a>.</p>
+						</div>
+					</div>
+				</noscript>
 			</section>
 		</section>
 	</section>

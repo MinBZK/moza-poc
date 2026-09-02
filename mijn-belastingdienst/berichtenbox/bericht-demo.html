@@ -34,6 +34,15 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 		</div>
 
 
+		<noscript>
+			<div class="feedback feedback-info">
+				{% include "icon-feedback-info.njk" %}
+				<div>
+					<p>Dit bericht wordt opgehaald bij de organisatie die het stuurde. Daarvoor is JavaScript nodig. Zet JavaScript aan en ververs deze pagina, of ga terug naar <a href="{{ '/mijn-belastingdienst/berichtenbox/' | url }}">uw Berichtenbox</a>.</p>
+				</div>
+			</div>
+		</noscript>
+
 		<section class="berichtenbox-content" data-demo-detail>
 			<h1 data-demo-onderwerp class="h3"></h1>
 
@@ -48,6 +57,10 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 			</div>
 
 			<div class="berichtenbox-detail-body" data-demo-body></div>
+
+			<!-- Meldt aan een schermlezer dat de inhoud binnen is. Niet de brief zelf in een
+			     live-regio: die zou dan bij het invoegen volledig worden voorgelezen. -->
+			<p class="visually-hidden" data-demo-inhoud-status role="status"></p>
 
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
 				<h2>Bijlage(n)</h2>

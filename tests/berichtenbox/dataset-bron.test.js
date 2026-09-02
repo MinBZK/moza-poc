@@ -46,7 +46,9 @@ describe("datasetBron — laden", () => {
 
 	it("overleeft een dataset zonder velden", async () => {
 		const uit = await datasetBron({}).laad();
-		expect(uit).toEqual({ berichten: [], magazijnen: [], mappen: [] });
+		// `uitval` hoort bij het antwoord: de bron zegt zelf wat hij niet kon leveren. Zonder
+		// nagebootste storing is dat null.
+		expect(uit).toEqual({ berichten: [], magazijnen: [], mappen: [], uitval: null });
 	});
 
 	it("ruimt eerder binnengedruppelde berichten op als de vlag uit staat", async () => {

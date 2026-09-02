@@ -82,11 +82,7 @@ describe("berichtenbox.js — rijen komen uit de datalaag", () => {
 	});
 
 	it("telt de berichten en de bronnen boven de lijst", async () => {
-		await laad([
-			bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }),
-			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
-			bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }),
-		]);
+		await laad([bericht({ magazijnId: "gemeente", afzender: "Gemeente Utrecht" }), bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" }), bericht({ magazijnId: "belastingdienst", afzender: "Belastingdienst" })]);
 		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
 		expect(tekstVan("[data-berichtenbox-sources]")).toBe("2");
 	});
@@ -169,14 +165,16 @@ describe("berichtenbox.js — filteren en pagineren via de datalaag", () => {
 
 describe("berichtenbox.js — sorteren via de datalaag", () => {
 	function afzenders() {
-		return rijen().map((r) => r.querySelector(".berichtenbox-row-sender").textContent.trim().replace(/^Ongelezen\.\s*/, ""));
+		return rijen().map((r) =>
+			r
+				.querySelector(".berichtenbox-row-sender")
+				.textContent.trim()
+				.replace(/^Ongelezen\.\s*/, "")
+		);
 	}
 
 	it("sorteert oplopend op afzender en zet aria-sort", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd" })]);
 		const knop = document.querySelector('button[data-sort="afzender"]');
 		knop.click();
 		expect(afzenders()).toEqual(["Belastingdienst", "Zorginstituut"]);
@@ -184,10 +182,7 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 	});
 
 	it("draait de volgorde om bij een tweede klik", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd" })]);
 		const knop = document.querySelector('button[data-sort="afzender"]');
 		knop.click();
 		knop.click();
@@ -196,11 +191,7 @@ describe("berichtenbox.js — sorteren via de datalaag", () => {
 	});
 
 	it("sorteert de gefilterde lijst, niet de hele lijst", async () => {
-		await laad([
-			bericht({ afzender: "Zorginstituut", magazijnId: "zorg", onderwerp: "Aanslag" }),
-			bericht({ afzender: "Belastingdienst", magazijnId: "bd", onderwerp: "Aanslag" }),
-			bericht({ afzender: "Gemeente", magazijnId: "gem", onderwerp: "Subsidie" }),
-		]);
+		await laad([bericht({ afzender: "Zorginstituut", magazijnId: "zorg", onderwerp: "Aanslag" }), bericht({ afzender: "Belastingdienst", magazijnId: "bd", onderwerp: "Aanslag" }), bericht({ afzender: "Gemeente", magazijnId: "gem", onderwerp: "Subsidie" })]);
 		const zoek = document.querySelector("[data-berichtenbox-search-input]");
 		zoek.value = "aanslag";
 		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
@@ -345,6 +336,43 @@ describe("berichtenbox.js — herstel na een storing", () => {
 		expect(melding.hidden).toBe(false);
 	});
 
+	it("toont geen bolletje in plaats van een bolletje met een streepje", async () => {
+		// De tellerregel is lopende tekst: "– berichten uit – bronnen" leest daar als "dit weten we
+		// niet". Een bolletje ís een getal, en een streepje erin ziet eruit als een waarde. Leeg
+		// laten laat het bolletje verdwijnen (`.badge:empty`), en dat is hier wat waar is.
+		//
+		// De storing moet ná een geslaagde weergave komen, anders staat er nog niets in de bolletjes
+		// en bewijst deze test niets: leegmaken wat al leeg was is niet te onderscheiden van niets doen.
+		const kapot = Array.from({ length: 10 }, (_, i) => ({
+			magazijnId: "gem",
+			afzender: "Gemeente",
+			onderwerp: "Kapot " + i,
+		}));
+		bouwPagina([bericht({ onderwerp: "Werkt", magazijnId: "werkt", afzender: "Werkende bron" })]);
+		const goed = window.berichtenboxData.berichten[0];
+		window.berichtenboxData.berichten = [...kapot, goed];
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "werkende";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
+		const bolletjes = document.querySelectorAll('[data-berichtenbox-count="ongelezen"], [data-berichtenbox-count="inbox"]');
+		expect(bolletjes.length).toBe(2);
+		expect(Array.from(bolletjes).some((el) => el.textContent !== "")).toBe(true);
+
+		// Terug naar de lijst die niet te renderen is.
+		zoek.value = "";
+		zoek.dispatchEvent(new window.Event("input", { bubbles: true }));
+
+		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
+		bolletjes.forEach((el) => expect(el.textContent).toBe(""));
+
+		// De tellerregel houdt zijn streepje wél.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("–");
+	});
+
 	it("haalt de melding weg en zet de tellers terug zodra er weer een lijst staat", async () => {
 		// Het hele paginavenster moet onrenderbaar zijn, anders slaat de drempel niet aan en test
 		// dit niets: de vorige versie bleef groen ook zonder herstelNaLaadfout.
@@ -381,8 +409,16 @@ describe("berichtenbox.js — een mislukte lading blijft een mislukte lading", (
 	// Een null in de lijst laat render() struikelen; dat rolt terug, wordt doorgegooid en komt in
 	// de .catch terecht. Dat is het pad waar de lading zelf mislukt, niet één rij.
 	async function metMislukteLading() {
+		// Een bericht waarvan het id gooit: dan struikelt het filteren zelf, de bronwijziging mislukt,
+		// en de lading loopt op zijn catch uit. Voorheen deed een losse `null` dat ook, maar de bron
+		// gaat daar inmiddels netjes langsheen — en een lading die slaagt is hier geen mislukte lading.
 		bouwPagina([bericht(), bericht()]);
-		window.berichtenboxData.berichten.push(null);
+		window.berichtenboxData.berichten.push({
+			get id() {
+				throw new Error("onleesbaar bericht");
+			},
+			magazijnId: "rdw",
+		});
 		await laadBerichtenbox();
 		await laatLaden();
 	}
@@ -420,7 +456,9 @@ describe("berichtenbox.js — de bezoeker hoort het als bewaren niet lukt", () =
 		// laden gezet: berichtenbox.js pakt de opslag één keer, bij het opzetten van de state.
 		vi.stubGlobal("localStorage", {
 			getItem: () => JSON.stringify({ eersteBezoekGehad: true }),
-			setItem: () => { throw new Error("QuotaExceededError"); },
+			setItem: () => {
+				throw new Error("QuotaExceededError");
+			},
 			removeItem: () => {},
 			clear: () => {},
 		});
@@ -450,9 +488,13 @@ describe("berichtenbox.js — scherm en gegevens lopen niet uiteen", () => {
 		// Eén bericht waarvan het id niet te lezen is. Met één renderpad raakt dat de hele lijst:
 		// filterBerichten struikelt erover, dus er valt niets meer te tonen. Een sabotage die
 		// createRij ongemoeid laat bereikt de rollback nooit — dat was de vorige versie van deze test.
-		window.berichtenboxData.berichten.push(Object.defineProperty({}, "id", {
-			get() { throw new Error("niet te lezen"); },
-		}));
+		window.berichtenboxData.berichten.push(
+			Object.defineProperty({}, "id", {
+				get() {
+					throw new Error("niet te lezen");
+				},
+			})
+		);
 
 		await vi.advanceTimersByTimeAsync(5000);
 
@@ -470,7 +512,9 @@ describe("berichtenbox.js — een storing blijft een storing", () => {
 		// Alle berichten onrenderbaar: dat is een storing, geen lege berichtenbox.
 		bouwPagina([bericht({ onderwerp: "Kapot" })]);
 		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-			get() { throw new Error("niet te lezen"); },
+			get() {
+				throw new Error("niet te lezen");
+			},
 		});
 		await laadBerichtenbox();
 		await laatLaden();
@@ -487,22 +531,29 @@ describe("berichtenbox.js — een storing blijft een storing", () => {
 });
 
 describe("berichtenbox.js — tellers spreken de storing niet tegen", () => {
-	it("laat de server-gerenderde aantallen niet staan naast een storingsmelding", async () => {
+	it("zet geen aantallen neer naast een storingsmelding", async () => {
 		bouwPagina([bericht(), bericht(), bericht()]);
-		// De tellers staan nu op 3; dat is wat Eleventy erin zette.
-		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("3");
+		// Leeg en verborgen zoals de templates het opleveren: bij het bouwen is niet te weten welke
+		// persona er kijkt, dus staat er nog geen getal.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).toBe("");
+		expect(document.querySelector("[data-berichtenbox-tellers]").hidden).toBe(true);
 
 		window.berichtenboxData.berichten[0] = Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-			get() { throw new Error("niet te lezen"); },
+			get() {
+				throw new Error("niet te lezen");
+			},
 		});
 		await laadBerichtenbox();
 		await laatLaden();
 
 		expect(document.querySelector("[data-berichtenbox-storing]").hidden).toBe(false);
 		// "3 berichten uit 2 bronnen" naast "we konden niets ophalen" laat de bezoeker het getal
-		// geloven en de zin voor een detail aanzien.
-		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toBe("3");
-		expect(tekstVan("[data-berichtenbox-count=\"inbox\"]")).not.toBe("3");
+		// geloven en de zin voor een detail aanzien. De regel hoort dus verborgen te blijven.
+		expect(document.querySelector("[data-berichtenbox-tellers]").hidden).toBe(true);
+		// Geen getal: toonLaadfout zet er een streepje neer, wat "onbekend" zegt in plaats van iets
+		// te beweren. Wat het ook is, het mag geen aantal zijn.
+		expect(tekstVan("[data-berichtenbox-counter-total]")).not.toMatch(/\d/);
+		expect(tekstVan('[data-berichtenbox-count="inbox"]')).not.toMatch(/\d/);
 	});
 });
 
@@ -548,7 +599,9 @@ describe("berichtenbox.js — de storingsdrempel geldt per pagina", () => {
 		// een teller van 25 en werkende paginanavigatie — zonder één woord over de storing.
 		const kapot = Array.from({ length: 25 }, () =>
 			Object.defineProperty({ magazijnId: "gem", afzender: "Gemeente" }, "id", {
-				get() { throw new Error("niet te lezen"); },
+				get() {
+					throw new Error("niet te lezen");
+				},
 			})
 		);
 		bouwPagina([bericht()]);

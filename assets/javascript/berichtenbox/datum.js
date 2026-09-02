@@ -6,10 +6,7 @@
  * de lijst staat.
  */
 
-const MAANDEN = [
-	"januari", "februari", "maart", "april", "mei", "juni",
-	"juli", "augustus", "september", "oktober", "november", "december",
-];
+const MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
 
 function dagenIn(jaar, maand) {
 	// Maand 2 is februari; new Date(jaar, maand, 0) geeft de laatste dag van die maand.

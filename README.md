@@ -135,7 +135,7 @@ In productie draait alles achter **één origin**: de nginx van de frontend **pr
 | Variabele        | Waar                                                                  | Betekenis                                                                                                                                                                     |
 | ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
-| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** de chat-endpoints naartoe stuurt (zie [Welke backend krijgt welk pad](#welke-backend-krijgt-welk-pad) voor de rest). Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
 De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuurt gewoon het KvK-nummer van de actieve persona mee, zie [Sessie-identiteit](#sessie-identiteit).
 
@@ -219,6 +219,32 @@ Staat het nummer niet in de allowlist van de backend — of is er geen persona �
 
 Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
 
+#### De ontvanger bij een bijlage uit het stelsel
+
+Een bijlage uit het Federatief Berichtenstelsel is een gewone URL die de browser zelf ophaalt, en
+het stelsel eist daarbij de header `X-Ontvanger`. Een `<a href>` en een `<object data>` kunnen die
+niet meesturen, dus zet `berichtenbox-keten.js` de ontvanger in een cookie en maakt de proxy er weer
+een header van (`location ~ ^/api/v1/berichten/.../bijlagen/...` in de template). Alle andere
+aanroepen zetten de header gewoon zelf.
+
+Dat cookie is **geen** beveiliging — de bezoeker kan het net zo goed zelf zetten als de header, en
+het stelsel houdt zijn eigen controle. De waarde is wel een identiteit, dus het reist zo min
+mogelijk mee: `path=/api/v1/berichten`, `SameSite=Strict` en `Secure` zodra de pagina over https
+gaat. Geen vervaltijd, dus een sessiecookie: het leeft zolang de browserzitting duurt. Een vaste vervaltijd
+brak precies het normale geval: het cookie wordt alleen bij een paginalading gezet, en de inbox is
+een pagina die blijft openstaan. Na afloop gaf elke bijlage een 400 zonder melding.
+
+Wat er in staat is bij deze persona's altijd `KVK:<nummer>`; `berichtenbox-keten.js` matcht daar hard op. Kent
+het stelsel straks ook ontvangers op BSN, dan staat er een BSN in en telt dat als bijzonder
+persoonsgegeven.
+
+Bij een persona-wissel wordt het gewist, op het nieuwe én op het oude pad, want anders haalt een klik
+het document van de vorige persona op.
+
+Uit die identiteit volgt één regel voor de proxy-config: **zet `$http_cookie` nergens in een
+logformaat of debug-regel.** Het standaard nginx-logformaat doet dat niet, en zo hoort het te
+blijven.
+
 #### Op een deployment
 
 Niets in te stellen aan de frontend-kant: er is geen build-variabele, geen repo-secret en geen build-arg voor de identiteit. Zet alleen op de **backend**-deployment `TEST_KVK_NUMMERS=85234567,62345681,56789012`. Ontbreekt die, dan antwoordt de assistent overal "log eerst in".
@@ -240,6 +266,53 @@ docker build -f container/Containerfile -t moza .
 # wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
 docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
+
+#### Welke backend krijgt welk pad
+
+De proxy bedient drie ongerelateerde diensten. Elke variabele is runtime-env op de container en
+mag leeg blijven; wat er dan gebeurt staat in de laatste kolom.
+
+| Variabele | Bedient | Leeg gelaten |
+| --- | --- | --- |
+| `BACKEND_ORIGIN` | `/chat`, `/chat/stream`, `/health`, `/tools` — de Digitale Assistent | default `http://dabackend:8000` |
+| `BACKEND_API` | de catch-all `/api/` en de terugval van `BACKEND_PROFIEL` en `BACKEND_API_2` | valt terug op `BACKEND_ORIGIN` |
+| `BACKEND_PROFIEL` | `/api/profielservice/` | valt terug op `BACKEND_API` |
+| `BACKEND_API_2` | `/api/other/` (voorbeeld) | valt terug op `BACKEND_API` |
+| `BACKEND_KETEN` | `/api/v1/` — de berichtenuitvraag van het Federatief Berichtenstelsel | default: de publieke omgeving van FBS. Expliciet leeggemaakt: **502**; onder `/api/v1/` met de variabelenaam erin, bij een bijlage-adres bewust zonder |
+| `BACKEND_PERSONAS` | `/api/demo/personas` — de testaccountlijst, een eigen publieke dienst | default: de publieke lijst van FBS; leeggemaakt valt hij terug op `BACKEND_DEMO` |
+| `BACKEND_DEMO` | de rest van `/api/demo/` — de demo-console | valt terug op `BACKEND_KETEN`, anders **502** |
+| `BACKEND_KETEN_HOST` | de `Host`-header naar de uitvraag | de host van de browser |
+| `BACKEND_DEMO_HOST` | de `Host`-header naar de demo-console | valt terug op `BACKEND_KETEN_HOST` |
+| `BACKEND_PERSONAS_HOST` | de `Host`-header naar de testaccountlijst | valt terug op `BACKEND_DEMO_HOST` |
+
+Drie dingen om te weten bij het uitrollen:
+
+- **Het stelsel valt niet terug.** Staat `BACKEND_KETEN` niet, dan antwoordt nginx zelf met een 502
+  die de variabelenaam noemt. Dat is met opzet: doorsturen naar de chat-backend leverde een 404 of
+  een DNS-fout uit een dienst die deze paden niet kent, en dan is niet te zien dát er een variabele
+  ontbreekt.
+- **Elke route bewaakt zijn eigen variabele.** Is die leeg — en de terugval erachter ook — dan
+  antwoordt de proxy met een 502 die zegt welke variabele ontbreekt, in plaats van met een kale 500
+  (`invalid URL prefix` in het logboek). `BACKEND_ORIGIN` leegmaken legt dus alleen `/chat`,
+  `/health` en `/tools` stil; staat `BACKEND_API` dan op een werkende dienst, dan blijft alles onder
+  `/api/` gewoon werken.
+- **De keten heeft een default naar de publieke omgeving van FBS.** Zonder die default toont elke
+  PR-preview een configuratie-502 voor de aangesloten persona's, want de deploy-action kan geen
+  runtime-env zetten. De default wijst nu naar een PR-omgeving van FBS omdat daar de gevulde dataset
+  staat; verdwijnt die, dan wijst hij naar een dood adres en leest dat als een storing. Het adres
+  staat in `container/Containerfile`, met de stabiele tegenhanger ernaast.
+- **Een configuratiefout is te herkennen aan `X-Proxy-Configuratie`.** Die header staat op het
+  502-antwoord van elke guard en noemt de ontbrekende variabele. Een omgevallen upstream geeft óók
+  een 502, maar zonder die header — daarmee kan de berichtenbox "deze omgeving is niet volledig
+  ingericht" zeggen in plaats van "ververs de pagina", wat tegen een lege variabele nooit helpt.
+- **De testaccountlijst staat los van de demo-console.** `/api/demo/personas` is een eigen,
+  publiek bereikbare deployment; de rest van de console (storingen schakelen, berichten opvoeren)
+  zit achter een SSO-muur. Zo'n muur blokkeert ook server-side proxyen: deze container heeft geen
+  sessie en het cookie van de bezoeker geldt op een andere host, dus die paden geven een 403. Dat is
+  geen gemis — de berichtenbox roept alleen de lijst aan.
+- **`/health` zegt niets over deze container.** Dat pad proxyt naar de Digitale-Assistent-backend.
+  Draait die niet in de omgeving, richt een health-check dan niet op `/health` — die faalt dan
+  terwijl de proeftuin het prima doet.
 
 ---
 
