@@ -14,57 +14,60 @@ title: "MijnOverheid Zakelijk: Bericht"
 	</nav>
 
 	<section class="card">
-		{% include "berichtenbox-tabs.njk" %}
 
 		<section class="berichtenbox-content" data-demo-detail>
 			<h1 data-demo-onderwerp class="h3"></h1>
 
 			<p class="metadata" data-demo-meta></p>
 
-			<div class="action-group">
-				<button class="icon-button" data-actie="archiveren">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="icon-sm">
-						<path fill="currentColor" d="M7 23v33c0 .55.45 1 1 1h48c.55 0 1-.45 1-1V23c0-.55-.45-1-1-1H8c-.55 0-1 .45-1 1m18 7h14v7H25v-7Zm17 20.5c0 .83-.67 1.5-1.5 1.5h-17c-.83 0-1.5-.67-1.5-1.5V47c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v2h14v-2c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3.5ZM51 16H13c-.55 0-1 .45-1 1v3h40v-3c0-.55-.45-1-1-1m-5-6H18c-.55 0-1 .45-1 1v3h30v-3c0-.55-.45-1-1-1" />
-					</svg>
-					Archiveren
-				</button>
-				<button class="icon-button" data-actie="verplaatsen">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-						<path fill="currentColor" d="M58 15H29v-2c0-1.1-.9-2-2-2H12c-1.1 0-2 .9-2 2v4.69c7.13.47 40.09 2.62 40.59 2.75.28.07.38.21.4.34 0 .04.02.23-.01.23H4.53c-1.29 0-2.24 1.2-1.95 2.46l7.06 30c.27 1.16 1.18 1.54 2.36 1.54h46a2 2 0 0 0 2-2V17c0-1.1-.9-2-2-2" /></svg
-					>Verplaatsen naar map
-				</button>
-				<button class="icon-button" data-actie="markeer-ongelezen">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-						<mask id="gap">
-							<rect width="64" height="64" fill="white" />
-							<line x1="12" y1="52" x2="52" y2="12" stroke="black" stroke-width="12" stroke-linecap="round" />
-						</mask>
-						<path mask="url(#gap)" fill="currentColor" d="M59.13 28.33C55.86 23.1 47.14 12 32 12S8.14 23.09 4.87 28.33a5.06 5.06 0 0 0 0 5.35C8.14 38.91 16.86 50.01 32 50.01s23.86-11.09 27.13-16.33a5.06 5.06 0 0 0 0-5.35M32 20.9c3.37 0 6.1 2.73 6.1 6.1s-2.73 6.1-6.1 6.1-6.1-2.73-6.1-6.1 2.73-6.1 6.1-6.1M32 45C16.62 45 9.78 31 9.78 31s3.1-6.34 9.82-10.49c-.78 1.49-1.31 3.12-1.51 4.84C17.12 33.82 23.72 41 32 41c7.37 0 13.42-5.7 13.96-12.94.36-4.83-4.08-7.81-8.46-10.13-.18-.1-.17-.3-.16-.34C48.98 20.26 54.22 31 54.22 31S47.38 45 32 45" />
-						<path fill="currentColor" d="M10.59 53.41a2 2 0 0 1 0-2.82L50.59 10.59a2 2 0 1 1 2.82 2.82L13.41 53.41a2 2 0 0 1-2.82 0z" /></svg
-					>Markeer als ongelezen
-				</button>
-				<button class="icon-button" data-actie="naar-inbox" hidden>Verplaats naar inbox</button>
-				<button class="icon-button" data-actie="verwijderen">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-						<path fill="none" d="M0 0h64v64H0z" />
-						<path fill="currentColor" d="M10.67 18.67zm40-8h-8V8A2.67 2.67 0 0 0 40 5.33H24A2.67 2.67 0 0 0 21.33 8v2.67h-8a2.67 2.67 0 0 0-2.67 2.67v5.33h14.28s.15.32-.31.44c-.58.16-11.31 1.43-11.31 1.43V56a2.67 2.67 0 0 0 2.67 2.67h32A2.67 2.67 0 0 0 50.66 56V18.67h2.67v-5.33a2.67 2.67 0 0 0-2.67-2.67ZM24 50.67l-5.33 2.67V24.01H24v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67ZM24.43 10.63v-.8c0-.94-.16-1.7.88-1.7h13.27c1.04 0 .88.76.88 1.7v.8H24.43Z" />
-					</svg>
-					Verwijderen
-				</button>
-			</div>
-
 			<div class="berichtenbox-detail-body" data-demo-body></div>
 
-			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
-				<h2>Bijlagen</h2>
+			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden role="status" aria-live="polite">
+					<p>PDF wordt geladen…</p>
+					<div class="progress-bar"><div class="progress-bar-fill progress-bar-fill--indeterminate"></div></div>
+				</div>
+				<div class="pdf-reveal"><object class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview type="application/pdf" aria-label="Voorbeeld van de bijlage" hidden><p>Uw browser kan de PDF niet tonen. Gebruik de download-link hieronder.</p></object></div>
+				<ul class="list-indent">
+					<li><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></li>
+					<li><a href="#" class="content-link" data-berichtenbox-tekst-download target="_blank" rel="noopener" download hidden>Lees tekst-versie</a></li>
+				</ul>
+			</div>
+
+			<p class="variant-c-only"><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
+				<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
+				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
-				<ul class="berichtenbox-attachments-list" data-berichtenbox-attachments-list hidden></ul>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
+
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<!-- <button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button> -->
+				<button class="icon-button" data-actie="doorsturen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Delen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+			</div>
 		</section>
 
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
 			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
 			<p><a href="{{ '/moza/berichtenbox/' | url }}" class="btn-cta">Terug naar Berichtenbox</a></p>
 		</div>
+
+		<!-- <p class="berichtenbox-detail-organisatie" data-demo-organisatie hidden>
+			<a class="content-link" href="#" rel="external" data-demo-organisatie-link>{% icon "/assets/icons/icon-berichtenbox.svg" %}Ga naar de Berichtenbox van&nbsp;<span data-demo-organisatie-naam></span></a>
+		</p> -->
+
 	</section>
 </article>

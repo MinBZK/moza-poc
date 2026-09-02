@@ -13,6 +13,23 @@
 const FEATURE_PREFIX = "feature:";
 const SETTING_PREFIX = "setting:";
 
+// Persistente feature flags: bewaard in een cookie i.p.v. localStorage, zodat de
+// keuze het wissen van localStorage (bv. de "localStorage wissen"-knop) overleeft.
+// Map: feature-naam -> cookienaam.
+const PERSISTENT_FEATURES = {
+	"Berichtenbox unhappy flow": "unhappy-flow",
+};
+
+function getCookie(naam) {
+	const rij = document.cookie.split("; ").find((r) => r.startsWith(naam + "="));
+	return rij ? decodeURIComponent(rij.split("=").slice(1).join("=")) : null;
+}
+
+function setCookie(naam, waarde) {
+	// 1 jaar houdbaar; path=/ zodat de flag op alle pagina's geldt.
+	document.cookie = naam + "=" + encodeURIComponent(waarde) + "; path=/; max-age=" + 60 * 60 * 24 * 365 + "; samesite=lax";
+}
+
 function getSettingValue(name, defaultValue) {
 	return localStorage.getItem(SETTING_PREFIX + name) || defaultValue;
 }
@@ -21,6 +38,36 @@ function setSettingValue(name, value) {
 	localStorage.setItem(SETTING_PREFIX + name, value);
 	window.dispatchEvent(new CustomEvent("setting-changed", { detail: { key: name } }));
 }
+
+// Berichtenbox A/B/C-test: één actieve variant. a = huidige, b = PDF-preview,
+// c = directe acties. Bron: ?variant= seedt alleen de eerste keer; een keuze in
+// het flags-paneel wint daarna (en verwijdert de URL-param) > setting > 'a'.
+const BX_VARIANTEN = ["a", "b", "c"];
+function pasBerichtenboxVariantToe(gebruikUrlParam) {
+	const param = (new URLSearchParams(location.search).get("variant") || "").toLowerCase();
+	let variant;
+	if (gebruikUrlParam && BX_VARIANTEN.includes(param)) {
+		variant = param;
+		localStorage.setItem(SETTING_PREFIX + "berichtenbox-variant", variant);
+	} else {
+		variant = getSettingValue("berichtenbox-variant", "a");
+		if (!BX_VARIANTEN.includes(variant)) variant = "a";
+	}
+	document.documentElement.dataset.berichtenboxVariant = variant;
+}
+pasBerichtenboxVariantToe(true);
+window.addEventListener("setting-changed", (e) => {
+	if (e.detail && e.detail.key === "berichtenbox-variant") {
+		// Paneelkeuze wint: verwijder een eventuele ?variant= uit de URL zodat die
+		// bij een reload de keuze niet opnieuw overschrijft.
+		const url = new URL(location.href);
+		if (url.searchParams.has("variant")) {
+			url.searchParams.delete("variant");
+			history.replaceState(null, "", url);
+		}
+		pasBerichtenboxVariantToe(false);
+	}
+});
 
 function getFeaturesByType() {
 	const groups = {};
@@ -43,6 +90,9 @@ document.querySelectorAll('[data-feature-default="off"]').forEach((el) => {
 });
 
 function isFeatureEnabled(name) {
+	if (PERSISTENT_FEATURES[name]) {
+		return getCookie(PERSISTENT_FEATURES[name]) === "true";
+	}
 	const stored = localStorage.getItem(FEATURE_PREFIX + name);
 	if (defaultOffFeatures.has(name)) {
 		return stored === "true";
@@ -52,15 +102,33 @@ function isFeatureEnabled(name) {
 
 function applyFeatureFlags() {
 	document.querySelectorAll("[data-feature]").forEach((el) => {
-		el.hidden = !isFeatureEnabled(el.dataset.feature);
+		const enabled = isFeatureEnabled(el.dataset.feature);
+		if (el.dataset.featureAction === "link") {
+			// Toggle href + class. Bij off: href weg, class erop. Bij on: href terug, class weg.
+			if (enabled) {
+				if (el.dataset.featureHref) el.setAttribute("href", el.dataset.featureHref);
+				el.classList.remove("feature-link-disabled");
+			} else {
+				if (el.hasAttribute("href")) {
+					el.dataset.featureHref = el.getAttribute("href");
+					el.removeAttribute("href");
+				}
+				el.classList.add("feature-link-disabled");
+			}
+		} else {
+			el.hidden = !enabled;
+		}
 	});
-	// Wijs inloglinks naar Ondernemersplein als de Inlogflow-flag aan staat
+	// Wijs inloglinks naar de inlogpagina als de Inlogflow-flag aan staat
 	const inlogflowAan = isFeatureEnabled("Inlogflow");
 	document.querySelectorAll("[data-inlogflow-link]").forEach((el) => {
 		if (inlogflowAan) {
-			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/moza/ondernemersplein/";
+			el.href = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/" ? window.PATH_PREFIX.replace(/\/$/, "") : "") + "/inloggen/";
 		}
 	});
+	// Laat andere scripts (bv. berichtenbox.js) reageren op een flag-wijziging
+	// zonder herladen. hidden-attributen staan op dit punt al goed.
+	document.dispatchEvent(new CustomEvent("feature-flags-applied"));
 }
 
 const TYPE_LABELS = {
@@ -100,7 +168,9 @@ function buildTogglePanel() {
 			checkbox.type = "checkbox";
 			checkbox.checked = isFeatureEnabled(name);
 			checkbox.addEventListener("change", () => {
-				if (checkbox.checked) {
+				if (PERSISTENT_FEATURES[name]) {
+					setCookie(PERSISTENT_FEATURES[name], checkbox.checked ? "true" : "false");
+				} else if (checkbox.checked) {
 					if (defaultOffFeatures.has(name)) {
 						localStorage.setItem(FEATURE_PREFIX + name, "true");
 					} else {
@@ -123,6 +193,36 @@ function buildTogglePanel() {
 		panel.appendChild(list);
 	});
 
+	// --- Berichtenbox A/B/C-test ---
+	const variantHeading = document.createElement("p");
+	variantHeading.className = "feature-flags-group-heading";
+	variantHeading.textContent = "Berichtenbox A/B/C-test";
+	panel.appendChild(variantHeading);
+
+	const variantFieldset = document.createElement("fieldset");
+	variantFieldset.className = "settings-radio-group";
+	const variantLegend = document.createElement("legend");
+	variantLegend.textContent = "Variant";
+	variantFieldset.appendChild(variantLegend);
+	[
+		["a", "A: Huidige berichtenbox"],
+		["b", "B: Bericht met PDF-preview"],
+		["c", "C: Bericht met directe acties"],
+	].forEach(([value, labelText]) => {
+		const label = document.createElement("label");
+		label.className = "mode-option";
+		const radio = document.createElement("input");
+		radio.type = "radio";
+		radio.name = "berichtenbox-variant";
+		radio.value = value;
+		radio.checked = getSettingValue("berichtenbox-variant", "a") === value;
+		radio.addEventListener("change", () => setSettingValue("berichtenbox-variant", value));
+		label.appendChild(radio);
+		label.appendChild(document.createElement("span")).textContent = labelText;
+		variantFieldset.appendChild(label);
+	});
+	panel.appendChild(variantFieldset);
+
 	// --- Digitale Assistent instellingen ---
 	const settingsHeading = document.createElement("p");
 	settingsHeading.className = "feature-flags-group-heading";
@@ -142,7 +242,7 @@ function buildTogglePanel() {
 		radio.type = "radio";
 		radio.name = "admin-llm";
 		radio.value = value;
-		radio.checked = getSettingValue("llm", "vlam") === value;
+		radio.checked = getSettingValue("llm", "claude") === value;
 		radio.addEventListener("change", () => setSettingValue("llm", value));
 		label.appendChild(radio);
 		label.appendChild(document.createElement("span")).textContent = value.toUpperCase();
@@ -171,30 +271,121 @@ function buildTogglePanel() {
 	});
 	panel.appendChild(transportFieldset);
 
-	// API Key velden
+	// Demo-modus voor de Digitale Assistent: toon het patroon zonder backend.
+	const demoField = document.createElement("label");
+	demoField.className = "settings-field";
+	const demoToggle = document.createElement("input");
+	demoToggle.type = "checkbox";
+	demoToggle.checked = getSettingValue("demo-mode", "false") === "true";
+	demoToggle.addEventListener("change", () => setSettingValue("demo-mode", demoToggle.checked ? "true" : "false"));
+	demoField.appendChild(demoToggle);
+	demoField.appendChild(document.createTextNode(" Demo-modus: speel het draaiboek af zonder backend"));
+	panel.appendChild(demoField);
+
+	// Wat de demo-modus doet, staat niet in de schakelaar zelf: zonder deze uitleg
+	// blijft het een knop die "iets" doet, en dan blijven de scenario's onvindbaar.
+	const demoUitleg = document.createElement("p");
+	demoUitleg.className = "feature-flags-uitleg";
+	demoUitleg.textContent = "Stel in de chat een van de voorbeeldvragen (energiebesparing, bedrijfsgegevens, belastingaangifte) en beantwoord wat de assistent terugvraagt. U doorloopt dan het deelverzoek, de energiekaart uit de Business Wallet, de vraagformulieren en de zaak die bij de RVO wordt ingediend. Typ “fout” voor de foutmelding.";
+	panel.appendChild(demoUitleg);
+
+	// Freeze thinking element: houdt het denk-element zichtbaar voor animatie-aanpassingen
+	const freezeField = document.createElement("label");
+	freezeField.className = "settings-field";
+	const freezeToggle = document.createElement("input");
+	freezeToggle.type = "checkbox";
+	freezeToggle.checked = getSettingValue("freeze-thinking", "false") === "true";
+	freezeToggle.addEventListener("change", () => setSettingValue("freeze-thinking", freezeToggle.checked ? "true" : "false"));
+	freezeField.appendChild(freezeToggle);
+	freezeField.appendChild(document.createTextNode(" Freeze thinking element (voor tweaking)"));
+	panel.appendChild(freezeField);
+
+	// Pauzeknop voor de wait-indicator animatie: handig om de animatie visueel aan te passen
+	const pauseField = document.createElement("label");
+	pauseField.className = "settings-field";
+	const pauseToggle = document.createElement("input");
+	pauseToggle.type = "checkbox";
+	pauseToggle.checked = getSettingValue("pause-animations", "false") === "true";
+	pauseToggle.addEventListener("change", () => {
+		const isPaused = pauseToggle.checked;
+		setSettingValue("pause-animations", isPaused ? "true" : "false");
+		if (isPaused) {
+			document.documentElement.classList.add("animations-paused");
+		} else {
+			document.documentElement.classList.remove("animations-paused");
+		}
+	});
+	pauseField.appendChild(pauseToggle);
+	pauseField.appendChild(document.createTextNode(" Animaties pauzeren (voor aanpassingen)"));
+	panel.appendChild(pauseField);
+
+	// Pas de initiële pauzestaat toe
+	if (getSettingValue("pause-animations", "false") === "true") {
+		document.documentElement.classList.add("animations-paused");
+	}
+
+	// Testantwoord met bronvermelding: alleen zinvol op een pagina met een chat.
+	// digitale-assistent.js laadt na dit script, dus we controleren op het element
+	// en niet op window.MozaAssistent — die bestaat hier nog niet.
+	// Losse onderdelen los tonen, zonder een heel gesprek te hoeven voeren: handig
+	// om één kaart of formulier te beoordelen of om er een schermafdruk van te
+	// maken. Alleen zinvol op een pagina met een chat; digitale-assistent.js laadt
+	// na dit script, dus we controleren op het element en niet op window.Moza* —
+	// die bestaan hier nog niet.
+	if (document.getElementById("chat-messages")) {
+		[
+			["Testantwoord met bronvermelding tonen", () => window.MozaAssistent && window.MozaAssistent.testAntwoord()],
+			["Deelverzoek Business Wallet tonen", () => window.MozaWallet && window.MozaWallet.demo()],
+			["Formulier maatregelenlijst tonen", () => window.MozaVraag && window.MozaVraag.eml()],
+			["Formulier ja/nee-vraag tonen", () => window.MozaVraag && window.MozaVraag.jaNee()],
+		].forEach(([labelText, actie]) => {
+			const knop = document.createElement("button");
+			knop.className = "feature-flags-actie";
+			knop.textContent = labelText;
+			knop.addEventListener("click", actie);
+			panel.appendChild(knop);
+		});
+	}
+
+	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
+	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
+	// geheim (het staat al in personas.json), dus een gewoon tekstveld.
 	[
-		{ key: "vlam-api-key", label: "VLAM API Key" },
-		{ key: "claude-api-key", label: "Claude API Key" },
-	].forEach(({ key, label: labelText }) => {
+		{ key: "vlam-api-key", label: "VLAM API Key", type: "password", placeholder: "sk-..." },
+		{ key: "claude-api-key", label: "Claude API Key", type: "password", placeholder: "sk-..." },
+		{ key: "test-user-kvk", label: "KvK-nummer assistent", type: "text", placeholder: "85234567" },
+	].forEach(({ key, label: labelText, type, placeholder }) => {
 		const field = document.createElement("div");
 		field.className = "settings-field";
 		const label = document.createElement("label");
 		label.textContent = labelText;
 		const input = document.createElement("input");
-		input.type = "password";
+		input.type = type;
 		input.value = getSettingValue(key, "");
-		input.placeholder = "sk-...";
+		input.placeholder = placeholder;
+		if (type === "text") input.inputMode = "numeric";
 		input.addEventListener("input", () => setSettingValue(key, input.value));
 		label.appendChild(input);
 		field.appendChild(label);
 		panel.appendChild(field);
 	});
 
+	// Hard reset: beide opslagen leeg. localStorage draagt bewaarde items, verborgen
+	// items en de lopende zaken die de assistent aanmaakt; sessionStorage draagt het
+	// gesprek zelf. Alleen localStorage wissen laat het gesprek van de vorige
+	// gebruiker staan — bij demo's en gebruikersonderzoek precies wat je niet wilt.
+	// De feature flags overleven dit: die staan in een cookie.
 	const clearBtn = document.createElement("button");
 	clearBtn.className = "feature-flags-clear";
-	clearBtn.textContent = "localStorage wissen";
+	clearBtn.textContent = "Hard reset (alles wissen)";
 	clearBtn.addEventListener("click", () => {
+		if (!window.confirm("Alles wissen? Het gesprek, de bewaarde items en de lopende zaken verdwijnen.")) return;
 		localStorage.clear();
+		try {
+			sessionStorage.clear();
+		} catch (e) {
+			/* privémodus: er was dan ook niets bewaard */
+		}
 		location.reload();
 	});
 	panel.appendChild(clearBtn);
@@ -211,6 +402,13 @@ function buildTogglePanel() {
 
 	document.body.appendChild(panel);
 	document.body.appendChild(toggle);
+
+	document.addEventListener("click", (e) => {
+		if (!panel.hidden && !panel.contains(e.target) && !toggle.contains(e.target)) {
+			panel.hidden = true;
+			toggle.setAttribute("aria-expanded", "false");
+		}
+	});
 }
 
 applyFeatureFlags();

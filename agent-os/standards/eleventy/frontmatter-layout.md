@@ -32,4 +32,4 @@ The base layout (`_includes/base.njk`) reads these keys to conditionally include
 ```
 
 - New layout variants = new template file + new frontmatter value
-- Keep the base layout thin — logic stays in the included templates
+- Keep the base layout thin, logic stays in the included templates

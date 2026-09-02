@@ -41,17 +41,6 @@ Omdat er geen server of database is, worden gebruikersacties opgeslagen in de **
 		</tr>
 		<tr>
 			<td>
-				<strong>Relevant / Niet relevant</strong> (toggle)
-			</td>
-			<td>
-				<code>relevant:Titel van item</code>
-			</td>
-			<td>
-				JSON met titel, URL, beschrijving en waarde (<code>"relevant"</code> of <code>"irrelevant"</code>)
-			</td>
-		</tr>
-		<tr>
-			<td>
 				<strong>Notificatie sluiten</strong>
 			</td>
 			<td>
@@ -68,36 +57,26 @@ Omdat er geen server of database is, worden gebruikersacties opgeslagen in de **
 
 Alle interactielogica staat in **content-interactions.js**, dat op elke pagina wordt geladen via de base-template. Het script:
 
-- Herstelt opgeslagen staten bij het laden van de pagina (checkboxes, radio buttons, verborgen items, gesloten notificaties)
+- Herstelt opgeslagen staten bij het laden van de pagina (checkboxes, verborgen items, gesloten notificaties)
 - Slaat wijzigingen direct op bij interactie
 - Gebruikt event delegation (`document.addEventListener`) zodat het ook werkt met dynamisch gegenereerde elementen
 
-### Semantiek van de relevantie-keuze
+### De actiegroep
 
-De **Relevant** en **Niet relevant** opties zijn geïmplementeerd als een radio button group binnen een `<fieldset>`:
+Elke contentkaart die de gebruiker kan beoordelen krijgt een actiegroep (`_includes/action-group.njk`) met drie acties:
 
 ```html
-<fieldset class="relevance-group">
-	<legend class="visually-hidden">Is dit relevant voor u?</legend>
-	<label class="relevance-option relevance-yes">
-		<input type="radio" name="relevance-0" value="relevant" />
-		<span class="relevance-icon"></span>
-		<span>Relevant</span>
-	</label>
-	<label class="relevance-option relevance-no">
-		<input type="radio" name="relevance-0" value="irrelevant" />
-		<span class="relevance-icon"></span>
-		<span>Niet relevant</span>
-	</label>
-</fieldset>
+<div class="action-group action-options">
+	<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden"></span></label>
+	<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">Deel</button>
+	<button class="link-button hide-topic">Niet relevant voor mij</button>
+</div>
 ```
 
-- De `<fieldset>` met `<legend>` geeft screenreaders context: “Is dit relevant voor u?”
-- Radio buttons zijn natively wederzijds exclusief — de browser handhaaft dit zonder JavaScript
-- Toetsenbordnavigatie werkt automatisch via pijltoetsen binnen de groep
-- De radio inputs zijn visueel verborgen; de labels zijn gestyled als knoppen met iconen
-- Bij “Niet relevant” wordt het item verborgen en schuift een reserve-topic door
-- Unieke `name`-attributen worden per groep toegewezen door JavaScript, zodat elke radio group onafhankelijk werkt
+- **Bewaar** is een checkbox; aanvinken schrijft een `favorite:`-sleutel en de staat wordt na herladen hersteld.
+- **Deel** staat achter de feature-flag `Delen` en kan via het Flags-paneel uitgezet worden.
+- **Niet relevant voor mij** (`hide-topic`) verbergt het item met een `.remove-item`-animatie, schrijft een `hidden:`-sleutel, en schuift een reserve-topic (`reserve-topic`) door op de vrijgekomen plek.
+- De lege `.visually-hidden` span wordt door JavaScript gevuld met de heading van het item, zodat screenreaders weten waarop de actie betrekking heeft.
 
 ### De pagina Bewaarde items
 
@@ -105,7 +84,7 @@ De pagina **Bewaarde items** leest alle `favorite:` en `hidden:` sleutels uit lo
 
 ## Berichtenbox
 
-De Berichtenbox simuleert het ophalen van berichten uit meerdere bronnen (overheidsinstanties en gemeentes) via het Federatief Berichtenstelsel. Er is geen backend — alle data wordt gegenereerd tijdens de Eleventy-build en opgeslagen in `window.berichtenboxData`.
+De Berichtenbox simuleert het ophalen van berichten uit meerdere bronnen (overheidsinstanties en gemeentes) via het Federatief Berichtenstelsel. Er is geen backend, alle data wordt gegenereerd tijdens de Eleventy-build en opgeslagen in `window.berichtenboxData`.
 
 ### Berichten ophalen
 
@@ -200,16 +179,54 @@ Op de Berichtenbox-pagina staat een resetlink (`data-berichtenbox-reset`) die al
 localStorage.removeItem("berichtenbox");
 ```
 
+## Persona's
+
+Het prototype kent meerdere voorgedefinieerde **persona's** (testaccounts) zodat in gebruikerstests dezelfde flow met verschillende bedrijfsprofielen getoond kan worden — een adviseur, een winkelier, een makelaar, een schilder, een melkveehouder, et cetera. Iedere persona heeft eigen bedrijfsgegevens, een eigen branche, en een eigen set relevante subsidies en regelgeving.
+
+### Wisselen van persona
+
+Drie manieren:
+
+1. **Flags-paneel**; onder de groep _Persona's_ kies je een radio-button. De keuze wordt opgeslagen in localStorage onder de sleutel `persona` en blijft staan na herladen.
+2. **URL-parameter**; voeg `?persona=Adviseur` toe (of een ander label). Deze parameter heeft voorrang boven de localStorage-keuze, blijft op interne links bewaard, en is daardoor handig om een specifieke staat te delen.
+3. **Browserconsole**; `window.Personas.wissel("makelaar")` om programmatisch te wisselen, of `window.Personas.actief()` om de huidige persona te bekijken.
+
+### Hoe het werkt
+
+Persona-data staat in [`_data/personas.json`](../_data/personas.json) en wordt door Eleventy als `window.personasData` in de pagina geïnjecteerd. [`assets/javascript/personas.js`](../assets/javascript/personas.js) past de actieve persona toe op alle elementen met `data-profiel="..."` (voornaam, handelsnaam, KvK-nummer, et cetera) en bouwt de kiezer in het Flags-paneel.
+
+### Opgeslagen sleutel
+
+<table>
+	<thead>
+		<tr>
+			<th>Sleutel</th>
+			<th>Waarde</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>
+				<code>persona</code>
+			</td>
+			<td>
+				id van de actieve persona (<code>"bloom"</code>, <code>"makelaar"</code>, ...)
+			</td>
+		</tr>
+	</tbody>
+</table>
+
 ## Feature flags
 
-Het prototype bevat een ingebouwd feature-flag systeem waarmee pagina's en functionaliteit in- of uitgeschakeld kunnen worden — zonder aparte versies te hoeven bouwen.
+Het prototype bevat een ingebouwd feature-flag systeem waarmee pagina's en functionaliteit in- of uitgeschakeld kunnen worden, zonder aparte versies te hoeven bouwen.
 
 ### Hoe te gebruiken
 
-Klik op de **Flags**-knop rechtsonder in het prototype. Er opent een paneel met twee groepen:
+Klik op de **Flags**-knop rechtsonder in het prototype. Er opent een paneel met drie groepen:
 
-- **Pagina's** — navigatie-items zoals Berichtenbox, Belastingen en Zakelijk vervoer. Uitschakelen verbergt zowel het navigatie-item als de bijbehorende content op de homepage.
-- **Functionaliteit** — interactiemogelijkheden zoals _Delen_ en _Relevantie_. Uitschakelen verbergt de betreffende knoppen in alle actiegroepen.
+- **Pagina's**; navigatie-items zoals Berichtenbox, Belastingen en Zakelijk vervoer. Uitschakelen verbergt zowel het navigatie-item als de bijbehorende content op de homepage.
+- **Functionaliteit**; interactiemogelijkheden zoals _Delen_. Uitschakelen verbergt de betreffende knoppen in alle actiegroepen.
+- **Persona's**; wisselen tussen voorgedefinieerde testaccounts. Bepaalt welke bedrijfsgegevens, subsidies, regelgeving en gemeente getoond worden. Zie de sectie [Persona's](#personas) hierboven.
 
 Feature flags worden opgeslagen in localStorage en blijven staan na herladen. Standaard staan alle features aan.
 
@@ -272,7 +289,7 @@ Handmatig kan het ook via de browserconsole (F12 of Cmd+Option+I):
 localStorage.clear();
 ```
 
-Herlaad daarna de pagina. Alle bewaarde items, verborgen topics, relevantie-keuzes en gesloten notificaties worden gereset.
+Herlaad daarna de pagina. Alle bewaarde items, verborgen topics en gesloten notificaties worden gereset.
 
 Om alleen een specifieke categorie te wissen:
 
@@ -287,13 +304,11 @@ Object.keys(localStorage)
 	.filter((k) => k.startsWith("hidden:"))
 	.forEach((k) => localStorage.removeItem(k));
 
-// Alleen relevantie-keuzes wissen
-Object.keys(localStorage)
-	.filter((k) => k.startsWith("relevant:"))
-	.forEach((k) => localStorage.removeItem(k));
-
 // Alleen gesloten notificaties wissen
 Object.keys(localStorage)
 	.filter((k) => k.startsWith("dismissed:"))
 	.forEach((k) => localStorage.removeItem(k));
+
+// Alleen de persona-keuze resetten (valt terug op de standaardpersona)
+localStorage.removeItem("persona");
 ```

@@ -1,0 +1,80 @@
+---
+title: "MijnOverheid: Berichtenbox Anne Vogel-de Groot"
+---
+
+{% include "side-nav-mobu.njk" %}
+
+<article id="hoofd-inhoud" class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/mobu/namens-mantelzorg/' | url }}">Home</a></li>
+			<li aria-current="page">Berichtenbox</li>
+		</ol>
+	</nav>
+
+	<h1>Berichtenbox</h1>
+
+	<section class="card">
+		<p class="metadata"><b>3</b> berichten, <b>1</b> ongelezen.</p>
+		<table class="data-overview">
+			<caption class="visually-hidden">
+				Berichten
+			</caption>
+			<thead>
+				<tr>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+					<th scope="col" class="berichtenbox-actions-th"><span class="visually-hidden">Acties</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="berichtenbox-row is-unread">
+					<td class="berichtenbox-row-sender"><span><i class="visually-hidden">Ongelezen.</i></span> Gemeente Utrecht</td>
+					<td class="berichtenbox-row-subject"><a href="#">Afspraak Wmo-onderzoek</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-05-28">28 mei 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">CAK</td>
+					<td class="berichtenbox-row-subject"><a href="#">Vaststelling eigen bijdrage Wmo 2026</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-03-04">4 maart 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
+				</tr>
+				<tr class="berichtenbox-row">
+					<td class="berichtenbox-row-sender">Zorg en Zekerheid</td>
+					<td class="berichtenbox-row-subject"><a href="#">Polisoverzicht 2026</a></td>
+					<td class="berichtenbox-row-date"><time datetime="2026-01-08">8 januari 2026</time></td>
+					<td class="berichtenbox-row-actions">
+						<div class="row-actions">
+							<button type="button" class="icon-button row-actions-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Acties voor dit bericht">{% icon "/assets/icons/icon-meer.svg" %}</button>
+							<div class="row-actions-menu action-options" role="menu" hidden>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="doorsturen">{% icon "/assets/icons/icon-doorsturen.svg" %}Delen</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="archiveren">{% icon "/assets/icons/icon-archief.svg" %}Archiveren</button>
+								<button type="button" class="icon-button" role="menuitem" data-row-actie="verwijderen">{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen</button>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>

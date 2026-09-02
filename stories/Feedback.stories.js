@@ -14,7 +14,7 @@ const feedbackIconWaarschuwing = `<svg xmlns="http://www.w3.org/2000/svg" viewBo
 	</svg>`;
 
 const feedbackIconFout = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-		<circle cx="12" cy="12" r="10.5"/>
+		<circle cx="12" cy="12" r="10.5" fill="currentColor"/>
 		<path class="icon-color-inverse" d="M15.12 7.71 12 10.48 8.88 7.71a.858.858 0 0 0-1.15.02c-.3.32-.31.81-.02 1.14L10.48 12l-2.77 3.12c-.29.33-.29.83.02 1.14.32.3.81.31 1.14.02L12 13.52l3.12 2.77c.33.29.83.28 1.14-.02.3-.32.31-.81.02-1.14L13.52 12l2.77-3.12c.29-.33.29-.83-.02-1.14a.848.848 0 0 0-1.15-.03M12 12.01l-.01-.01.01-.01.01-.01.01.01.01.01-.03.01z"/>
 	</svg>`;
 

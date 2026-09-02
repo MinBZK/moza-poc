@@ -18,6 +18,8 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 	<h1>Contactvoorkeuren</h1>
 
+	<a href="{{ '/moza/contactvoorkeuren/' | url }}" class="back-link">Terug naar Contactvoorkeuren</a>
+
 	<section class="card">
 		<h2>Berichtgevingen</h2>
 
@@ -25,33 +27,33 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 		<form action="{{ '/moza/contactvoorkeuren/' | url }}">
 			<dl class="data-overview">
-				<dt>Ontvangstbevestiging</dt>
-				<dd>
+				<dt id="bm-ontvangst">Ontvangstbevestiging</dt>
+				<dd role="group" aria-labelledby="bm-ontvangst">
 					<ul class="list-plain">
 						<li><input type="checkbox" id="contact-message-receiptconfirmation-email" checked /><label for="contact-message-receiptconfirmation-email">E-mail</label></li>
 						<li><input type="checkbox" id="contact-message-receiptconfirmation-post" checked /><label for="contact-message-receiptconfirmation-post">Post</label></li>
 					</ul>
 				</dd>
-				<dt>Statuswijzigingen</dt>
-				<dd>
+				<dt id="bm-status">Statuswijzigingen</dt>
+				<dd role="group" aria-labelledby="bm-status">
 					<ul class="list-plain">
 						<li><input type="checkbox" id="contact-message-statuschange-email" checked /><label for="contact-message-statuschange-email">E-mail</label></li>
 						<li><input type="checkbox" id="contact-message-statuschange-post" /><label for="contact-message-statuschange-post">Post</label></li>
 					</ul>
 				</dd>
-				<dt>Besluiten</dt>
-				<dd>
+				<dt id="bm-besluiten">Besluiten</dt>
+				<dd role="group" aria-labelledby="bm-besluiten">
 					<ul class="list-plain">
 						<li><input type="checkbox" id="contact-message-decision-email" checked /><label for="contact-message-decision-email">E-mail</label></li>
 						<li><input type="checkbox" id="contact-message-decision-post" /><label for="contact-message-decision-post">Post</label></li>
 					</ul>
 				</dd>
-				<dt>Taken</dt>
-				<dd>
-					<div class="feedback feedback-error">
-						{% include "icon-feedback.njk" %}
+				<dt id="bm-taken">Taken</dt>
+				<dd role="group" aria-labelledby="bm-taken" aria-describedby="bm-taken-error">
+					<div class="feedback feedback-error" role="alert">
+						{% include "icon-feedback-error.njk" %}
 						<div>
-							<p>U dient minimaal één optie voor berichtgeving over taken te selecteren.</p>
+							<p id="bm-taken-error">U dient minimaal één optie voor berichtgeving over taken te selecteren.</p>
 						</div>
 					</div>
 					<ul class="list-plain">
@@ -63,7 +65,7 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 			<div class="action-group">
 				<button type="submit">Opslaan</button>
-				<button class="secondary">Annuleren</button>
+				<button type="button" class="secondary">Annuleren</button>
 			</div>
 		</form>
 	</section>

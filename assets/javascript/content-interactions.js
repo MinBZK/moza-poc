@@ -18,12 +18,12 @@ document.querySelectorAll(".action-group .visually-hidden").forEach((span) => {
 
 function getCategory(li) {
 	const section = li.closest("section");
-	const heading = section?.querySelector("h2, h3");
+	const heading = section?.querySelector(":scope > hgroup > h2, :scope > hgroup > h3, :scope > h2, :scope > h3");
 	return heading?.textContent.trim() || "";
 }
 
 function getFavoriteKey(checkbox) {
-	const label = checkbox.closest(".save-favorite");
+	const label = checkbox.closest(".save-topic");
 	const hidden = label?.querySelector(".visually-hidden");
 	return hidden ? "favorite:" + hidden.textContent.trim() : null;
 }
@@ -44,13 +44,13 @@ function getFavoriteData(checkbox) {
 	const title = article.querySelector("h1")?.textContent.trim() || "";
 	const url = location.pathname;
 	const desc = article.querySelector(".intro")?.textContent.trim() || "";
-	const breadcrumb = article.querySelector(".breadcrumb li:nth-child(3) a");
+	const breadcrumb = article.querySelector(".breadcrumb li:nth-child(2) a") || article.querySelector(".breadcrumb li:nth-child(3) a");
 	const category = breadcrumb?.textContent.trim() || "";
 	return { title, url, desc, category };
 }
 
 // Herstel opgeslagen staat bij laden
-document.querySelectorAll(".save-favorite input[type='checkbox']").forEach((checkbox) => {
+document.querySelectorAll(".save-topic input[type='checkbox']").forEach((checkbox) => {
 	const key = getFavoriteKey(checkbox);
 	if (!key) return;
 	const stored = localStorage.getItem(key);
@@ -62,7 +62,7 @@ document.querySelectorAll(".save-favorite input[type='checkbox']").forEach((chec
 
 // Sla staat op bij wijziging
 document.addEventListener("change", (e) => {
-	if (e.target.matches(".save-favorite input[type='checkbox']")) {
+	if (e.target.matches(".save-topic input[type='checkbox']")) {
 		const key = getFavoriteKey(e.target);
 		if (!key) return;
 		if (e.target.checked) {
@@ -168,18 +168,27 @@ document.addEventListener("click", (e) => {
 	}
 });
 
+// Stabiele sleutel per feedback-blok: het id wanneer aanwezig, anders het
+// paginapad plus de positie van het blok op de pagina. Zo onthouden we ook
+// blokken zonder id, zonder af te hangen van (soms dynamische) tekstinhoud.
+function feedbackKey(feedback) {
+	if (feedback.id) return feedback.id;
+	const alle = Array.prototype.slice.call(document.querySelectorAll(".feedback"));
+	return location.pathname + "#" + alle.indexOf(feedback);
+}
+
 // Sluit feedback-notificaties met .btn-close en onthoud dit
 document.addEventListener("click", (e) => {
 	const btn = e.target.closest(".btn-close");
 	if (!btn) return;
-	const feedback = btn.closest(".feedback[id]");
+	const feedback = btn.closest(".feedback");
 	if (!feedback) return;
 	feedback.hidden = true;
-	localStorage.setItem("dismissed:" + feedback.id, "true");
+	localStorage.setItem("dismissed:" + feedbackKey(feedback), "true");
 });
 
-document.querySelectorAll(".feedback[id]").forEach((feedback) => {
-	if (localStorage.getItem("dismissed:" + feedback.id) === "true") {
+document.querySelectorAll(".feedback").forEach((feedback) => {
+	if (localStorage.getItem("dismissed:" + feedbackKey(feedback)) === "true") {
 		feedback.hidden = true;
 	}
 });
@@ -194,7 +203,7 @@ document.querySelectorAll(".list-content-links li.reserve-topic").forEach((li) =
 });
 
 // Verberg eerder verborgen topics bij laden en schuif reserve-topics door
-// Alleen voor items die nog zichtbaar waren — items die al hidden zijn
+// Alleen voor items die nog zichtbaar waren, items die al hidden zijn
 // (bijv. reserves waarvan .reserve-topic hierboven is verwijderd) overslaan
 document.querySelectorAll(".list-content-links li:not(.reserve-topic)").forEach((li) => {
 	if (li.closest("#saved-groups") || li.closest("#hidden-groups")) return;
@@ -219,14 +228,25 @@ function updateUnreadBadge() {
 	} catch (e) { /* localStorage niet toegankelijk */ }
 }
 
+// Herstel gelezen-status voor alle ongelezen links binnen een scope.
+function herstelGelezenStatus(root = document) {
+	root.querySelectorAll(".content-link.is-unread").forEach((link) => {
+		const heading = link.querySelector("h2, h3, h4");
+		if (!heading) return;
+		const key = "read:" + heading.textContent.trim();
+		if (localStorage.getItem(key)) {
+			link.classList.remove("is-unread");
+		}
+	});
+}
+
 // Herstel gelezen-status bij laden.
-document.querySelectorAll(".content-link.is-unread").forEach((link) => {
-	const heading = link.querySelector("h2, h3, h4");
-	if (!heading) return;
-	const key = "read:" + heading.textContent.trim();
-	if (localStorage.getItem(key)) {
-		link.classList.remove("is-unread");
-	}
+herstelGelezenStatus();
+
+// Herstel + badge bijwerken na dynamische rendering (zie homepage-profiel.js).
+document.addEventListener("content:rendered", (e) => {
+	herstelGelezenStatus(e.target instanceof Element ? e.target : document);
+	updateUnreadBadge();
 });
 
 // Markeer als gelezen bij klik.
@@ -238,6 +258,7 @@ document.addEventListener("click", (e) => {
 	localStorage.setItem("read:" + heading.textContent.trim(), "true");
 	link.classList.remove("is-unread");
 	updateUnreadBadge();
+	document.dispatchEvent(new CustomEvent("content:read"));
 });
 
 // Badge op andere pagina's bijwerken vanuit localStorage.
@@ -250,8 +271,3 @@ try {
 		});
 	}
 } catch (e) { /* localStorage niet toegankelijk */ }
-
-// Op de actueel-pagina: bereken de echte telling vanuit de DOM.
-if (location.pathname.includes("/actueel")) {
-	updateUnreadBadge();
-}

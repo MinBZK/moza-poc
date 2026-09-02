@@ -1,5 +1,110 @@
 [
 	{
+		"id": "uitgebreide-producentenverantwoordelijkheid",
+		"titel": "Uitgebreide producentenverantwoordelijkheid verpakkingen",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Vanaf 1 juli 2026 worden retailers en winkels medeverantwoordelijk voor het inzamelen en recyclen van verpakkingen die zij aan consumenten meegeven. Dit geldt ook voor online bestellingen.",
+		"inhoud": [
+			"De uitgebreide producentenverantwoordelijkheid (UPV) voor verpakkingen wordt per 1 juli 2026 aangescherpt. Retailers worden verplicht om actief bij te dragen aan de inzameling en recycling van verpakkingsmateriaal dat zij aan klanten meegeven.",
+			"Dit betekent dat u als winkelier een financiële bijdrage moet leveren aan het Afvalfonds Verpakkingen, gebaseerd op de hoeveelheid en het type verpakkingsmateriaal dat u gebruikt. Ook moet u klanten informeren over de juiste manier van afvalscheiding.",
+			"De hoogte van de bijdrage hangt af van het materiaal: plastic, karton, glas of metaal. Bedrijven die aantoonbaar minder verpakkingsmateriaal gebruiken of overstappen op herbruikbare verpakkingen betalen een lager tarief."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 juli 2026",
+		"geldtVoor": "Retailers en winkels",
+		"isOngelezen": true
+	},
+	{
+		"id": "wwft-verscherpt-clientenonderzoek",
+		"titel": "Wijziging Wwft: verscherpt cliëntenonderzoek",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Per 1 september 2026 worden de eisen aan het cliëntenonderzoek onder de Wwft aangescherpt. Makelaars en vastgoedprofessionals moeten uitgebreider onderzoek doen naar de herkomst van financieringsmiddelen.",
+		"inhoud": [
+			"De Wet ter voorkoming van witwassen en financieren van terrorisme (Wwft) wordt per 1 september 2026 aangescherpt voor de vastgoedsector. Makelaars, taxateurs en vastgoedadviseurs moeten voortaan uitgebreider onderzoek doen naar de herkomst van financieringsmiddelen bij transacties boven 100.000 euro.",
+			"Concreet betekent dit dat u bij elke transactie boven de drempel een verklaring herkomst vermogen moet opvragen bij uw cliënt. U moet ook ongebruikelijke transacties — zoals contante betalingen, transacties via buitenlandse rechtspersonen of snelle doorverkoop — direct melden bij de FIU.",
+			"Het Bureau Financieel Toezicht (BFT) houdt toezicht op de naleving door makelaars. Bij overtredingen riskeert u boetes tot 500.000 euro en in ernstige gevallen intrekking van uw vergunning."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 september 2026",
+		"geldtVoor": "Makelaars en vastgoedprofessionals",
+		"isOngelezen": true
+	},
+	{
+		"id": "omgevingswet-stikstofnorm",
+		"titel": "Wijziging Omgevingswet: aangescherpte stikstofnorm",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Per 1 augustus 2026 worden de stikstofnormen voor bouwprojecten aangescherpt. Projectontwikkelaars moeten een uitgebreidere stikstofberekening overleggen bij de vergunningsaanvraag.",
+		"inhoud": [
+			"De aanscherping van de stikstofnorm in de Omgevingswet betekent dat bouwprojecten in de nabijheid van Natura 2000-gebieden een strengere toets moeten doorstaan. De drempelwaarde voor verplichte stikstofberekening wordt verlaagd.",
+			"U moet bij uw vergunningsaanvraag een AERIUS-berekening overleggen die aantoont dat uw project niet leidt tot significante stikstofdepositie. Bij overschrijding moet u externe saldering of ADC-toetsing toepassen.",
+			"De wijziging geldt voor alle nieuwe vergunningsaanvragen vanaf 1 augustus 2026. Lopende aanvragen worden niet geraakt. Het bevoegd gezag (gemeente of provincie) toetst de berekening als onderdeel van de omgevingsvergunning."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 augustus 2026",
+		"geldtVoor": "Projectontwikkelaars en bouwbedrijven",
+		"isOngelezen": true
+	},
+	{
+		"id": "arbowet-gevaarlijke-stoffen",
+		"titel": "Wijziging Arbowet: blootstelling gevaarlijke stoffen",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Per 1 juli 2026 worden de grenswaarden voor blootstelling aan gevaarlijke stoffen op de werkplek aangescherpt. Werkgevers in de bouw moeten hun RI&E en werkprocedures aanpassen.",
+		"inhoud": [
+			"De wijziging van de Arbowet verlaagt de toegestane grenswaarden voor blootstelling aan kwartsstof, houtstof en oplosmiddeldampen op de werkplek. Dit raakt met name de bouw-, schilder- en houtbewerkingssector.",
+			"Als werkgever moet u uw risico-inventarisatie en -evaluatie (RI&E) actualiseren en zorgen dat uw werknemers niet boven de nieuwe grenswaarden worden blootgesteld. Dit kan betekenen dat u moet investeren in betere afzuiging, persoonlijke beschermingsmiddelen of alternatieve werkmethoden.",
+			"De Nederlandse Arbeidsinspectie gaat actief controleren op naleving vanaf 1 oktober 2026. In de eerste drie maanden na inwerkingtreding geldt een waarschuwingsperiode. Daarna kunnen boetes tot 13.500 euro per overtreding worden opgelegd."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 juli 2026",
+		"geldtVoor": "Werkgevers in bouw, schilderwerk en houtbewerking",
+		"isOngelezen": true
+	},
+	{
+		"id": "dienstenwet-informatieplicht",
+		"titel": "Wijziging Dienstenwet: informatieplicht online platforms",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Per 1 oktober 2026 moeten dienstverleners die hun diensten aanbieden via online platforms uitgebreidere informatie verstrekken aan consumenten over prijzen, voorwaarden en klachtenprocedures.",
+		"inhoud": [
+			"De wijziging van de Dienstenwet implementeert nieuwe Europese regels voor transparantie bij online dienstverlening. Als u uw diensten aanbiedt via platforms als Airbnb, Booking.com, Treatwell of vergelijkbare sites, moet u aanvullende informatie tonen.",
+			"U bent verplicht om duidelijk te vermelden: de totaalprijs inclusief alle bijkomende kosten, uw annuleringsvoorwaarden, uw KVK-nummer en vestigingsadres, en hoe consumenten een klacht kunnen indienen. Deze informatie moet zichtbaar zijn voordat de consument een boeking of bestelling plaatst.",
+			"De Autoriteit Consument & Markt (ACM) handhaaft de nieuwe regels. Bij overtredingen kan een boete worden opgelegd. Platforms zijn verplicht om u de mogelijkheid te bieden deze informatie te tonen."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 oktober 2026",
+		"geldtVoor": "Dienstverleners op online platforms",
+		"isOngelezen": true
+	},
+	{
+		"id": "meststoffenwet-fosfaatplafond",
+		"titel": "Aanscherping Meststoffenwet: verlaging fosfaatplafond",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Per 1 juni 2026 wordt het fosfaatplafond voor de melkveehouderij verder verlaagd. Melkveehouders moeten hun fosfaatproductie met 5% reduceren ten opzichte van 2025.",
+		"inhoud": [
+			"In het kader van de Europese Nitraatrichtlijn verlaagt Nederland het fosfaatplafond voor de melkveehouderij per 1 juni 2026. Dit betekent dat de totale hoeveelheid fosfaat die de Nederlandse melkveesector mag produceren daalt met 5% ten opzichte van het niveau van 2025.",
+			"Als melkveehouder moet u uw fosfaatproductie beheersen binnen de aan u toegekende fosfaatrechten. Bij overschrijding moet u fosfaatrechten aankopen of uw veestapel verkleinen. De RVO controleert uw fosfaatproductie op basis van uw mestboekhouding.",
+			"Bij overschrijding van uw fosfaatrechten legt RVO een heffing op van 21 euro per kilogram fosfaat boven uw rechten. Daarnaast kunt u een bestuurlijke boete krijgen. Controleer tijdig of uw bedrijfsvoering past binnen de nieuwe normen."
+		],
+		"bron": "Rijksoverheid",
+		"inwerkingtreding": "1 juni 2026",
+		"geldtVoor": "Melkveehouders",
+		"isOngelezen": true
+	},
+	{
+		"id": "ai-verordening",
+		"titel": "AI-verordening: nieuwe verplichtingen per 1 juni 2026",
+		"externUrl": "https://wetten.overheid.nl/",
+		"beschrijving": "Vanaf 1 juni 2026 gelden nieuwe Europese regels voor het gebruik van kunstmatige intelligentie in bedrijfsprocessen. Advies- en consultancybureaus die AI-tools inzetten moeten voldoen aan transparantie- en risicobeoordelingseisen.",
+		"inhoud": [
+			"De Europese AI-verordening (AI Act) treedt gefaseerd in werking. Per 1 juni 2026 gelden de verplichtingen voor aanbieders en gebruikers van AI-systemen met een hoog risico. Als u AI-tools inzet bij uw advieswerkzaamheden — bijvoorbeeld voor data-analyse, rapportgeneratie of besluitvormingsondersteuning — moet u beoordelen of deze als hoog-risico gelden.",
+			"Voor hoog-risico AI-systemen moet u een conformiteitsbeoordeling uitvoeren, technische documentatie bijhouden en menselijk toezicht garanderen. Ook moet u uw klanten informeren wanneer zij te maken krijgen met AI-gegenereerde output. Bij generatieve AI (zoals chatbots en tekstgeneratoren) geldt een transparantieverplichting.",
+			"De toezichthouder Autoriteit Persoonsgegevens handhaaft de AI-verordening in Nederland. Overtredingen kunnen leiden tot boetes tot 35 miljoen euro of 7% van de wereldwijde omzet. Begin tijdig met een inventarisatie van de AI-systemen die u gebruikt en stel een AI-beleid op voor uw organisatie."
+		],
+		"bron": "Europese Unie / Rijksoverheid",
+		"inwerkingtreding": "1 juni 2026",
+		"geldtVoor": "Alle bedrijven die AI-systemen gebruiken",
+		"isOngelezen": true
+	},
+	{
 		"id": "minimumloon",
 		"titel": "Minimumloon per 1 januari 2026",
 		"externUrl": "https://wetten.overheid.nl/BWBR0005290/2026-01-01/0",
@@ -66,12 +171,14 @@
 		"beschrijving": "De Wet milieubeheer verplicht bedrijven met een hoog energieverbruik om energiebesparende maatregelen te nemen en hierover te rapporteren.",
 		"inhoud": [
 			"Als uw bedrijf meer dan 50.000 kWh aan elektriciteit of meer dan 25.000 kubieke meter aardgas per jaar verbruikt, bent u verplicht om alle energiebesparende maatregelen te nemen die zich binnen vijf jaar terugverdienen. U moet hierover elke vier jaar rapporteren via het eLoket van de Rijksdienst voor Ondernemend Nederland.",
-			"In uw rapportage geeft u aan welke maatregelen u al heeft genomen en welke maatregelen u nog gaat nemen. De Erkende Maatregelenlijsten (EML) geven per sector aan welke maatregelen u wordt geacht te nemen. U kunt ook alternatieve maatregelen treffen als die minstens evenveel energie besparen.",
+			"In uw rapportage geeft u aan welke maatregelen u al hebt genomen en welke maatregelen u nog gaat nemen. De Erkende Maatregelenlijsten (EML) geven per sector aan welke maatregelen u wordt geacht te nemen. U kunt ook alternatieve maatregelen treffen als die minstens evenveel energie besparen.",
 			"De omgevingsdienst in uw regio houdt toezicht op de naleving. Bij het niet voldoen aan de rapportageplicht of het niet nemen van verplichte maatregelen kunt u een last onder dwangsom of een bestuurlijke boete krijgen."
 		],
 		"bron": "Rijksoverheid",
 		"inwerkingtreding": "1 juli 2023",
 		"geldtVoor": "Ondernemingen met energieverbruik boven 50.000 kWh of 25.000 m\u00b3 gas per jaar",
+		"assistentVraag": "Help mij met de informatieplicht energiebesparing voor mijn bedrijf",
+		"regelrechtRegel": "omgevingswet/energiebesparing/informatieplicht",
 		"isOngelezen": false
 	},
 	{
@@ -367,11 +474,11 @@
 		"inhoud": [
 			"De CSRD verplicht u om uitgebreid te rapporteren over de duurzaamheidsprestaties van uw bedrijf. U moet rapporteren over milieu, sociale zaken en bestuur (ESG). De rapportage moet onderdeel zijn van uw bestuursverslag en volgens de Europese standaarden voor duurzaamheidsrapportage (ESRS) worden opgesteld.",
 			"U moet een dubbele materialiteitsanalyse uitvoeren: u beschrijft zowel de impact van uw bedrijf op mens en milieu als de impact van duurzaamheidsrisico's op uw bedrijf. De rapportage moet gecontroleerd worden door een accountant of onafhankelijke auditor. U moet ook rapporteren over uw hele waardeketen, inclusief leveranciers.",
-			"De rapportageverplichting wordt gefaseerd ingevoerd. Grote bedrijven zijn vanaf boekjaar 2024 verplicht. Beursgenoteerde MKB'ers volgen later. Als u niet voldoet aan de rapportageplicht, kunt u een boete krijgen en loopt u het risico dat investeerders en klanten hun vertrouwen in uw bedrijf verliezen."
+			"De rapportageverplichting wordt gefaseerd ingevoerd. Grote bedrijven zijn vanaf boekjaar 2024 verplicht. Beursgenoteerde mkb’ers volgen later. Als u niet voldoet aan de rapportageplicht, kunt u een boete krijgen en loopt u het risico dat investeerders en klanten hun vertrouwen in uw bedrijf verliezen."
 		],
 		"bron": "Europese Unie (omgezet in Nederlandse wet)",
 		"inwerkingtreding": "1 januari 2026",
-		"geldtVoor": "Grote bedrijven en beursgenoteerde MKB'ers",
+		"geldtVoor": "Grote bedrijven en beursgenoteerde mkb’ers",
 		"isOngelezen": false
 	}
 ]

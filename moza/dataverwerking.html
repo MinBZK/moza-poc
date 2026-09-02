@@ -1,5 +1,9 @@
 ---
 title: "MijnOverheid Zakelijk: Gegevensdeling en dataverwerking"
+styles:
+  - "/style/pages/dataverwerking.css"
+permalink: "/moza/dataverwerking/"
+subNavActive: "/moza/dataverwerking/"
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -15,8 +19,61 @@ title: "MijnOverheid Zakelijk: Gegevensdeling en dataverwerking"
 	<h1>Gegevensdeling en dataverwerking</h1>
 
 	<section class="card">
-		<h2>Binnenkort beschikbaar <span class="badge">januari 2028</span></h2>
-		<p>Straks vindt u hier een overzicht van hoe uw bedrijfsgegevens worden gedeeld en verwerkt door overheidsorganisaties.</p>
+		<h2>Activiteiten logboek</h2>
+		<p>Dit is een overzicht van hoe uw bedrijfsgegevens worden gedeeld en verwerkt door overheidsorganisaties.</p>
+		<!-- <div class="dataverwerking-filters">
+			<div class="filter-group">
+				<label for="filter-jaar">Filter op jaar:</label>
+				<select value="jaar" id="filter-jaar">
+					<option value="" disabled>Kies een jaar</option>
+					<option value="2026" selected>2026</option>
+					<option value="2025">2025</option>
+					<option value="2024">2024</option>
+					<option value="2023">2023</option>
+				</select>
+			</div>
+			<div class="filter-group">
+				<label for="filter-afzender">Filter op afzender:</label>
+				<select value="afzender" id="filter-afzender">
+					<option value="" disabled selected>Kies een afzender</option>
+					<option value="">Geen filter</option>
+					<option value="belastingsdienst">Belastingdienst</option>
+					<option value="kvk">KVK</option>
+					<option value="uwv">UWV</option>
+				</select>
+			</div>
+			<div class="filter-group">
+				<label for="filter-zaak">Filter op lopende zaak:</label>
+				<select value="zaak" id="filter-zaak">
+					<option value="" disabled selected>Kies een lopende zaak</option>
+					<option value="">Geen filter</option>
+					<option value="1">Omgevingsvergunning verbouwing bedrijfspand</option>
+					<option value="2">Aanvraag subsidie bedrijfspand verduurzaming</option>
+					<option value="3">Melding openbare ruimte</option>
+				</select>
+			</div>
+		</div> -->
+
+		<!-- server-rendered full activities list -->
+		<ul class="logging-track" id="activiteiten-list">
+			{% for entry in activiteitenLogData %}
+			<li data-id="{{ entry.id }}" data-year="{{ entry.datetime }}" data-source="{{ entry.source }}" data-zaak="{% if entry.relatedProduct %}{{ entry.relatedProduct.id }}{% endif %}">
+				<details>
+					<summary>
+						{{ entry.source }}<small>({{ entry.datetime | tijdgeledenNL }})</small>
+					</summary>
+					<div>
+						<p>
+						<div class="status-details">
+						<p class="status-date"><time datetime="{{ entry.datetime }}">{{ entry.datetime | datumtijdNL }}</time></p>
+						{% for d in entry.data %}
+						<strong>{{ d.request }}:</strong> {{ d.response }}{% if not loop.last %}<br />{% endif %} {% endfor %}
+					</p>
+					</div>
+				</details>
+			</li>
+			{% endfor %}
+		</ul>
 	</section>
 
 	<section class="card">
@@ -42,7 +99,9 @@ title: "MijnOverheid Zakelijk: Gegevensdeling en dataverwerking"
 					<summary>
 						<h3>Welke gegevensverwerkingen kan ik hier inzien?</h3>
 					</summary>
-					<p>U vindt hier een overzicht van gegevensuitwisselingen tussen overheidsorganisaties waarbij uw bedrijfsgegevens betrokken zijn. Denk aan gegevens die worden gedeeld met de Belastingdienst, KVK of het UWV.</p>
+					<div>
+						<p>U vindt hier een overzicht van gegevensuitwisselingen tussen overheidsorganisaties waarbij uw bedrijfsgegevens betrokken zijn. Denk aan gegevens die worden gedeeld met de Belastingdienst, KVK of het UWV.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -50,7 +109,9 @@ title: "MijnOverheid Zakelijk: Gegevensdeling en dataverwerking"
 					<summary>
 						<h3>Kan ik gegevensdeling tegenhouden?</h3>
 					</summary>
-					<p>Overheidsorganisaties delen gegevens op basis van wettelijke grondslagen. In sommige gevallen kunt u bezwaar maken tegen een specifieke verwerking. Neem hiervoor contact op met de betreffende organisatie of raadpleeg het <a href="https://www.autoriteitpersoonsgegevens.nl/">Autoriteit Persoonsgegevens</a>.</p>
+					<div>
+						<p>Overheidsorganisaties delen gegevens op basis van wettelijke grondslagen. In sommige gevallen kunt u bezwaar maken tegen een specifieke verwerking. Neem hiervoor contact op met de betreffende organisatie of raadpleeg het <a href="https://www.autoriteitpersoonsgegevens.nl/">Autoriteit Persoonsgegevens</a>.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -58,7 +119,9 @@ title: "MijnOverheid Zakelijk: Gegevensdeling en dataverwerking"
 					<summary>
 						<h3>Ik zie onjuiste gegevens. Wat kan ik doen?</h3>
 					</summary>
-					<p>Als gegevens van uw bedrijf niet kloppen, kunt u een terugmelding doen bij de organisatie die de gegevens beheert. Via dit overzicht ziet u welke organisatie de bronhouder is, zodat u weet waar u terecht kunt.</p>
+					<div>
+						<p>Als gegevens van uw bedrijf niet kloppen, kunt u een terugmelding doen bij de organisatie die de gegevens beheert. Via dit overzicht ziet u welke organisatie de bronhouder is, zodat u weet waar u terecht kunt.</p>
+					</div>
 				</details>
 			</li>
 		</ul>

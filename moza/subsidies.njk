@@ -1,11 +1,7 @@
 ---
 title: "MijnOverheid Zakelijk: Subsidies en financiering"
-pagination:
-  data: subsidiesData
-  size: 10
-  alias: subsidiesPagina
-permalink: "/moza/subsidies/{% if pagination.pageNumber > 0 %}pagina-{{ pagination.pageNumber + 1 }}/{% endif %}"
-subNavActive: "/moza/actueel/"
+permalink: "/moza/subsidies/"
+subNavActive: "/moza/subsidies/"
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -14,76 +10,25 @@ subNavActive: "/moza/actueel/"
 	<nav class="breadcrumb">
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li><a href="{{ '/moza/actueel/' | url }}">Actualiteiten</a></li>
 			<li aria-current="page">Subsidies en financiering</li>
 		</ol>
 	</nav>
 
 	<h1>Subsidies en financiering</h1>
 
-	<section class="card">
-		<p>Subsidies en financiering waar u mogelijk voor in aanmerking komt op basis van uw branche en rechtsvorm.</p>
-		<ul class="list-content-links">
-			{% for subsidie in subsidiesPagina %}
-			<li class="card-topic">
-				<a href="{{ '/moza/subsidies/' | url }}{{ subsidie.id }}/" class="content-link{% if subsidie.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ subsidie.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ subsidie.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Verstrekker</dt>
-					<dd>{{ subsidie.verstrekker }}</dd>
-					<dt>Type</dt>
-					<dd>{{ subsidie.type }}</dd>
-					<dt>Aanvraagperiode</dt>
-					<dd>{{ subsidie.aanvraagperiode }}</dd>
-					{% if subsidie.maximaalBedrag %}
-					<dt>Maximaal bedrag</dt>
-					<dd>{{ subsidie.maximaalBedrag }}</dd>
-					{% endif %}
-					{% if subsidie.budgetVergeven %}
-					<dt>Budget vergeven</dt>
-					<dd>
-						<div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="{{ subsidie.budgetVergeven }}" aria-valuemin="0" aria-valuemax="100">
-							<div class="progress-bar-fill" style="inline-size: {{ subsidie.budgetVergeven }}%">{{ subsidie.budgetVergeven }}%</div>
-						</div>
-					</dd>
-					{% endif %}
-				</dl>
-				<div class="action-group topic-options">
-					<label class="save-favorite"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">{{ subsidie.titel }}</span></label>
-					<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">{% icon "/assets/icons/icon-delen.svg" %} Deel</button>
-					<button class="link-button hide-topic">Niet relevant voor mij</button>
-				</div>
-			</li>
-			{% endfor %}
-		</ul>
-		{% if pagination.pages.length > 1 %}
-			<nav class="pagination" aria-label="Paginering">
-				<ol>
-					{% if pagination.previousPageHref %}
-					<li>
-						<a href="{{ pagination.previousPageHref | url }}" rel="prev">Vorige<span class="visually-hidden"> pagina</span></a>
-					</li>
-					{% endif %}
-					{% for href in pagination.hrefs %}
-					<li>
-						{% if loop.index0 == pagination.pageNumber %}
-						<span aria-current="page">{{ loop.index }}</span>
-						{% else %}
-						<a href="{{ href | url }}">{{ loop.index }}</a>
-						{% endif %}
-					</li>
-					{% endfor %}
-					{% if pagination.nextPageHref %}
-					<li>
-						<a href="{{ pagination.nextPageHref | url }}" rel="next">Volgende<span class="visually-hidden"> pagina</span></a>
-					</li>
-					{% endif %}
-				</ol>
-			</nav>
-		{% endif %}
+	<section class="card" data-overzicht-subsidies>
+		<h2 class="visually-hidden">Subsidies en financiering</h2>
+		<div class="feedback feedback-info" id="info-actualiteiten">
+		{% icon "/assets/icons/icon-informatie.svg" %}
+		<div>
+			<p>Subsidies en financiering waar u mogelijk voor in aanmerking komt, geselecteerd op basis van uw bedrijfsprofiel. Door items te bewaren of als niet relevant te markeren helpt u ons de aanbevelingen te verbeteren.</p>
+		</div>
+		<button class="btn-close link-button">
+			<i>Sluit notificatie</i>
+		</button>
+	</div>
+		<ul class="list-content-links" aria-busy="true"></ul>
+		<nav class="pagination" aria-label="Paginering" data-paginering hidden></nav>
 	</section>
 
 </article>

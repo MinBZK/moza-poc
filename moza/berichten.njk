@@ -5,69 +5,86 @@ pagination:
   size: 10
   alias: berichtenPagina
 permalink: "/moza/berichten/{% if pagination.pageNumber > 0 %}pagina-{{ pagination.pageNumber + 1 }}/{% endif %}"
-subNavActive: "/moza/actueel/"
+subNavActive: "/moza/berichten/"
 ---
 
 {% include "side-nav-overheid.njk" %}
 
-<article id="hoofd-inhoud">
-	<nav class="breadcrumb">
+<article id='hoofd-inhoud'>
+	<nav class='breadcrumb'>
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li><a href="{{ '/moza/actueel/' | url }}">Actualiteiten</a></li>
-			<li aria-current="page">Berichten over uw buurt</li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li aria-current='page'>Berichten over uw buurt</li>
 		</ol>
 	</nav>
 
 	<h1>Berichten over uw buurt</h1>
 
-	<section class="card">
+	<section class='card'>
 		<p>Berichten die betrekking hebben op de omgeving van uw bedrijfsadres.</p>
-		<ul class="list-content-links">
+		<ul class='list-content-links'>
 			{% for bericht in berichtenPagina %}
-			<li class="card-topic">
-				<a href="{{ '/moza/berichten/' | url }}{{ bericht.id }}/" class="content-link{% if bericht.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ bericht.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ bericht.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Bron</dt>
-					<dd>{{ bericht.bron }}</dd>
-					<dt>Datum</dt>
-					<dd>{{ bericht.datum }}</dd>
-					<dt>Locatie</dt>
-					<dd>{{ bericht.locatie }}</dd>
-				</dl>
-				<div class="action-group topic-options">
-					<label class="save-favorite"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">{{ bericht.titel }}</span></label>
-					<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">{% icon "/assets/icons/icon-delen.svg" %} Deel</button>
-					<button class="link-button hide-topic">Niet relevant voor mij</button>
-				</div>
-			</li>
+				<li class='card-topic'>
+					<a
+						class='
+							content-link
+							{% if bericht.isOngelezen %}
+								is-unread
+							{% endif %}
+						'
+						href="{{ '/moza/berichten/' | url }}{{ bericht.id }}/"
+					>
+						<h3>{{ bericht.titel }}</h3>
+						<span class='card-link'></span>
+					</a>
+					<p>{{ bericht.beschrijving }}</p>
+					<dl class='data-overview'>
+						<dt>Bron</dt>
+						<dd>{{ bericht.bron }}</dd>
+						<dt>Datum</dt>
+						<dd>{{ bericht.datum }}</dd>
+						<dt>Locatie</dt>
+						<dd>{{ bericht.locatie }}</dd>
+					</dl>
+					<div class='action-group action-options'>
+						<label class='save-topic'>
+							<input type='checkbox' />
+							<span class='favorite-label'>Bewaar</span>
+							<span class='visually-hidden'>{{ bericht.titel }}</span>
+						</label>
+						<button class='link-button share-topic' data-feature='Delen' data-feature-type='functionaliteit'>Deel</button>
+						<button class='link-button hide-topic'>Niet relevant voor mij</button>
+					</div>
+				</li>
 			{% endfor %}
 		</ul>
 		{% if pagination.pages.length > 1 %}
-			<nav class="pagination" aria-label="Paginering">
+			<nav class='pagination' aria-label='Paginering'>
 				<ol>
 					{% if pagination.previousPageHref %}
-					<li>
-						<a href="{{ pagination.previousPageHref | url }}" rel="prev">Vorige<span class="visually-hidden"> pagina</span></a>
-					</li>
+						<li>
+							<a href='{{ pagination.previousPageHref | url }}' rel='prev'>Vorige<span class='visually-hidden'>pagina</span></a>
+						</li>
 					{% endif %}
 					{% for href in pagination.hrefs %}
-					<li>
-						{% if loop.index0 == pagination.pageNumber %}
-						<span aria-current="page">{{ loop.index }}</span>
-						{% else %}
-						<a href="{{ href | url }}">{{ loop.index }}</a>
-						{% endif %}
-					</li>
+						<li>
+							{% if loop.index0 == pagination.pageNumber %}
+								<span aria-current='page'>
+									{{ loop.index }}
+								</span>
+							{% else %}
+								<a href='{{ href | url }}'>
+									{{ loop.index }}
+								</a>
+							{% endif %}
+						</li>
 					{% endfor %}
 					{% if pagination.nextPageHref %}
-					<li>
-						<a href="{{ pagination.nextPageHref | url }}" rel="next">Volgende<span class="visually-hidden"> pagina</span></a>
-					</li>
+						<li>
+							<a href='{{ pagination.nextPageHref | url }}' rel='next'>Volgende<span class='visually-hidden'>pagina</span></a>
+						</li>
 					{% endif %}
 				</ol>
 			</nav>

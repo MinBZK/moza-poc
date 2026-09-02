@@ -1,11 +1,7 @@
 ---
 title: "MijnOverheid Zakelijk: Wetten en regelgeving"
-pagination:
-  data: regelgevingData
-  size: 10
-  alias: regelgevingPagina
-permalink: "/moza/regelgeving/{% if pagination.pageNumber > 0 %}pagina-{{ pagination.pageNumber + 1 }}/{% endif %}"
-subNavActive: "/moza/actueel/"
+permalink: "/moza/regelgeving/"
+subNavActive: "/moza/regelgeving/"
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -14,65 +10,25 @@ subNavActive: "/moza/actueel/"
 	<nav class="breadcrumb">
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li><a href="{{ '/moza/actueel/' | url }}">Actualiteiten</a></li>
 			<li aria-current="page">Wetten en regelgeving</li>
 		</ol>
 	</nav>
 
 	<h1>Wetten en regelgeving</h1>
 
-	<section class="card">
-		<p>Wetten en regelgeving die mogelijk relevant voor uw onderneming kunnen zijn.</p>
-		<ul class="list-content-links">
-			{% for regeling in regelgevingPagina %}
-			<li class="card-topic">
-				<a href="{{ '/moza/regelgeving/' | url }}{{ regeling.id }}/" class="content-link{% if regeling.isOngelezen %} is-unread{% endif %}">
-					<h3>{{ regeling.titel }}</h3>
-					<span class="card-link"></span>
-				</a>
-				<p>{{ regeling.beschrijving }}</p>
-				<dl class="data-overview">
-					<dt>Bron</dt>
-					<dd>{{ regeling.bron }}</dd>
-					<dt>Inwerkingtreding</dt>
-					<dd>{{ regeling.inwerkingtreding }}</dd>
-					<dt>Geldt voor</dt>
-					<dd>{{ regeling.geldtVoor }}</dd>
-				</dl>
-				<div class="action-group topic-options">
-					<label class="save-favorite"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">{{ regeling.titel }}</span></label>
-					<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">{% icon "/assets/icons/icon-delen.svg" %} Deel</button>
-					<button class="link-button hide-topic">Niet relevant voor mij</button>
-				</div>
-			</li>
-			{% endfor %}
-		</ul>
-
-		{% if pagination.pages.length > 1 %}
-			<nav class="pagination" aria-label="Paginering">
-				<ol>
-					{% if pagination.previousPageHref %}
-					<li>
-						<a href="{{ pagination.previousPageHref | url }}" rel="prev">Vorige<span class="visually-hidden"> pagina</span></a>
-					</li>
-					{% endif %}
-					{% for href in pagination.hrefs %}
-					<li>
-						{% if loop.index0 == pagination.pageNumber %}
-						<span aria-current="page">{{ loop.index }}</span>
-						{% else %}
-						<a href="{{ href | url }}">{{ loop.index }}</a>
-						{% endif %}
-					</li>
-					{% endfor %}
-					{% if pagination.nextPageHref %}
-					<li>
-						<a href="{{ pagination.nextPageHref | url }}" rel="next">Volgende<span class="visually-hidden"> pagina</span></a>
-					</li>
-					{% endif %}
-				</ol>
-			</nav>
-		{% endif %}
+	<section class="card" data-overzicht-regelgeving>
+		<h2 class="visually-hidden">Wetten en regelgeving</h2>
+		<div class="feedback feedback-info" id="info-actualiteiten">
+		{% icon "/assets/icons/icon-informatie.svg" %}
+		<div>
+			<p>Wetten en regelgeving die mogelijk betrekking hebben op uw bedrijf of branche, geselecteerd op basis van uw bedrijfsprofiel. Door items te bewaren of als niet relevant te markeren helpt u ons de aanbevelingen te verbeteren.</p>
+		</div>
+		<button class="btn-close link-button">
+			<i>Sluit notificatie</i>
+		</button>
+	</div>
+		<ul class="list-content-links" aria-busy="true"></ul>
+		<nav class="pagination" aria-label="Paginering" data-paginering hidden></nav>
 	</section>
 
 </article>

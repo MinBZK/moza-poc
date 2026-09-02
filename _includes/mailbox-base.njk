@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="nl">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>{{ title }}</title>
+		<link rel="shortcut icon" href="/mailbox/favicon/favicon.ico" type="image/x-icon" />
+		<link rel="icon" sizes="192x192" href="/mailbox/favicon/touch-icon.png" />
+		<link rel="apple-touch-icon" href="/mailbox/favicon/apple-touch-icon.png" />
+		<link rel="stylesheet" href="/mailbox/styles.css" />
+	</head>
+	<body>
+		<div class="app">
+			{% include "mailbox-app-header.njk" %}
+			<main class="app-main">
+				{% include "mailbox-sidebar.njk" %}
+				{{ content | safe }}
+			</main>
+		</div>
+		<script src="/assets/javascript/feature-flags.js" defer></script>
+	</body>
+</html>

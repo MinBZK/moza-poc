@@ -860,12 +860,17 @@
           "$type": "color",
           "$value": "{color.lintblauw.600}",
           "$description": "Bij toetsenbord-, spraak-, en switchfocus"
+        },
+        "outline-backing": {
+          "$type": "color",
+          "$value": "{color.neutraal.wit}",
+          "$description": "Bij toetsenbord-, spraak-, en switchfocus"
         }
       },
       "disabled": {
         "background": {
           "$type": "color",
-          "$value": "{color.grijs.300}",
+          "$value": "{color.grijs.200}",
           "$description": "Inactief element"
         },
         "border": {
@@ -1170,7 +1175,12 @@
       "hover": {
         "background": {
           "$type": "color",
-          "$value": "{color.grijs.100}",
+          "$value": "{color.grijs.200}",
+          "$description": "Staat bij aanwijzen met de muis"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.hover.background}",
           "$description": "Staat bij aanwijzen met de muis"
         },
         "text": {
@@ -1190,6 +1200,11 @@
           "$value": "{color.grijs.300}",
           "$description": "Staat terwijl element ingedrukt is"
         },
+        "border": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.active.background}",
+          "$description": "Staat terwijl element ingedrukt is"
+        },
         "text": {
           "$type": "color",
           "$value": "{color.interactive-alternate.default.text}",
@@ -1207,6 +1222,11 @@
           "$value": "{color.hemelblauw.50}",
           "$description": "Ingeschakeld, aangevinkt, actief element"
         },
+        "border": {
+          "$type": "color",
+          "$value": "{color.interactive-alternate.selected.background}",
+          "$description": "Ingeschakeld, aangevinkt, actief element"
+        },
         "text": {
           "$type": "color",
           "$value": "{color.interactive.selected.text}",
@@ -1219,37 +1239,35 @@
         }
       }
     },
-    "component": {
-      "footer": {
-        "background": {
-          "$type": "color",
-          "$value": "{color.grijs.700}"
-        }
+    "footer": {
+      "background": {
+        "$type": "color",
+        "$value": "{color.grijs.700}"
+      }
+    },
+    "badge": {
+      "background": {
+        "$type": "color",
+        "$value": "{color.feedback.attention}"
       },
-      "badge": {
-        "background": {
+      "text": {
+        "$type": "color",
+        "$value": "{color.text.inverse}"
+      }
+    },
+    "text-input": {
+      "border": {
+        "default": {
           "$type": "color",
-          "$value": "{color.feedback.attention}"
-        },
-        "text": {
+          "$value": "{color.border.default}"
+        }
+      }
+    },
+    "side-nav": {
+      "background": {
+        "hover": {
           "$type": "color",
-          "$value": "{color.text.inverse}"
-        }
-      },
-      "text-input": {
-        "border": {
-          "default": {
-            "$type": "color",
-            "$value": "{color.border.default}"
-          }
-        }
-      },
-      "side-nav": {
-        "background": {
-          "hover": {
-            "$type": "color",
-            "$value": "{color.grijs.200}"
-          }
+          "$value": "{color.grijs.200}"
         }
       }
     },
@@ -1257,6 +1275,20 @@
       "background": {
         "$type": "color",
         "$value": "{color.lintblauw.500}"
+      }
+    },
+    "role": {
+      "private": {
+        "$type": "color",
+        "$value": "{color.hemelblauw.500}"
+      },
+      "business": {
+        "$type": "color",
+        "$value": "{color.lintblauw.500}"
+      },
+      "authorized": {
+        "$type": "color",
+        "$value": "{color.oranje.500}"
       }
     }
   },
@@ -1336,7 +1368,7 @@
     "base": {
       "$type": "sizing",
       "$value": "8",
-      "$description": "Base size for calculation. Defaults to 8 to follow 8px grid."
+      "$description": "Basisgrootte voor berekeningen. Volgt het standaard 8pt grid."
     },
     "5xs": {
       "$type": "sizing",
@@ -1414,12 +1446,10 @@
         "$value": "{size.48}"
       }
     },
-    "component": {
-      "subnav": {
-        "width": {
-          "$type": "sizing",
-          "$value": "288"
-        }
+    "subnav": {
+      "width": {
+        "$type": "sizing",
+        "$value": "288"
       }
     }
   },
@@ -1429,6 +1459,10 @@
         "$type": "fontFamilies",
         "$value": "RijksSansVF",
         "$description": "Rijksoverheid Sans variable font"
+      },
+      "monospace": {
+        "$type": "fontFamilies",
+        "$value": "Monaco, Consolas, \"Lucida Console\", monospace"
       },
       "body": {
         "$type": "fontFamilies",
@@ -1453,7 +1487,7 @@
       "base": {
         "$type": "fontSizes",
         "$value": "16",
-        "$description": "Modifier voor de schaal van overige groottes."
+        "$description": "Basisgrootte voor berekening van de schaal voor overige groottes."
       },
       "2xs": {
         "$type": "fontSizes",
@@ -1485,11 +1519,11 @@
       },
       "3xl": {
         "$type": "fontSizes",
-        "$value": "{text.font-size.base} * 2"
+        "$value": "{text.font-size.base} * 1.75"
       },
       "4xl": {
         "$type": "fontSizes",
-        "$value": "{text.font-size.base} * 2.5"
+        "$value": "{text.font-size.base} * 2"
       }
     },
     "line-height": {
@@ -1630,16 +1664,10 @@
         "$value": "{text.weight.bold}"
       }
     },
-    "text-decoration": {
-      "hyperlink": {
-        "$type": "textDecoration",
-        "$value": "underline solid currentColor {border-width.xs}"
-      }
-    },
     "code": {
       "$type": "typography",
       "$value": {
-        "fontFamily": "monospace",
+        "fontFamily": "{text.font-family.monospace}",
         "fontWeight": "{text.font-weight.semi-bold}",
         "fontSize": "{text.size.body.sm}"
       }
@@ -1658,7 +1686,8 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.size.body.md}"
+          "fontSize": "{text.size.body.md}",
+          "lineHeight": "{text.line-height.md}"
         }
       },
       "footer": {
@@ -1667,21 +1696,17 @@
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.size.body.sm}",
-          "lineHeight": "{text.line-height.md}"
+          "lineHeight": "{text.line-height.sm}"
         }
       }
     },
-    "component": {
-      "text": {
-        "badge": {
-          "$type": "typography",
-          "$value": {
-            "fontFamily": "{text.font-family.body}",
-            "fontWeight": "{text.font-weight.semi-bold}",
-            "fontSize": "{text.size.body.2xs}",
-            "lineHeight": "{text.line-height.md}"
-          }
-        }
+    "badge": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{text.font-family.body}",
+        "fontWeight": "{text.font-weight.semi-bold}",
+        "fontSize": "{text.size.body.2xs}",
+        "lineHeight": "{text.line-height.md}"
       }
     },
     "size": {
@@ -1732,6 +1757,14 @@
           "$type": "fontSizes",
           "$value": "{text.font-size.4xl}"
         }
+      }
+    },
+    "input-digits": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{text.font-family.monospace}",
+        "fontWeight": "{text.font-weight.semi-bold}",
+        "fontSize": "{text.font-size.sm}"
       }
     }
   },
@@ -1927,12 +1960,10 @@
         "$value": "{space.2xl}"
       }
     },
-    "component": {
-      "card": {
-        "padding": {
-          "$type": "spacing",
-          "$value": "{space.padding.xl}"
-        }
+    "card": {
+      "padding": {
+        "$type": "spacing",
+        "$value": "{space.padding.xl}"
       }
     },
     "layout": {
@@ -2053,6 +2084,12 @@
       "$value": "1140"
     }
   },
+  "text-decoration": {
+    "hyperlink": {
+      "$type": "textDecoration",
+      "$value": "underline solid currentColor {border-width.xs}"
+    }
+  },
   "opacity": {
     "interactive": {
       "disabled": {
@@ -2064,18 +2101,30 @@
   "focus": {
     "outline": {
       "$type": "other",
-      "$value": "{border-width.lg} dotted {color.interactive.focus.outline}"
+      "$value": "{border-width.lg} dashed {color.interactive.focus.outline}",
+      "$description": "Geblokte toetsenbordfocus: dashes met witte backing-ring (focus.outline-backing)"
+    },
+    "outline-backing": {
+      "$type": "other",
+      "$value": "0 0 0 calc({focus.outline-offset.md} + {border-width.lg}) {color.interactive.focus.outline-backing}",
+      "$description": "Witte ring achter de focus-dashes, leesbaar op elke achtergrond"
     },
     "outline-offset": {
-      "$type": "spacing",
-      "$value": "{space.2}"
+      "md": {
+        "$type": "spacing",
+        "$value": "{space.2}"
+      },
+      "lg": {
+        "$type": "spacing",
+        "$value": "{space.4}"
+      }
     }
   },
   "transition": {
     "default": {
       "$type": "other",
-      "$value": "background {motion.speed.fast} {motion.easing.default}, border {motion.speed.fast} {motion.easing.default}, color {motion.speed.fast} {motion.easing.default}",
-      "$description": "Standaard transitie die toegepast wordt op alle CSS properties"
+      "$value": "background {motion.speed.fast} {motion.easing.default}, border {motion.speed.fast} {motion.easing.default}, color {motion.speed.fast} {motion.easing.default}, text-decoration {motion.speed.fast} {motion.easing.default}",
+      "$description": "Standaard transitie die toegepast wordt op meerdere CSS properties"
     },
     "opacity": {
       "$type": "other",
@@ -2095,42 +2144,40 @@
         "$value": "{box-shadow.default}"
       }
     },
-    "component": {
-      "pageheader": {
-        "border": {
+    "pageheader": {
+      "border": {
+        "$type": "border",
+        "$value": {
+          "color": "{color.hemelblauw.500}",
+          "width": "{border-width.md}",
+          "style": "solid"
+        }
+      }
+    },
+    "tabs": {
+      "tab": {
+        "inactive": {
           "$type": "border",
           "$value": {
-            "color": "{color.hemelblauw.500}",
+            "width": "{border-width.md}",
+            "style": "solid",
+            "color": "{color.border.subtle}"
+          }
+        },
+        "hover": {
+          "$type": "border",
+          "$value": {
+            "width": "{border-width.md}",
+            "style": "solid",
+            "color": "{color.interactive.hover.border}"
+          }
+        },
+        "selected": {
+          "$type": "border",
+          "$value": {
+            "color": "{color.interactive.selected.border}",
             "width": "{border-width.md}",
             "style": "solid"
-          }
-        }
-      },
-      "tabs": {
-        "tab": {
-          "inactive": {
-            "$type": "border",
-            "$value": {
-              "width": "{border-width.md}",
-              "style": "solid",
-              "color": "{color.border.subtle}"
-            }
-          },
-          "hover": {
-            "$type": "border",
-            "$value": {
-              "width": "{border-width.md}",
-              "style": "solid",
-              "color": "{color.interactive.hover.border}"
-            }
-          },
-          "selected": {
-            "$type": "border",
-            "$value": {
-              "color": "{color.interactive.selected.border}",
-              "width": "{border-width.md}",
-              "style": "solid"
-            }
           }
         }
       }

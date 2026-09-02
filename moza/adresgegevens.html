@@ -1,0 +1,73 @@
+---
+title: "MijnOverheid Zakelijk: Adresgegevens"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li><a href="{{ '/moza/bedrijfsgegevens/' | url }}">Bedrijfsgegevens</a></li>
+			<li aria-current="page">Adresgegevens</li>
+		</ol>
+	</nav>
+
+	<h1>Adresgegevens</h1>
+
+	<a href="{{ '/moza/bedrijfsgegevens/' | url }}" class="back-link">Terug naar Bedrijfsgegevens</a>
+
+	<section class="card">
+		<hgroup>
+			<h2>Vestigings- en postadres</h2>
+			<p>Uw vestigingsadres en postadres zoals geregistreerd bij de Kamer van Koophandel.</p>
+		</hgroup>
+		<dl class="data-overview">
+			<div>
+				<dt>Vestigingsadres</dt>
+				<dd data-profiel="vestigingsadresVolledig">Hoefweg 210, 2665 KG Bleiswijk</dd>
+			</div>
+			<div>
+				<dt>Postadres</dt>
+				<dd data-profiel="postadres">Hoefweg 210, 2665 KG Bleiswijk</dd>
+			</div>
+		</dl>
+		<p class="metadata">Bron: <a href="https://kvk.nl/">KVK</a></p>
+	</section>
+
+	<section class="card">
+		<h2>Veelgestelde vragen</h2>
+		<ul class="accordion">
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Wat is het verschil tussen een vestigings- en postadres?</h3>
+					</summary>
+					<div>
+						<p>Het vestigingsadres is de fysieke locatie van uw onderneming. Het postadres is het adres waarop u post wilt ontvangen. Dit kan hetzelfde zijn als het vestigingsadres, maar bijvoorbeeld ook een postbus of een ander correspondentieadres.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Hoe wijzig ik mijn adresgegevens?</h3>
+					</summary>
+					<div>
+						<p>Adresgegevens worden bijgehouden door de Kamer van Koophandel. U kunt een adreswijziging doorgeven via <a href="https://kvk.nl/">kvk.nl</a> of bij een KVK-kantoor. Na verwerking zijn de gewijzigde gegevens automatisch zichtbaar op MijnOverheid Zakelijk.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Wie kan mijn adresgegevens inzien?</h3>
+					</summary>
+					<div>
+						<p>Vestigingsadressen van ondernemingen zijn openbaar via het KVK Handelsregister. Postadressen zijn alleen openbaar als ze afwijken van het vestigingsadres en u dit zo heeft opgegeven. Voor eenmanszaken aan huis kunt u uw vestigingsadres laten afschermen via de KVK.</p>
+					</div>
+				</details>
+			</li>
+		</ul>
+	</section>
+</article>

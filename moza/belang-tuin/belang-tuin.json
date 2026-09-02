@@ -1,0 +1,10 @@
+{
+	"bodyClass": "moza authorized",
+	"override:subNav": [
+		{ "label": "Home", "url": "/moza/belang-tuin/", "icon": "/assets/icons/icon-home.svg", "exact": true },
+		{ "label": "Gegevens", "url": "/moza/belang-tuin/gegevens/", "icon": "/assets/icons/icon-gegevens.svg", "class": "side-nav-group--start" },
+		{ "label": "Berichtenbox", "url": "/moza/belang-tuin/berichtenbox/", "icon": "/assets/icons/icon-berichtenbox.svg" },
+		{ "label": "Lopende zaken", "url": "/moza/belang-tuin/lopende-zaken/", "icon": "/assets/icons/icon-lopende-zaken.svg" },
+		{ "label": "Financiën", "url": "/moza/belang-tuin/financien/", "icon": "/assets/icons/icon-financieen.svg", "class": "side-nav-group--start" }
+	]
+}

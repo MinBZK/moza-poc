@@ -4,12 +4,13 @@
 		<ul id="side-nav-menu">
 			{% for item in subNav %}
 			<li{% if item.class %} class="{{ item.class }}"{% endif %}{% if item.feature %} data-feature="{{ item.feature }}" data-feature-type="pagina"{% endif %}>
-				<a href="{{ item.url | url }}"{% if page.url == item.url or subNavActive == item.url %} aria-current="page"{% endif %}{% if item.disabled %} class="temp-navitem-feature-release"{% endif %}>
+				<a href="{{ item.url | url }}"{% if page.url == item.url or subNavActive == item.url or (not item.exact and item.url != '/moza/' and page.url.startsWith(item.url)) %} aria-current="page"{% endif %}>
 					{% if item.icon %}{% icon item.icon %}{% endif %}
 					{{ item.label }}
+					{% if item.badgeId %}<span class="badge" data-badge-id="{{ item.badgeId }}"></span>{% endif %}
 					{% if item.unreadBadge %}<span class="badge" data-unread-badge>{{ item.badge }}</span>{% endif %}
-					{% if item.badge and not item.unreadBadge %}<span class="badge{% if item.badgeClass %} {{ item.badgeClass }}{% endif %}">{{ item.badge }}</span>{% endif %}
-					{% if item.label == "Berichtenbox" and not item.disabled %}<span class="badge" data-berichtenbox-count="ongelezen">{{ berichtenboxData.aantalOngelezen or 0 }}</span>{% endif %}
+					{% if item.badge and item.unreadBadge != false and not item.badgeId %}<span class="badge{% if item.badgeClass %} {{ item.badgeClass }}{% endif %}">{{ item.badge }}</span>{% endif %}
+					{% if item.label == "Berichtenbox" and item.unreadBadge != false and not item.disabled %}<span class="badge" data-berichtenbox-count="ongelezen">{% if berichtenboxData.aantalOngelezen %}{{ berichtenboxData.aantalOngelezen }}{% endif %}</span>{% endif %}
 				</a>
 			</li>
 			{% endfor %}

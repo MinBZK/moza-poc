@@ -6,110 +6,57 @@ title: "MijnOverheid Zakelijk: Home"
 
 <article id="hoofd-inhoud">
 	<h1>Welkom <span data-profiel="voornaam">Robin</span> <span data-profiel="achternaam">Vogel</span></h1>
-
-	<h2>Actualiteiten</h2>
-
+	{# Alleen tonen als de informatieplicht voor de actieve persona geldt: dezelfde
+	   business rule als de CTA op de regeling-pagina. personas.js haalt de drempel
+	   pre-chat op uit RegelRecht en vergelijkt die met het verbruik van de persona.
+	   data-regelrecht-law verwijst naar dezelfde regel als de Wet milieubeheer-pagina. #}
+	<div class="feedback feedback-info" data-persona-energiedrempel data-regelrecht-law="omgevingswet/energiebesparing/informatieplicht" hidden>
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Binnenkort geldt de informatieplicht energiebesparing voor uw onderneming. <a href="/moza/digitale-assistent/">De digitale assistent helpt u</a> het rapport in één keer goed in te dienen.</p>
+		</div>
+		<button class="btn-close link-button"><i>Sluit notificatie</i></button>
+	</div>
 	<section class="card">
-		<section>
-			<h3>Subsidies en financiering</h3>
-			<ul class="list-content-links">
-				{% for subsidie in subsidiesData | batch(4) | first %}
-				<li class="card-topic{% if loop.index0 >= 1 %} reserve-topic{% endif %}"{% if loop.index0 >= 1 %} hidden{% endif %}>
-					<a href="{{ '/moza/subsidies/' | url }}{{ subsidie.id }}/" class="content-link{% if subsidie.isOngelezen %} is-unread{% endif %}">
-						<h4>{{ subsidie.titel }}</h4>
-						<span class="card-link"></span>
-					</a>
-					<p>{{ subsidie.beschrijving }}</p>
-					<dl class="data-overview">
-						<dt>Verstrekker</dt>
-						<dd>{{ subsidie.verstrekker }}</dd>
-						<dt>Type</dt>
-						<dd>{{ subsidie.type }}</dd>
-						{% if subsidie.budgetVergeven %}
-						<dt>Budget vergeven</dt>
-						<dd>
-							<div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="{{ subsidie.budgetVergeven }}" aria-valuemin="0" aria-valuemax="100">
-								<div class="progress-bar-fill" style="inline-size: {{ subsidie.budgetVergeven }}%">{{ subsidie.budgetVergeven }}%</div>
-							</div>
-						</dd>
-						{% endif %}
-					</dl>
-					{% include "action-group.njk" %}
-				</li>
+		<h2>Recente berichten</h2>
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">
+						{% include "icon-markeren.njk" %}
+						<span class="visually-hidden">Gemarkeerd</span>
+					</th>
+					<th scope="col">Afzender</th>
+					<th scope="col">Onderwerp</th>
+					<th scope="col">Datum</th>
+					<th scope="col">
+						<span class="visually-hidden">Bijlage</span>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for bericht in berichtenboxData.berichten %}
+					{% if loop.index <= 5 %}{% include "berichtenbox-row.njk" %}{% endif %}
 				{% endfor %}
-			</ul>
-			<a class="btn-cta" href="{{ '/moza/actueel/#section-subsidies' | url }}">Naar Subsidies en financiering</a>
-		</section>
-
-		<section>
-			<h3>Wetten en regelgeving</h3>
-			<ul class="list-content-links">
-				{% for regeling in regelgevingData | batch(4) | first %}
-				<li class="card-topic{% if loop.index0 >= 1 %} reserve-topic{% endif %}"{% if loop.index0 >= 1 %} hidden{% endif %}>
-					<a href="{{ '/moza/regelgeving/' | url }}{{ regeling.id }}/" class="content-link{% if regeling.isOngelezen %} is-unread{% endif %}">
-						<h4>{{ regeling.titel }}</h4>
-						<span class="card-link"></span>
-					</a>
-					<p>{{ regeling.beschrijving }}</p>
-					<dl class="data-overview">
-						<dt>Bron</dt>
-						<dd>{{ regeling.bron }}</dd>
-						<dt>Geldt voor</dt>
-						<dd>{{ regeling.geldtVoor }}</dd>
-					</dl>
-					{% include "action-group.njk" %}
-				</li>
-				{% endfor %}
-			</ul>
-			<a class="btn-cta" href="{{ '/moza/actueel/#section-wetten' | url }}">Naar Wetten en regelgeving</a>
-		</section>
-
-		<section>
-			<h3>Berichten over uw buurt</h3>
-			<ul class="list-content-links">
-				{% for bericht in buurtberichtenData | batch(4) | first %}
-				<li class="card-topic{% if loop.index0 >= 1 %} reserve-topic{% endif %}"{% if loop.index0 >= 1 %} hidden{% endif %}>
-					<a href="{{ '/moza/berichten/' | url }}{{ bericht.id }}/" class="content-link{% if bericht.isOngelezen %} is-unread{% endif %}">
-						<h4>{{ bericht.titel }}</h4>
-						<span class="card-link"></span>
-					</a>
-					<p>{{ bericht.beschrijving }}</p>
-					<dl class="data-overview">
-						<dt>Datum</dt>
-						<dd>{{ bericht.datum }}</dd>
-						<dt>Locatie</dt>
-						<dd>{{ bericht.locatie }}</dd>
-					</dl>
-					{% include "action-group.njk" %}
-				</li>
-				{% endfor %}
-			</ul>
-			<a class="btn-cta" href="{{ '/moza/actueel/#section-berichten' | url }}">Naar Berichten over uw buurt</a>
-		</section>
+			</tbody>
+		</table>
+		<a class="btn-cta" href="{{ '/moza/berichtenbox/' | url }}">Ga naar uw zakelijke berichtenbox</a>
 	</section>
-
-	<h2>Bedrijfsgegevens</h2>
-
-	<section class="card">
-		<dl class="data-overview">
-			<dt>Handelsnaam</dt>
-			<dd data-profiel="handelsnaam">Bloom B.V.</dd>
-			<dt>KVK-nummer</dt>
-			<dd data-profiel="kvkNummer">12345678</dd>
-			<dt>RSIN-nummer</dt>
-			<dd data-profiel="rsinNummer">12345678</dd>
-			<dt>BTW-identificatienummer</dt>
-			<dd data-profiel="btwNummer">NL00012345678</dd>
-			<dt>Omzetbelastingnummer</dt>
-			<dd data-profiel="omzetbelastingnummer">012345678B01</dd>
-			<dt>Startdatum</dt>
-			<dd data-profiel="startdatum">12 februari 2018</dd>
-			<dt>Rechtsvorm</dt>
-			<dd data-profiel="rechtsvorm">Besloten vennootschap</dd>
-		</dl>
-		<p class="metadata">Bron: <a href="https://kvk.nl/">KVK</a> en <a href="https://belastingdienst.nl/">Belastingdienst</a></p>
-		<a class="btn-cta" href="{{ '/moza/bedrijfsgegevens/' | url }}">Alle bedrijfsgegevens</a>
-	</section>
+	<div class="tiles">
+		<section class="card">
+			<h2>Subsidies en financiering</h2>
+			<p data-singular-of="subsidies-count" hidden>Er is <a href="{{ '/moza/subsidies/' | url }}">1 nieuwe subsidie en/of financieringsmogelijkheid</a> sinds uw laatste bezoek die mogelijk interessant voor u kan zijn.</p>
+			<p data-plural-of="subsidies-count">Er zijn <a href="{{ '/moza/subsidies/' | url }}"><span data-badge-id="subsidies-count"></span> nieuwe subsidies en/of financieringsmogelijkheden</a> sinds uw laatste bezoek die mogelijk interessant voor u kunnen zijn.</p>
+			<a class="btn-cta" href="{{ '/moza/subsidies/' | url }}">Ga naar Subsidies en financiering</a>
+		</section>
+		<section class="card">
+			<h2>Wetten en regelgeving</h2>
+			<p data-singular-of="regelgeving-count" hidden>Er is <a href="{{ '/moza/regelgeving/' | url }}">1 nieuwe wet of regelgeving</a> die mogelijk op u van toepassing is.</p>
+			<p data-plural-of="regelgeving-count">Er zijn <a href="{{ '/moza/regelgeving/' | url }}"><span data-badge-id="regelgeving-count"></span> nieuwe wetten of regelgeving, of wijzigingen op bestaande wet- of regelgeving</a> die mogelijk op u van toepassing zijn.</p>
+			<ul class="list-content-links" aria-busy="true"></ul>
+			<a class="btn-cta" href="{{ '/moza/regelgeving/' | url }}">Ga naar Wetten en regelgeving</a>
+		</section>
+	</div>
 
 	<section class="card">
 		<h2>Veelgestelde vragen</h2>
@@ -119,7 +66,9 @@ title: "MijnOverheid Zakelijk: Home"
 					<summary>
 						<h3>Hoe vraag ik een subsidie aan via MijnOverheid Zakelijk?</h3>
 					</summary>
-					<p>Via MijnOverheid Zakelijk vindt u een overzicht van beschikbare subsidies. Het aanvragen zelf doet u bij de organisatie die de subsidie verstrekt, zoals RVO of uw gemeente. Klik op de subsidie voor meer informatie en een directe link naar de aanvraagpagina.</p>
+					<div>
+						<p>Via MijnOverheid Zakelijk vindt u een overzicht van beschikbare subsidies. Het aanvragen zelf doet u bij de organisatie die de subsidie verstrekt, zoals RVO of uw gemeente. Klik op de subsidie voor meer informatie en een directe link naar de aanvraagpagina.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -127,13 +76,19 @@ title: "MijnOverheid Zakelijk: Home"
 					<summary>
 						<h3>Welk betrouwbaarheidsniveau van DigiD heb ik nodig?</h3>
 					</summary>
-					<p>Voor de meeste diensten op MijnOverheid Zakelijk heeft u minimaal DigiD Midden nodig. Controleer bij de specifieke dienst of een hoger niveau vereist is.</p>
+					<div>
+						<p>Voor de meeste diensten op MijnOverheid Zakelijk heeft u minimaal DigiD Midden nodig. Controleer bij de specifieke dienst of een hoger niveau vereist is.</p>
+					</div>
 				</details>
 			</li>
 			<li>
 				<details name="faq">
-					<summary><h3>Waar vind ik berichten van mijn gemeente?</h3></summary>
-					<p>Berichten over uw buurt vindt u op de homepage onder 'Berichten over uw buurt'. Dit zijn officiële bekendmakingen en besluiten die betrekking hebben op uw vestigingsadres.</p>
+					<summary>
+						<h3>Waar vind ik berichten van mijn gemeente?</h3>
+					</summary>
+					<div>
+						<p>Berichten over uw buurt vindt u op de homepage onder ‘Berichten over uw buurt’. Dit zijn officiële bekendmakingen en besluiten die betrekking hebben op uw vestigingsadres.</p>
+					</div>
 				</details>
 			</li>
 		</ul>

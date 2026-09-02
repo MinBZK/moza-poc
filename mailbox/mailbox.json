@@ -1,0 +1,5 @@
+{
+	"layout": "mailbox-base.njk",
+	"permalink": "{{ page.filePathStem }}.html",
+	"eleventyExcludeFromCollections": true
+}

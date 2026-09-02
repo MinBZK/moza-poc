@@ -6,7 +6,7 @@ pagination:
 permalink: "/moza/berichten/{{ bericht.id }}/"
 eleventyComputed:
   title: "MijnOverheid Zakelijk: {{ bericht.titel }}"
-subNavActive: "/moza/actueel/"
+subNavActive: "/moza/berichten/"
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -15,7 +15,6 @@ subNavActive: "/moza/actueel/"
 	<nav class="breadcrumb">
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li><a href="{{ '/moza/actueel/' | url }}">Actualiteiten</a></li>
 			<li><a href="{{ '/moza/berichten/' | url }}">Berichten over uw buurt</a></li>
 			<li aria-current="page">{{ bericht.titel }}</li>
 		</ol>
@@ -44,7 +43,7 @@ subNavActive: "/moza/actueel/"
 		{% include "action-group.njk" %}
 
 		<div class="action-group">
-			<a class="btn-cta" href="{{ bericht.externUrl }}" rel="external">Bekijk op officielebekendmakingen.nl</a>
+			<a class="btn-cta" href="{{ bericht.externUrl }}" rel="external">Bekijk op de website van officielebekendmakingen.nl</a>
 		</div>
 	</section>
 </article>

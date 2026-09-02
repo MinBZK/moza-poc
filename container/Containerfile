@@ -6,25 +6,34 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN cd style-dictionary && npm ci && npm run build
+
+# Backend-URL voor de chat-frontend (instelbaar per omgeving):
+#   leeg ("")  = relatief / zelfde origin (reverse proxy)  -- default
+#   https://…  = expliciete backend-URL (cross-origin; vereist CORS in de backend)
+ARG MOZA_CHAT_API=""
+ENV MOZA_CHAT_API=$MOZA_CHAT_API
 RUN npx @11ty/eleventy && ls -d _site
 RUN npx storybook build -o _site/storybook
 
 
-# 2) Serveer de site via nginx (non-root, poort 8080)
-#
-# Dit prototype draaide in april op een Python-image met de host-service van de
-# Digitale Assistent erin. Dat image is niet meer te bouwen: services/host pint
-# geen versies, en met de bibliotheken van nu (mcp, anthropic, openai) loopt de
-# host bij het opstarten stuk op het registreren van de MCP-servers — de pod
-# start niet, en de release-URL blijft op een 503 staan.
-#
-# Een onderzoeksrelease bestaat om terug te kunnen zien wat er is voorgelegd, en
-# dat zijn de pagina's. Die serveren we hier statisch, net als de releases van
-# maart en daarna. De chat op /moza/digitale-assistent/ antwoordt daardoor niet.
-FROM nginxinc/nginx-unprivileged:stable-alpine-slim
+# 2) Serveer de statische site via nginx + same-origin reverse proxy
+#    (frontend-only, non-root, poort 8080)
+FROM nginxinc/nginx-unprivileged:alpine
 
+# /chat, /chat/stream, /health en /tools worden intern naar de backend geproxyd.
+# BACKEND_ORIGIN is een RUNTIME env-var: zet 'm op het ZAD-component `proef` via de
+# ZAD-UI (de zad-actions/deploy-action kan geen runtime-env zetten). Default = het
+# interne cluster-adres van de backend.
+#  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
+#    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
+#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot deze twee vars, zodat nginx-eigen
+#    variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven.
+# De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
+ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+    NGINX_ENVSUBST_FILTER='^(BACKEND_ORIGIN|NGINX_LOCAL_RESOLVERS)$'
+
+COPY container/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=site_builder /app/_site /usr/share/nginx/html
-COPY container/nginx.conf /etc/nginx/nginx.conf
-COPY container/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080
