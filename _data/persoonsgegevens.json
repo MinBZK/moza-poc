@@ -1,0 +1,746 @@
+{
+	"basis": {
+		"sections": [
+			{
+				"heading": "Basisgegevens",
+				"items": [
+					{
+						"title": "Huidig (geldig vanaf 1 september 1990)",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Robin",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Vogel",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Naamgebruik",
+								"value": "Eigen geslachtsnaam",
+								"description": "Dit is de naam die u in het dagelijks leven gebruikt. Met deze naam wordt u ook aangeschreven door de overheid."
+							},
+							{
+								"key": "Geslacht",
+								"value": "Onbekend",
+								"description": "Dit kan zijn: man, vrouw of onbekend."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "783654248",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "28 augustus 1990",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "Den Haag",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Gemeente document",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar het document ligt op basis waarvan de gegevens zijn opgenomen of veranderd."
+							},
+							{
+								"key": "Datum document",
+								"value": "1 september 1990",
+								"description": "Datum waarop het document is gebruikt waarmee de gegevens zijn opgenomen of veranderd."
+							},
+							{
+								"key": "Beschrijving document",
+								"value": "Melding Ministerie van Financiën",
+								"description": "Hier staat op basis van welk document de gegevens zijn opgenomen of veranderd."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "1 september 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					},
+					{
+						"title": "Geldig vanaf 28 augustus 1990",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Robin",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Vogel",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Naamgebruik",
+								"value": "Eigen geslachtsnaam",
+								"description": "Dit is de naam die u in het dagelijks leven gebruikt. Met deze naam wordt u ook aangeschreven door de overheid."
+							},
+							{
+								"key": "Geslacht",
+								"value": "Onbekend",
+								"description": "Dit kan zijn: man, vrouw of onbekend."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "28 augustus 1990",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "Den Haag",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "0842 Geboorte",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					}
+				]
+			},
+			{
+				"heading": "Adres",
+				"items": [
+					{
+						"title": "Huidig (geldig vanaf 18 januari 2020)",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Straat",
+								"value": "Rijkslaan",
+								"description": "De straatnaam als onderdeel van uw adres."
+							},
+							{
+								"key": "Huisnummer",
+								"value": "1",
+								"description": "Huisnummer als onderdeel van uw adres."
+							},
+							{
+								"key": "Postcode",
+								"value": "2526RO",
+								"description": "Code van uw adres bestaande uit vier cijfers en twee letters."
+							},
+							{
+								"key": "Aantal bewoners",
+								"value": "Onbekend",
+								"description": "Het aantal personen dat als bewoner staat ingeschreven op dit adres. Personen die het adres gebruiken als briefadres of tijdelijk verblijfadres worden niet meegeteld."
+							},
+							{
+								"key": "Datum aanvang",
+								"value": "21 januari 2020",
+								"description": "De datum waarop uw huidige adres in de *[BRP] is opgenomen, bijvoorbeeld na een verhuizing."
+							},
+							{
+								"key": "Adresaangifte omschrijving",
+								"value": "Ingeschrevene",
+								"description": "Omschrijving van degene die uw adreswijziging heeft doorgegeven. Meestal bent u dat zelf. Dan staat hier ingeschrevene."
+							},
+							{
+								"key": "Gemeente van inschrijving",
+								"value": "'s-Gravenhage",
+								"description": "De gemeente waar u als inwoner bent ingeschreven. Wanneer u niet (meer) met een adres in een Nederlandse gemeente bent ingeschreven, staat hier geen gemeentenaam."
+							},
+							{
+								"key": "Datum inschrijving gemeente",
+								"value": "28 augustus 1990",
+								"description": "Sinds wanneer de gemeente uw gegevens bijhoudt, bijvoorbeeld bij een eerste inschrijving in de BRP of na een verhuizing naar een andere gemeente. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "18 januari 2020",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					},
+					{
+						"title": "Geldig vanaf 30 december 2012",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Straat",
+								"value": "Groothertogstraat",
+								"description": "De straatnaam als onderdeel van uw adres."
+							},
+							{
+								"key": "Huisnummer",
+								"value": "33",
+								"description": "Huisnummer als onderdeel van uw adres."
+							},
+							{
+								"key": "Postcode",
+								"value": "2500OV",
+								"description": "Code van uw adres bestaande uit vier cijfers en twee letters."
+							},
+							{
+								"key": "Datum aanvang",
+								"value": "2 januari 2013",
+								"description": "De datum waarop uw huidige adres in de *[BRP] is opgenomen, bijvoorbeeld na een verhuizing."
+							},
+							{
+								"key": "Adresaangifte omschrijving",
+								"value": "Ingeschrevene",
+								"description": "Omschrijving van degene die uw adreswijziging heeft doorgegeven. Meestal bent u dat zelf. Dan staat hier ingeschrevene."
+							},
+							{
+								"key": "Gemeente van inschrijving",
+								"value": "'s-Gravenhage",
+								"description": "De gemeente waar u als inwoner bent ingeschreven. Wanneer u niet (meer) met een adres in een Nederlandse gemeente bent ingeschreven, staat hier geen gemeentenaam."
+							},
+							{
+								"key": "Datum inschrijving gemeente",
+								"value": "28 augustus 1990",
+								"description": "Sinds wanneer de gemeente uw gegevens bijhoudt, bijvoorbeeld bij een eerste inschrijving in de BRP of na een verhuizing naar een andere gemeente. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "30 december 2012",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					},
+					{
+						"title": "Geldig vanaf 28 augustus 1990",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Straat",
+								"value": "Kasteel",
+								"description": "De straatnaam als onderdeel van uw adres."
+							},
+							{
+								"key": "Huisnummer",
+								"value": "68",
+								"description": "Huisnummer als onderdeel van uw adres."
+							},
+							{
+								"key": "Postcode",
+								"value": "2525NL",
+								"description": "Code van uw adres bestaande uit vier cijfers en twee letters."
+							},
+							{
+								"key": "Datum aanvang",
+								"value": "28 augustus 1990",
+								"description": "De datum waarop uw huidige adres in de *[BRP] is opgenomen, bijvoorbeeld na een verhuizing."
+							},
+							{
+								"key": "Adresaangifte omschrijving",
+								"value": "Ambtshalve",
+								"description": "Omschrijving van degene die uw adreswijziging heeft doorgegeven. Meestal bent u dat zelf. Dan staat hier ingeschrevene."
+							},
+							{
+								"key": "Gemeente van inschrijving",
+								"value": "'s-Gravenhage",
+								"description": "De gemeente waar u als inwoner bent ingeschreven. Wanneer u niet (meer) met een adres in een Nederlandse gemeente bent ingeschreven, staat hier geen gemeentenaam."
+							},
+							{
+								"key": "Datum inschrijving gemeente",
+								"value": "28 augustus 1990",
+								"description": "Sinds wanneer de gemeente uw gegevens bijhoudt, bijvoorbeeld bij een eerste inschrijving in de BRP of na een verhuizing naar een andere gemeente. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					}
+				]
+			}
+		],
+		"faqs": [
+			{
+				"q": "Wat is de BRP?",
+				"a": "<p>BRP staat voor Basisregistratie Personen. Hierin staat informatie over u die de overheid nodig heeft, zoals uw geboortedatum, naam, huwelijk of verhuizing. De gemeente waar u ingeschreven staat, houdt deze gegevens bij.</p><p>Woont u in het buitenland en staat u in de BRP ingeschreven als niet-ingezetene? Dan houdt het ministerie van Binnenlandse Zaken en Koninkrijksrelaties uw gegevens bij.</p><p>Voor meer informatie zie de website van de <a href=\"https://rijksoverheid.nl/onderwerpen/persoonsgegevens/basisregistratie-personen-brp\" rel=\"external noopener\" target=\"_blank\">Rijksoverheid</a>.</p>"
+			},
+			{
+				"q": "Waarom zie ik gegevens die ik heb laten registreren als 'geheim'?",
+				"a": "<p>U bent via uw MijnOverheid-account de enige die toegang heeft tot uw persoonlijke gegevens. Ze zijn dus niet zichtbaar voor anderen.</p>"
+			},
+			{
+				"q": "Waarom mis ik bepaalde oude BRP-gegevens in mijn overzicht?",
+				"a": "<p>Oudere gegevens zijn soms niet volledig digitaal beschikbaar.</p><ul><li>De meeste persoonsgegevens vanaf 1 oktober 1994 zijn gedigitaliseerd</li><li>Adresgegevens vanaf 1 oktober 1994 zijn gedigitaliseerd</li><li>Kinderen geboren op of na 1 januari 1966 zijn op de digitale persoonslijst van ouder(s) vermeld.</li></ul><p>Gegevens van voor 1 januari 1966 zijn niet digitaal beschikbaar. U kunt deze wel opvragen via het papieren archief gemeenten.</p>"
+			},
+			{
+				"q": "Hoe wijzig ik gegevens uit de Basis Registratie Personen (BRP)?",
+				"a": "<ul><li>Woont u in Nederland? Neem dan contact op met uw gemeente. De contactgegevens staan meestal op de pagina waar de gegevens worden getoond. Biedt de gemeente geen oplossing? Dan kunt u contact opnemen met het <a href=\"https://www.rvig.nl/mfo-burgers\" rel=\"external noopener\" target=\"_blank\">Meldpunt Fouten in Overheidsregistraties (MFO)</a></li><li>Woont u buiten Nederland? Ga dan naar <a href=\"https://www.nederlandwereldwijd.nl/rni/gegevens-wijzigen\" rel=\"external noopener\" target=\"_blank\">hoe verander ik mijn gegevens in de Registratie Niet-Ingezetenen (RNI)?</a></li></ul>"
+			}
+		]
+	},
+	"familie": {
+		"sections": [
+			{
+				"heading": "Familie",
+				"items": [
+					{
+						"title": "Sam Jesse Bakker",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Sam Jesse",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Bakker",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Geslacht",
+								"value": "Onbekend",
+								"description": "Dit kan zijn: man, vrouw of onbekend."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "990054087",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "14 juni 1990",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "Rotterdam",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Datum huwelijk",
+								"value": "1 juli 2020",
+								"description": "Datum waarop u gehuwd bent of het geregistreerd partnerschap bent aangegaan."
+							},
+							{
+								"key": "Plaats huwelijk",
+								"value": "'s-Gravenhage",
+								"description": "Plaats waar u gehuwd bent of het geregistreerd partnerschap bent aangegaan."
+							},
+							{
+								"key": "Land huwelijk",
+								"value": "Nederland",
+								"description": "Land waar u gehuwd bent of het geregistreerd partnerschap bent aangegaan."
+							},
+							{
+								"key": "Soort verbintenis",
+								"value": "Huwelijk",
+								"description": "Hier is vermeld of u gehuwd bent of een geregistreerd partnerschap bent aangegaan."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "4640 Huwelijk",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "1 juli 2020",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					},
+					{
+						"title": "Jamie De Boer",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Jamie",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Voorvoegsels geslachtsnaam",
+								"value": "De",
+								"description": "Onderdeel van de geslachtsnaam (achternaam). Bijvoorbeeld “de” als iemand “de Boer” heet. Of “van der” als iemand “van der Linden” heet."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Boer",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Geslacht",
+								"value": "Vrouw",
+								"description": "Dit kan zijn: man, vrouw of onbekend."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "556339496",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "13 juni 1965",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "'s-Gravenhage",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Ingangsdatum familiebetrekking",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop uw officiële band (dit heet ook wel de familierechtelijke betrekking) met uw ouder is ontstaan. Meestal is de begindatum uw geboortedatum. Hebben uw ouders een geregistreerd partnerschap? Dan staat hier de datum waarop een van uw ouders u erkend heeft. Bent u geadopteerd? Dan staat hier de adoptiedatum. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "0842 Geboorte",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Datum document",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop het document is gebruikt waarmee de gegevens zijn opgenomen of veranderd."
+							}
+						]
+					},
+					{
+						"title": "Alex Bakker",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Alex",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Bakker",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Geslacht",
+								"value": "Man",
+								"description": "Dit kan zijn: man, vrouw of onbekend."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "665448385",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "30 januari 1960",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "Amsterdam",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Ingangsdatum familiebetrekking",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop uw officiële band (dit heet ook wel de familierechtelijke betrekking) met uw ouder is ontstaan. Meestal is de begindatum uw geboortedatum. Hebben uw ouders een geregistreerd partnerschap? Dan staat hier de datum waarop een van uw ouders u erkend heeft. Bent u geadopteerd? Dan staat hier de adoptiedatum. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "0842 Geboorte",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Datum document",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop het document is gebruikt waarmee de gegevens zijn opgenomen of veranderd."
+							}
+						]
+					},
+					{
+						"title": "Bobbi Bakker",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Bobbi",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Bakker",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "999999999",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "8 mei 2018",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "'s-Gravenhage",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "0842 Geboorte",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "8 mei 2018",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					},
+					{
+						"title": "Beau Bakker",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Voornamen",
+								"value": "Beau",
+								"description": "De voornaam of voornamen die zijn gegeven bij aangifte van geboorte."
+							},
+							{
+								"key": "Geslachtsnaam",
+								"value": "Bakker",
+								"description": "De geslachtsnaam is hetzelfde als de achternaam. Heeft de geslachtsnaam een voorvoegsel, zoals “de” of “van”? Dan is het voorvoegsel vermeld bij Voorvoegsels geslachtsnaam."
+							},
+							{
+								"key": "Burgerservicenummer",
+								"value": "000000000",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de Nederlandse overheid."
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "19 april 2021",
+								"description": "Datum van geboorte. Als de geboortedatum niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "'s-Gravenhage",
+								"description": "Plaats van geboorte. In Nederland wordt hier uw geboortegemeente getoond. Als de geboorteplaats niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Geboorteland",
+								"value": "Nederland",
+								"description": "Land van geboorte. Als het geboorteland niet beschikbaar is –bijvoorbeeld bij een geboorte in het buitenland– staat hier 'Onbekend'."
+							},
+							{
+								"key": "Registergemeente akte",
+								"value": "'s-Gravenhage",
+								"description": "Gemeente waar de akte in de registers van de burgerlijke stand is opgenomen. Voorbeelden van aktes: geboorteakte, huwelijksakte."
+							},
+							{
+								"key": "Akte",
+								"value": "0842 Geboorte",
+								"description": "Het nummer van de akte waaruit de gegevens komen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "19 april 2021",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					}
+				]
+			}
+		],
+		"faqs": [
+			{
+				"q": "Waarom mis ik bepaalde oude BRP-gegevens in mijn overzicht?",
+				"a": "<p>Oudere gegevens zijn soms niet volledig digitaal beschikbaar.</p><ul><li>De meeste persoonsgegevens vanaf 1 oktober 1994 zijn gedigitaliseerd</li><li>Adresgegevens vanaf 1 oktober 1994 zijn gedigitaliseerd</li><li>Kinderen geboren op of na 1 januari 1966 zijn op de digitale persoonslijst van ouder(s) vermeld.</li></ul><p>Gegevens van voor 1 januari 1966 zijn niet digitaal beschikbaar. U kunt deze wel opvragen via het papieren archief gemeenten.</p>"
+			},
+			{
+				"q": "Waarom zie ik geen overlijdensdatum vermeld bij een overleden familielid?",
+				"a": "<p>MijnOverheid toont alleen de gegevens van uw eigen persoonslijst in de Basisregistratie Personen (BRP). MijnOverheid kan van uw familieleden geen informatie tonen over het wel of niet in leven zijn van deze persoon, omdat dat gegeven niet voorkomt op uw persoonslijst in de BRP.</p>"
+			},
+			{
+				"q": "Hoe wijzig ik gegevens uit de Basis Registratie Personen (BRP)?",
+				"a": "<ul><li>Woont u in Nederland? Neem dan contact op met uw gemeente. De contactgegevens staan meestal op de pagina waar de gegevens worden getoond. Biedt de gemeente geen oplossing? Dan kunt u contact opnemen met het <a href=\"https://www.rvig.nl/mfo-burgers\" rel=\"external noopener\" target=\"_blank\">Meldpunt Fouten in Overheidsregistraties (MFO)</a></li><li>Woont u buiten Nederland? Ga dan naar <a href=\"https://www.nederlandwereldwijd.nl/rni/gegevens-wijzigen\" rel=\"external noopener\" target=\"_blank\">hoe verander ik mijn gegevens in de Registratie Niet-Ingezetenen (RNI)?</a></li></ul>"
+			}
+		]
+	},
+	"nationaliteit": {
+		"sections": [
+			{
+				"heading": "Nationaliteit",
+				"items": [
+					{
+						"title": "Nederlandse",
+						"subtitle": "",
+						"fields": [
+							{
+								"key": "Nationaliteit",
+								"value": "Nederlandse",
+								"description": "Omschrijving van uw nationaliteit."
+							},
+							{
+								"key": "Reden opname nationaliteit",
+								"value": "Wet op het Nederlanderschap 1892, art. 8b",
+								"description": "Gegevens over de verkrijging van de Nederlandse nationaliteit dan wel het opnemen van een niet-Nederlandse nationaliteit. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak 'Onbekend' zijn opgenomen."
+							},
+							{
+								"key": "Ingangsdatum geldigheid",
+								"value": "28 augustus 1990",
+								"description": "Datum waarop een aanvulling en/of een wijziging in de gegevens wettelijk van kracht is. Woonde u vóór 1 oktober 1994 al in Nederland, dan zal vaak de datum 00-00-0000 'Onbekend' zijn opgenomen."
+							}
+						]
+					}
+				]
+			}
+		],
+		"faqs": [
+			{
+				"q": "Waarom zie ik alleen mijn Nederlandse nationaliteit?",
+				"a": "<p>De overheid registreert (sinds 6 januari 2014) niet meer in de BRP of u meerdere nationaliteiten hebt. Daarom ziet u deze informatie niet in MijnOverheid.</p>"
+			},
+			{
+				"q": "Wat is de BRP?",
+				"a": "<p>BRP staat voor Basisregistratie Personen. Hierin staat informatie over u die de overheid nodig heeft, zoals uw geboortedatum, naam, huwelijk of verhuizing. De gemeente waar u ingeschreven staat, houdt deze gegevens bij.</p><p>Woont u in het buitenland en staat u in de BRP ingeschreven als niet-ingezetene? Dan houdt het ministerie van Binnenlandse Zaken en Koninkrijksrelaties uw gegevens bij.</p><p>Voor meer informatie zie de website van de <a href=\"https://rijksoverheid.nl/onderwerpen/persoonsgegevens/basisregistratie-personen-brp\" rel=\"external noopener\" target=\"_blank\">Rijksoverheid</a>.</p>"
+			},
+			{
+				"q": "Hoe wijzig ik gegevens uit de Basis Registratie Personen (BRP)?",
+				"a": "<ul><li>Woont u in Nederland? Neem dan contact op met uw gemeente. De contactgegevens staan meestal op de pagina waar de gegevens worden getoond. Biedt de gemeente geen oplossing? Dan kunt u contact opnemen met het <a href=\"https://www.rvig.nl/mfo-burgers\" rel=\"external noopener\" target=\"_blank\">Meldpunt Fouten in Overheidsregistraties (MFO)</a></li><li>Woont u buiten Nederland? Ga dan naar <a href=\"https://www.nederlandwereldwijd.nl/rni/gegevens-wijzigen\" rel=\"external noopener\" target=\"_blank\">hoe verander ik mijn gegevens in de Registratie Niet-Ingezetenen (RNI)?</a></li></ul>"
+			}
+		]
+	},
+	"reisdocumenten": {
+		"sections": [
+			{
+				"heading": "Paspoort en ID-kaart",
+				"items": [
+					{
+						"title": "Paspoort",
+						"subtitle": "Geldig tot 10 juni 2036",
+						"fields": [
+							{
+								"key": "Burgerservicenummer (BSN)",
+								"value": "990020338",
+								"description": "Uniek identificatienummer voor iedereen die een relatie heeft met de overheid.  \n\nOp uw document kunt u dit vinden als ‘Persoonsnr’."
+							},
+							{
+								"key": "Achternaam",
+								"value": "Vogel",
+								"description": ""
+							},
+							{
+								"key": "Voornamen",
+								"value": "Robin",
+								"description": ""
+							},
+							{
+								"key": "Voorvoegsels",
+								"value": "-",
+								"description": ""
+							},
+							{
+								"key": "Geboortedatum",
+								"value": "28 augustus 1990",
+								"description": "Datum van geboorte. Is deze niet bekend, bijvoorbeeld bij een geboorte in het buitenland? Dan staat hier \nbijvoorbeeld ‘00-00-1975’ of ‘01-01-1975’."
+							},
+							{
+								"key": "Geboorteplaats",
+								"value": "Den Haag",
+								"description": ""
+							},
+							{
+								"key": "Geslacht",
+								"value": "Onbekend",
+								"description": ""
+							},
+							{
+								"key": "Nationaliteit",
+								"value": "Nederlandse",
+								"description": ""
+							},
+							{
+								"key": "Lengte",
+								"value": "185 cm",
+								"description": ""
+							}
+						]
+					}
+				]
+			}
+		],
+		"faqs": [
+			{
+				"q": "Hoe wijzig ik gegevens in het Basisregister Reisdocumenten?",
+				"a": "<ul><li>Woont u in Nederland? Neem dan contact op met uw gemeente. De contactgegevens staan meestal op de pagina waar de gegevens worden getoond. Biedt de gemeente geen oplossing? Dan kunt u contact opnemen met het <a href=\"https://www.rvig.nl/mfo\" rel=\"external noopener\" target=\"_blank\">Meldpunt Fouten in Overheidsregistraties (MFO)</a></li><li>Woont u buiten Nederland? Ga dan naar <a href=\"https://www.nederlandwereldwijd.nl/rni/gegevens-wijzigen\" rel=\"external noopener\" target=\"_blank\">hoe verander ik mijn gegevens in de Registratie Niet-Ingezetenen (RNI)?</a></li></ul>"
+			},
+			{
+				"q": "Wat is het Basisregister Reisdocumenten?",
+				"a": "<p>Het Basisregister Reisdocumenten bevat informatie over Nederlandse reisdocumenten. Denk daarbij aan gegevens over het reisdocument zelf, zoals documentnummer, documentsoort en geldigheid. En gegevens die gebruikt zijn bij het maken van het document, zoals naam, geboortedatum en BSN. <a href=\"https://www.rvig.nl/basisregister-reisdocumenten\" rel=\"external noopener\" target=\"_blank\">De Rijksdienst voor Identiteitsgegevens</a> beheert dit register.</p>"
+			}
+		]
+	}
+}

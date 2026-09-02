@@ -34,7 +34,7 @@ export const Layout = {
 	parameters: {
 		docs: {
 			description: {
-				story: "Layout-tokens voor spacing tussen elementen. Worden toegepast via <code>> * + *</code> met margin (content flow) of <code>gap</code> met flex/grid (component-layouts).",
+				story: "Layout-tokens voor spacing tussen elementen. Worden toegepast via <code>gap</code> op een flex- of grid-container, zodat het eerste kind geen onnodige marge krijgt en verborgen items geen lege gaten achterlaten.",
 			},
 		},
 	},

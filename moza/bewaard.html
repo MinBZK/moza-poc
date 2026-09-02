@@ -16,32 +16,37 @@ bodyClass: "moza page-saved-items"
 	<h1>Bewaarde items</h1>
 
 	<section class="card">
-		<p>Hier vindt u berichten, subsidies en regelgeving die u hebt bewaard.</p>
-		<div id="saved-groups"></div>
-		<div class="feedback feedback-info" id="saved-empty" hidden>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-				<path d="M22.04 3.78c-.16-.95-.88-1.67-1.83-1.83-2.73-.45-7.3-.45-8.21-.45-.91 0-5.48 0-8.22.46-.94.15-1.67.88-1.82 1.82C1.5 6.52 1.5 11.09 1.5 12s0 5.48.46 8.22c.16.95.88 1.67 1.83 1.83 2.74.46 7.3.46 8.22.46.91 0 5.48 0 8.22-.46.95-.16 1.67-.88 1.83-1.83.46-2.74.46-7.3.46-8.22-.02-2.74-.02-5.48-.48-8.22z" />
-				<path class="icon-color-inverse" d="M10.71 6.93c0-.34.11-.63.33-.88.22-.25.54-.38.95-.38.41 0 .72.12.94.36.22.24.33.54.33.9 0 .32-.11.61-.33.86s-.54.37-.94.37c-.41 0-.72-.12-.95-.35-.22-.24-.33-.53-.33-.88zm2.4 2.39v8.96H10.9V9.41l2.21-.09z" />
-			</svg>
+		<div class="feedback feedback-info" id="info-bewaard">
+			{% include "icon-feedback-info.njk" %}
 			<div>
-				<p>U hebt nog geen items bewaard. Gebruik de "Bewaar"-optie bij actualiteiten om items hier te verzamelen.</p>
+				<p>Hier vindt u Subsidies en financiering, Wetten en regelgeving, en Berichten over uw buurt die u hebt bewaard.</p>
+				<p id="saved-hint">U hebt nog geen items bewaard. Gebruik de {% include "icon-bewaar-outline.njk" %} Bewaar-optie bij Subsidies en financiering, Wetten en regelgeving, en Berichten over uw buurt om items hier te verzamelen.</p>
 			</div>
+			<button class="btn-close link-button" id="saved-close" hidden>
+				<i>Sluit notificatie</i>
+			</button>
 		</div>
+		<div id="saved-groups" class="dynamic-list"></div>
+	</section>
+
+	<section class="card" id="gesprekken-section" hidden>
+		<h2>Gesprekken met de digitale assistent</h2>
+		<div id="gesprekken-groups" class="dynamic-list"></div>
 	</section>
 
 	<section class="card" id="hidden-section">
 		<h2>Niet relevant gemarkeerd</h2>
-		<p>Deze items hebt u als niet relevant gemarkeerd en worden niet gebruikt om uw profiel te verfijnen. U kunt ze hier weer zichtbaar maken, dan worden ze ook meegenomen in het verfijnen van uw profiel.</p>
-		<div id="hidden-groups"></div>
-		<div class="feedback feedback-info" id="hidden-empty" hidden>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-				<path d="M22.04 3.78c-.16-.95-.88-1.67-1.83-1.83-2.73-.45-7.3-.45-8.21-.45-.91 0-5.48 0-8.22.46-.94.15-1.67.88-1.82 1.82C1.5 6.52 1.5 11.09 1.5 12s0 5.48.46 8.22c.16.95.88 1.67 1.83 1.83 2.74.46 7.3.46 8.22.46.91 0 5.48 0 8.22-.46.95-.16 1.67-.88 1.83-1.83.46-2.74.46-7.3.46-8.22-.02-2.74-.02-5.48-.48-8.22z" />
-				<path class="icon-color-inverse" d="M10.71 6.93c0-.34.11-.63.33-.88.22-.25.54-.38.95-.38.41 0 .72.12.94.36.22.24.33.54.33.9 0 .32-.11.61-.33.86s-.54.37-.94.37c-.41 0-.72-.12-.95-.35-.22-.24-.33-.53-.33-.88zm2.4 2.39v8.96H10.9V9.41l2.21-.09z" />
-			</svg>
+		<div class="feedback feedback-info" id="info-niet-relevant">
+			{% include "icon-feedback-info.njk" %}
 			<div>
-				<p>U hebt geen items als niet relevant gemarkeerd. Gebruik de "Niet relevant voor mij"-optie bij actualiteiten om items te verbergen.</p>
+				<p>Hier vindt u Subsidies en financiering, Wetten en regelgeving, en Berichten over uw buurt die u als niet relevant gemarkeerd heeft. Deze worden niet gebruikt om uw profiel te verfijnen. U kunt ze hier weer zichtbaar maken, dan worden ze ook meegenomen in het verfijnen van uw profiel.</p>
+				<p id="hidden-hint">U hebt nog geen items als niet relevant gemarkeerd. Gebruik de {% include "icon-verbergen.njk" %} Niet relevant voor mij-optie bij een item om items te verbergen.</p>
 			</div>
+			<button class="btn-close link-button" id="hidden-close" hidden>
+				<i>Sluit notificatie</i>
+			</button>
 		</div>
+		<div id="hidden-groups" class="dynamic-list"></div>
 	</section>
 
 	<section class="card">
@@ -52,7 +57,9 @@ bodyClass: "moza page-saved-items"
 					<summary>
 						<h3>Hoe bewaar ik een item?</h3>
 					</summary>
-					<p>Op de pagina Actualiteiten vindt u bij elk bericht, elke subsidie en elke regeling een "Bewaar"-optie. Klik hierop om het item aan uw bewaarde items toe te voegen.</p>
+					<div>
+						<p>Op de pagina Actualiteiten vindt u bij elk bericht, elke subsidie en elke regeling een “Bewaar”-optie. Klik hierop om het item aan uw bewaarde items toe te voegen.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -60,7 +67,9 @@ bodyClass: "moza page-saved-items"
 					<summary>
 						<h3>Hoe verwijder ik een bewaard item?</h3>
 					</summary>
-					<p>U kunt een bewaard item verwijderen via de knop "Verwijderen" op deze pagina. Het item verdwijnt dan uit uw overzicht. U kunt het daarna opnieuw bewaren via de pagina Actualiteiten.</p>
+					<div>
+						<p>U kunt een bewaard item verwijderen via de knop “Verwijder uit bewaarde items” op deze pagina. Het item verdwijnt dan uit uw overzicht. U kunt het daarna opnieuw bewaren via de pagina Actualiteiten.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -68,7 +77,9 @@ bodyClass: "moza page-saved-items"
 					<summary>
 						<h3>Worden mijn bewaarde items gedeeld met overheidsorganisaties?</h3>
 					</summary>
-					<p>Nee, overheidsorganisaties hebben hier geen toegang toe. Bewaarde en niet-relevante items worden gebruikt om uw profiel op te bouwen zodat we u nog relevantere content kunnen aanbieden.</p>
+					<div>
+						<p>Nee, overheidsorganisaties hebben hier geen toegang toe. Bewaarde en niet-relevante items worden gebruikt om uw profiel op te bouwen zodat we u nog relevantere content kunnen aanbieden.</p>
+					</div>
 				</details>
 			</li>
 		</ul>
@@ -81,6 +92,14 @@ bodyClass: "moza page-saved-items"
 	const hiddenGroups = document.getElementById("hidden-groups");
 	const hiddenEmpty = document.getElementById("hidden-empty");
 	const hiddenSection = document.getElementById("hidden-section");
+	const savedHint = document.getElementById("saved-hint");
+	const gesprekkenGroups = document.getElementById("gesprekken-groups");
+	const gesprekkenSection = document.getElementById("gesprekken-section");
+	// Gesprekken met de digitale assistent worden op dezelfde manier bewaard als
+	// andere items (favorite:<titel>), maar krijgen een eigen kaart: het zijn geen
+	// items uit een overzicht maar een eigen gesprek, met een eigen manier om ze
+	// terug te lezen. digitale-assistent.js zet deze categorie.
+	const GESPREK_CATEGORIE = "Digitale assistent";
 	const favorites = [];
 	const hiddenTopics = [];
 
@@ -113,6 +132,23 @@ bodyClass: "moza page-saved-items"
 		}
 	}
 
+	const hiddenHint = document.getElementById("hidden-hint");
+	const savedClose = document.getElementById("saved-close");
+	const hiddenClose = document.getElementById("hidden-close");
+	// De gesprekken uit de gewone bewaarde items lichten: ze horen in hun eigen
+	// kaart. De tip in de eerste kaart gaat over de andere items, dus die blijft
+	// staan zolang daar niets bewaard is — ook als er wel een gesprek staat.
+	const gesprekken = favorites.filter((item) => item.category === GESPREK_CATEGORIE);
+	const bewaardeItems = favorites.filter((item) => item.category !== GESPREK_CATEGORIE);
+	if (bewaardeItems.length > 0) {
+		if (savedHint) savedHint.hidden = true;
+		if (savedClose) savedClose.hidden = false;
+	}
+	if (hiddenTopics.length > 0) {
+		if (hiddenHint) hiddenHint.hidden = true;
+		if (hiddenClose) hiddenClose.hidden = false;
+	}
+
 	function groupByCategory(items) {
 		const groups = {};
 		items.forEach((item) => {
@@ -128,7 +164,9 @@ bodyClass: "moza page-saved-items"
 		if (item.url) {
 			const a = document.createElement("a");
 			a.href = item.url;
-			a.rel = "external";
+			// Een bewaard gesprek blijft binnen deze site; rel="external" zou er een
+			// externe-link-icoon bij zetten en dat klopt dan niet.
+			if (!options?.intern) a.rel = "external";
 			a.className = "content-link";
 			a.innerHTML = `<h3>${item.title}</h3><span class="card-link"></span>`;
 			li.appendChild(a);
@@ -141,11 +179,11 @@ bodyClass: "moza page-saved-items"
 			li.appendChild(p);
 		}
 		const actions = document.createElement("div");
-		actions.className = "action-group topic-options";
+		actions.className = "action-group action-options";
 		if (options?.share && item.url) {
 			const shareBtn = document.createElement("button");
 			shareBtn.className = "link-button share-topic";
-			shareBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M48 42c-2.045 0-3.925.69-5.436 1.84L23.921 33.13c.046-.372.078-.747.078-1.13a8.956 8.956 0 0 0-1.975-5.618c.088-.08.31-.095.518.038.378.239 1.78 1.273 3.323 3.4l16.712-9.648A8.948 8.948 0 0 0 48 22a9 9 0 1 0-9-9c0 .377.03.746.076 1.111L20.46 24.858A8.95 8.95 0 0 0 15 23a9 9 0 0 0 0 18c2.032 0 3.9-.681 5.407-1.817l18.666 10.725A9.047 9.047 0 0 0 39 51a9 9 0 1 0 9-9z"/></svg> Deel';
+			shareBtn.innerHTML = " Deel";
 			shareBtn.addEventListener("click", async () => {
 				try {
 					if (navigator.share) {
@@ -180,9 +218,13 @@ bodyClass: "moza page-saved-items"
 		const groups = groupByCategory(items);
 		Object.keys(groups).forEach((cat) => {
 			const section = document.createElement("section");
-			const heading = document.createElement("h2");
-			heading.textContent = cat;
-			section.appendChild(heading);
+			// Zonder kop als de kaart er zelf al een heeft: anders staat de categorie
+			// er twee keer, en dat leest als twee niveaus die er niet zijn.
+			if (!options?.zonderKop) {
+				const heading = document.createElement("h2");
+				heading.textContent = cat;
+				section.appendChild(heading);
+			}
 			const ul = document.createElement("ul");
 			ul.className = "list-content-links";
 			groups[cat].forEach((item) => {
@@ -221,7 +263,7 @@ bodyClass: "moza page-saved-items"
 	renderGroups(
 		savedGroups,
 		savedEmpty,
-		favorites,
+		bewaardeItems,
 		"delete-topic",
 		"Verwijder uit bewaarde items",
 		(li, item) => {
@@ -234,6 +276,28 @@ bodyClass: "moza page-saved-items"
 			});
 		},
 		{ share: true },
+	);
+
+	// Gesprekken: eigen kaart, geen categoriekop en geen Deel-knop. De link wijst
+	// naar ?gesprek=…, en het gesprek zelf staat in localStorage op dit apparaat —
+	// gedeeld met iemand anders zou het een lege chat openen.
+	if (gesprekkenSection) gesprekkenSection.hidden = gesprekken.length === 0;
+	renderGroups(
+		gesprekkenGroups,
+		null,
+		gesprekken,
+		"delete-topic",
+		"Verwijder bewaard gesprek",
+		(li, item) => {
+			localStorage.removeItem(item.key);
+			const ul = li.closest("ul");
+			const section = li.closest("section");
+			fadeOut(li, "down", () => {
+				if (ul && ul.children.length === 0 && section) section.remove();
+				if (gesprekkenSection && gesprekkenGroups.children.length === 0) gesprekkenSection.hidden = true;
+			});
+		},
+		{ zonderKop: true, intern: true },
 	);
 
 	renderGroups(hiddenGroups, hiddenEmpty, hiddenTopics, "restore-topic", "Toch relevant", (li, item) => {

@@ -1,0 +1,9 @@
+{
+	"bodyClass": "moza authorized",
+	"override:subNav": [
+		{ "label": "Home", "url": "/moza/belang-vve/", "icon": "/assets/icons/icon-home.svg", "exact": true },
+		{ "label": "Gegevens", "url": "/moza/belang-vve/gegevens/", "icon": "/assets/icons/icon-gegevens.svg", "class": "side-nav-group--start" },
+		{ "label": "Berichtenbox", "url": "/moza/belang-vve/berichtenbox/", "icon": "/assets/icons/icon-berichtenbox.svg" },
+		{ "label": "Lopende zaken", "url": "/moza/belang-vve/lopende-zaken/", "icon": "/assets/icons/icon-lopende-zaken.svg" }
+	]
+}

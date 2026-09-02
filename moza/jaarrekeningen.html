@@ -1,0 +1,85 @@
+---
+title: "MijnOverheid Zakelijk: Jaarrekeningen"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li><a href="{{ '/moza/bedrijfsgegevens/' | url }}">Bedrijfsgegevens</a></li>
+			<li aria-current="page">Jaarrekeningen</li>
+		</ol>
+	</nav>
+
+	<h1>Jaarrekeningen</h1>
+
+	<a href="{{ '/moza/bedrijfsgegevens/' | url }}" class="back-link">Terug naar Bedrijfsgegevens</a>
+
+	<section class="card">
+		<hgroup>
+			<h2>Gedeponeerde jaarrekeningen</h2>
+			<p>De bij de Kamer van Koophandel gedeponeerde jaarrekeningen en financiële overzichten van uw onderneming.</p>
+		</hgroup>
+		<dl class="data-overview" data-profiel-lijst="jaarrekeningen">
+			<div>
+				<dt>Jaarrekening 2024</dt>
+				<dd>
+					<p>Gedeponeerd op 12 juni 2025</p>
+					<a href="https://www.kvk.nl/orderstraat/product-kiezen/?kvknummer=12345678" rel="external noopener" target="_blank"><span class="visually-hidden">Jaarrekening 2024 </span>Inzien bij KVK</a>
+				</dd>
+			</div>
+			<div>
+				<dt>Jaarrekening 2023</dt>
+				<dd>
+					<p>Gedeponeerd op 8 juli 2024</p>
+					<a href="https://www.kvk.nl/orderstraat/product-kiezen/?kvknummer=12345678" rel="external noopener" target="_blank"><span class="visually-hidden">Jaarrekening 2023 </span>Inzien bij KVK</a>
+				</dd>
+			</div>
+		</dl>
+		<div class="feedback feedback-info" data-profiel-leeg="jaarrekeningen" hidden>
+			{% include "icon-feedback-info.njk" %}
+			<div>
+				<p>Voor uw rechtsvorm hoeft geen jaarrekening te worden gedeponeerd bij de Kamer van Koophandel. De deponeerplicht geldt voor besloten vennootschappen, naamloze vennootschappen en bepaalde stichtingen en verenigingen.</p>
+			</div>
+		</div>
+		<p class="metadata">Bron: <a href="https://kvk.nl/">KVK</a></p>
+	</section>
+
+	<section class="card">
+		<h2>Veelgestelde vragen</h2>
+		<ul class="accordion">
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Wanneer moet ik mijn jaarrekening deponeren?</h3>
+					</summary>
+					<div>
+						<p>U moet de jaarrekening binnen twaalf maanden na afloop van het boekjaar deponeren bij de Kamer van Koophandel. Voor kleine ondernemingen volstaat een verkorte balans en toelichting. Niet tijdig deponeren kan leiden tot een boete en, bij faillissement, aansprakelijkheid van bestuurders.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Wie kan mijn jaarrekening inzien?</h3>
+					</summary>
+					<div>
+						<p>Gedeponeerde jaarrekeningen zijn openbaar via het KVK Handelsregister. Iedereen kan deze tegen betaling opvragen. Welke gegevens openbaar zijn, hangt af van de grootte van uw onderneming: voor micro- en kleine ondernemingen geldt een beperkte publicatieplicht.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Hoe deponeer ik mijn jaarrekening?</h3>
+					</summary>
+					<div>
+						<p>U deponeert de jaarrekening digitaal via Standard Business Reporting (SBR) bij de Kamer van Koophandel. Uw boekhouder of accountant kan u hierbij ondersteunen. Meer informatie vindt u op <a href="https://kvk.nl/">kvk.nl</a>.</p>
+					</div>
+				</details>
+			</li>
+		</ul>
+	</section>
+</article>

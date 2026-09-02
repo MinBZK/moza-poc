@@ -2,53 +2,52 @@
  * homepage-profiel.js
  *
  * Vult dynamische secties op de homepage, overzichtspagina's en
- * detailoverzichtspagina's op basis van het actieve testprofiel.
+ * detailoverzichtspagina's op basis van de actieve persona.
  */
 
 (function () {
 	"use strict";
 
-	var profielen = window.testprofielenData;
+	var personas = window.personasData;
 	var subsidies = window.subsidiesData;
 	var regelgeving = window.regelgevingData;
-	if (!profielen || !subsidies || !regelgeving) return;
+	if (!personas || !subsidies || !regelgeving) return;
 
-	var LS_KEY = "testprofiel";
+	var LS_KEY = "persona";
 	var PAGINA_GROOTTE = 5;
 	var PATH_PREFIX = (typeof window.PATH_PREFIX === "string" && window.PATH_PREFIX !== "/")
 		? window.PATH_PREFIX.replace(/\/$/, "")
 		: "";
 
-	function actiefProfiel() {
+	function actievePersona() {
 		var id;
 		try { id = localStorage.getItem(LS_KEY); } catch (e) { /* */ }
-		var profiel = id ? profielen.find(function (p) { return p.id === id; }) : null;
-		return profiel || profielen.find(function (p) { return p.actief; }) || profielen[0];
+		var persona = id ? personas.find(function (p) { return p.id === id; }) : null;
+		return persona || personas.find(function (p) { return p.actief; }) || personas[0];
 	}
 
 	function vindSubsidie(id) { return subsidies.find(function (s) { return s.id === id; }); }
 	function vindRegeling(id) { return regelgeving.find(function (r) { return r.id === id; }); }
 
-	var DELEN_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="currentColor" d="M48 42c-2.045 0-3.925.69-5.436 1.84L23.921 33.13c.046-.372.078-.747.078-1.13a8.956 8.956 0 0 0-1.975-5.618c.088-.08.31-.095.518.038.378.239 1.78 1.273 3.323 3.4l16.712-9.648A8.948 8.948 0 0 0 48 22a9 9 0 1 0-9-9c0 .377.03.746.076 1.111L20.46 24.858A8.95 8.95 0 0 0 15 23a9 9 0 0 0 0 18c2.032 0 3.9-.681 5.407-1.817l18.666 10.725A9.047 9.047 0 0 0 39 51a9 9 0 1 0 9-9z"/></svg>';
-
-	function maakActionGroup(titel) {
+	function maakActionGroup(item, soort) {
 		var div = document.createElement("div");
-		div.className = "action-group topic-options";
-		div.innerHTML = '<label class="save-favorite"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">' + titel + '</span></label>'
-			+ '<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">' + DELEN_ICON + ' Deel</button>'
+		div.className = "action-group action-options";
+		div.innerHTML = '<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">' + item.titel + '</span></label>'
+			+ '<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">' + ' Deel</button>'
 			+ '<button class="link-button hide-topic">Niet relevant voor mij</button>';
+		// Met DOM-methodes en niet via innerHTML: de titel zit in de URL en in de
+		// tekst, en textContent/href doen het ontsnappen zelf.
+		// De vraag komt uit assistent-vraag.js — dezelfde module die Eleventy als
+		// filter gebruikt voor de detailpagina's.
+		var link = document.createElement("a");
+		link.className = "link-button ask-assistent";
+		link.href = PATH_PREFIX + "/moza/digitale-assistent/?vraag=" + encodeURIComponent(window.MozaAssistentVraag.vraag(item, soort));
+		link.textContent = "Vraag aan de digitale assistent";
+		div.appendChild(link);
 		return div;
 	}
 
-	function maakInterestSmall(interestType) {
-		if (!interestType) return null;
-		var small = document.createElement("small");
-		small.className = "interest-" + interestType;
-		small.innerHTML = interestType === "business" ? "Mogelijk relevant voor <b>uw bedrijf</b>" : "Mogelijk relevant voor <b>uw branche</b>";
-		return small;
-	}
-
-	function maakSubsidieLi(item, interestType) {
+	function maakSubsidieLi(item) {
 		var li = document.createElement("li");
 		li.className = "card-topic";
 		var a = document.createElement("a");
@@ -56,8 +55,6 @@
 		a.className = "content-link is-unread";
 		a.innerHTML = "<h3>" + item.titel + "</h3><span class=\"card-link\"></span>";
 		li.appendChild(a);
-		var interest = maakInterestSmall(interestType);
-		if (interest) li.appendChild(interest);
 		var p = document.createElement("p");
 		p.textContent = item.beschrijving;
 		li.appendChild(p);
@@ -66,13 +63,14 @@
 		dl.innerHTML = "<dt>Verstrekker</dt><dd>" + item.verstrekker + "</dd>"
 			+ "<dt>Type</dt><dd>" + (item.type || "") + "</dd>"
 			+ "<dt>Aanvraagperiode</dt><dd>" + (item.aanvraagperiode || "") + "</dd>"
-			+ (item.maximaalBedrag ? "<dt>Maximaal bedrag</dt><dd>" + item.maximaalBedrag + "</dd>" : "");
+			+ (item.maximaalBedrag ? "<dt>Maximaal bedrag</dt><dd>" + item.maximaalBedrag + "</dd>" : "")
+			+ (item.budgetVergeven ? '<dt>Budget vergeven</dt><dd><div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="' + item.budgetVergeven + '" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar-fill" style="inline-size: ' + item.budgetVergeven + '%">' + item.budgetVergeven + '%</div></div></dd>' : '');
 		li.appendChild(dl);
-		li.appendChild(maakActionGroup(item.titel));
+		li.appendChild(maakActionGroup(item, "subsidie"));
 		return li;
 	}
 
-	function maakRegelingLi(item, interestType) {
+	function maakRegelingLi(item) {
 		var li = document.createElement("li");
 		li.className = "card-topic";
 		var a = document.createElement("a");
@@ -80,8 +78,6 @@
 		a.className = "content-link is-unread";
 		a.innerHTML = "<h3>" + item.titel + "</h3><span class=\"card-link\"></span>";
 		li.appendChild(a);
-		var interest = maakInterestSmall(interestType);
-		if (interest) li.appendChild(interest);
 		var p = document.createElement("p");
 		p.textContent = item.beschrijving;
 		li.appendChild(p);
@@ -91,8 +87,12 @@
 			+ "<dt>In werking</dt><dd>" + (item.inwerkingtreding || "") + "</dd>"
 			+ "<dt>Geldt voor</dt><dd>" + (item.geldtVoor || "") + "</dd>";
 		li.appendChild(dl);
-		li.appendChild(maakActionGroup(item.titel));
+		li.appendChild(maakActionGroup(item, "regeling"));
 		return li;
+	}
+
+	function meldGerenderd(container) {
+		container.dispatchEvent(new CustomEvent("content:rendered", { bubbles: true }));
 	}
 
 	function vulLijst(container, getagdeItems, limiet) {
@@ -101,9 +101,10 @@
 		while (ul.firstChild) ul.removeChild(ul.firstChild);
 		var getoond = limiet ? getagdeItems.slice(0, limiet) : getagdeItems;
 		getoond.forEach(function (entry) {
-			ul.appendChild(entry.maakFn(entry.item, entry.interest));
+			ul.appendChild(entry.maakFn(entry.item));
 		});
 		ul.setAttribute("aria-busy", "false");
+		meldGerenderd(ul);
 	}
 
 	function vulPaginering(container, getagdeItems) {
@@ -120,10 +121,11 @@
 			var eind = Math.min(start + PAGINA_GROOTTE, getagdeItems.length);
 			for (var i = start; i < eind; i++) {
 				var entry = getagdeItems[i];
-				ul.appendChild(entry.maakFn(entry.item, entry.interest));
+				ul.appendChild(entry.maakFn(entry.item));
 			}
 			ul.setAttribute("aria-busy", "false");
 			renderPaginering();
+			meldGerenderd(ul);
 		}
 
 		function renderPaginering() {
@@ -184,16 +186,51 @@
 		return ids.map(vindFn).filter(Boolean);
 	}
 
-	function tagItems(items, maakFn, interest) {
-		return items.map(function (item) { return { item: item, maakFn: maakFn, interest: interest }; });
+	function tagItems(items, maakFn) {
+		return items.map(function (item) { return { item: item, maakFn: maakFn }; });
+	}
+
+	// Telt alleen items uit homepageSubsidies/homepageRegelgeving, de gehoogde
+	// "nieuw sinds uw laatste bezoek"-items. De overzichten tonen meer items,
+	// maar die zijn deel van de algemene branche-lijst en tellen niet als nieuw.
+	var huidigeNieuweSubs = [];
+	var huidigeNieuweRegs = [];
+
+	function isOngelezen(item) {
+		try {
+			if (localStorage.getItem("read:" + item.titel)) return false;
+			if (localStorage.getItem("hidden:" + item.titel)) return false;
+		} catch (e) { /* localStorage niet toegankelijk */ }
+		return true;
+	}
+
+	function updateSideNavBadges() {
+		var ongelezenSubs = huidigeNieuweSubs.filter(function (entry) { return isOngelezen(entry.item); }).length;
+		var ongelezenRegs = huidigeNieuweRegs.filter(function (entry) { return isOngelezen(entry.item); }).length;
+		setTelling("subsidies-count", ongelezenSubs);
+		setTelling("regelgeving-count", ongelezenRegs);
+	}
+
+	// Werkt de badge bij en wisselt tussen enkelvoud-/meervoud-formulering.
+	function setTelling(badgeId, count) {
+		document.querySelectorAll('[data-badge-id="' + badgeId + '"]').forEach(function (el) {
+			el.textContent = count;
+			el.hidden = count === 0;
+		});
+		document.querySelectorAll('[data-singular-of="' + badgeId + '"]').forEach(function (el) {
+			el.hidden = count !== 1;
+		});
+		document.querySelectorAll('[data-plural-of="' + badgeId + '"]').forEach(function (el) {
+			el.hidden = count === 1;
+		});
 	}
 
 	function render() {
-		var profiel = actiefProfiel();
-		var bedrijfSubIds = profiel.homepageSubsidies || [];
-		var brancheSubIds = (profiel.subsidies || []).filter(function (id) { return bedrijfSubIds.indexOf(id) === -1; });
-		var bedrijfRegIds = profiel.homepageRegelgeving || [];
-		var brancheRegIds = (profiel.regelgeving || []).filter(function (id) { return bedrijfRegIds.indexOf(id) === -1; });
+		var persona = actievePersona();
+		var bedrijfSubIds = persona.homepageSubsidies || [];
+		var brancheSubIds = (persona.subsidies || []).filter(function (id) { return bedrijfSubIds.indexOf(id) === -1; });
+		var bedrijfRegIds = persona.homepageRegelgeving || [];
+		var brancheRegIds = (persona.regelgeving || []).filter(function (id) { return bedrijfRegIds.indexOf(id) === -1; });
 
 		var bedrijfSubs = resolveIds(bedrijfSubIds, vindSubsidie);
 		var brancheSubs = resolveIds(brancheSubIds, vindSubsidie);
@@ -206,14 +243,14 @@
 		}
 
 		// Gecombineerde lijsten: bedrijf-items eerst, dan branche-items
-		var alleSubs = tagItems(bedrijfSubs, maakSubsidieLi, "business")
-			.concat(tagItems(brancheSubs, maakSubsidieLi, "industry"));
-		var alleRegs = tagItems(bedrijfRegs, maakRegelingLi, "business")
-			.concat(tagItems(brancheRegs, maakRegelingLi, "industry"));
+		var alleSubs = tagItems(bedrijfSubs, maakSubsidieLi)
+			.concat(tagItems(brancheSubs, maakSubsidieLi));
+		var alleRegs = tagItems(bedrijfRegs, maakRegelingLi)
+			.concat(tagItems(brancheRegs, maakRegelingLi));
 
-		// Homepage (zonder badges)
-		var homeSubItems = tagItems(bedrijfSubs, maakSubsidieLi, null);
-		var homeRegItems = tagItems(bedrijfRegs, maakRegelingLi, null);
+		// Homepage
+		var homeSubItems = tagItems(bedrijfSubs, maakSubsidieLi);
+		var homeRegItems = tagItems(bedrijfRegs, maakRegelingLi);
 		vulLijst(document.querySelector("[data-homepage-subsidies]"), homeSubItems);
 		vulLijst(document.querySelector("[data-homepage-regelgeving]"), homeRegItems);
 
@@ -223,18 +260,14 @@
 		if (ovzSub) vulPaginering(ovzSub, alleSubs);
 		if (ovzReg) vulPaginering(ovzReg, alleRegs);
 
-		// Side-nav badges updaten
-		var totaleSubs = alleSubs.length;
-		var totaleRegs = alleRegs.length;
-		document.querySelectorAll('[data-badge-id="subsidies-count"]').forEach(function (el) {
-			el.textContent = totaleSubs;
-			el.hidden = totaleSubs === 0;
-		});
-		document.querySelectorAll('[data-badge-id="regelgeving-count"]').forEach(function (el) {
-			el.textContent = totaleRegs;
-			el.hidden = totaleRegs === 0;
-		});
+		// Side-nav badges tonen alleen ongelezen "nieuw sinds uw laatste bezoek"-
+		// items uit homepageSubsidies/homepageRegelgeving, niet de hele branche-lijst.
+		huidigeNieuweSubs = homeSubItems;
+		huidigeNieuweRegs = homeRegItems;
+		updateSideNavBadges();
 	}
+
+	document.addEventListener("content:read", updateSideNavBadges);
 
 	render();
 })();

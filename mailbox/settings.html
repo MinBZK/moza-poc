@@ -1,0 +1,180 @@
+---
+title: "Postvak — Instellingen"
+currentNav: "inbox"
+---
+
+<section class="content content--single">
+					<div class="settings-layout">
+						<nav class="settings-nav" aria-label="Instellingen">
+							<h2>Instellingen</h2>
+							<ul>
+								<li><a href="#algemeen" class="active">Algemeen</a></li>
+								<li><a href="#account">Account</a></li>
+								<li><a href="#weergave">Weergave</a></li>
+								<li><a href="#meldingen">Meldingen</a></li>
+								<li><a href="#handtekening">Handtekening</a></li>
+								<li><a href="#filters">Filters &amp; regels</a></li>
+								<li><a href="#labels">Labels</a></li>
+								<li><a href="#afwezigheid">Afwezigheid</a></li>
+								<li><a href="#sneltoetsen">Sneltoetsen</a></li>
+								<li><a href="#privacy">Privacy &amp; veiligheid</a></li>
+							</ul>
+						</nav>
+
+						<div class="settings-content">
+							<h1>Algemeen</h1>
+							<p class="lede">Basisvoorkeuren voor je inbox en hoe Postvak zich gedraagt.</p>
+
+							<section class="setting-group" id="weergave">
+								<h3>Weergave</h3>
+								<div class="setting-row">
+									<div>
+										<div class="label">Thema</div>
+										<div class="desc">Kies de kleurmodus van de interface.</div>
+									</div>
+									<select>
+										<option>Systeem</option>
+										<option selected>Licht</option>
+										<option>Donker</option>
+									</select>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Dichtheid van de lijst</div>
+										<div class="desc">Comfortabel toont meer ruimte, compact toont meer mails.</div>
+									</div>
+									<select>
+										<option>Comfortabel</option>
+										<option selected>Standaard</option>
+										<option>Compact</option>
+									</select>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Indeling leespaneel</div>
+										<div class="desc">Rechts van de lijst, onder de lijst, of geen leespaneel.</div>
+									</div>
+									<select>
+										<option selected>Rechts</option>
+										<option>Onder</option>
+										<option>Geen</option>
+									</select>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Conversaties groeperen</div>
+										<div class="desc">Bundel berichten met hetzelfde onderwerp in één thread.</div>
+									</div>
+									<label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+								</div>
+							</section>
+
+							<section class="setting-group" id="meldingen">
+								<h3>Meldingen</h3>
+								<div class="setting-row">
+									<div>
+										<div class="label">Bureaubladmeldingen</div>
+										<div class="desc">Toon een melding bij nieuwe mail in dit tabblad.</div>
+									</div>
+									<select>
+										<option selected>Alleen belangrijke</option>
+										<option>Alle nieuwe mail</option>
+										<option>Uit</option>
+									</select>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Geluid bij nieuwe mail</div>
+									</div>
+									<label class="toggle"><input type="checkbox" /><span class="slider"></span></label>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Stille uren</div>
+										<div class="desc">Geen meldingen tussen deze tijden.</div>
+									</div>
+									<div>
+										<input type="text" class="input-time" value="18:00" aria-label="Stille uren begin" />
+										–
+										<input type="text" class="input-time" value="08:00" aria-label="Stille uren eind" />
+									</div>
+								</div>
+							</section>
+
+							<section class="setting-group" id="handtekening">
+								<h3>Handtekening</h3>
+								<div class="setting-row setting-row--stack">
+									<div>
+										<div class="label">Standaard handtekening</div>
+										<div class="desc field-desc-spaced">Wordt automatisch toegevoegd aan nieuwe berichten.</div>
+										<textarea rows="5" class="signature-textarea" aria-label="Handtekening">
+Met vriendelijke groet,
+
+Robin Vogel
+Vogel Studio — eigenaar
++31 6 12 34 56 78
+www.vogelstudio.nl</textarea
+										>
+									</div>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Handtekening toevoegen bij antwoord</div>
+									</div>
+									<label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+								</div>
+							</section>
+
+							<section class="setting-group" id="afwezigheid">
+								<h3>Afwezigheidsbericht</h3>
+								<div class="setting-row">
+									<div>
+										<div class="label">Automatisch antwoord</div>
+										<div class="desc">Stuur een vooraf ingesteld bericht naar afzenders.</div>
+									</div>
+									<label class="toggle"><input type="checkbox" /><span class="slider"></span></label>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Periode</div>
+									</div>
+									<div>
+										<input type="text" class="input-date" value="20-05-2026" aria-label="Startdatum" />
+										–
+										<input type="text" class="input-date" value="27-05-2026" aria-label="Einddatum" />
+									</div>
+								</div>
+							</section>
+
+							<section class="setting-group" id="privacy">
+								<h3>Privacy &amp; veiligheid</h3>
+								<div class="setting-row">
+									<div>
+										<div class="label">Externe afbeeldingen blokkeren</div>
+										<div class="desc">Beschermt tegen tracking-pixels en automatische downloads.</div>
+									</div>
+									<label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Waarschuw bij externe afzenders</div>
+										<div class="desc">Toon een banner bij mail van buiten de organisatie.</div>
+									</div>
+									<label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+								</div>
+								<div class="setting-row">
+									<div>
+										<div class="label">Tweestapsverificatie</div>
+										<div class="desc">Ingeschakeld via authenticator-app.</div>
+									</div>
+									<button class="btn">Beheren</button>
+								</div>
+							</section>
+
+							<div class="form-actions">
+								<button class="btn">Annuleren</button>
+								<button class="btn btn-primary">Opslaan</button>
+							</div>
+						</div>
+					</div>
+				</section>

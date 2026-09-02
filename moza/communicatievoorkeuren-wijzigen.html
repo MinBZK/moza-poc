@@ -18,11 +18,13 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 	<h1>Contactvoorkeuren</h1>
 
+	<a href="{{ '/moza/contactvoorkeuren/' | url }}" class="back-link">Terug naar Contactvoorkeuren</a>
+
 	<section class="card">
 		<h2>Communicatiekanalen</h2>
 
 		<div class="feedback feedback-info">
-			{% include "icon-feedback.njk" %}
+			{% include "icon-feedback-info.njk" %}
 			<div>
 				<p>Contactgegevens die u hier aanpast, worden automatisch bijgewerkt bij alle organisaties waarmee u uw gegevens centraal deelt.</p>
 			</div>
@@ -33,15 +35,15 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 		<form action="{{ '/moza/contactvoorkeuren/' | url }}">
 			<dl class="data-overview">
-				<dt>Voorkeurskanaal</dt>
-				<dd>
+				<dt id="cv-kanaal">Voorkeurskanaal</dt>
+				<dd role="radiogroup" aria-labelledby="cv-kanaal">
 					<ul class="list-plain">
 						<li><input type="radio" id="contact-channel-email" name="contact-channel" checked /><label for="contact-channel-email">E-mail</label></li>
 						<li><input type="radio" id="contact-channel-post" name="contact-channel" /><label for="contact-channel-post">Post</label></li>
 					</ul>
 				</dd>
-				<dt>Bellen</dt>
-				<dd>
+				<dt id="cv-bellen">Bellen</dt>
+				<dd role="radiogroup" aria-labelledby="cv-bellen">
 					<ul class="list-plain">
 						<li><input type="radio" id="contact-allow-phone-yes" name="contact-allow-phone" /><label for="contact-allow-phone-yes">Ik mag gebeld worden</label></li>
 						<li><input type="radio" id="contact-allow-phone-no" name="contact-allow-phone" checked /><label for="contact-allow-phone-no">Ik wil niet gebeld worden</label></li>
@@ -51,7 +53,7 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 			<div class="action-group">
 				<button type="submit">Opslaan</button>
-				<button class="secondary">Annuleren</button>
+				<a class="btn secondary" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">Annuleren</a>
 			</div>
 		</form>
 	</section>

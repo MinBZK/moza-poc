@@ -1,12 +1,12 @@
 <div class="feedback-page-banner" id="info-banner">
 	<div class="feedback feedback-info">
-		{% include "icon-feedback.njk" %}
+		{% include "icon-feedback-info.njk" %}
 		<div>
 			<p>
 				MijnOverheid Zakelijk wordt continu uitgebreid met nieuwe mogelijkheden. <a href="{{ '/moza/meer/' | url }}">Bekijk welke functies eraan komen</a>.
 			</p>
 		</div>
-		<button class="feedback-close icon-button" aria-label="Sluiten" onclick="this.closest('.feedback-page-banner').hidden = true; sessionStorage.setItem('info-banner-dismissed', 'true');">
+		<button class="icon-button" aria-label="Sluiten" onclick="this.closest('.feedback-page-banner').hidden = true; sessionStorage.setItem('info-banner-dismissed', 'true');">
 		</button>
 	</div>
 </div>

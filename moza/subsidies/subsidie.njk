@@ -14,15 +14,19 @@ subNavActive: "/moza/subsidies/"
 <article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
-			<li><a href="{{ '/moza/subsidies/' | url }}">Subsidies en financiering</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/subsidies/' | url }}">Subsidies en financiering</a>
+			</li>
 			<li aria-current="page">{{ subsidie.titel }}</li>
 		</ol>
 	</nav>
 
 	<h1>{{ subsidie.titel }}</h1>
 
-	<a href="{{ '/moza/subsidies/' | url }}" class="back-link">Terug naar Subsidies en financiering</a>
+	<a class="back-link" href="{{ '/moza/subsidies/' | url }}">Terug naar Subsidies en financiering</a>
 
 	<section class="card">
 		<p class="intro">{{ subsidie.beschrijving }}</p>
@@ -35,22 +39,29 @@ subNavActive: "/moza/subsidies/"
 			<dt>Aanvraagperiode</dt>
 			<dd>{{ subsidie.aanvraagperiode }}</dd>
 			{% if subsidie.maximaalBedrag %}
-			<dt>Maximaal bedrag</dt>
-			<dd>{{ subsidie.maximaalBedrag }}</dd>
+				<dt>Maximaal bedrag</dt>
+				<dd>
+					{{ subsidie.maximaalBedrag }}
+				</dd>
 			{% endif %}
 			{% if subsidie.budgetVergeven %}
-			<dt>Budget vergeven</dt>
-			<dd>
-				<div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="{{ subsidie.budgetVergeven }}" aria-valuemin="0" aria-valuemax="100">
-					<div class="progress-bar-fill" style="inline-size: {{ subsidie.budgetVergeven }}%">{{ subsidie.budgetVergeven }}%</div>
-				</div>
-			</dd>
+				<dt>Budget vergeven</dt>
+				<dd>
+					<div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="{{ subsidie.budgetVergeven }}" aria-valuemin="0" aria-valuemax="100">
+						<div class="progress-bar-fill" style="inline-size: {{ subsidie.budgetVergeven }}%">{{ subsidie.budgetVergeven }}%</div>
+					</div>
+				</dd>
 			{% endif %}
 		</dl>
 
 		{% for alinea in subsidie.inhoud %}
-		<p>{{ alinea }}</p>
+			<p>
+				{{ alinea }}
+			</p>
 		{% endfor %}
+
+		<p><strong>Vragen over deze regeling?</strong></p>
+		<p><a href="{{ '/moza/digitale-assistent/' | url }}">De digitale assistent zoekt voor u uit</a>. Bijvoorbeeld: komt u in aanmerking voor deze subsidie, en wat moet u doen vóór de aanvraagperiode sluit?</p>
 
 		{% include "action-group.njk" %}
 

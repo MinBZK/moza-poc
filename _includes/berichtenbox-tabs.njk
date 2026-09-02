@@ -1,20 +1,21 @@
 {% set box = berichtenboxData %}
+{% set tabsBasis = berichtenboxBasis or '/moza/berichtenbox/' %}
 {% set path = page.url %}
 {% set isArchief = '/berichtenbox-archief/' in path %}
 {% set isPrullenbak = '/berichtenbox-prullenbak/' in path %}
 {# Inbox is current voor alle berichtenbox-pagina's die niet archief/prullenbak zijn (ook detail en paginering). #}
-{% set isInbox = '/moza/berichtenbox' in path and not isArchief and not isPrullenbak %}
+{% set isInbox = tabsBasis in path and not isArchief and not isPrullenbak %}
 
-<nav class="berichtenbox-nav" aria-label="Berichtenbox">
-	<ul role="tablist">
-		<li role="presentation">
-			<a role="tab" href="{{ '/moza/berichtenbox/' | url }}"{% if isInbox %} aria-current="page" aria-selected="true"{% endif %}>
+<nav aria-label="Berichtenbox">
+	<ul class="tablist">
+		<li>
+			<a href="{{ tabsBasis | url }}#hoofd-inhoud"{% if isInbox %} aria-current="page"{% endif %}>
 				Inbox
 				<span class="badge" data-berichtenbox-count="inbox">{{ box.berichten | selectattr("isOngelezen") | length }}</span>
 			</a>
 		</li>
-		<li role="presentation">
-			<a role="tab" href="{{ '/moza/berichtenbox/berichtenbox-archief/' | url }}"{% if isArchief %} aria-current="page" aria-selected="true"{% endif %}>
+		<li>
+			<a href="{{ tabsBasis | url }}berichtenbox-archief/#hoofd-inhoud"{% if isArchief %} aria-current="page"{% endif %}>
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="icon-sm">
 					<path fill="currentColor" d="M7 23v33c0 .55.45 1 1 1h48c.55 0 1-.45 1-1V23c0-.55-.45-1-1-1H8c-.55 0-1 .45-1 1m18 7h14v7H25v-7Zm17 20.5c0 .83-.67 1.5-1.5 1.5h-17c-.83 0-1.5-.67-1.5-1.5V47c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v2h14v-2c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3.5ZM51 16H13c-.55 0-1 .45-1 1v3h40v-3c0-.55-.45-1-1-1m-5-6H18c-.55 0-1 .45-1 1v3h30v-3c0-.55-.45-1-1-1" />
 				</svg>
@@ -22,8 +23,8 @@
 				<!-- <span class="badge" data-berichtenbox-count="archief">0</span> -->
 			</a>
 		</li>
-		<li role="presentation">
-			<a role="tab" href="{{ '/moza/berichtenbox/berichtenbox-prullenbak/' | url }}"{% if isPrullenbak %} aria-current="page" aria-selected="true"{% endif %}><svg xmlns="http://www.w3.org/2000/svg"  class="icon-sm" viewBox="0 0 64 64">
+		<li>
+			<a href="{{ tabsBasis | url }}berichtenbox-prullenbak/#hoofd-inhoud"{% if isPrullenbak %} aria-current="page"{% endif %}><svg xmlns="http://www.w3.org/2000/svg"  class="icon-sm" viewBox="0 0 64 64">
 	<path fill="none" d="M0 0h64v64H0z" />
 	<path fill="currentColor" d="M10.67 18.67zm40-8h-8V8A2.67 2.67 0 0 0 40 5.33H24A2.67 2.67 0 0 0 21.33 8v2.67h-8a2.67 2.67 0 0 0-2.67 2.67v5.33h14.28s.15.32-.31.44c-.58.16-11.31 1.43-11.31 1.43V56a2.67 2.67 0 0 0 2.67 2.67h32A2.67 2.67 0 0 0 50.66 56V18.67h2.67v-5.33a2.67 2.67 0 0 0-2.67-2.67ZM24 50.67l-5.33 2.67V24.01H24v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67Zm10.67 0-5.33 2.67V24.01h5.33v26.67ZM24.43 10.63v-.8c0-.94-.16-1.7.88-1.7h13.27c1.04 0 .88.76.88 1.7v.8H24.43Z" />
 </svg>
@@ -33,8 +34,8 @@
 		</li>
 		<li class="list-separation"><span class="visually-hidden">Mappen:</span></li>
 		{% for map in box.mappen %}
-			<li data-map-slug="{{ map.slug }}" role="presentation" class="berichtenbox-folder-user">
-				<a href="{{ '/moza/berichtenbox/' | url }}?map={{ map.slug }}">
+			<li data-map-slug="{{ map.slug }}" class="berichtenbox-folder-user">
+				<a href="{{ tabsBasis | url }}?map={{ map.slug }}#hoofd-inhoud">
 					<svg xmlns="http://www.w3.org/2000/svg" class="icon-sm" viewBox="0 0 64 64">
 						<path fill="currentColor" d="M58 15H29v-2c0-1.1-.9-2-2-2H12c-1.1 0-2 .9-2 2v4.69c7.13.47 40.09 2.62 40.59 2.75.28.07.38.21.4.34 0 .04.02.23-.01.23H4.53c-1.29 0-2.24 1.2-1.95 2.46l7.06 30c.27 1.16 1.18 1.54 2.36 1.54h46a2 2 0 0 0 2-2V17c0-1.1-.9-2-2-2" />
 					</svg>

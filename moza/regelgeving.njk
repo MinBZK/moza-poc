@@ -18,7 +18,15 @@ subNavActive: "/moza/regelgeving/"
 
 	<section class="card" data-overzicht-regelgeving>
 		<h2 class="visually-hidden">Wetten en regelgeving</h2>
-		<p>Nieuwe en gewijzigde wetten en regelgeving die mogelijk betrekking hebben op uw bedrijf of branche.</p>
+		<div class="feedback feedback-info" id="info-actualiteiten">
+		{% icon "/assets/icons/icon-informatie.svg" %}
+		<div>
+			<p>Wetten en regelgeving die mogelijk betrekking hebben op uw bedrijf of branche, geselecteerd op basis van uw bedrijfsprofiel. Door items te bewaren of als niet relevant te markeren helpt u ons de aanbevelingen te verbeteren.</p>
+		</div>
+		<button class="btn-close link-button">
+			<i>Sluit notificatie</i>
+		</button>
+	</div>
 		<ul class="list-content-links" aria-busy="true"></ul>
 		<nav class="pagination" aria-label="Paginering" data-paginering hidden></nav>
 	</section>

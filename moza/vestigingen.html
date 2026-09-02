@@ -1,0 +1,78 @@
+---
+title: "MijnOverheid Zakelijk: Vestigingen"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li><a href="{{ '/moza/bedrijfsgegevens/' | url }}">Bedrijfsgegevens</a></li>
+			<li aria-current="page">Vestigingen</li>
+		</ol>
+	</nav>
+
+	<h1>Vestigingen</h1>
+
+	<a href="{{ '/moza/bedrijfsgegevens/' | url }}" class="back-link">Terug naar Bedrijfsgegevens</a>
+
+	<section class="card">
+		<hgroup>
+			<h2>Geregistreerde vestigingen</h2>
+			<p>Overzicht van alle vestigingen die gekoppeld zijn aan uw onderneming, inclusief nevenvestigingen.</p>
+		</hgroup>
+		<ul class="list-content-links" data-profiel-lijst="vestigingen">
+			<li>
+				<h3>Hoofdvestiging</h3>
+				<dl class="data-overview">
+					<div>
+						<dt>Vestigingsnummer</dt>
+						<dd>000012345678</dd>
+					</div>
+					<div>
+						<dt>Adres</dt>
+						<dd>Stationsweg 12, 2515 BA 's-Gravenhage</dd>
+					</div>
+				</dl>
+			</li>
+		</ul>
+		<p class="metadata">Bron: <a href="https://kvk.nl/">KVK</a></p>
+	</section>
+
+	<section class="card">
+		<h2>Veelgestelde vragen</h2>
+		<ul class="accordion">
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Wat is het verschil tussen een hoofd- en nevenvestiging?</h3>
+					</summary>
+					<div>
+						<p>Een onderneming heeft altijd één hoofdvestiging. Daarnaast kan een onderneming één of meerdere nevenvestigingen hebben, bijvoorbeeld een filiaal, werkplaats of magazijn op een ander adres. Elke vestiging heeft een eigen vestigingsnummer.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Hoe registreer ik een nieuwe vestiging?</h3>
+					</summary>
+					<div>
+						<p>U registreert een nieuwe vestiging bij de Kamer van Koophandel via <a href="https://kvk.nl/">kvk.nl</a> of bij een KVK-kantoor. Na inschrijving wordt de vestiging automatisch zichtbaar op MijnOverheid Zakelijk.</p>
+					</div>
+				</details>
+			</li>
+			<li>
+				<details name="faq">
+					<summary>
+						<h3>Moet ik een nevenvestiging apart belasting laten doen?</h3>
+					</summary>
+					<div>
+						<p>Nee. Een nevenvestiging hoort fiscaal bij dezelfde onderneming. U doet één gezamenlijke aangifte voor uw hele onderneming. Wel kan een nevenvestiging gevolgen hebben voor lokale belastingen en vergunningen bij de gemeente waar de vestiging is gevestigd.</p>
+					</div>
+				</details>
+			</li>
+		</ul>
+	</section>
+</article>

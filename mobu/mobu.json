@@ -1,6 +1,6 @@
 {
 	"layout": "base.njk",
-	"bodyClass": "moza",
+	"bodyClass": "mobu",
 	"headerType": "mobu",
 	"footerType": "overheid",
 	"subNav": [
@@ -22,7 +22,7 @@
 		},
 		{
 			"label": "Identiteit",
-			"url": "#",
+			"url": "/mobu/identiteit/",
 			"icon": "/assets/icons/icon-identiteit.svg"
 		},
 		{

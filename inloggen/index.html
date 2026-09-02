@@ -1,0 +1,120 @@
+---
+title: "Inloggen bij MijnOverheid Zakelijk"
+permalink: "/inloggen/"
+footerType: "none"
+bodyClass: "page-login"
+layout: "base.njk"
+---
+
+<article id="hoofd-inhoud">
+	<h1>Inloggen bij <b>MijnOverheid</b></h1>
+	<p>Kies een inlogmiddel. <a href="#">Hoe kies ik een inlogmiddel?</a></p>
+
+	<div class="login-selection">
+		<section>
+			<section>
+				<!-- <h2>Laatst gekozen inlogmiddel</h2> -->
+				<section>
+					<details class="card card-inloggen-options" open>
+						<summary>
+							<h3><img src="/assets/inloggen/images/digid-logo.svg" alt="" />DigiD</h3>
+						</summary>
+						<div>
+							<ul>
+								<li data-feature="Inloggen voor mezelf" data-feature-type="functionaliteit">
+									<a href="{{ '/inloggen/digid/prive/' | url }}">{% icon "/assets/icons/icon-persoon.svg" %} Inloggen <b>voor mezelf</b></a>
+								</li>
+								<li data-feature="Inloggen voor mijn onderneming" data-feature-type="functionaliteit">
+									<a href="{{ '/inloggen/digid/zakelijk/' | url }}">{% icon "/assets/icons/icon-werk.svg" %} Inloggen <b>voor mijn onderneming</b></a>
+								</li>
+								<li data-feature="Inloggen met een machtiging" data-feature-type="functionaliteit">
+									<a href="#">{% icon "/assets/icons/icon-vertegenwoordiging.svg" %} Inloggen <b>met een machtiging</b></a>
+								</li>
+								<li data-feature="Inloggen als bewindvoerder, curator of mentor" data-feature-type="functionaliteit">
+									<a href="#">
+										{% icon "/assets/icons/icon-wettelijke-vertegenwoordiging.svg" %} Inloggen <b>als bewindvoerder, curator of mentor</b>
+									</a>
+								</li>
+								<li data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+									<a href="#">
+										{% icon "/assets/icons/icon-machtiging-kind.svg" %} Inloggen <b>voor een kind onder de 12</b>
+									</a>
+								</li>
+							</ul>
+							<div class="feedback feedback-info" data-feature="Inloggen voor een kind onder de 12" data-feature-type="functionaliteit">
+								{% include "icon-feedback-info.njk" %}
+								<div>
+									<a href="#">Inloggen voor een kind van 12 jaar of ouder</a>
+								</div>
+							</div>
+						</div>
+					</details>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-eh.svg" alt="" />
+								eHerkenning
+							</h3>
+						</a>
+					</div>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-eidas.svg" alt="" />
+								European login
+							</h3>
+						</a>
+					</div>
+				</section>
+				<section class="login-wallet">
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-digidentity.png" alt="" />
+								Digidentity
+							</h3>
+						</a>
+					</div>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-itsme.svg" alt="" />
+								Itsme
+							</h3>
+						</a>
+					</div>
+					<div class="card">
+						<a href="#">
+							<h3>
+								<img src="/assets/inloggen/images/logo-cleverbase.png" alt="" />
+								Cleverbase
+							</h3>
+						</a>
+					</div>
+				</section>
+				<div class="login-faq">
+					<details>
+						<summary>Ik wil inloggen voor iemand anders. Hoe werkt dat?</summary>
+						<p>U kunt voor iemand anders inloggen als die persoon u daarvoor heeft gemachtigd via DigiD Machtigen. Bent u bewindvoerder, curator of mentor? Dan logt u in met uw eigen DigiD en kiest u daarna voor wie u iets wilt regelen.</p>
+					</details>
+					<details>
+						<summary>Kan ik een ander inlogmiddel dan DigiD gebruiken?</summary>
+						<p>Ja. Naast DigiD kunt u inloggen met eHerkenning, een European login (eIDAS) of een privaat inlogmiddel zoals Digidentity, Itsme of Cleverbase. Welk middel u kiest, hangt af van uw situatie en het betrouwbaarheidsniveau dat de dienst vraagt.</p>
+					</details>
+				</div>
+				<a href="#">Meer hulp en informatie over inloggen</a>
+			</section>
+		</section>
+
+		<div class="feedback feedback-info login-own-credentials">
+			{% include "icon-feedback-info.njk" %}
+			<div>
+				<p>Log altijd in met uw eigen inloggegevens. Ook als u voor iemand anders wilt inloggen.</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="action-group">
+		<button class="secondary">Inloggen annuleren</button>
+	</div>
+</article>

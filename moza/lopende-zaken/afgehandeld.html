@@ -1,0 +1,55 @@
+---
+title: "MijnOverheid Zakelijk: Afgehandelde zaken"
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li><a href="{{ '/moza/lopende-zaken/' | url }}">Lopende zaken</a></li>
+			<li aria-current="page">Afgehandeld</li>
+		</ol>
+	</nav>
+
+	<h1>Lopende zaken</h1>
+
+	<section class="card tabs">
+		{% include "lopende-zaken-tabs.njk" %}
+
+		<section role="tabpanel" aria-labelledby="tab-lopende-zaken-afgehandeld">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Organisatie</th>
+						<th scope="col">Onderwerp</th>
+						<th scope="col">Afgehandeld op</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Gemeente Lansingerland</td>
+						<td><a href="{{ '/moza/lopende-zaken/afgehandeld/omgevingsvergunning-gevelreclame/' | url }}">Omgevingsvergunning gevelreclame</a></td>
+						<td><time datetime="2026-03-18">18 maart 2026</time></td>
+					</tr>
+					<tr>
+						<td>Rijksdienst voor Ondernemend Nederland</td>
+						<td><a href="{{ '/moza/lopende-zaken/afgehandeld/subsidie-duurzame-bedrijfsvoering/' | url }}">Subsidie duurzame bedrijfsvoering</a></td>
+						<td><time datetime="2026-01-22">22 januari 2026</time></td>
+					</tr>
+					<tr>
+						<td>Belastingdienst</td>
+						<td><a href="{{ '/moza/lopende-zaken/afgehandeld/uitstel-btw-aangifte/' | url }}">Uitstel van btw-aangifte</a></td>
+						<td><time datetime="2026-01-20">20 januari 2026</time></td>
+					</tr>
+					<tr>
+						<td>Kamer van Koophandel</td>
+						<td><a href="{{ '/moza/lopende-zaken/afgehandeld/uittreksel-handelsregister/' | url }}">Aanvraag uittreksel Handelsregister</a></td>
+						<td><time datetime="2025-12-18">18 december 2025</time></td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+	</section>
+</article>

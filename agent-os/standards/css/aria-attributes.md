@@ -30,4 +30,4 @@ CSS uses opacity for the disabled style, which auto-adapts to dark/light/high-co
 
 ## Why
 
-Styling via aria attributes ensures visual state and accessible state are always in sync — no risk of a class being applied without the matching accessibility semantics.
+Styling via aria attributes ensures visual state and accessible state are always in sync; no risk of a class being applied without the matching accessibility semantics.

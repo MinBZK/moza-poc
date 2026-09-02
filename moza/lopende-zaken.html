@@ -14,24 +14,46 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 
 	<h1>Lopende zaken</h1>
 
-	<section class="card">
-		<h2>Binnenkort beschikbaar <span class="badge">juni 2027</span></h2>
-		<p>Straks vindt u hier een overzicht van al uw aanvragen, vergunningen en meldingen bij de overheid. U ziet direct de status en voortgang per zaak.</p>
-	</section>
+	<section class="card tabs">
+		{% include "lopende-zaken-tabs.njk" %}
 
-	<section class="card">
-		<video controls src="https://placeholdervideo.dev/1920x1080" poster="/assets/images/video-placeholder-poster.png">
-			<p>Uw browser ondersteunt geen video.</p>
-		</video>
-	</section>
-
-	<section class="card">
-		<h2>Wat kunt u zoal verwachten?</h2>
-		<ul>
-			<li>Bekijk de status van uw aanvragen, vergunningen en meldingen</li>
-			<li>Zie direct of er actie van u nodig is</li>
-			<li>Volg de voortgang van begin tot eind</li>
-		</ul>
+		<section aria-label="Lopende zaken">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Organisatie</th>
+						<th scope="col">Onderwerp</th>
+						<th scope="col">Datum laatste wijziging</th>
+						<th scope="col">Status</th>
+					</tr>
+				</thead>
+				<tbody id="zaken-overzicht">
+					<tr>
+						<td>Gemeente Lansingerland</td>
+						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
+						<td><time datetime="2026-05-21">21 mei 2026</time></td>
+						<td>In behandeling genomen</td>
+					</tr>
+					<tr>
+						<td>Rijksdienst voor Ondernemend Nederland</td>
+						<td><a href="{{ '/moza/lopende-zaken/subsidie/' | url }}">Subsidie aangevraagd</a></td>
+						<td><time datetime="2026-03-19">19 maart 2026</time></td>
+						<td>Volledigheid gecontroleerd</td>
+					</tr>
+					<tr>
+						<td>Gemeente Lansingerland</td>
+						<td><a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a></td>
+						<td><time datetime="2026-05-06">6 mei 2026</time></td>
+						<td>
+							<div class="feedback feedback-warning">
+								{% include "icon-feedback-warning.njk" %}
+								Extra informatie opgevraagd
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
 	</section>
 
 	<section class="card">
@@ -42,7 +64,9 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 					<summary>
 						<h3>Wat zijn lopende zaken?</h3>
 					</summary>
-					<p>Lopende zaken zijn aanvragen, vergunningen en meldingen die u heeft ingediend bij de overheid en die nog in behandeling zijn. Hier vindt u een overzicht van de voortgang per zaak.</p>
+					<div>
+						<p>Lopende zaken zijn aanvragen, vergunningen en meldingen die u hebt ingediend bij de overheid en die nog in behandeling zijn. Hier vindt u een overzicht van de voortgang per zaak.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -50,7 +74,9 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 					<summary>
 						<h3>Hoe lang duurt de behandeling van mijn zaak?</h3>
 					</summary>
-					<p>De behandeltijd verschilt per type zaak en per overheidsorganisatie. Bij elke zaak ziet u de verwachte doorlooptijd en de huidige status. Bij overschrijding van de wettelijke termijn ontvangt u hierover automatisch bericht.</p>
+					<div>
+						<p>De behandeltijd verschilt per type zaak en per overheidsorganisatie. Bij elke zaak ziet u de verwachte doorlooptijd en de huidige status. Bij overschrijding van de wettelijke termijn ontvangt u hierover automatisch bericht.</p>
+					</div>
 				</details>
 			</li>
 			<li>
@@ -58,7 +84,9 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 					<summary>
 						<h3>Kan ik aanvullende documenten toevoegen aan een lopende zaak?</h3>
 					</summary>
-					<p>Dat hangt af van de betreffende organisatie en het type zaak. Als het mogelijk is om documenten na te sturen, vindt u bij de zaak een optie om bestanden toe te voegen. Neem anders contact op met de behandelende organisatie.</p>
+					<div>
+						<p>Dat hangt af van de betreffende organisatie en het type zaak. Als het mogelijk is om documenten na te sturen, vindt u bij de zaak een optie om bestanden toe te voegen. Neem anders contact op met de behandelende organisatie.</p>
+					</div>
 				</details>
 			</li>
 		</ul>

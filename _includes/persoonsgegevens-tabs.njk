@@ -1,0 +1,9 @@
+{% set p = page.url %}
+<nav aria-label="Persoonsgegevens">
+	<ul class="tablist">
+		<li><a href="{{ '/mobu/persoonsgegevens/' | url }}#hoofd-inhoud"{% if p == '/mobu/persoonsgegevens/' %} aria-current="page"{% endif %}>Basisgegevens</a></li>
+		<li><a href="{{ '/mobu/persoonsgegevens/familie/' | url }}#hoofd-inhoud"{% if '/familie/' in p %} aria-current="page"{% endif %}>Familie</a></li>
+		<li><a href="{{ '/mobu/persoonsgegevens/nationaliteit/' | url }}#hoofd-inhoud"{% if '/nationaliteit/' in p %} aria-current="page"{% endif %}>Nationaliteit</a></li>
+		<li><a href="{{ '/mobu/persoonsgegevens/paspoort/' | url }}#hoofd-inhoud"{% if '/paspoort/' in p %} aria-current="page"{% endif %}>Paspoort en ID-kaart</a></li>
+	</ul>
+</nav>

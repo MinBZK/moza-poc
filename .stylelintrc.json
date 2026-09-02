@@ -1,6 +1,6 @@
 {
 	"extends": ["stylelint-config-standard"],
-	"plugins": ["stylelint-use-logical", "stylelint-order", "@stylistic/stylelint-plugin"],
+	"plugins": ["stylelint-use-logical", "stylelint-order"],
 	"rules": {
 		"csstools/use-logical": "always",
 		"order/properties-alphabetical-order": true,
@@ -13,10 +13,6 @@
 		"no-descending-specificity": null,
 		"property-no-deprecated": null,
 		"selector-class-pattern": null,
-		"no-duplicate-selectors": null,
-		"@stylistic/declaration-block-semicolon-newline-after": "always",
-		"@stylistic/block-opening-brace-space-before": "always",
-		"@stylistic/indentation": "tab",
-		"@stylistic/selector-list-comma-space-after": "always"
+		"no-duplicate-selectors": null
 	}
 }

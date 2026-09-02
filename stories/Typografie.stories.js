@@ -8,7 +8,7 @@ export default {
 
 **Semantiek boven vormgeving**
 
-Gebruik altijd het juiste heading-niveau voor de context. Een \`<h3>\` volgt op een \`<h2>\`, niet op een \`<h1>\`. Sla geen niveaus over — dat verstoort de navigatie voor screenreaders en de inhoudsopgave.
+Gebruik altijd het juiste heading-niveau voor de context. Een \`<h3>\` volgt op een \`<h2>\`, niet op een \`<h1>\`. Sla geen niveaus over, dat verstoort de navigatie voor screenreaders en de inhoudsopgave.
 
 **Visuele stijlklassen**
 
