@@ -21,7 +21,7 @@ MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy e
 2. **Toegankelijkheid altijd**; toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
 3. **CSS logical properties**; gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
 4. **Design tokens**; gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
-5. **Eenvoudigst mogelijke oplossing**; HTML en CSS waar het kan, JavaScript waar het moet. Platform boven framework.
+5. **Eenvoudigst mogelijke oplossing in de interface-laag**; HTML en CSS waar het kan, JavaScript waar het moet, platform boven framework. Dit geldt voor wat de gebruiker in de browser voor zich krijgt, niet voor de laag eromheen zoals build-scripts, datatransformaties, backend-koppelingen en testopstellingen.
 6. **Spacing**; gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
 7. **Feature flags**; gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
 

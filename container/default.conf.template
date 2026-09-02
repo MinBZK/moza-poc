@@ -41,8 +41,13 @@ server {
     set $backend_demo_host "${BACKEND_DEMO_HOST}";
 
     # Fallback to the generic backend_origin when a specific backend isn't set
+    # De profielservice is een publieke dienst, geen onderdeel van deze omgeving. Zonder
+    # BACKEND_PROFIEL viel dit terug op de generieke backend, en daar bestaat dit pad niet: het
+    # contactgegevens-blok kreeg dan een 404 in elke omgeving waar niemand de variabele gezet had.
+    # De terugval is daarom de dienst zelf; de variabele blijft voor wie naar een testopstelling
+    # wil wijzen.
     if ($backend_profiel = "") {
-        set $backend_profiel $backend_origin;
+        set $backend_profiel https://profiel.mijnoverheidzakelijk.nl;
     }
     if ($backend_api_2 = "") {
         set $backend_api_2 $backend_origin;
@@ -89,13 +94,36 @@ server {
         proxy_set_header Host $host;
     }
 
+    # Bereikbaarheid van deze container zelf, zonder een backend aan te spreken.
+    location = /api/livecheck {
+        return 200 '{"status":"ok"}';
+        add_header Content-Type application/json;
+    }
+
     # --- Per-API proxies (configurable at runtime) ---
-    # Proxy the profiel service API prefix to BACKEND_PROFIEL when set
+    # De profielservice draait buiten deze container en kijkt naar de headers van de browser. Host
+    # volgt de upstream uit proxy_pass, Origin en Referer gaan er niet heen — anders past die dienst
+    # zijn CORS-regels toe op een aanroep die server-side gedaan wordt. De rest van de
+    # binnenkomende headers gaat om dezelfde reden niet mee.
     location /api/profielservice/ {
         proxy_pass $backend_profiel$request_uri;
-        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header Origin "";
+        proxy_set_header Referer "";
+        proxy_pass_request_headers off;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # De upstream kan een gedeelde ingress zijn; zonder SNI wijst die de verbinding af.
+        proxy_ssl_server_name on;
+        proxy_ssl_session_reuse on;
+        proxy_set_header Connection "";
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
         proxy_buffering off;
     }
 

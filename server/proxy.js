@@ -4,8 +4,7 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
-const PORT = process.env.PROXY_PORT || 4040;
-const TARGET = process.env.PROXY_TARGET;
+const PORT = process.env.PROXY_PORT || 8080;
 
 const app = express();
 
@@ -15,21 +14,14 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Parse JSON bodies only for methods that usually contain a body
-app.use((req, res, next) => {
-	if (["POST", "PUT", "PATCH"].includes(req.method)) {
-		return express.json({ limit: "1mb" })(req, res, next);
-	}
-	return next();
-});
-
 // CORS middleware: allow the dev front-end (and other origins) to call the proxy
 app.use((req, res, next) => {
-	const origin = req.headers.origin || "*";
-	res.setHeader("Access-Control-Allow-Origin", origin);
+	// Development: allow any origin to simplify local testing
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Credentials", "false");
+
 	res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
 	res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"] || "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-	res.setHeader("Access-Control-Allow-Credentials", "true");
 
 	// Short-circuit preflight requests
 	if (req.method === "OPTIONS") {
@@ -39,73 +31,112 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Proxy any request under /api to the target (supports per-request target via header or query)
+// Proxy any request under /api to the target (requires per-request target via header or query)
 app.use(
 	"/api",
 	createProxyMiddleware({
-		// default target if none specified per-request
-		target: TARGET,
+		// Target is required per-request via x-proxy-target header or ?target= query parameter
+		target: "http://localhost",
 		changeOrigin: true,
 		secure: true,
 		logLevel: "info",
-		// Allow per-request target via header 'x-proxy-target' or query '?target='
+		// Fail faster if upstream doesn't respond
+		proxyTimeout: 15000,
+		timeout: 30000,
+		// Require x-proxy-target header or ?target= query parameter; otherwise reject
 		router: (req) => {
 			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
-			if (!perReq) return TARGET;
+			if (!perReq) {
+				console.error("[proxy] Missing target: provide x-proxy-target header or ?target= query parameter");
+				return null;
+			}
 			try {
 				const u = new URL(perReq);
+				console.log(`[proxy] routing request to target: ${u.origin}`);
 				return u.origin;
 			} catch (e) {
 				// If just an origin without protocol was provided, assume https
-				if (/^[a-z0-9.-]+(:[0-9]+)?$/i.test(perReq)) return `https://${perReq}`;
-				return TARGET;
+				if (/^[a-z0-9.-]+(:[0-9]+)?$/i.test(perReq)) {
+					console.log(`[proxy] routing request to target: https://${perReq}`);
+					return `https://${perReq}`;
+				}
+				console.error("[proxy] Invalid target format:", perReq);
+				return null;
 			}
 		},
-		// Resolve the upstream path dynamically: if a full URL was provided use its path,
-		// otherwise forward the incoming request path unchanged.
+		// Ensure the upstream path preserves the original requested path (including /api)
+		pathRewrite: (path, req) => {
+			// req.originalUrl includes the full path as requested by the client
+			console.log(`[proxy] pathRewrite: ${path} -> ${req.originalUrl}`);
+			return req.originalUrl;
+		},
 		proxyReqPathResolver: (req) => {
-			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
-			if (!perReq) return req.originalUrl;
-			try {
-				const u = new URL(perReq);
-				// ensure path portion exists
-				return u.pathname + u.search;
-			} catch (e) {
-				return req.originalUrl;
-			}
+			const upstreamPath = req.originalUrl;
+			console.log(`[proxy] forwarding incoming path for ${req.method} ${req.url} -> ${upstreamPath}`);
+			return upstreamPath;
 		},
 		onProxyReq(proxyReq, req, res) {
-			// If the request body was parsed by express.json(), we need to re-serialize it
-			// and explicitly write it to the proxy request. This prevents empty bodies
-			// for POST/PUT when middleware has already consumed the stream.
-			if (req.body && Object.keys(req.body).length) {
-				const bodyData = JSON.stringify(req.body);
-				// ensure correct headers
-				proxyReq.setHeader("Content-Type", "application/json");
-				proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-				proxyReq.write(bodyData);
-				proxyReq.end();
-				console.log(`[proxy] forwarded JSON body to target for ${req.method} ${req.url}:`, bodyData);
-			} else {
-				// No parsed body available; nothing to forward here
+			// For local dev: do NOT forward the browser Origin/Referer to upstream.
+			// Present the request as server-to-server to avoid upstream CORS allowlist checks.
+			proxyReq.removeHeader("Origin");
+			proxyReq.removeHeader("Referer");
+			// Keep Host and Authorization if present so upstream receives expected host/auth
+			const perReq = req.headers["x-proxy-target"] || (req.query && (req.query.target || req.query.proxyTarget));
+			if (perReq) {
+				try {
+					const u = new URL(perReq);
+					if (u.port) {
+						proxyReq.setHeader("Host", `${u.hostname}:${u.port}`);
+					} else {
+						proxyReq.setHeader("Host", u.hostname);
+					}
+					if (req.headers["authorization"]) {
+						proxyReq.setHeader("Authorization", req.headers["authorization"]);
+					}
+				} catch (e) {
+					// ignore
+				}
 			}
 		},
 		onProxyRes(proxyRes, req, res) {
-			// Ensure CORS headers remain present on proxied responses
-			const origin = req.headers.origin || "*";
-			proxyRes.headers["access-control-allow-origin"] = origin;
-			proxyRes.headers["access-control-allow-credentials"] = "true";
+			// Make proxied responses permissive for the browser
+			proxyRes.headers["access-control-allow-origin"] = "*";
+			proxyRes.headers["access-control-allow-credentials"] = "false";
 			proxyRes.headers["access-control-allow-methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
 			proxyRes.headers["access-control-allow-headers"] = req.headers["access-control-request-headers"] || "Origin, X-Requested-With, Content-Type, Accept, Authorization";
-			// Ensure caches vary by Origin so responses for different origins don't get mixed
 			proxyRes.headers["vary"] = "Origin";
 
-			console.log(`[proxy] proxied response ${req.method} ${req.url} -> ${proxyRes.statusCode}`);
+			// Also ensure Express response headers include CORS so the browser sees them
+			try {
+				res.setHeader("Access-Control-Allow-Origin", "*");
+				res.setHeader("Access-Control-Allow-Credentials", "false");
+				res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+				res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"] || "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+				res.setHeader("Vary", "Origin");
+			} catch (e) {
+				// ignore if headers already sent
+			}
+
+			// Collect upstream response body for debugging if status >= 400
+			let body = "";
+			proxyRes.on("data", (chunk) => {
+				try {
+					body += chunk.toString();
+				} catch (e) {
+					// ignore
+				}
+			});
+			proxyRes.on("end", () => {
+				console.log(`[proxy] proxied response ${req.method} ${req.url} -> ${proxyRes.statusCode}`);
+				if (proxyRes.statusCode >= 400) {
+					console.error(`[proxy] upstream response body:`, body.slice(0, 2000));
+				}
+			});
 		},
 		onError(err, req, res) {
 			console.error("[proxy] error", err && err.message);
 			if (err && err.code === "ECONNREFUSED") {
-				console.error(`[proxy] ECONNREFUSED when connecting to target ${TARGET}. Is the target reachable?`);
+				console.error("[proxy] ECONNREFUSED: ensure target is reachable via x-proxy-target header or ?target= query parameter");
 			}
 			if (!res.headersSent) {
 				res.statusCode = 502;
@@ -116,5 +147,6 @@ app.use(
 );
 
 app.listen(PORT, () => {
-	console.log(`[proxy] Listening on http://localhost:${PORT} -> ${TARGET}`);
+	console.log(`[proxy] Listening on http://localhost:${PORT}`);
+	console.log(`[proxy] Target must be specified per-request via x-proxy-target header or ?target= query parameter`);
 });
