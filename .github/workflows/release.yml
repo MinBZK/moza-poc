@@ -29,11 +29,12 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             RAW_TAG="${{ github.event.inputs.tag }}"
-            # Op deze branch wordt niet de tag zelf gebouwd maar de branch: de
-            # source van de tag draait niet meer (zie container/Containerfile).
-            # De tag blijft wél de naam bepalen, zodat de release-URL van het
-            # onderzoek hetzelfde blijft.
-            echo "ref=${{ github.ref }}" >> "$GITHUB_OUTPUT"
+            # De tag bepaalt wat er gebouwd wordt, niet de branch waarop je de
+            # workflow start. Een onderzoeksrelease hoort het prototype te tonen
+            # zoals het is voorgelegd; bouwen vanaf de branch zet de laatste
+            # versie op een URL waar iemand het onderzoek van maanden terug
+            # verwacht.
+            echo "ref=refs/tags/$RAW_TAG" >> "$GITHUB_OUTPUT"
           else
             RAW_TAG="${GITHUB_REF#refs/tags/}"
             echo "ref=$GITHUB_REF" >> "$GITHUB_OUTPUT"
