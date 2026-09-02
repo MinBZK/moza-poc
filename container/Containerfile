@@ -51,13 +51,9 @@ FROM nginxinc/nginx-unprivileged:alpine
 # preview met de hand in de ZAD-UI moeten zetten. De HOST-varianten horen erbij: de ingress daar
 # routeert op de Host-header, en de browser-host doorgeven levert de verkeerde vhost.
 #
-# LET OP — dit wijst nu naar een PR-omgeving van FBS (`pr-250`) en niet naar hun `test`, omdat daar
-# de gevulde dataset staat. Die omgeving verdwijnt zodra hun PR sluit, en dan wijzen deze defaults
-# naar een dood adres. Dat leest dan als een storing en niet als een configuratiefout, want de
-# variabele ís gezet. Zet ze op dat moment op de stabiele omgeving:
-#   BACKEND_KETEN=https://uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl
-#   BACKEND_PERSONAS=https://demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl
-# (die laatste gaf op 1 september nog 503; die wacht op een merge aan hun kant).
+# Het adres is hun `test`, en dat hoort een blijvende omgeving te zijn. Een PR-omgeving van FBS
+# hoort hier niet: die wordt opgeruimd zodra hun PR sluit, en een dood adres leest in de
+# berichtenbox als een storing en niet als een configuratiefout — de variabele ís immers gezet.
 #
 # Een deployment die zijn eigen keten heeft, overschrijft ze gewoon in de ZAD-UI. Lokaal doet
 # tests-integratie/proeftuin-lokaal.yaml dat al: die wijst naar 127.0.0.1, zodat een lokale test de
@@ -67,12 +63,12 @@ ENV BACKEND_ORIGIN=http://dabackend:8000 \
     BACKEND_API= \
     BACKEND_PROFIEL= \
     BACKEND_API_2= \
-    BACKEND_KETEN=https://uitvraag-pr-250-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_KETEN=https://uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
     BACKEND_DEMO= \
-    BACKEND_PERSONAS=https://demopersonas-pr-250-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
-    BACKEND_KETEN_HOST=uitvraag-pr-250-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_PERSONAS=https://demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_KETEN_HOST=uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
     BACKEND_DEMO_HOST= \
-    BACKEND_PERSONAS_HOST=demopersonas-pr-250-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_PERSONAS_HOST=demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
     NGINX_ENVSUBST_FILTER='^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$'
 
