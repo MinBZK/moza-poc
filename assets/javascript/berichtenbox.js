@@ -1902,6 +1902,56 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}
 	}
 
+	/**
+	 * Zet in het kruimelpad van een detailpagina waar dit bericht staat.
+	 *
+	 * Het sjabloon zet er "Inbox" neer, want dat is waar een bericht staat zolang niemand het
+	 * verplaatst heeft, en zonder JavaScript blijft dat het beste antwoord. Waar het écht staat
+	 * weet alleen de bewaarde staat: archief, prullenbak of een eigen map van de bezoeker.
+	 *
+	 * De kruimel wijst naar die weergave, zodat "terug naar waar ik vandaan kwam" ook echt daar
+	 * uitkomt. Voor de tabs hierboven gebeurt hetzelfde in bindDetailPaginaActies; dat is dezelfde
+	 * vraag, op een andere plek op het scherm.
+	 */
+	function werkMapKruimelBij() {
+		const kruimel = document.querySelector("[data-berichtenbox-map-kruimel]");
+		if (!kruimel) return;
+
+		const inhoud = document.querySelector(".berichtenbox-content[data-bericht-id]");
+		const berichtId = inhoud ? inhoud.dataset.berichtId : new URLSearchParams(location.search).get("id");
+		if (!berichtId) return;
+
+		const link = kruimel.querySelector("a");
+		if (!link) return;
+
+		const basis = berichtenboxBasis();
+		const status = statusVan(berichtId);
+
+		let naam = "Inbox";
+		let pad = basis;
+
+		if (status === "archief") {
+			naam = "Archief";
+			pad = basis + "berichtenbox-archief/";
+		} else if (status === "prullenbak") {
+			naam = "Prullenbak";
+			pad = basis + "berichtenbox-prullenbak/";
+		} else {
+			// In de inbox kan het bericht nog in een eigen map van de bezoeker zitten. Die map is
+			// geen aparte pagina maar een filter op de inbox, vandaar de queryparameter.
+			const bericht = data.berichten.find((b) => b.id === berichtId);
+			const slug = mapVan(berichtId, bericht ? bericht.map : null);
+			const map = slug ? [...data.mappen, ...state.eigenMappen].find((m) => m.slug === slug) : null;
+			if (map) {
+				naam = map.naam;
+				pad = basis + "?map=" + encodeURIComponent(map.slug);
+			}
+		}
+
+		link.textContent = naam;
+		link.setAttribute("href", url(pad));
+	}
+
 	// Vul de generieke demo-detailpagina met berichtdata uit state.
 	function vulDemoDetailPagina() {
 		const detail = document.querySelector("[data-demo-detail]");
@@ -2499,6 +2549,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// aan, en die stil laten falen levert een pagina op waar klikken niets doet.
 		veilig({ log: "Vullen van de detailpagina", bezoeker: "Wij kunnen dit bericht niet volledig tonen." }, vulDemoDetailPagina);
 		veilig({ log: "Binden van de acties op de detailpagina", bezoeker: "U kunt dit bericht nu niet archiveren, verwijderen of markeren." }, bindDetailPaginaActies);
+
+		// Eigen afscherming: gaat dit mis, dan staat er "Inbox" in het kruimelpad terwijl het bericht
+		// elders staat. Vervelend, maar geen reden om de knoppen hierboven mee te nemen.
+		veilig({ log: "De map in het kruimelpad", bezoeker: "Het kruimelpad laat niet zien waar dit bericht staat." }, werkMapKruimelBij);
 
 		// Ná het register: dit hangt aan de bron. De wéérgave hoeft hier niet bijgewerkt te worden —
 		// de lading meldt zich als bronwijziging, en die luisteraar doet het.

@@ -156,6 +156,14 @@ function detailHtml(bericht, { metStoringsblok = true } = {}) {
 
 	return `
 <article class="berichtenbox">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="/moza/">Home</a></li>
+			<li><a href="/moza/berichtenbox/">Berichtenbox</a></li>
+			<li data-berichtenbox-map-kruimel><a href="/moza/berichtenbox/">Inbox</a></li>
+			<li aria-current="page">${bericht.onderwerp}</li>
+		</ol>
+	</nav>
 	<section class="berichtenbox-content" data-bericht-id="${bericht.id}" data-afzender-id="${bericht.magazijnId}" data-afzender-naam="${bericht.afzender}">
 		<h1 class="h3">${bericht.onderwerp}</h1>
 ${storing}

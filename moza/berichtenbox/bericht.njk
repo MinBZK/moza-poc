@@ -17,6 +17,7 @@ eleventyComputed:
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
 			<li><a href="{{ '/moza/berichtenbox/' | url }}">Berichtenbox</a></li>
+			<li data-berichtenbox-map-kruimel>{# Waar dit bericht staat. De status komt uit de bewaarde staat, dus JavaScript zet de naam en de link; hier staat de inbox, want daar staat een bericht zolang niemand het verplaatst heeft. #}<a href="{{ '/moza/berichtenbox/' | url }}">Inbox</a></li>
 			<li aria-current="page">{{ bericht.onderwerp }}</li>
 		</ol>
 	</nav>
