@@ -298,9 +298,10 @@ Drie dingen om te weten bij het uitrollen:
   `/api/` gewoon werken.
 - **De keten heeft een default naar de publieke omgeving van FBS.** Zonder die default toont elke
   PR-preview een configuratie-502 voor de aangesloten persona's, want de deploy-action kan geen
-  runtime-env zetten. De default wijst nu naar een PR-omgeving van FBS omdat daar de gevulde dataset
-  staat; verdwijnt die, dan wijst hij naar een dood adres en leest dat als een storing. Het adres
-  staat in `container/Containerfile`, met de stabiele tegenhanger ernaast.
+  runtime-env zetten. Het adres staat in `container/Containerfile` en wijst naar hun `test`. Wijs
+  het niet naar een PR-omgeving van hen: die wordt opgeruimd zodra hun PR sluit, en dan wijzen deze
+  defaults naar een dood adres. Dat leest als een storing en niet als een configuratiefout, want de
+  variabele ís gezet.
 - **Een configuratiefout is te herkennen aan `X-Proxy-Configuratie`.** Die header staat op het
   502-antwoord van elke guard en noemt de ontbrekende variabele. Een omgevallen upstream geeft óók
   een 502, maar zonder die header — daarmee kan de berichtenbox "deze omgeving is niet volledig
