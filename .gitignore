@@ -35,3 +35,7 @@ style-dictionary/node_modules/*
 !.vscode/settings.json
 # JetBrains IDE
 .idea/
+node_modules
+
+# React
+react-islands/dist
