@@ -6,8 +6,12 @@ export const pocFetch = async <T = unknown>({ path, baseUrl, params, method = "G
 	const headers: Record<string, string> = { "Content-Type": "application/json" };
 
 	if (isLocalhost) {
-		// Local dev: use local proxy and instruct it which upstream to call
-		const proxyPort = 8080;
+		// Local dev: use local proxy and instruct it which upstream to call.
+		// De site draait lokaal op 8080, dus de proxy staat ernaast op 8081:
+		// `PROXY_PORT=8081 npm run proxy`. Delen ze een poort, dan vangt de
+		// dev-server deze aanroepen op en krijgt de island zijn eigen 404-pagina
+		// terug in plaats van gegevens.
+		const proxyPort = 8081;
 		fetchUrl = `http://localhost:${proxyPort}${path}`;
 		headers["x-proxy-target"] = upstreamUrl;
 	} else {
