@@ -3,10 +3,10 @@ _site/
 _test_build/
 .astro/
 storybook-static/
-style-dictionary/node_modules/
+style-dictionary/node_modules
 
 # Node
-node_modules/
+node_modules
 
 # Secrets
 .env
