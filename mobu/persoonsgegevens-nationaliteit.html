@@ -1,0 +1,23 @@
+---
+title: "MijnOverheid: Persoonsgegevens — Nationaliteit"
+permalink: "/mobu/persoonsgegevens/nationaliteit/"
+---
+
+{% include "side-nav-mobu.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li><a href="{{ '/mobu/' | url }}">Home</a></li>
+			<li><a href="{{ '/mobu/identiteit/' | url }}">Identiteit</a></li>
+			<li aria-current="page">Mijn Persoonsgegevens</li>
+		</ol>
+	</nav>
+	<h1>Mijn Persoonsgegevens</h1>
+	{% set pgTab = "nationaliteit" %}
+	<section class="card tabs">
+		{% include "persoonsgegevens-tabs.njk" %}
+		{% include "persoonsgegevens-content.njk" %}
+	</section>
+	{% include "persoonsgegevens-faq.njk" %}
+</article>

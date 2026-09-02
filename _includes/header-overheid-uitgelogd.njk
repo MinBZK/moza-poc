@@ -1,18 +1,20 @@
 <header>
+	<a class="skip-link btn-cta" href="#hoofd-inhoud">Ga naar hoofdinhoud</a>
 
-	<figure class="logo">
-		<a href="/">
-			<img src="{{ '/assets/images/beeldmerk-rijksoverheid.svg' | url }}" alt="Naar de homepage van MijnOverheid Zakelijk" height="96" width="48">
-		</a>
-	</figure>
+	<div class="logo">
+		<figure>
+			<a href="/">
+				<img src="{{ '/assets/images/beeldmerk-rijksoverheid.svg' | url }}" alt="Naar de homepage van MijnOverheid Zakelijk" />
+			</a>
+		</figure>
+		<a class="language-switch" href="#">English</a>
+	</div>
 
 	<div class="page-head">
 		<span class="page-title">MijnOverheid Zakelijk</span>
 		<div class="user-menu">
-			<a class="icon-link" href="{{ '/moza/' | url }}" data-inlogflow-link>
-				{% include "icon-inloggen.njk" %}
-				Inloggen
-			</a>
+			<a class="icon-link" href="{{ '/inloggen/zakelijk/' | url }}" data-inlogflow-link>{% include "icon-inloggen.njk" %} Inloggen</a>
+			<span hidden data-feature="Inlogflow" data-feature-type="functionaliteit" data-feature-default="off"></span>
 		</div>
 	</div>
 

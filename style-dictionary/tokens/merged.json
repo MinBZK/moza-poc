@@ -860,6 +860,11 @@
           "$type": "color",
           "$value": "{color.lintblauw.600}",
           "$description": "Bij toetsenbord-, spraak-, en switchfocus"
+        },
+        "outline-backing": {
+          "$type": "color",
+          "$value": "{color.neutraal.wit}",
+          "$description": "Bij toetsenbord-, spraak-, en switchfocus"
         }
       },
       "disabled": {
@@ -1271,6 +1276,20 @@
         "$type": "color",
         "$value": "{color.lintblauw.500}"
       }
+    },
+    "role": {
+      "private": {
+        "$type": "color",
+        "$value": "{color.hemelblauw.500}"
+      },
+      "business": {
+        "$type": "color",
+        "$value": "{color.lintblauw.500}"
+      },
+      "authorized": {
+        "$type": "color",
+        "$value": "{color.oranje.500}"
+      }
     }
   },
   "size": {
@@ -1667,7 +1686,8 @@
         "$value": {
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
-          "fontSize": "{text.size.body.md}"
+          "fontSize": "{text.size.body.md}",
+          "lineHeight": "{text.line-height.md}"
         }
       },
       "footer": {
@@ -1676,7 +1696,7 @@
           "fontFamily": "{text.font-family.default}",
           "fontWeight": "{text.font-weight.regular}",
           "fontSize": "{text.size.body.sm}",
-          "lineHeight": "{text.line-height.md}"
+          "lineHeight": "{text.line-height.sm}"
         }
       }
     },
@@ -2081,7 +2101,13 @@
   "focus": {
     "outline": {
       "$type": "other",
-      "$value": "{border-width.lg} dotted {color.interactive.focus.outline}"
+      "$value": "{border-width.lg} dashed {color.interactive.focus.outline}",
+      "$description": "Geblokte toetsenbordfocus: dashes met witte backing-ring (focus.outline-backing)"
+    },
+    "outline-backing": {
+      "$type": "other",
+      "$value": "0 0 0 calc({focus.outline-offset.md} + {border-width.lg}) {color.interactive.focus.outline-backing}",
+      "$description": "Witte ring achter de focus-dashes, leesbaar op elke achtergrond"
     },
     "outline-offset": {
       "md": {

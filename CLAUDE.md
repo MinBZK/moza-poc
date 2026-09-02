@@ -4,7 +4,7 @@ Dit bestand wordt automatisch geladen bij elke Claude Code-sessie. Het bevat de 
 
 ## Project
 
-MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy en gedocumenteerd in Storybook. Geen frameworks, geen preprocessors. De code is het ontwerp.
+MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy en gedocumenteerd in Storybook. Geen frameworks, geen preprocessors. De code is het ontwerp.
 
 - Prototype: `moza/` (zakelijk) en `mobu/` (burger)
 - Storybook stories: `stories/`
@@ -17,13 +17,13 @@ MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy 
 
 ## Ontwerp-principes (kernregels)
 
-1. **Semantische HTML eerst** — gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
-2. **Toegankelijkheid altijd** — toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
-3. **CSS logical properties** — gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
-4. **Design tokens** — gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
-5. **Eenvoudigst mogelijke oplossing** — HTML en CSS waar het kan, JavaScript waar het moet. Platform boven framework.
-6. **Spacing** — gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
-7. **Feature flags** — gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
+1. **Semantische HTML eerst**; gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
+2. **Toegankelijkheid altijd**; toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
+3. **CSS logical properties**; gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
+4. **Design tokens**; gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
+5. **Eenvoudigst mogelijke oplossing in de interface-laag**; HTML en CSS waar het kan, JavaScript waar het moet, platform boven framework. Dit geldt voor wat de gebruiker in de browser voor zich krijgt, niet voor de laag eromheen zoals build-scripts, datatransformaties, backend-koppelingen en testopstellingen.
+6. **Spacing**; gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
+7. **Feature flags**; gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
 
 ## Schrijfwijzer (kernregels)
 
@@ -48,8 +48,9 @@ MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy 
 ### Notatie
 
 - Datums: dag maandnaam jaar (12 februari 2018), volledige maandnaam
-- Gedachtestreep (—) voor scheiding: "19 februari 2026 — De Stationsweg is afgesloten."
-- Typografische aanhalingstekens in lopende tekst: "dubbel" en 'enkel', ook in samentrekkingen (MKB'er, ZZP'er, komma's)
+- Datum gevolgd door een beschrijving: scheid met een dubbele punt — "19 februari 2026: De Stationsweg is afgesloten."
+- Scheiding in lopende tekst: standaard de komma. Bevat de zin al komma’s waardoor die onoverzichtelijk wordt, gebruik dan een puntkomma (voor volledige, nauw samenhangende zinnen of komma-rijke opsommingen). De gedachtestreep (—) alleen als uiterste middel, voor extra nadruk op een ingevoegd of slot-zinsdeel
+- Typografische aanhalingstekens in lopende tekst: “dubbel” en ‘enkel’, ook in samentrekkingen (mkb’er, zzp’er, komma’s)
 - Rechte quotes alleen in code en HTML-attributen
 - Kopteksten als zelfstandige naamwoorden, geen punt aan het einde
 
@@ -70,6 +71,12 @@ MijnOverheid Zakelijk (MOZa) — een HTML/CSS/JS prototype gebouwd met Eleventy 
 - Pagina-layout: `body` is een flex column met `min-block-size: 100dvh`, `<main>` heeft `flex: 1` zodat `<footer>` altijd onderaan staat
 - Lege dynamische containers: geef ze `class="dynamic-list"` zodat ze via `.dynamic-list:empty { display: none }` uit de layout vallen tot er items zijn
 - Persona's (testaccounts): `_data/personas.json` + `assets/javascript/personas.js`. Wisselbaar via Flags-paneel of `?persona=`-URL-param. localStorage-key: `persona`. Debug-API: `window.Personas`
+- Digitale Assistent, sessie-identiteit: de chat stuurt het `kvkNummer` van de actieve persona mee in de header `X-Test-User` (`getTestUser()` in `digitale-assistent.js`, als string zodat een voorloopnul niet wegvalt); het Flags-paneel kan het forceren via `setting:test-user-kvk`. De backend toetst het aan zijn allowlist `TEST_KVK_NUMMERS` en injecteert het server-side bij elke bronaanroep; `kvk_nummer` staat niet in de tool-schema's, dus het model kan de identiteit niet kiezen. Geen build-variabele, geen repo-secret, geen build-arg aan deze kant — alleen `TEST_KVK_NUMMERS=85234567,62345681,56789012` op de backend. Persona's met een backend-profiel: `koffiezaak` (85234567), `bloemenkweker` (62345681), `haarstylist` (56789012); de rest hoort "log eerst in" te krijgen, als gewoon `answer`-event en niet als foutmelding. Let op: dit is **geen authenticatie** — de header is in de browser aan te passen, wat voor een gesloten testgroep met fictieve data aanvaardbaar is (echte inlog is BETA-02)
+
+## Git
+
+- **Commits altijd ondertekenen.** Deze repo gebruikt SSH commit-signing (`commit.gpgsign=true`, `gpg.format=ssh`) zodat commits in GitHub als "Verified" verschijnen. Commit nooit met `--no-gpg-sign` of `-c commit.gpgsign=false`. Lukt ondertekenen niet (bijvoorbeeld geen key-agent beschikbaar), maak de commit dan niet zelf — meld het en laat de gebruiker committen vanuit een omgeving waar de signing-key wél beschikbaar is.
+- Commitberichten volgen de emoji-conventie uit `README.md` (➕ Added, ✏️ Modified, ❌ Deleted, 🧼 Hygiene, 🐛 Bugfix, 🔁 Renamed).
 
 ## Volledig referentie
 

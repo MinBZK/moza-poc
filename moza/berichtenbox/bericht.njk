@@ -22,7 +22,6 @@ eleventyComputed:
 	</nav>
 
 	<section class="card">
-		{% include "berichtenbox-tabs.njk" %}
 
 		<section class="berichtenbox-content" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}" data-afzender-naam="{{ bericht.afzender }}"{% if bericht.heeftBijlage %} data-heeft-bijlage="true"{% endif %}>
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
@@ -32,31 +31,58 @@ eleventyComputed:
 				{% if bericht.map %}· <span data-maplabel>{{ bericht.map }}</span>{% endif %}
 			</p>
 
-			<div class="action-group">
-				<button class="icon-button" data-actie="naar-inbox" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" />
-					<path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" />
-				</svg>Verplaats naar inbox</button>
-				<button class="icon-button" data-actie="archiveren">
-					{% icon "/assets/icons/icon-archief.svg" %}Archiveer
-				</button>
-				<button class="icon-button" data-actie="verplaatsen">
-					{% icon "/assets/icons/icon-archief.svg" %}Verplaats naar map
-				</button>
-				<button class="icon-button" data-actie="markeer-ongelezen">
-					{% include "icon-ongelezen.njk" %}Markeer als ongelezen
-				</button>
-				<button class="icon-button" data-actie="verwijderen">
-					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijder bericht
-				</button>
+			<div class="feedback feedback-warning" hidden data-bericht-onbeschikbaar role="status">
+				{% include "icon-feedback-warning.njk" %}
+				<div>
+					<p>Dit bericht is momenteel niet beschikbaar omdat <b data-bron-uitval-naam></b> onbereikbaar is geworden. Probeer het later opnieuw.</p>
+					<p><button type="button" class="link-button" data-bericht-retry>Opnieuw proberen</button></p>
+				</div>
 			</div>
 
 			<div class="berichtenbox-detail-body">
+				{% if bericht.variantCInhoud %}
+				<div class="variant-c-only">
+					{% for alinea in bericht.variantCInhoud.split('\n\n') %}
+					<p>{{ alinea }}</p>
+					{% endfor %}
+				</div>
+				<div class="variant-ab-only">
+					{% for alinea in bericht.inhoud.split('\n\n') %}
+					<p>{{ alinea }}</p>
+					{% endfor %}
+				</div>
+				{% else %}
 				{% for alinea in bericht.inhoud.split('\n\n') %}
 				<p>{{ alinea }}</p>
 				{% endfor %}
+				{% endif %}
 			</div>
 
+			{% if bericht.acties %}
+			<div class="variant-c-only berichtenbox-detail-acties-panel">
+				<h2 class="h4">Wat kunt u doen?</h2>
+				{% if bericht.actiesUitleg %}<p>{{ bericht.actiesUitleg }}</p>{% endif %}
+				<div class="berichtenbox-detail-acties">
+					{% for actie in bericht.acties %}
+					{% set actieClass = "btn-cta" if actie.primair else "secondary" %}
+					<button type="button" class="{{ actieClass }}">{{ actie.label }}</button>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+
+			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden role="status" aria-live="polite">
+					<p>PDF wordt geladen…</p>
+					<div class="progress-bar"><div class="progress-bar-fill progress-bar-fill--indeterminate"></div></div>
+				</div>
+				<div class="pdf-reveal"><object class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview type="application/pdf" aria-label="Voorbeeld van de bijlage" hidden><p>Uw browser kan de PDF niet tonen. Gebruik de download-link hieronder.</p></object></div>
+				<ul class="list-indent">
+					<li><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></li>
+					<li><a href="#" class="content-link" data-berichtenbox-tekst-download target="_blank" rel="noopener" download hidden>Lees tekst-versie</a></li>
+				</ul>
+			</div>
+			<p class="variant-c-only"><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
 			{% if bericht.heeftBijlage %}
 			<section class="berichtenbox-attachments" data-berichtenbox-attachments>
 				<h2>Bijlage(n)</h2>
@@ -64,6 +90,28 @@ eleventyComputed:
 				<ul class="berichtenbox-attachments-list list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
 			{% endif %}
+
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<!-- <button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button> -->
+				<button class="icon-button" data-actie="doorsturen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Delen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+			</div>
+
+			<!-- <p class="berichtenbox-detail-organisatie">
+				<a class="content-link" href="{% if bericht.magazijnId == 'belastingdienst' %}{{ '/mijn-belastingdienst/berichtenbox/' | url }}{% else %}#{% endif %}" rel="external">{% icon "/assets/icons/icon-berichtenbox.svg" %}Ga naar de Berichtenbox van {{ bericht.afzender }}</a>
+			</p> -->
 		</section>
 	</section>
 

@@ -14,52 +14,15 @@
 		<span class="page-title">MijnOverheid Zakelijk</span>
 		<div class="user-menu">
 			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit" data-feature-default="off">
-				<button class="account-switcher-toggle icon-label" aria-expanded="false" aria-haspopup="true">
-					{% include "icon-persoon.njk" %}
-					<span class="account-switcher-label" data-profiel="initialen-bedrijf">R.J. Vogel van Bloom B.V.</span>
+				<button class="account-switcher-toggle icon-label {% if '/moza/belang-' in page.url %}group-label-authorized{% else %}group-label-business{% endif %}" aria-expanded="false" aria-haspopup="true">
+					{% if '/moza/belang-' in page.url %}{% icon "/assets/icons/icon-belang.svg" %}{% else %}{% icon "/assets/icons/icon-werk.svg" %}{% endif %}
+					<span{% if '/moza/belang-' not in page.url %} data-profiel="voornaam-bedrijf"{% endif %}>{% if '/moza/belang-vve/' in page.url %}Robin Vogel voor VvE Residentie Parkzicht{% elif '/moza/belang-tuin/' in page.url %}Robin Vogel voor Volkstuinvereniging De Groene Long{% elif '/moza/belang-winter/' in page.url %}Robin Vogel voor Familiebedrijf Winter{% else %}Robin Vogel van Kwekerij De Bloesem{% endif %}</span>
 				</button>
-				<ul class="account-switcher-menu" role="menu" hidden>
-					<li class="account-switcher-group-label">Mijn ondernemingen</li>
-					<li role="menuitem">
-						<a href="{{ '/moza/' | url }}" aria-current="true">
-							Bloom B.V. <span>Eigenaar</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Vogel & Partners Consultancy <span>Eigenaar</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Kwartaal Vastgoed B.V.
-							<span>Eigenaar</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Belangen</li>
-					<li role="menuitem">
-						<a href="#">
-							Stichting Groenrijk
-							<span>Bestuurslid</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							Coöperatie ZuidWest U.A.
-							<span>Aandeelhouder</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Privé</li>
-					<li role="menuitem">
-						<a href="#">
-							R.J. Vogel
-						</a>
-					</li>
-				</ul>
+				{% include "account-switcher-menu.njk" %}
 			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}
-				<span data-profiel="naam">R.J. Vogel</span>
+				<span data-profiel="naam">Robin Vogel</span>
 			</span>
 			<a class="icon-link" href="{{ '/moza/uitgelogd/' | url }}">
 				{% include "icon-inloggen.njk" %}

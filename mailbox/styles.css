@@ -360,6 +360,10 @@ button { cursor: pointer;
 .message {
 	border-block-end: 1px solid var(--border);
 	padding: 20px 32px;
+	a {
+		cursor: default;
+		text-decoration: none;
+	}
 }
 .message:last-child { border-block-end: 0; }
 .message-meta { align-items: start;
@@ -763,7 +767,7 @@ a.mail-item { color: inherit;
 	padding: 1px 5px;
 }
 
-/* Responsive — collapse to single pane */
+/* Responsive, collapse to single pane */
 @media (max-width: 1100px) {
 	:root { --list-w: 320px;
 		--sidebar-w: 64px; }
@@ -801,17 +805,18 @@ a.mail-item { color: inherit;
 	background: #fff;
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
-	box-shadow: 0 10px 30px rgba(0,0,0,.15);
+	box-shadow: 0 10px 30px rgb(0 0 0 / 15%);
 	inset-block-end: 2rem;
 	inset-inline-end: 2rem;
 	max-block-size: 70vh;
+	min-inline-size: 280px;
 	overflow-y: auto;
 	padding: 16px;
 	position: fixed;
-	min-inline-size: 280px;
 	z-index: 1;
 }
-.feature-flags-heading { font-weight: 600; margin: 0 0 8px; }
+.feature-flags-heading { font-weight: 600;
+	margin: 0 0 8px; }
 .feature-flags-group-heading {
 	border-block-start: 1px solid #e5e7eb;
 	color: #6b7280;
@@ -819,7 +824,9 @@ a.mail-item { color: inherit;
 	margin-block: 12px 6px;
 	padding-block-start: 8px;
 }
-.feature-flags-panel ul { list-style: none; padding: 0; margin: 0; }
+.feature-flags-panel ul { list-style: none;
+	margin: 0;
+	padding: 0; }
 .feature-flags-panel label {
 	align-items: center;
 	cursor: pointer;
@@ -838,12 +845,10 @@ a.mail-item { color: inherit;
 	margin-block-start: 16px;
 	padding: 6px 12px;
 }
-.settings-radio-group,
-.settings-field { display: none; }
+.settings-radio-group, .settings-field { display: none; }
 
 /* Feature-flag link-action: strip anchor-styling als href is verwijderd */
-.feature-link-disabled,
-.message-body a.feature-link-disabled {
+.feature-link-disabled, .message-body a.feature-link-disabled {
 	color: inherit;
 	cursor: default;
 	text-decoration: none;

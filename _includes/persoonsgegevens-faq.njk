@@ -1,0 +1,18 @@
+{% set tabData = persoonsgegevens[pgTab] %}
+{% if tabData.faqs %}
+	<section class="card">
+		<h2>Veelgestelde vragen</h2>
+		<ul class="accordion">
+			{% for faq in tabData.faqs %}
+				<li>
+					<details name="pg-faq-{{ pgTab }}">
+						<summary>
+							<h3>{{ faq.q }}</h3>
+						</summary>
+						{{ faq.a | safe }}
+					</details>
+				</li>
+			{% endfor %}
+		</ul>
+	</section>
+{% endif %}

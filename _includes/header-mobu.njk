@@ -1,52 +1,28 @@
 <header>
+	<a class="skip-link btn-cta" href="#hoofd-inhoud">Ga naar hoofdinhoud</a>
 
-	<figure class="logo">
-		<a href="/">
-			<img src="{{ '/assets/images/beeldmerk-rijksoverheid.svg' | url }}" alt="Naar de homepage van MijnOverheid">
-		</a>
-	</figure>
+	<div class="logo">
+		<figure>
+			<a href="/">
+				<img src="{{ '/assets/images/beeldmerk-rijksoverheid.svg' | url }}" alt="Naar de homepage van MijnOverheid Zakelijk">
+			</a>
+		</figure>
+		<a href="#" class="language-switch">English</a>
+	</div>
 
 	<div class="page-head">
 		<span class="page-title">MijnOverheid</span>
 		<div class="user-menu">
 			<div class="account-switcher" data-feature="Accountwisselaar" data-feature-type="functionaliteit" data-feature-default="off">
-				<button class="account-switcher-toggle icon-label" aria-expanded="false" aria-haspopup="true">
-					{% include "icon-persoon.njk" %}
-					<span class="account-switcher-label">R.J. Vogel</span>
+				<button class="account-switcher-toggle icon-label {% if '/mobu/namens-' in page.url %}group-label-authorized{% else %}group-label-private{% endif %}" aria-expanded="false" aria-haspopup="true">
+					{% if '/mobu/namens-' in page.url %}{% icon "/assets/icons/icon-vertegenwoordiging.svg" %}{% else %}{% include "icon-persoon.njk" %}{% endif %}
+					<span>{% if '/mobu/namens-mantelzorg/' in page.url %}Robin Vogel voor Anne Vogel-de Groot{% elif '/mobu/namens-kind/' in page.url %}Robin Vogel voor Sofia René Vogel{% else %}Robin Vogel{% endif %}</span>
 				</button>
-				<ul class="account-switcher-menu" role="menu" hidden>
-					<li class="account-switcher-group-label">Mijn gegevens</li>
-					<li role="menuitem">
-						<a href="{{ '/mobu/' | url }}" aria-current="true">
-							R.J. Vogel
-							<span>Privé</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Ik handel namens</li>
-					<li role="menuitem">
-						<a href="#">
-							A.M. Vogel-de Groot
-							<span>Mantelzorg</span>
-						</a>
-					</li>
-					<li role="menuitem">
-						<a href="#">
-							S.R. Vogel
-							<span>Ouderlijk gezag</span>
-						</a>
-					</li>
-					<li class="account-switcher-group-label">Zakelijk</li>
-					<li role="menuitem">
-						<a href="{{ '/moza/' | url }}">
-							Bloom B.V.
-							<span>Eigenaar</span>
-						</a>
-					</li>
-				</ul>
+				{% include "account-switcher-menu.njk" %}
 			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}
-				R.J. Vogel
+				Robin Vogel
 			</span>
 			<a class="icon-link" href="{{ '/mobu/uitgelogd/' | url }}">
 				{% include "icon-inloggen.njk" %}

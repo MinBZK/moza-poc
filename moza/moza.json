@@ -21,14 +21,14 @@
 			"label": "Berichtenbox",
 			"url": "/moza/berichtenbox/",
 			"icon": "/assets/icons/icon-berichtenbox.svg",
-			"feature": "Berichtenbox",
-			"unreadBadge": false
+			"feature": "Berichtenbox"
 		},
 		{
 			"label": "Lopende zaken",
 			"url": "/moza/lopende-zaken/",
 			"icon": "/assets/icons/icon-lopende-zaken.svg",
 			"feature": "Lopende zaken",
+			"badgeId": "zaken-count",
 			"disabled": true
 		},
 		{
@@ -54,7 +54,7 @@
 			"icon": "/assets/icons/icon-bewaar.svg"
 		},
 		{
-			"label": "Digitale assistent",
+			"label": "Digitale assistent (AI)",
 			"url": "/moza/digitale-assistent/",
 			"icon": "/assets/icons/icon-assistent.svg",
 			"feature": "Digitale assistent"

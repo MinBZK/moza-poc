@@ -8,10 +8,11 @@
  * Elementen met data-profiel-* attributen worden door dit script gevuld:
  *   data-profiel="voornaam"          → persoon.voornaam
  *   data-profiel="achternaam"        → persoon.achternaam
- *   data-profiel="initialen"         → persoon.initialen
  *   data-profiel="naam"              → persoon.voornaam + " " + persoon.achternaam
- *   data-profiel="initialen-bedrijf" → persoon.initialen + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
+ *   data-profiel="voornaam-bedrijf"  → persoon.voornaam + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
  *   data-profiel="handelsnaam"       → bedrijf.handelsnaam
+ *   data-profiel="functies"          → bedrijf.functies
+ *   data-profiel="website"           → bedrijf.website (als klikbare link)
  *   data-profiel="kvkNummer"         → bedrijf.kvkNummer
  *   data-profiel="vestigingsnummer"  → bedrijf.vestigingsnummer
  *   data-profiel="rsinNummer"        → bedrijf.rsinNummer
@@ -37,8 +38,18 @@
  *   <ul data-profiel-lijst="vestigingen"> … </ul>      → { nummer, type, adres }
  *   <ul data-profiel-lijst="ubo"> … </ul>              → { naam, aardVanBelang, groottevanBelang }
  *
- * Bij een lege array wordt de container verborgen en — indien aanwezig — een
+ * Bij een lege array wordt de container verborgen en, indien aanwezig, een
  * sibling <div data-profiel-leeg="sleutel" hidden> getoond als feedback-bericht.
+ *
+ * Elementen die alleen relevant zijn boven een wettelijke energiedrempel
+ * (zoals de digitale-assistent-CTA bij de informatieplicht energiebesparing)
+ * krijgen data-persona-energiedrempel, data-regelrecht-law="<wet>" en het
+ * hidden-attribuut. De drempel komt live uit RegelRecht via de backend
+ * (GET /regelrecht/definities?law=<wet>); het verbruik uit de persona-data
+ * (bedrijf.energie). Komt het verbruik boven de drempel, dan wordt het element
+ * getoond. Faalt de aanroep (wet niet op de allowlist, of geen backend), dan
+ * blijft het verborgen. Zo bepaalt een business rule de zichtbaarheid, niet een
+ * vaste persona-id.
  */
 
 (function () {
@@ -105,10 +116,11 @@
 		switch (sleutel) {
 			case "voornaam": return p.voornaam;
 			case "achternaam": return p.achternaam;
-			case "initialen": return p.initialen;
 			case "naam": return p.voornaam + " " + p.achternaam;
-			case "initialen-bedrijf": return p.initialen + " " + p.achternaam + " van " + b.handelsnaam;
+			case "voornaam-bedrijf": return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
 			case "handelsnaam": return b.handelsnaam;
+			case "functies": return b.functies;
+			case "website": return b.website;
 			case "kvkNummer": return b.kvkNummer;
 			case "vestigingsnummer": return b.vestigingsnummer;
 			case "rsinNummer": return b.rsinNummer;
@@ -157,6 +169,49 @@
 		return li;
 	}
 
+	// Toon [data-persona-energiedrempel]-elementen als het verbruik van de persona
+	// boven de RegelRecht-drempel uitkomt. De drempel komt van de backend
+	// (GET /regelrecht/definities?law=…, same-origin via de proxy; lokaal direct via
+	// window.MOZA_CHAT_API). Per wet één aanroep; faalt die (404 / geen backend),
+	// dan blijft het element verborgen.
+	function pasEnergiedrempelToe(persona) {
+		var elementen = document.querySelectorAll("[data-persona-energiedrempel]");
+		if (!elementen.length) return;
+		var energie = (persona.bedrijf && persona.bedrijf.energie) || {};
+		var kwh = Number(energie.elektriciteitKwh || 0);
+		var gas = Number(energie.gasM3 || 0);
+		var apiBase = typeof window.MOZA_CHAT_API === "string" ? window.MOZA_CHAT_API : "";
+		var drempelCache = {};
+
+		function haalDrempel(law) {
+			if (!drempelCache[law]) {
+				drempelCache[law] = fetch(apiBase + "/regelrecht/definities?law=" + encodeURIComponent(law), { signal: AbortSignal.timeout(4000) })
+					.then(function (r) {
+						return r.ok ? r.json() : null;
+					})
+					.then(function (d) {
+						return (d && d.definities) || null;
+					})
+					.catch(function () {
+						return null;
+					});
+			}
+			return drempelCache[law];
+		}
+
+		elementen.forEach(function (el) {
+			var law = el.getAttribute("data-regelrecht-law");
+			if (!law) return;
+			haalDrempel(law).then(function (def) {
+				if (!def) return; // 404 of onbereikbaar: niets tonen
+				var kwhDrempel = Number(def.DREMPEL_ELEKTRICITEIT_KWH);
+				var gasDrempel = Number(def.DREMPEL_GAS_M3);
+				var boven = (kwhDrempel && kwh > kwhDrempel) || (gasDrempel && gas > gasDrempel);
+				if (boven) el.hidden = false;
+			});
+		});
+	}
+
 	function pasToe(persona) {
 		// Vul alle data-profiel elementen.
 		document.querySelectorAll("[data-profiel]").forEach(function (el) {
@@ -184,7 +239,19 @@
 			}
 
 			if (tekst !== "" && tekst !== null && tekst !== undefined) {
-				el.textContent = String(tekst);
+				if (sleutel === "website") {
+					// Website als klikbare link tonen; de URL zonder protocol is
+					// leesbaarder als linktekst.
+					var url = String(tekst);
+					var link = document.createElement("a");
+					link.href = url;
+					link.target = "_blank";
+					link.rel = "external noopener";
+					link.textContent = url.replace(/^https?:\/\//, "");
+					el.replaceChildren(link);
+				} else {
+					el.textContent = String(tekst);
+				}
 			}
 		});
 
@@ -253,9 +320,20 @@
 			}
 		});
 
-		// Markeer de actieve persona in de kiezer.
+		// Toon elementen die alleen boven een wettelijke energiedrempel relevant
+		// zijn (bv. de assistent-CTA bij de informatieplicht energiebesparing). De
+		// drempel komt live uit RegelRecht via de backend; het verbruik uit de
+		// persona-data. Bij een mislukte aanroep (404 / geen backend) blijft het
+		// element verborgen.
+		pasEnergiedrempelToe(persona);
+
+		// Markeer de actieve persona (bv. in de accountwisselaar). Alleen in de
+		// eigenaar-context van /moza/: in belang- of /mobu/-contexten is geen
+		// onderneming "huidig" en bepaalt de server-side aria-current het actieve item.
+		var pad = location.pathname;
+		var eigenaarContext = pad.indexOf("/moza/") !== -1 && pad.indexOf("/moza/belang-") === -1;
 		document.querySelectorAll("[data-profiel-id]").forEach(function (el) {
-			var isActief = el.getAttribute("data-profiel-id") === persona.id;
+			var isActief = eigenaarContext && el.getAttribute("data-profiel-id") === persona.id;
 			if (isActief) {
 				el.setAttribute("aria-current", "true");
 			} else {
@@ -264,7 +342,31 @@
 		});
 	}
 
-	// Bouw de persona-kiezer in het feature flags paneel.
+	// Bouw één keuze-item (radio) voor een persona.
+	function maakPersonaItem(persona, i, actief) {
+		var li = document.createElement("li");
+		var label = document.createElement("label");
+		var radio = document.createElement("input");
+		radio.type = "radio";
+		radio.name = "persona";
+		radio.value = persona.id;
+		radio.checked = persona.id === actief.id;
+		radio.addEventListener("change", function () {
+			slaActiefOp(persona.id);
+			var params = new URLSearchParams(location.search);
+			params.set("persona", urlLabel(persona));
+			location.search = params.toString();
+		});
+		label.appendChild(radio);
+		var kiezerLabel = persona.label || ("Persona " + i);
+		label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
+		li.appendChild(label);
+		return li;
+	}
+
+	// Bouw de persona-kiezer in het feature flags paneel. Persona's met
+	// "archief": true blijven in de data (en aanroepbaar via ?persona=), maar
+	// staan in een apart uitklapbaar "Archief"-blok i.p.v. de hoofdlijst.
 	function bouwKiezer() {
 		var panel = document.querySelector(".feature-flags-panel");
 		if (!panel) return;
@@ -280,29 +382,34 @@
 		panel.insertBefore(heading, clearBtn);
 
 		var list = document.createElement("ul");
+		var archiefList = document.createElement("ul");
+		var aantalArchief = 0;
+		var actiefIsGearchiveerd = false;
 
 		personas.forEach(function (persona, i) {
-			var li = document.createElement("li");
-			var label = document.createElement("label");
-			var radio = document.createElement("input");
-			radio.type = "radio";
-			radio.name = "persona";
-			radio.value = persona.id;
-			radio.checked = persona.id === actief.id;
-			radio.addEventListener("change", function () {
-				slaActiefOp(persona.id);
-				var params = new URLSearchParams(location.search);
-				params.set("persona", urlLabel(persona));
-				location.search = params.toString();
-			});
-			label.appendChild(radio);
-			var kiezerLabel = persona.label || ("Persona " + i);
-			label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
-			li.appendChild(label);
-			list.appendChild(li);
+			var li = maakPersonaItem(persona, i, actief);
+			if (persona.archief) {
+				archiefList.appendChild(li);
+				aantalArchief++;
+				if (persona.id === actief.id) actiefIsGearchiveerd = true;
+			} else {
+				list.appendChild(li);
+			}
 		});
 
 		panel.insertBefore(list, clearBtn);
+
+		// Gearchiveerde persona's in een uitklapbaar blok; blijven aanroepbaar.
+		if (aantalArchief > 0) {
+			var details = document.createElement("details");
+			details.className = "feature-flags-persona-archief";
+			if (actiefIsGearchiveerd) details.open = true;
+			var summary = document.createElement("summary");
+			summary.textContent = "Persona archief (" + aantalArchief + ")";
+			details.appendChild(summary);
+			details.appendChild(archiefList);
+			panel.insertBefore(details, clearBtn);
+		}
 	}
 
 	// Initialisatie.

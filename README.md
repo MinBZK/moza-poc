@@ -17,7 +17,7 @@ Clone deze repository lokaal.
 
 [Eleventy](https://www.11ty.dev/) wordt gebruikt om herhalende componenten zoals headers en footers als includes te beheren. Installeer Eleventy in de root van het project:
 
-``` bash
+```bash
 npm install @11ty/eleventy
 ```
 
@@ -25,7 +25,7 @@ npm install @11ty/eleventy
 
 Om de HTML pagina's te bouwen voer je dit commando uit vanuit de root van het project:
 
-``` bash
+```bash
 npx @11ty/eleventy
 ```
 
@@ -35,7 +35,7 @@ De gebouwde pagina's worden in de map `_site` geplaatst.
 
 Start een lokale server met live reload:
 
-``` bash
+```bash
 npx @11ty/eleventy --serve
 ```
 
@@ -45,18 +45,18 @@ De site is vervolgens te bekijken op [`localhost:8080`](http://localhost:8080).
 
 Herhalende componenten staan in de `_includes` map:
 
-| Bestand | Beschrijving |
-| ------- | ------------ |
-| `base.njk` | Basis layout |
-| `header-rijksoverheid.njk` | Rijksoverheid header met logo en navigatie |
-| `header-overheid.njk` | Overheid header header met logo |
-| `footer-overheid.njk` | Overheid footer |
-| `side-nav-overheid.njk` | Overheid hoofdnavigatie |
-| `action-group.njk` | Actiegroep onder een topic (Bewaar, Deel, Niet relevant) |
+| Bestand                    | Beschrijving                                             |
+| -------------------------- | -------------------------------------------------------- |
+| `base.njk`                 | Basis layout                                             |
+| `header-rijksoverheid.njk` | Rijksoverheid header met logo en navigatie               |
+| `header-overheid.njk`      | Overheid header header met logo                          |
+| `footer-overheid.njk`      | Overheid footer                                          |
+| `side-nav-overheid.njk`    | Overheid hoofdnavigatie                                  |
+| `action-group.njk`         | Actiegroep onder een topic (Bewaar, Deel, Niet relevant) |
 
 Elke pagina selecteert diens layout en opties bovenaan het bestand:
 
-``` yaml
+```yaml
 ---
 layout: base.njk
 title: "Pagina titel"
@@ -71,10 +71,10 @@ footerType: overheid
 
 Design tokens zijn ontwerp-waarden — zoals kleuren, typografie, maatvoering — opgeslagen in een platformonafhankelijk formaat (JSON). Ze vormen een gedeelde taal tussen ontwerp en ontwikkeling: in plaats van bijvoorbeeld losse hex-codes of pixelwaarden door te geven, verwijzen beide disciplines naar dezelfde bron. Hierdoor blijven ontwerp en code altijd synchroon en is een wijziging op één plek (bijvoorbeeld een merkkleur) direct overal doorgevoerd.
 
-Het bestand `tokens/tokens.json` is de *single source of truth* voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
+Het bestand `tokens/tokens.json` is de _single source of truth_ voor alle ontwerp-waarden én toepassingen (kleur, typografie, spacing, etc.). Dit bestand is in twee richtingen te bewerken:
 
-- **Figma** — via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
-- **IDE** — ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
+- **Figma**; via de [Tokens Studio](https://docs.tokens.studio/) plugin kunnen ontwerpers tokens ophalen, aanpassen en terugschrijven naar Git.
+- **IDE**; ontwikkelaars kunnen het JSON-bestand ophalen, aanpassen en terugschrijven naar Git in een code-editor.
 
 ### Style Dictionary
 
@@ -87,14 +87,14 @@ De pipeline ziet er zo uit:
 
 Figma met Tokens Studio óf IDE → tokens/tokens.json → Style Dictionary + SD-Transforms → CSS variabelen → Stylesheet (style.css)
 
-Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom properties. Omdat Tokens Studio een eigen tokenformaat hanteert dat afwijkt van het [standaard Design Token Community Group (DTCG) formaat](https://www.designtokens.org/tr/2025.10/format/), wordt [SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms) als aanvulling gebruikt. Dit zorgt onder andere voor het correct oplossen van tokenreferenties, het omrekenen van `px` naar `rem` waarden en het omzetten van namen naar ‘*kebab-case*’.
+Style Dictionary leest `tokens.json` en transformeert de tokens naar CSS custom properties. Omdat Tokens Studio een eigen tokenformaat hanteert dat afwijkt van het [standaard Design Token Community Group (DTCG) formaat](https://www.designtokens.org/tr/2025.10/format/), wordt [SD-Transforms](https://www.npmjs.com/package/@tokens-studio/sd-transforms) als aanvulling gebruikt. Dit zorgt onder andere voor het correct oplossen van tokenreferenties, het omrekenen van `px` naar `rem` waarden en het omzetten van namen naar ‘_kebab-case_’.
 
 Het resultaat wordt opgesplitst in twee automatisch gegenereerde CSS-bestanden:
 
-- **`_rijkshuisstijl.css`** — bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare *opties*.
-- **`_toepassing.css`** — bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de *toepassingen* van de opties.
+- **`_rijkshuisstijl.css`**; bevat de waarden uit de Rijkshuisstijl: het kleurenpalet, typografie-instellingen, maatvoering, etc. Dit zijn de beschikbare _opties_.
+- **`_toepassing.css`**; bevat semantische variabelen die verwijzen naar de Rijkshuisstijl-waarden en daar een concrete betekenis aan geven, bijvoorbeeld `--color-text-default` of `--button-primary-background-color`. Dit zijn de _toepassingen_ van de opties.
 
-Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen *hoe* die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden — de toepassingslaag vangt de verandering op.
+Gebruik in stylesheets en componenten altijd variabelen uit `_toepassing.css` en nooit rechtstreeks uit `_rijkshuisstijl.css`. De Rijkshuisstijl-variabelen zijn de bouwstenen; de toepassingsvariabelen bepalen _hoe_ die bouwstenen worden ingezet. Door deze scheiding kan een Rijkshuisstijl-waarde wijzigen zonder dat stylesheets aangepast hoeven te worden, de toepassingslaag vangt de verandering op.
 
 Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt worden. Alle wijzigingen aan ontwerp-waarden horen thuis in `tokens/tokens.json`.
 
@@ -102,7 +102,7 @@ Beide bestanden worden automatisch gegenereerd en mogen niet handmatig bewerkt w
 
 Gebruik dit commando om design tokens handmatig naar CSS variabelen om te zetten:
 
-``` bash
+```bash
 npm run tokens
 ```
 
@@ -112,50 +112,125 @@ Bij het gebruik van `npm run dev` worden design tokens automatisch opnieuw gebou
 
 ---
 
-## Digitale Assistent (backend)
+## Digitale Assistent
 
-De [Digitale Assistent](services/README.md) draait op een Python-host (FastAPI) die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI.
+De chat-UI van de Digitale Assistent zit in dit prototype (`moza/digitale-assistent.html` + `assets/javascript/digitale-assistent.js`). De **backend** — een FastAPI-host die twee LLM-backends (VLAM en Claude) combineert met overheidsbronnen via MCP of CLI — leeft in een eigen repo en draait standalone:
 
-### Lokaal draaien geïntegreerd via `npm run dev`
+[![backend: moza-poc-digitale-assistent](https://img.shields.io/badge/backend-moza--poc--digitale--assistent-blue?logo=github)](https://github.com/MinBZK/moza-poc-digitale-assistent)
 
-`npm run dev` start drie processen tegelijk via `concurrently`:
+→ **<https://github.com/MinBZK/moza-poc-digitale-assistent>**
 
-- **eleventy** — `eleventy --watch`, herbouwt `_site/` bij elke wijziging
-- **tokens** — chokidar-watcher die Style Dictionary triggert bij `tokens/tokens.json`
-- **backend** — `python api.py` in `services/host/`, serveert de API én de gebouwde `_site/` op dezelfde poort
+### Verbinden met de backend
 
-Doordat de backend ook de statische site serveert is er één origin: geen CORS-gedoe, geen aparte `--serve` van Eleventy. De poort wordt gelezen uit `services/host/.env` (`VLAM_PORT`, standaard `8001` in deze setup omdat poort `8000` op macOS vaak door `pinniped` wordt gebruikt).
+In productie draait alles achter **één origin**: de nginx van de frontend **proxyt** de chat-endpoints (`/chat`, `/chat/stream`, `/health`, `/tools`) intern naar de backend. De browser praat dus alleen met de frontend-origin — **geen CORS nodig**, en de backend hoeft niet publiek te zijn. Twee instellingen:
 
-De Digitale Assistent is dan bereikbaar op [`localhost:8001/moza/digitale-assistent/`](http://localhost:8001/moza/digitale-assistent/).
+| Variabele        | Waar                                                                  | Betekenis                                                                                                                                                                     |
+| ---------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MOZA_CHAT_API`  | build-time (`_data/chatApi.js` → `base.njk` → `window.MOZA_CHAT_API`) | Waar de **browser** naartoe fetcht. Default leeg (`""`) = same-origin via de proxy. Productie laat dit leeg.                                                                  |
+| `BACKEND_ORIGIN` | runtime env op de nginx-container                                     | Waar de **proxy** naartoe stuurt. Default `http://dabackend:8000`. Zet dit op het ZAD-component `proef` via de **ZAD-UI** (`zad-actions/deploy` kan geen runtime-env zetten). |
 
-> **Let op — geen hot-reload:** Eleventy draait in `--watch` (alleen rebuild, geen BrowserSync). Bij wijzigingen moet je de browser handmatig verversen. Doe eenmalig `npm run build` voordat je `npm run dev` start, zodat `_site/` bestaat als de backend mount.
+De frontend heeft **geen** eigen variabele voor de bedrijfsidentiteit: die stuurt gewoon het KvK-nummer van de actieve persona mee, zie [Sessie-identiteit](#sessie-identiteit).
 
-### Lokaal draaien met `uv` (alleen backend)
+**Lokaal end-to-end** (zonder proxy; backend draait los, dus daar wél CORS):
 
-Als alternatief, alleen de host zonder Eleventy-watcher:
+1. `npm run dev` — Eleventy `--serve` op [`localhost:8080`](http://localhost:8080); zet automatisch `window.MOZA_CHAT_API=http://localhost:8000` zodat de browser de lokale backend direct aanroept.
+2. Start de backend (FastAPI, poort `8000`) volgens de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent).
+3. Zet aan de backend `ALLOWED_ORIGINS=http://localhost:8080` en `TEST_KVK_NUMMERS=85234567,62345681,56789012` (de persona's met een backend-profiel). Ontbreekt die allowlist, dan geeft élke vraag "log eerst in".
 
-``` bash
-cd services/host
-uv run --with-requirements requirements.txt \
-  uvicorn api:app --host 0.0.0.0 --port 8090
-```
+> ⚠️ **Preview-deploys (`pr<nr>`):** het backend-component `dabackend` draait alleen in de gedeelde deployments (`poc`, gebruikersonderzoek), niet in per-PR previews. In een PR-preview is er dus geen backend en werkt de chat niet, tenzij `dabackend` aan die deployment wordt toegevoegd.
+
+> Voor losse demo's van de CLI-tools (`kvk-cli`, `koop-cli`, …) gebruik je de backend-repo; die bevat de standalone bash-tools.
+
+### Demo-modus (zonder backend)
+
+Zonder backend of API-sleutel blijft het grootste deel van de assistent onzichtbaar: het deelverzoek, de energiekaart uit de Business Wallet, de vraagformulieren en de zaak die bij de RVO wordt ingediend komen allemaal uit backend-events. **Demo-modus** speelt die events af uit een draaiboek, zodat je ze zonder backend kunt zien, beoordelen en tonen.
+
+Aanzetten via het feature-flags-paneel rechtsonder → kopje "Digitale Assistent" → **Demo-modus** (localStorage `setting:demo-mode`). Zolang die aanstaat gaat er geen enkele request naar de backend; ook `/health` en de RegelRecht-drempel komen uit het draaiboek, zodat de bronstatus niet ten onrechte "niet bereikbaar" toont.
+
+Het draaiboek staat in `assets/javascript/digitale-assistent-demo.js` en levert dezelfde events als de backend (`status`, `tool`, `case`, `answer`, `error`). `digitale-assistent.js` verwerkt ze via `verwerkEvent()` — hetzelfde renderpad als een echte beurt. Wat in demo-modus te zien is, is dus wat live ook gebeurt.
+
+**Bronvermelding.** Elke bronvermelding in de chat gebruikt hetzelfde patroon (`.chat-bronnen`): bron en titel apart, met de datum van raadpleging, en bij een URL een externe link met `rel="external noopener" target="_blank"`. Dat geldt voor het antwoord, voor de regel onder een vraagformulier en voor de energiekaart uit de Business Wallet.
+
+De chat vult die lijst uit twee bronnen, in deze volgorde:
+
+1. **Veld `bronnen` op het `answer`-event** — een lijst van `{ label, titel?, url?, geraadpleegdOp? }`. Het draaiboek van de demo gebruikt dit.
+2. **De slotregel van de antwoordtekst** — de backend schrijft de bron als laatste regel: `Bron: RegelRecht (art. 5.15 Besluit activiteiten leefomgeving)` (zie `prompts/blocks/shared/format.md` in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). `haalBronnenUitTekst()` haalt die regel eraf en rendert hem als bronvermelding. Ook een `Bronnen:`-kop met een opsomming eronder wordt herkend.
+
+Zo krijgt een live antwoord dezelfde vormgeving als de demo, zonder dat de backend iets hoeft te veranderen. Herkent de parser niets, dan blijft de tekst onaangeroerd — een opsomming midden in een antwoord wordt nooit als bronvermelding gelezen.
+
+**Links op bronnen.** De backend noemt een bron alleen bij naam ("Bron: RegelRecht"), zonder verwijzing. De link komt daarom uit het veld `url` in `STATUS_ITEMS` (`digitale-assistent.js`) — dezelfde lijst die de statusregel boven het gesprek vult. `bronURL()` zoekt de naam terug, zodat zowel "KvK" als "KvK Handelsregister" raak is. Een bron die zijn eigen `url` meestuurt (het demo-draaiboek doet dat, met diepe links naar het wetsartikel) wint van de lijst.
+
+| Bron                | Link                                                                 |
+| ------------------- | -------------------------------------------------------------------- |
+| RegelRecht          | <https://regelrecht.rijks.app/>                                      |
+| KvK Handelsregister | <https://www.kvk.nl/handelsregister/>                                |
+| KOOP Regelingenbank | <https://wetten.overheid.nl/>                                        |
+| RVO                 | <https://www.rvo.nl/>                                                |
+| Business Wallet     | geen — mock in dit prototype, dus die bron toont de naam zonder link |
+
+| Vraag in de chat                                       | Wat je te zien krijgt                                                                                                                                                                                                 |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Geldt de energiebesparingsinformatieplicht voor mij?" | Vier beurten: deelverzoek Business Wallet → energiekaart met grens-annotatie → getrapt categorieformulier → maatregelenlijst (EML, met één voorgevuld veld en toelichting) → `case`-event met knop naar Lopende zaken |
+| "Hoe kan ik mijn bedrijfsgegevens bekijken?"           | Deelverzoek voor het KvK Handelsregister, daarna het uittreksel met bronvermelding                                                                                                                                    |
+| "Hoe bereid ik mijn belastingaangifte voor?"           | Vraagformulier met gemengde veldtypen (keuze + open veld), daarna het antwoord                                                                                                                                        |
+| "fout"                                                 | De foutmelding met de knop "Neem contact op"                                                                                                                                                                          |
+| "Leg mij dit uit"                                      | Uitleg-antwoord; het formulier blijft staan (schuift het draaiboek niet vooruit)                                                                                                                                      |
+| "Niet delen" in een deelverzoek                        | De assistent respecteert de weigering en raadpleegt de bron niet                                                                                                                                                      |
+| Persona buiten de allowlist                            | "Log eerst in" — als gewoon antwoord, niet als foutmelding                                                                                                                                                            |
+
+De inhoud volgt de **actieve persona**: het uittreksel toont de gegevens uit `_data/personas.json` en de energiekaart het verbruik uit `bedrijf.energie` (alleen Koffiezaak Noon heeft dat; de rest krijgt een demo-verbruik boven de drempel). Blijft een persona onder beide drempels, dan eindigt het scenario met "geldt niet voor u" in plaats van een rapportage.
+
+Losse onderdelen bekijken zonder een gesprek te voeren kan met de knoppen in hetzelfde paneel: testantwoord met bronvermelding, deelverzoek Business Wallet, formulier maatregelenlijst en formulier ja/nee-vraag. "Nieuw gesprek" zet het draaiboek terug op de eerste beurt.
 
 ### API-sleutels
 
-API-sleutels kunnen op twee manieren worden gezet:
+Gebruikers kunnen hun eigen VLAM- en Claude-sleutel invullen via het feature-flags-paneel rechtsonder in de site. Deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header naar de backend meegestuurd (de proxy laat die headers door). Dit werkt zolang de backend `ALLOW_API_KEY_OVERRIDE=true` heeft (PoC-default); lege velden vallen terug op de server-side keys.
 
-- via `services/host/.env` (zie `services/host/.env.example`)
-- via het feature-flags paneel rechtsonder in de site — deze worden per request als `X-VLAM-API-Key` / `X-Claude-API-Key` header meegestuurd en overrulen de `.env`
+> Let op: een **Claude**-sleutel uit de UI werkt zelfstandig. Voor **VLAM** vraagt de UI alleen de sleutel, maar VLAM heeft ook `VLAM_BASE_URL` + `VLAM_MODEL_ID` nodig — die moeten server-side op de backend staan. Het eenvoudigst is om de server-side keys op de backend-deployment te zetten, dan werkt de chat voor iedereen zonder iets in te vullen.
 
-UI-keys werken alleen als `ALLOW_API_KEY_OVERRIDE=true` in `services/host/.env`. Lege UI-velden vallen automatisch terug op de `.env`-keys.
+### Sessie-identiteit
+
+De frontend stuurt bij elke chat-request de header `X-Test-User` met het **KvK-nummer van de actieve persona** (uit `_data/personas.json`). De backend toetst dat aan zijn allowlist `TEST_KVK_NUMMERS` en injecteert het nummer vervolgens server-side bij elke bronaanroep (PDR-009 in de [backend-repo](https://github.com/MinBZK/moza-poc-digitale-assistent)). De parameter `kvk_nummer` is uit alle tool-schema's gestript, dus het model ziet 'm niet en kan de identiteit niet kiezen — ook niet als iemand in het gesprek een ander nummer noemt.
+
+Het nummer komt uit één van twee plekken, waarbij de eerste voorgaat:
+
+1. **Flags-paneel** → veld "KvK-nummer assistent" (localStorage `setting:test-user-kvk`). Handmatige override, handig om een nummer buiten de allowlist te testen. Wijzigen start een schoon gesprek.
+2. **Actieve persona** → het veld `kvkNummer` van die persona in `_data/personas.json`.
+
+Staat het nummer niet in de allowlist van de backend — of is er geen persona — dan antwoordt de assistent "Log eerst in om uw bedrijfsgegevens te kunnen gebruiken." Dat is gewenst gedrag, geen fout: alleen persona's met een backend-profiel zien bedrijfsgegevens. Bij een persona-wissel start de frontend een nieuwe sessie, zodat het gesprek van de vorige identiteit niet doorloopt.
+
+> ⚠️ **Dit is geen authenticatie.** Een gebruiker kan de header in de browser aanpassen en zo een andere testpersona worden; de allowlist begrenst alleen wélke nummers werken. Met een token was dat niet anders — dat stond leesbaar in de paginabron. Voor een gesloten testgroep met uitsluitend fictieve bedrijven is dat aanvaardbaar. Echte identiteitsvaststelling (eHerkenning/DigiD, via de NL GOV-profielen van OAuth/OIDC) is BETA-02 in de backend-repo.
+
+**Persona's met een backend-profiel.** De backend kent alleen deze bedrijven; voor de rest volgt terecht "log eerst in".
+
+| Persona-id      | Bedrijf             | KvK      | Bron backend-zijde                   |
+| --------------- | ------------------- | -------- | ------------------------------------ |
+| `koffiezaak`    | Koffiezaak Noon     | 85234567 | mock in `services/mcp/kvk/server.py` |
+| `bloemenkweker` | Kwekerij De Bloesem | 62345681 | mock in `services/mcp/kvk/server.py` |
+| `haarstylist`   | Roots & Locks       | 56789012 | mock in `services/mcp/kvk/server.py` |
+
+Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-nummer in `TEST_KVK_NUMMERS` daar. Aan deze kant is niets nodig zolang `_data/personas.json` hetzelfde nummer heeft. Houd de gegevens in beide bronnen gelijk, anders toont de pagina Bedrijfsgegevens iets anders dan de assistent vertelt.
+
+#### Op een deployment
+
+Niets in te stellen aan de frontend-kant: er is geen build-variabele, geen repo-secret en geen build-arg voor de identiteit. Zet alleen op de **backend**-deployment `TEST_KVK_NUMMERS=85234567,62345681,56789012`. Ontbreekt die, dan antwoordt de assistent overal "log eerst in".
+
+### Demo: informatieplicht energiebesparing
+
+Voor de demo van de ideale flow van de informatieplicht energiebesparing (Dag van de Toekomst, 18 juni 2026) bevat het prototype de testpersona **Claudia van Dam**, eigenaar van **Koffiezaak Noon** in Rotterdam (KvK 85234567, eenmanszaak, SBI 56102 Cafés). Kies haar via het feature-flags-paneel rechtsonder (kopje "Persona's") of via `?persona=Horecaondernemer` in de URL.
+
+Of de informatieplicht geldt, bepaalt een business rule: het jaarverbruik van de actieve persona (`bedrijf.energie` in `_data/personas.json`) wordt vergeleken met de wettelijke drempel uit RegelRecht (50.000 kWh / 25.000 m³, gespiegeld in `_data/regelrecht.json`). Komt het verbruik daarboven — zoals bij Claudia — dan toont het dashboard bovenaan een melding over de informatieplicht energiebesparing (stap 0) met een knop naar de digitale assistent. Dezelfde drempel-check staat op de detailpagina van de Wet milieubeheer; daar opent de knop het assistent-gesprek meteen met een startvraag (stap 1, via de URL-parameter `?vraag=…`, gevuld uit het veld `assistentVraag`). De geraadpleegde bronnen (KvK Handelsregister, netbeheerder) toont de assistent in het gesprek zelf. De stappen daarna — verbruik raadplegen, toets, geldende maatregelen, indienen en bevestiging — doet de assistent in het gesprek zelf (backend). Na indiening verschijnt de zaak via het `case`-event onder Lopende zaken.
+
+> ⚠️ **Allowlist nodig voor de Claudia-flow.** De assistent gebruikt alleen de gegevens van Koffiezaak Noon als 85234567 in `TEST_KVK_NUMMERS` op de backend staat (zie [Sessie-identiteit](#sessie-identiteit)); anders antwoordt die "log eerst in". Wisselen van persona kan zonder herstart van de backend: de identiteit volgt de header, niet de omgeving.
 
 ### Containerisatie
 
-De `container/Containerfile` bouwt een single-image deployment: een Node-builder genereert de Eleventy-site, een Python-release-image installeert de host-dependencies en serveert alles via `uvicorn` op poort 8080. Dezelfde image wordt gebruikt voor preview- en productiedeploys (ZAD).
+De `container/Containerfile` bouwt de statische site (frontend-only): een Node-builder genereert de Eleventy-site en Storybook, en een **nginx**-image serveert die op poort 8080 én doet de **same-origin reverse proxy** naar de backend (zie [Verbinden met de backend](#verbinden-met-de-backend)). De proxy-config (`container/default.conf.template`) wordt bij container-start gerenderd met `envsubst`; `BACKEND_ORIGIN` (runtime env, default `http://dabackend:8000`) bepaalt de upstream, met runtime-DNS-resolutie zodat nginx ook start als de backend nog niet up is. Dezelfde image (non-root, poort 8080) wordt gebruikt voor preview- en productiedeploys (ZAD).
 
-``` bash
+```bash
 docker build -f container/Containerfile -t moza .
-docker run --rm -p 8080:8080 --env-file services/host/.env moza
+# wijs de proxy naar een lokaal draaiende backend (Docker Desktop):
+docker run --rm -p 8080:8080 -e BACKEND_ORIGIN=http://host.docker.internal:8000 moza
 ```
 
 ---
@@ -166,7 +241,7 @@ docker run --rm -p 8080:8080 --env-file services/host/.env moza
 
 ### Lokaal opstarten
 
-``` bash
+```bash
 npm run storybook
 ```
 
@@ -180,16 +255,16 @@ Bij het gebruik van `npm run dev` wordt Storybook automatisch opnieuw gebouwd na
 
 De stories staan in de `stories/` map. Elk bestand beschrijft één component en toont varianten, bijvoorbeeld:
 
-| Bestand | Beschrijving |
-| ------- | ------------ |
-| `Knop.stories.js` | Knopvarianten (primair, secundair, negatief) |
-| `Link.stories.js` | Linkvarianten |
-| `Tekstinvoer.stories.js` | Tekstinvoervelden |
-| `Selectie.stories.js` | Selectievakjes en keuzerondjes |
-| `Feedback.stories.js` | Notificaties en foutmeldingen |
-| `Navigatie.stories.js` | Navigatiecomponenten |
-| `Typografie.stories.js` | Koppen en tekststijlen |
-| `Tabel.stories.js` | Tabelopmaak |
+| Bestand                  | Beschrijving                                 |
+| ------------------------ | -------------------------------------------- |
+| `Knop.stories.js`        | Knopvarianten (primair, secundair, negatief) |
+| `Link.stories.js`        | Linkvarianten                                |
+| `Tekstinvoer.stories.js` | Tekstinvoervelden                            |
+| `Selectie.stories.js`    | Selectievakjes en keuzerondjes               |
+| `Feedback.stories.js`    | Notificaties en foutmeldingen                |
+| `Navigatie.stories.js`   | Navigatiecomponenten                         |
+| `Typografie.stories.js`  | Koppen en tekststijlen                       |
+| `Tabel.stories.js`       | Tabelopmaak                                  |
 
 ---
 
@@ -197,24 +272,24 @@ De stories staan in de `stories/` map. Elk bestand beschrijft één component en
 
 Installeer dependencies in de root van het project:
 
-``` bash
+```bash
 npm install
 ```
 
-| Script | Commando | Beschrijving |
-| ------ | -------- | ------------ |
-| `npm run dev` | Eleventy watch + token watcher + FastAPI-backend | Alle drie parallel. Backend serveert `_site/` én de chat-API op dezelfde poort (`VLAM_PORT` uit `services/host/.env`, default `8001`). Geen hot-reload, browser handmatig verversen. |
-| `npm run build` | Tokens + Eleventy | Volledige productie-build |
-| `npm run tokens` | Alleen Style Dictionary | Handmatig tokens bouwen |
-| `npm run storybook` | Storybook dev server | Componentenbibliotheek lokaal bekijken |
-| `npm run build-storybook` | Storybook productie-build | Statische Storybook-site bouwen |
+| Script                    | Commando                       | Beschrijving                                                                                                                                                                                        |
+| ------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`             | Eleventy serve + token watcher | Beide parallel via `concurrently`. Eleventy `--serve` met live reload op [`localhost:8080`](http://localhost:8080); de chat-backend draai je apart (zie [Digitale Assistent](#digitale-assistent)). |
+| `npm run build`           | Tokens + Eleventy              | Volledige productie-build                                                                                                                                                                           |
+| `npm run build:tokens`    | Alleen Style Dictionary        | Handmatig tokens bouwen                                                                                                                                                                             |
+| `npm run storybook`       | Storybook dev server           | Componentenbibliotheek lokaal bekijken                                                                                                                                                              |
+| `npm run build-storybook` | Storybook productie-build      | Statische Storybook-site bouwen                                                                                                                                                                     |
 
 ---
 
 ## Structuur
 
-``` text
-📂 _data                    Eleventy-data: persona's, subsidies, regelgeving, berichtenbox
+```text
+📂 _data                    Eleventy-data: persona's, subsidies, regelgeving, berichtenbox, activiteitenlog-entries
 📂 _includes                herhalende consistente elementen die in meerdere pagina's toegegepast worden
 📂 _site                    statische site gegenereerd door Eleventy.js
 📂 assets
@@ -223,13 +298,9 @@ npm install
     📁 icons                iconen
     📁 images               afbeeldingen
     📁 javascript           interactielogica per pagina-type (personas, content-interactions, berichtenbox, etc.)
-📂 container                Containerfile voor de gebundelde deployment (site + host)
+📂 container                Containerfile + nginx-config voor de statische site-deployment
 📂 mobu                     prototype voor MijnOverheid Burger
 📂 moza                     prototype voor MijnOverheid Zakelijk, gebaseerd op deze omgeving
-📂 services                 Digitale Assistent — FastAPI-host, MCP-servers en CLI-tools
-    📁 host                 FastAPI-host die statische site én chat-API serveert
-    📁 mcp                  MCP-servers (kvk, koop, regelrecht, rvo)
-    📁 cli                  Bash-CLI's als alternatief transport
 📂 stories                  'stories' om componenten weer te geven in Storybook
 📂 style
     📄 _reset.css           cross-browser stijl normalisatie
@@ -263,7 +334,7 @@ Deze omgeving maakt gebruik van moderne CSS-features:
 
 Gegenereerde variabelen volgen ‘kebab-case’ met een semantische hiërarchie:
 
-``` text
+```text
 --prefix-categorie-optionelesubcategorie-attribuut--optionelestaat
 ```
 
@@ -278,17 +349,17 @@ In de stylesheets worden [CSS ‘logical’ properties](https://developer.mozill
 
 Voorbeelden van physical properties en hun logical equivalenten:
 
-| Physical | Logical |
-| ------ | ------- |
-| `width` | `inline-size` |
-| `height` | `block-size` |
-| `max-width` | `max-inline-size` |
-| `min-height` | `min-block-size` |
-| `margin-top` / `margin-bottom` | `margin-block-start` / `margin-block-end` |
-| `margin-left` / `margin-right` | `margin-inline-start` / `margin-inline-end` |
-| `padding-top` / `padding-bottom` | `padding-block-start` / `padding-block-end` |
+| Physical                         | Logical                                       |
+| -------------------------------- | --------------------------------------------- |
+| `width`                          | `inline-size`                                 |
+| `height`                         | `block-size`                                  |
+| `max-width`                      | `max-inline-size`                             |
+| `min-height`                     | `min-block-size`                              |
+| `margin-top` / `margin-bottom`   | `margin-block-start` / `margin-block-end`     |
+| `margin-left` / `margin-right`   | `margin-inline-start` / `margin-inline-end`   |
+| `padding-top` / `padding-bottom` | `padding-block-start` / `padding-block-end`   |
 | `padding-left` / `padding-right` | `padding-inline-start` / `padding-inline-end` |
-| `border-top` / `border-bottom` | `border-block-start` / `border-block-end` |
+| `border-top` / `border-bottom`   | `border-block-start` / `border-block-end`     |
 
 ---
 

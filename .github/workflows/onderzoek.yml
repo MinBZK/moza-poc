@@ -1,0 +1,94 @@
+name: Onderzoek deploy
+
+# Zet een gekozen commit van de frontend op de onderzoeksomgeving: deployment
+# `gebruikersonderzoek`, component `proef-onderzoek`. Alleen op verzoek
+# (workflow_dispatch), nooit automatisch: een uitrol tijdens een sessie stoort
+# de respondent.
+#
+# `proef-onderzoek` is een eigen component naast `proef`, omdat env op ZAD per
+# component en projectbreed is: zo kan BACKEND_ORIGIN hier naar
+# `dabackend-onderzoek` wijzen (de backend met een tijdelijke sleutel voor de
+# sessies), terwijl `proef` op `poc` naar `dabackend` blijft wijzen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit, branch of tag om uit te rollen"
+        required: true
+        default: main
+        type: string
+
+concurrency:
+  group: onderzoek
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.ref }}
+    steps:
+      - name: Lowercase image name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Bepaal image-ref
+        id: image
+        env:
+          GEVRAAGD: ${{ inputs.ref }}
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          echo "ref=${REGISTRY}/${IMAGE_NAME}:onderzoek-${SHA}" >> "$GITHUB_OUTPUT"
+          echo "Uitgerold wordt ${SHA} (${GEVRAAGD})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./container/Containerfile
+          push: true
+          tags: ${{ steps.image.outputs.ref }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    needs: build
+    environment:
+      name: gebruikersonderzoek
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Deploy to ZAD
+        id: deploy
+        uses: RijksICTGilde/zad-actions/deploy@v4
+        with:
+          api-key: ${{ secrets.ZAD_API_KEY }}
+          project-id: pm-5sj
+          deployment-name: gebruikersonderzoek
+          component: proef-onderzoek
+          image: ${{ needs.build.outputs.image }}
+          wait-for-ready: true

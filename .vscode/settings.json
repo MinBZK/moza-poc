@@ -1,16 +1,12 @@
 {
-	"files.associations": {
-		"*.njk": "html"
-	},
-	"emmet.includeLanguages": {
-		"nunjucks": "html"
-	},
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"[css]": {
-		"editor.formatOnSave": false
-	},
-	"editor.codeActionsOnSave": {
-		"source.fixAll.stylelint": "explicit"
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.codeActionsOnSave": {
+			"source.fixAll.stylelint": "explicit"
+		}
 	},
 	"stylelint.validate": ["css"],
-	"markuplint.enable": true
+	"css.validate": false
 }

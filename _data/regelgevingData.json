@@ -171,12 +171,14 @@
 		"beschrijving": "De Wet milieubeheer verplicht bedrijven met een hoog energieverbruik om energiebesparende maatregelen te nemen en hierover te rapporteren.",
 		"inhoud": [
 			"Als uw bedrijf meer dan 50.000 kWh aan elektriciteit of meer dan 25.000 kubieke meter aardgas per jaar verbruikt, bent u verplicht om alle energiebesparende maatregelen te nemen die zich binnen vijf jaar terugverdienen. U moet hierover elke vier jaar rapporteren via het eLoket van de Rijksdienst voor Ondernemend Nederland.",
-			"In uw rapportage geeft u aan welke maatregelen u al heeft genomen en welke maatregelen u nog gaat nemen. De Erkende Maatregelenlijsten (EML) geven per sector aan welke maatregelen u wordt geacht te nemen. U kunt ook alternatieve maatregelen treffen als die minstens evenveel energie besparen.",
+			"In uw rapportage geeft u aan welke maatregelen u al hebt genomen en welke maatregelen u nog gaat nemen. De Erkende Maatregelenlijsten (EML) geven per sector aan welke maatregelen u wordt geacht te nemen. U kunt ook alternatieve maatregelen treffen als die minstens evenveel energie besparen.",
 			"De omgevingsdienst in uw regio houdt toezicht op de naleving. Bij het niet voldoen aan de rapportageplicht of het niet nemen van verplichte maatregelen kunt u een last onder dwangsom of een bestuurlijke boete krijgen."
 		],
 		"bron": "Rijksoverheid",
 		"inwerkingtreding": "1 juli 2023",
 		"geldtVoor": "Ondernemingen met energieverbruik boven 50.000 kWh of 25.000 m\u00b3 gas per jaar",
+		"assistentVraag": "Help mij met de informatieplicht energiebesparing voor mijn bedrijf",
+		"regelrechtRegel": "omgevingswet/energiebesparing/informatieplicht",
 		"isOngelezen": false
 	},
 	{
@@ -472,11 +474,11 @@
 		"inhoud": [
 			"De CSRD verplicht u om uitgebreid te rapporteren over de duurzaamheidsprestaties van uw bedrijf. U moet rapporteren over milieu, sociale zaken en bestuur (ESG). De rapportage moet onderdeel zijn van uw bestuursverslag en volgens de Europese standaarden voor duurzaamheidsrapportage (ESRS) worden opgesteld.",
 			"U moet een dubbele materialiteitsanalyse uitvoeren: u beschrijft zowel de impact van uw bedrijf op mens en milieu als de impact van duurzaamheidsrisico's op uw bedrijf. De rapportage moet gecontroleerd worden door een accountant of onafhankelijke auditor. U moet ook rapporteren over uw hele waardeketen, inclusief leveranciers.",
-			"De rapportageverplichting wordt gefaseerd ingevoerd. Grote bedrijven zijn vanaf boekjaar 2024 verplicht. Beursgenoteerde MKB'ers volgen later. Als u niet voldoet aan de rapportageplicht, kunt u een boete krijgen en loopt u het risico dat investeerders en klanten hun vertrouwen in uw bedrijf verliezen."
+			"De rapportageverplichting wordt gefaseerd ingevoerd. Grote bedrijven zijn vanaf boekjaar 2024 verplicht. Beursgenoteerde mkb’ers volgen later. Als u niet voldoet aan de rapportageplicht, kunt u een boete krijgen en loopt u het risico dat investeerders en klanten hun vertrouwen in uw bedrijf verliezen."
 		],
 		"bron": "Europese Unie (omgezet in Nederlandse wet)",
 		"inwerkingtreding": "1 januari 2026",
-		"geldtVoor": "Grote bedrijven en beursgenoteerde MKB'ers",
+		"geldtVoor": "Grote bedrijven en beursgenoteerde mkb’ers",
 		"isOngelezen": false
 	}
 ]

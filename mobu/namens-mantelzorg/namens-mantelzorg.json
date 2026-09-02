@@ -1,0 +1,10 @@
+{
+	"bodyClass": "mobu authorized",
+	"override:subNav": [
+		{ "label": "Home", "url": "/mobu/namens-mantelzorg/", "icon": "/assets/icons/icon-home-burger.svg" },
+		{ "label": "Gegevens", "url": "/mobu/namens-mantelzorg/gegevens/", "icon": "/assets/icons/icon-identiteit.svg", "class": "side-nav-group--start" },
+		{ "label": "Berichtenbox", "url": "/mobu/namens-mantelzorg/berichtenbox/", "icon": "/assets/icons/icon-berichtenbox.svg" },
+		{ "label": "Lopende zaken", "url": "/mobu/namens-mantelzorg/lopende-zaken/", "icon": "/assets/icons/icon-lopende-zaken.svg" },
+		{ "label": "Gezondheid", "url": "/mobu/namens-mantelzorg/gezondheid/", "icon": "/assets/icons/icon-gezondheid.svg", "class": "side-nav-group--start" }
+	]
+}

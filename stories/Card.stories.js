@@ -100,14 +100,14 @@ export const MetContentLinks = {
 				<h3>Wegafsluiting Stationsweg vanaf 10 maart</h3>
 				<span class="card-link"></span>
 			</a>
-			<p>19 februari 2026 — De Stationsweg is afgesloten vanwege werkzaamheden aan het riool.</p>
+			<p>19 februari 2026. De Stationsweg is afgesloten vanwege werkzaamheden aan het riool.</p>
 		</li>
 		<li>
 			<a href="#" class="content-link">
 				<h3>Aanpassing parkeerregels en laad-/loszones</h3>
 				<span class="card-link"></span>
 			</a>
-			<p>19 februari 2026 — De gemeente past de parkeerregels aan in uw buurt.</p>
+			<p>19 februari 2026. De gemeente past de parkeerregels aan in uw buurt.</p>
 		</li>
 	</ul>
 	<a class="btn-cta" href="#">Meer Berichten over uw buurt</a>

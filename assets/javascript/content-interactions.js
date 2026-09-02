@@ -18,7 +18,7 @@ document.querySelectorAll(".action-group .visually-hidden").forEach((span) => {
 
 function getCategory(li) {
 	const section = li.closest("section");
-	const heading = section?.querySelector(":scope > h2, :scope > h3");
+	const heading = section?.querySelector(":scope > hgroup > h2, :scope > hgroup > h3, :scope > h2, :scope > h3");
 	return heading?.textContent.trim() || "";
 }
 
@@ -168,18 +168,27 @@ document.addEventListener("click", (e) => {
 	}
 });
 
+// Stabiele sleutel per feedback-blok: het id wanneer aanwezig, anders het
+// paginapad plus de positie van het blok op de pagina. Zo onthouden we ook
+// blokken zonder id, zonder af te hangen van (soms dynamische) tekstinhoud.
+function feedbackKey(feedback) {
+	if (feedback.id) return feedback.id;
+	const alle = Array.prototype.slice.call(document.querySelectorAll(".feedback"));
+	return location.pathname + "#" + alle.indexOf(feedback);
+}
+
 // Sluit feedback-notificaties met .btn-close en onthoud dit
 document.addEventListener("click", (e) => {
 	const btn = e.target.closest(".btn-close");
 	if (!btn) return;
-	const feedback = btn.closest(".feedback[id]");
+	const feedback = btn.closest(".feedback");
 	if (!feedback) return;
 	feedback.hidden = true;
-	localStorage.setItem("dismissed:" + feedback.id, "true");
+	localStorage.setItem("dismissed:" + feedbackKey(feedback), "true");
 });
 
-document.querySelectorAll(".feedback[id]").forEach((feedback) => {
-	if (localStorage.getItem("dismissed:" + feedback.id) === "true") {
+document.querySelectorAll(".feedback").forEach((feedback) => {
+	if (localStorage.getItem("dismissed:" + feedbackKey(feedback)) === "true") {
 		feedback.hidden = true;
 	}
 });
@@ -194,7 +203,7 @@ document.querySelectorAll(".list-content-links li.reserve-topic").forEach((li) =
 });
 
 // Verberg eerder verborgen topics bij laden en schuif reserve-topics door
-// Alleen voor items die nog zichtbaar waren — items die al hidden zijn
+// Alleen voor items die nog zichtbaar waren, items die al hidden zijn
 // (bijv. reserves waarvan .reserve-topic hierboven is verwijderd) overslaan
 document.querySelectorAll(".list-content-links li:not(.reserve-topic)").forEach((li) => {
 	if (li.closest("#saved-groups") || li.closest("#hidden-groups")) return;

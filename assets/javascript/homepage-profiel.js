@@ -29,12 +29,21 @@
 	function vindSubsidie(id) { return subsidies.find(function (s) { return s.id === id; }); }
 	function vindRegeling(id) { return regelgeving.find(function (r) { return r.id === id; }); }
 
-	function maakActionGroup(titel) {
+	function maakActionGroup(item, soort) {
 		var div = document.createElement("div");
-		div.className = "action-group topic-options";
-		div.innerHTML = '<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">' + titel + '</span></label>'
+		div.className = "action-group action-options";
+		div.innerHTML = '<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden">' + item.titel + '</span></label>'
 			+ '<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">' + ' Deel</button>'
 			+ '<button class="link-button hide-topic">Niet relevant voor mij</button>';
+		// Met DOM-methodes en niet via innerHTML: de titel zit in de URL en in de
+		// tekst, en textContent/href doen het ontsnappen zelf.
+		// De vraag komt uit assistent-vraag.js — dezelfde module die Eleventy als
+		// filter gebruikt voor de detailpagina's.
+		var link = document.createElement("a");
+		link.className = "link-button ask-assistent";
+		link.href = PATH_PREFIX + "/moza/digitale-assistent/?vraag=" + encodeURIComponent(window.MozaAssistentVraag.vraag(item, soort));
+		link.textContent = "Vraag aan de digitale assistent";
+		div.appendChild(link);
 		return div;
 	}
 
@@ -57,7 +66,7 @@
 			+ (item.maximaalBedrag ? "<dt>Maximaal bedrag</dt><dd>" + item.maximaalBedrag + "</dd>" : "")
 			+ (item.budgetVergeven ? '<dt>Budget vergeven</dt><dd><div class="progress-bar" role="progressbar" aria-label="Budget vergeven" aria-valuenow="' + item.budgetVergeven + '" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar-fill" style="inline-size: ' + item.budgetVergeven + '%">' + item.budgetVergeven + '%</div></div></dd>' : '');
 		li.appendChild(dl);
-		li.appendChild(maakActionGroup(item.titel));
+		li.appendChild(maakActionGroup(item, "subsidie"));
 		return li;
 	}
 
@@ -78,7 +87,7 @@
 			+ "<dt>In werking</dt><dd>" + (item.inwerkingtreding || "") + "</dd>"
 			+ "<dt>Geldt voor</dt><dd>" + (item.geldtVoor || "") + "</dd>";
 		li.appendChild(dl);
-		li.appendChild(maakActionGroup(item.titel));
+		li.appendChild(maakActionGroup(item, "regeling"));
 		return li;
 	}
 
@@ -181,7 +190,7 @@
 		return items.map(function (item) { return { item: item, maakFn: maakFn }; });
 	}
 
-	// Telt alleen items uit homepageSubsidies/homepageRegelgeving — de gehoogde
+	// Telt alleen items uit homepageSubsidies/homepageRegelgeving, de gehoogde
 	// "nieuw sinds uw laatste bezoek"-items. De overzichten tonen meer items,
 	// maar die zijn deel van de algemene branche-lijst en tellen niet als nieuw.
 	var huidigeNieuweSubs = [];

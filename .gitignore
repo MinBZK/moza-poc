@@ -5,16 +5,11 @@ _test_build/
 storybook-static/
 style-dictionary/node_modules/
 
-# Python
-__pycache__/
-.ruff_cache/
-
 # Node
 node_modules/
 
 # Secrets
 .env
-services/host/.env
 
 # Caches en temp
 .claude/*
@@ -33,3 +28,8 @@ build-storybook.log
 agent-os/standards/index.yml
 style-dictionary/node_modules/*
 *.log
+
+# VS Code / IDEs
+.vscode/*
+# Uitzondering: gedeelde workspace-instellingen (Prettier + stylelint fix-on-save)
+!.vscode/settings.json

@@ -26,6 +26,6 @@ CSS variable names are auto-generated from the token structure in Figma/Tokens S
 ## Rules
 
 - Names are Dutch where the Rijkshuisstijl prescribes it (color names, set names)
-- Structure mirrors Figma token groups — keep Figma and code in sync
+- Structure mirrors Figma token groups; keep Figma and code in sync
 - New tokens should follow existing category/subcategory patterns
 - Don't invent new top-level categories without updating Figma first

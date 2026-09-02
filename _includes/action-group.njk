@@ -1,5 +1,31 @@
-<div class="action-group topic-options">
-	<label class="save-topic"><input type="checkbox" /> <span class="favorite-label">Bewaar</span> <span class="visually-hidden"></span></label>
-	<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit"> Deel</button>
+<div class="action-group action-options">
+	<label class="save-topic">
+		<input type="checkbox" />
+		<span class="favorite-label">Bewaar</span>
+		<span class="visually-hidden"></span>
+	</label>
+	<button class="link-button share-topic" data-feature="Delen" data-feature-type="functionaliteit">Deel</button>
 	<button class="link-button hide-topic">Niet relevant voor mij</button>
+	{#
+		Dit include wordt vanuit drie detailpagina's aangeroepen, elk met een eigen
+		lus-variabele: subsidie, regeling of bericht. Nunjucks geeft die context door,
+		dus we kiezen hier welk onderwerp er is.
+
+		De vraag zelf komt uit assets/javascript/assistent-vraag.js, via het filter in
+		.eleventy.js. Diezelfde module bouwt de vraag voor de kaarten op de
+		overzichtspagina's, zodat beide dezelfde vraag stellen.
+
+		Een <a> en geen <button>: dit navigeert naar een andere pagina.
+		Het `url`-filter is nodig omdat de site ook onder een subpad kan draaien.
+	#}
+	{% if subsidie %}
+		{% set vraag = subsidie | assistentVraag("subsidie") %}
+	{% elif regeling %}
+		{% set vraag = regeling | assistentVraag("regeling") %}
+	{% elif bericht %}
+		{% set vraag = bericht | assistentVraag("bericht") %}
+	{% else %}
+		{% set vraag = "" %}
+	{% endif %}
+	<a class="link-button ask-assistent" href="{{ '/moza/digitale-assistent/' | url }}{% if vraag %}?vraag={{ vraag | urlencode }}{% endif %}">Vraag aan de digitale assistent</a>
 </div>

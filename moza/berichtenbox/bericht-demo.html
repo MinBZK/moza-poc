@@ -14,43 +14,60 @@ title: "MijnOverheid Zakelijk: Bericht"
 	</nav>
 
 	<section class="card">
-		{% include "berichtenbox-tabs.njk" %}
 
 		<section class="berichtenbox-content" data-demo-detail>
 			<h1 data-demo-onderwerp class="h3"></h1>
 
 			<p class="metadata" data-demo-meta></p>
 
-			<div class="action-group">
-				<button class="icon-button" data-actie="archiveren">
-					{% icon "/assets/icons/icon-archief.svg" %}
-					Archiveren
-				</button>
-				<button class="icon-button" data-actie="verplaatsen">
-					{% icon "/assets/icons/icon-archief.svg" %}Verplaatsen naar map
-				</button>
-				<button class="icon-button" data-actie="markeer-ongelezen">
-					{% include "icon-ongelezen.njk" %}Markeer als ongelezen
-				</button>
-				<button class="icon-button" data-actie="naar-inbox" hidden>Verplaats naar inbox</button>
-				<button class="icon-button" data-actie="verwijderen">
-					{% icon "/assets/icons/icon-weggooien.svg" %}
-					Verwijderen
-				</button>
-			</div>
-
 			<div class="berichtenbox-detail-body" data-demo-body></div>
 
-			<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
-				<h2>Bijlagen</h2>
+			<div class="berichtenbox-detail-pdf">
+				<div class="feedback-progress" data-pdf-laden hidden role="status" aria-live="polite">
+					<p>PDF wordt geladen…</p>
+					<div class="progress-bar"><div class="progress-bar-fill progress-bar-fill--indeterminate"></div></div>
+				</div>
+				<div class="pdf-reveal"><object class="berichtenbox-attachment-preview" data-berichtenbox-attachments-preview type="application/pdf" aria-label="Voorbeeld van de bijlage" hidden><p>Uw browser kan de PDF niet tonen. Gebruik de download-link hieronder.</p></object></div>
+				<ul class="list-indent">
+					<li><a href="#" class="content-link" data-berichtenbox-pdf-download target="_blank" rel="noopener" download hidden>Download PDF</a></li>
+					<li><a href="#" class="content-link" data-berichtenbox-tekst-download target="_blank" rel="noopener" download hidden>Lees tekst-versie</a></li>
+				</ul>
+			</div>
+
+			<p class="variant-c-only"><a class="content-link" href="{{ '/assets/documents/voorbeeld-bijlage.pdf' | url }}" target="_blank" rel="noopener">Open origineel bericht</a></p>
+				<section class="berichtenbox-attachments" data-berichtenbox-attachments hidden>
+				<h2>Bijlage(n)</h2>
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
-				<ul class="berichtenbox-attachments-list" data-berichtenbox-attachments-list hidden></ul>
+				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
+
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false">
+					{% icon "/assets/icons/icon-markeren.svg" %}<span data-markeer-label>Markeren</span>
+				</button>
+				<!-- <button class="icon-button" data-actie="verplaatsen">
+					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
+				</button> -->
+				<button class="icon-button" data-actie="doorsturen">
+					{% icon "/assets/icons/icon-doorsturen.svg" %}Delen
+				</button>
+				<button class="icon-button" data-actie="archiveren">
+					{% icon "/assets/icons/icon-archief.svg" %}Archiveren
+				</button>
+				<button class="icon-button" data-actie="verwijderen">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+			</div>
 		</section>
 
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
 			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
 			<p><a href="{{ '/moza/berichtenbox/' | url }}" class="btn-cta">Terug naar Berichtenbox</a></p>
 		</div>
+
+		<!-- <p class="berichtenbox-detail-organisatie" data-demo-organisatie hidden>
+			<a class="content-link" href="#" rel="external" data-demo-organisatie-link>{% icon "/assets/icons/icon-berichtenbox.svg" %}Ga naar de Berichtenbox van&nbsp;<span data-demo-organisatie-naam></span></a>
+		</p> -->
+
 	</section>
 </article>
