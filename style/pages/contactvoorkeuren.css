@@ -1,0 +1,100 @@
+.contactgegevens-container {
+}
+.contactgegevens-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: var(--toepassing-space-sm);
+	background: var(--toepassing-color-background-subtle-2);
+}
+.contactgegeven-container {
+	display: grid;
+	grid-template-columns: 1fr 3fr 200px;
+	align-items: start;
+	gap: 1rem;
+}
+.contactgegeven-container label {
+	font-weight: bold;
+}
+.contactgegeven-save-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-direction: column;
+	justify-content: end;
+	align-items: flex-end; /* place buttons at the right edge */
+	width: 100%;
+}
+.contactgegeven-container {
+	.text-missing {
+		font-style: italic;
+		color: var(--toepassing-color-text-subtle);
+	}
+	input,
+	select {
+		min-block-size: 2.5rem;
+		block-size: 2.5rem;
+		padding-block: 4px;
+	}
+}
+.contact-gegeven-input-group {
+	display: flex;
+	flex-direction: column;
+}
+.contactgegeven-form-error-message {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	align-items: center;
+	svg {
+		fill: var(--toepassing-color-feedback-error-icon);
+	}
+}
+
+.contactgegeven-resend-section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.contactgegeven-verification-field-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+/* Spinner used for contactgegevens loading state */
+.contactgegevens-spinner {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
+	padding: var(--toepassing-space-sm);
+}
+
+.spinner {
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	border: 3px solid var(--toepassing-color-interactive-default-text);
+	border-top-color: transparent; /* gap */
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Utility to hide text visually but keep it available to screenreaders */
+.visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(1px, 1px, 1px, 1px);
+	white-space: nowrap;
+	border: 0;
+	padding: 0;
+	margin: -1px;
+}

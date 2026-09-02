@@ -1,11 +1,12 @@
 # 1) Bouw de statische Eleventy-site (inclusief Storybook)
-FROM node:20-alpine AS site_builder
+FROM node:22-alpine AS site_builder
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Disable optional dependencies in CI build to avoid native-binding optional deps failures
+ENV NPM_CONFIG_OMIT=optional
+RUN npm ci --omit=optional
 COPY . .
-RUN cd style-dictionary && npm ci && npm run build
 
 # Backend-URL voor de chat-frontend (instelbaar per omgeving):
 #   leeg ("")  = relatief / zelfde origin (reverse proxy)  -- default
@@ -13,8 +14,8 @@ RUN cd style-dictionary && npm ci && npm run build
 ARG MOZA_CHAT_API=""
 ENV MOZA_CHAT_API=$MOZA_CHAT_API
 RUN npx @11ty/eleventy && ls -d _site
-RUN npx storybook build -o _site/storybook
-
+# RUN npx storybook build -o _site/storybook
+ 
 
 # 2) Serveer de statische site via nginx + same-origin reverse proxy
 #    (frontend-only, non-root, poort 8080)
