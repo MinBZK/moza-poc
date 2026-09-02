@@ -131,3 +131,72 @@ describe("detailpagina — als het bewaren wel lukt", () => {
 		expect(window.Berichtenbox.statusVan(b.id)).toBe("inbox");
 	});
 });
+
+/**
+ * Waar staat dit bericht? Op een detailpagina was dat niet te zien: het kruimelpad zei "Berichtenbox"
+ * en verder niets, terwijl hetzelfde bericht in de inbox, het archief of de prullenbak kan staan.
+ * De status komt uit de bewaarde staat, dus het sjabloon kan het niet weten en JavaScript zet het.
+ */
+describe("detailpagina — de map in het kruimelpad", () => {
+	const kruimel = () => document.querySelector("[data-berichtenbox-map-kruimel] a");
+
+	async function toonBericht(b, state) {
+		bouwDetailPagina(b, state ? { state } : {});
+		await laadBerichtenbox();
+		await laatLaden();
+	}
+
+	it("zegt Inbox voor een bericht dat niemand verplaatst heeft", async () => {
+		const b = bericht();
+		await toonBericht(b);
+
+		expect(kruimel().textContent).toBe("Inbox");
+		expect(kruimel().getAttribute("href")).toBe("/moza/berichtenbox/");
+	});
+
+	it("zegt Archief voor een gearchiveerd bericht, en linkt daarheen", async () => {
+		const b = bericht();
+		await toonBericht(b, { gearchiveerd: { [b.id]: true } });
+
+		expect(kruimel().textContent).toBe("Archief");
+		expect(kruimel().getAttribute("href")).toBe("/moza/berichtenbox/berichtenbox-archief/");
+	});
+
+	it("zegt Prullenbak voor een weggegooid bericht", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		expect(kruimel().textContent).toBe("Prullenbak");
+		expect(kruimel().getAttribute("href")).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
+	});
+
+	it("houdt de prullenbak aan als een bericht ook gearchiveerd is", async () => {
+		// Dezelfde voorrang als statusVan; anders wijst het kruimelpad naar het archief, waar het
+		// bericht niet meer staat.
+		const b = bericht();
+		await toonBericht(b, { gearchiveerd: { [b.id]: true }, verwijderd: { [b.id]: true } });
+
+		expect(kruimel().textContent).toBe("Prullenbak");
+	});
+
+	it("noemt de eigen map van de bezoeker, met het filter in de link", async () => {
+		// Een eigen map is geen aparte pagina maar een filter op de inbox.
+		const b = bericht();
+		await toonBericht(b, { mapOverride: { [b.id]: "belastingen-2025" } });
+
+		expect(kruimel().textContent).toBe("Belastingen 2025");
+		expect(kruimel().getAttribute("href")).toBe("/moza/berichtenbox/?map=belastingen-2025");
+	});
+
+	it("laat het sjabloon staan als het bericht onbekend is", async () => {
+		// Zonder JavaScript staat er "Inbox", en dat blijft het eerlijkste antwoord zolang we niets
+		// beters weten. Een lege kruimel zou een gat in het pad slaan.
+		const b = bericht();
+		bouwDetailPagina(b);
+		document.querySelector(".berichtenbox-content").dataset.berichtId = "bestaat-niet";
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(kruimel().textContent).toBe("Inbox");
+	});
+});
