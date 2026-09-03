@@ -27,25 +27,28 @@ function gelijkeMagazijnen(vorige, nieuwe) {
 }
 
 /**
- * Wat er ten opzichte van de vorige lijst bij gekomen is.
+ * Wat er bij gekomen is ten opzichte van wat er op het scherm staat.
  *
- * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, er zijn andere organisaties in
- * beeld, of er is nog geen vorige lijst om mee te vergelijken. Dan is het een andere lijst en hoort
- * die in één keer op het scherm, niet als een reeks binnenkomers.
+ * Het ijkpunt is niet de vorige lijst van het transport maar wat de render-laag daarvan werkelijk
+ * aangenomen heeft: `getoond`. Die twee lopen uiteen zodra het tonen van een bericht mislukt, en dan
+ * hoort dat bericht opnieuw aangeboden te worden — niet als bekend te gelden.
  *
- * Een lege uitkomst betekent: dezelfde berichten, er valt niets te melden.
+ * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, of er zijn andere organisaties
+ * in beeld. Dan is het een andere lijst en die hoort in één keer op het scherm, niet als een reeks
+ * binnenkomers. Een organisatie die erbij komt telt mee: haar naam bereikt de render-laag alleen via
+ * een hele lijst, want bij een binnenkomer gaan er geen magazijnen mee.
+ *
+ * Een lege uitkomst betekent: precies wat er staat, er valt niets te melden.
  */
-function aanwasVan(vorige, nieuwe) {
-	if (!vorige) return null;
-	if (!gelijkeMagazijnen(vorige.magazijnen, nieuwe.magazijnen)) return null;
+function aanwasVan(getoond, nieuwe) {
+	if (!gelijkeMagazijnen(getoond.magazijnen, nieuwe.magazijnen)) return null;
 
-	const oud = new Set((vorige.berichten || []).map((bericht) => bericht.id));
 	const nu = new Set((nieuwe.berichten || []).map((bericht) => bericht.id));
-	for (const id of oud) {
+	for (const id of getoond.ids) {
 		if (!nu.has(id)) return null;
 	}
 
-	return (nieuwe.berichten || []).filter((bericht) => !oud.has(bericht.id));
+	return (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
 }
 
 export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () => {}, magDruppelen = () => true } = {}) {
@@ -160,9 +163,10 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		},
 
 		/**
-		 * Wat er na het eerste laden nog verandert: een volgende ronde — de knop "Opnieuw proberen" —
-		 * en de berichten die het transport onderweg ophaalt. Beide gaan langs dezelfde weg als elke
-		 * andere bronwijziging.
+		 * Wat er na het eerste laden nog verandert: een herstelronde na een verlopen sessie, en de
+		 * berichten die het transport onderweg ophaalt. Beide gaan langs dezelfde weg als elke andere
+		 * bronwijziging. Een knop "Opnieuw proberen" is er voor deze bron niet — zie `opnieuw()` in
+		 * berichtenbox-keten.js, dat nog op die knop wacht.
 		 */
 		start(meld) {
 			if (!keten) return;
@@ -171,59 +175,76 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				return;
 			}
 
+			// Wat er op het scherm staat, en niet wat het transport laatst leverde. Bij het begin is
+			// dat de lijst waarmee de render-laag zojuist geladen heeft.
+			const getoond = {
+				ids: new Set(((uitkomst && uitkomst.berichten) || []).map((bericht) => bericht.id)),
+				magazijnen: (uitkomst && uitkomst.magazijnen) || [],
+			};
+
 			keten.opWijziging((toestand) => {
 				geefDoor(toestand.melding);
 
+				// De vergelijking op identiteit is ook de rem op een lus: de keten meldt een
+				// verwerkingsfout langs dezelfde weg terug — `meldVerwerkingsfout` zet een melding, en
+				// elke melding gaat naar alle kijkers, deze dus ook. Omdat `uitkomst` hieronder meteen
+				// vastgelegd wordt, ziet die her-intreding dezelfde uitkomst en keert hij hier om.
 				if (!toestand.uitkomst || toestand.uitkomst === uitkomst) return;
-				const nieuwe = toestand.uitkomst;
 
-				// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
-				// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
-				// lijst laten knipperen om niets.
-				const aanwas = aanwasVan(uitkomst, nieuwe);
-				if (aanwas && !aanwas.length) {
+				{
+					const nieuwe = toestand.uitkomst;
 					uitkomst = nieuwe;
-					return;
+
+					// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
+					// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
+					// lijst laten knipperen om niets.
+					const aanwas = aanwasVan(getoond, nieuwe);
+					if (aanwas && !aanwas.length) return;
+
+					const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst(nieuwe);
+
+					// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten:
+					// die heeft zojuist gemeld dat het ophalen gelukt is. Wat wél gelukt is, staat
+					// intussen in `getoond`, dus die berichten worden niet nog een keer aangeboden en de
+					// rest komt terug zodra de lijst weer verandert.
+					if (mislukt && mislukt.length) {
+						console.error("[Berichtenbox] " + mislukt.length + " bericht(en) uit het stelsel niet getoond.");
+						if (typeof keten.meldVerwerkingsfout === "function") keten.meldVerwerkingsfout();
+					}
 				}
-
-				const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst(nieuwe);
-
-				// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten:
-				// die heeft zojuist gemeld dat het ophalen gelukt is.
-				if (mislukt && mislukt.length) {
-					// `uitkomst` blijft staan waar het scherm staat: de render-laag heeft teruggedraaid
-					// naar de vorige lijst. Zouden we hem hier toch bijwerken, dan gelden deze berichten
-					// voortaan als bekend en biedt de volgende ronde ze nooit meer aan — weg van het
-					// scherm, zonder dat er nog iets van te zien is.
-					console.error("[Berichtenbox] " + mislukt.length + " bericht(en) uit het stelsel niet getoond; de volgende ronde biedt ze opnieuw aan.");
-					if (typeof keten.meldVerwerkingsfout === "function") keten.meldVerwerkingsfout();
-					return;
-				}
-
-				uitkomst = nieuwe;
 			});
 
 			function meldLijst(nieuwe) {
-				return meld({
+				const mislukt = meld({
 					berichten: nieuwe.berichten,
 					magazijnen: nieuwe.magazijnen,
 					mappen: [],
 				});
+
+				// Alleen bijhouden wat er ook echt staat: bij een mislukte lijst heeft de render-laag
+				// teruggedraaid naar de vorige weergave.
+				if (!mislukt || !mislukt.length) {
+					getoond.ids = new Set((nieuwe.berichten || []).map((bericht) => bericht.id));
+					getoond.magazijnen = nieuwe.magazijnen || [];
+				}
+				return mislukt;
 			}
 
 			/**
 			 * Eén melding per binnengekomen bericht, oudste eerst.
 			 *
 			 * De render-laag zet elke binnenkomer bovenaan. Volgden we de lijstvolgorde — het stelsel
-			 * levert de nieuwste eerst — dan eindigde de oudste bovenaan.
+			 * levert de nieuwste eerst; wij sorteren die lijst hier niet — dan eindigde de oudste
+			 * bovenaan.
 			 */
 			function meldBinnenkomers(berichten) {
 				const oudsteEerst = berichten.slice().reverse();
 				for (const bericht of oudsteEerst) {
 					const fouten = meld({ nieuwBericht: bericht });
 					// Doorgaan zou een lijst opleveren waar er middenin één ontbreekt, en dat is van een
-					// volledige lijst niet te onderscheiden. De rest wacht op de volgende ronde.
+					// volledige lijst niet te onderscheiden. De rest wacht op de volgende wijziging.
 					if (fouten && fouten.length) return fouten;
+					getoond.ids.add(bericht.id);
 				}
 				return [];
 			}

@@ -244,6 +244,52 @@ describe("ketenBron — berichten die tijdens het kijken binnenkomen", () => {
 		expect(meld).not.toHaveBeenCalled();
 	});
 
+	it("blijft niet hangen in zijn eigen foutmelding", async () => {
+		// De echte keten meldt een verwerkingsfout langs dezelfde weg terug: `meldVerwerkingsfout`
+		// zet een melding, die melding roept alle kijkers opnieuw aan, en die kijker is deze bron.
+		// Zonder rem probeert die dan eindeloos hetzelfde bericht opnieuw te tonen.
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+
+		const meld = vi.fn(() => [new Error("rij niet te bouwen")]);
+		// Zoals in berichtenbox-keten.js: een verwerkingsfout is een nieuwe melding, en elke melding
+		// gaat naar alle kijkers.
+		keten.meldVerwerkingsfout = vi.fn(() => keten._meld({ melding: { soort: "storing", tekst: "niet te tonen" }, uitkomst: keten._laatste }));
+		bron.start(meld);
+
+		keten._laatste = metAanwas(B2);
+		keten._meld({ melding: null, uitkomst: keten._laatste });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+	});
+
+	it("meldt de hele lijst als er een organisatie bij gekomen is", async () => {
+		// De binnenkomer alleen melden laat de nieuwe organisatie buiten de zijbalk en de tellers: de
+		// render-laag krijgt bij een binnenkomer geen magazijnen mee.
+		const { keten, meld } = await gestarteBron();
+		const erbij = { berichten: [B2, ...UITKOMST.berichten], magazijnen: [...UITKOMST.magazijnen, { id: "rdw", naam: "RDW" }] };
+
+		keten._meld({ melding: null, uitkomst: erbij });
+
+		expect(meld).toHaveBeenCalledWith({ berichten: erbij.berichten, magazijnen: erbij.magazijnen, mappen: [] });
+	});
+
+	it("toont een geslaagde binnenkomer geen tweede keer na een mislukte batch", async () => {
+		// Struikelt de derde van drie, dan staan de eerste twee al op het scherm. Worden die daarna
+		// opnieuw gemeld, dan staat dezelfde rij er twee keer — met een dubbele ongelezen-telling.
+		const { keten, meld } = await gestarteBron();
+		const B4 = { id: "b-4", magazijnId: "kvk", afzender: "KVK", onderwerp: "Vierde", uitKeten: true };
+		meld.mockImplementation((wijziging) => (wijziging.nieuwBericht && wijziging.nieuwBericht.id === "b-3" ? [new Error("rij niet te bouwen")] : []));
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B3, B2) });
+		meld.mockImplementation(() => []);
+		keten._meld({ melding: null, uitkomst: metAanwas(B4, B3, B2) });
+
+		const gemeld = meld.mock.calls.filter((aanroep) => aanroep[0].nieuwBericht).map((aanroep) => aanroep[0].nieuwBericht.id);
+		expect(gemeld).toEqual(["b-2", "b-3", "b-3", "b-4"]);
+	});
+
 	it("biedt een binnenkomer die niet te tonen was opnieuw aan", async () => {
 		// De render-laag draait bij een fout terug naar de vorige lijst. Zou de bron het bericht toch
 		// als "bekend" wegschrijven, dan is het van het scherm verdwenen en komt het nooit meer terug.

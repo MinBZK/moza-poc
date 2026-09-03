@@ -85,7 +85,7 @@
 
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
 	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
-	// geen knop is die dat doet: `opnieuw()` hieronder heeft nog steeds geen enkele aanroeper.
+	// geen knop is die dat doet: `opnieuw()` hieronder heeft nog steeds geen aanroeper in de interface.
 	// `herhaal()` wél — het pollen haalt daarmee een verlopen sessie terug — maar dat gebeurt buiten
 	// het zicht van de bezoeker. Zolang die knop er niet is, is verversen wat hem rest, en dat is ook
 	// wat de render-laag overal zegt.
@@ -119,7 +119,7 @@
 	// bezoeker eraan kan doen — verversen begint met een nieuwe ophaalronde en zet alles terug.
 	const POLL_GESTOPT_TEKSTEN = {
 		sessie: "Nieuwe berichten verschijnen niet meer vanzelf. Ververs de pagina om ze op te halen.",
-		fouten: "Wij konden niet meer kijken of er nieuwe berichten zijn. De berichten hieronder kloppen, maar er komen er niet vanzelf bij. Ververs de pagina.",
+		fouten: "Wij konden niet meer kijken of er nieuwe berichten zijn. Wat er nu staat klopt, maar er komen er niet vanzelf bij. Ververs de pagina.",
 	};
 
 	// Geen storing bij een bron, maar een toestand van deze omgeving: er is niets kapot, er valt
@@ -152,6 +152,9 @@
 	let melding = null; // { soort: "storing" | "mededeling", tekst }
 	let voortgang = null; // { bevraagd, klaar, gevonden }
 	let laatsteUitkomst = null;
+	// De lijst die het pollen als laatste aan de bron gaf. Los van `laatsteUitkomst`, want die schuift
+	// ook op bij een ophaalronde en zegt niets over wat er getoond kon worden.
+	let laatstGemeld = null;
 	const kijkers = [];
 
 	function laatWeten() {
@@ -810,15 +813,18 @@
 	// dat legt een traag antwoord een verouderde lijst over een nieuwere heen, en haalt de bron een
 	// zojuist getoond bericht weer van het scherm omdat het "verdwenen" lijkt.
 	let pollBezig = false;
+	let pollHerstelBezig = false;
 	let laatsteTikOp = 0;
 
 	/**
 	 * Een instelling in seconden: eerst de URL, dan localStorage, anders de standaardwaarde.
 	 *
 	 * De URL wint, zodat een gedeelde demo-link zijn eigen ritme meebrengt zonder dat iemand eerst
-	 * iets hoeft om te zetten. `0` of minder betekent uit; een negatief getal is een typefout en
-	 * krijgt hetzelfde antwoord als nul, want een ritme is het niet. Het Flags-paneel heeft hier geen
-	 * veld voor: wie het zonder de URL wil bijstellen, zet `setting:berichtenbox-poll` zelf.
+	 * iets hoeft om te zetten. Wat nul of minder betekent, beslist de aanroeper: zie `pollTussenpoos`
+	 * hieronder, waar de zichtbare nul uitzet en de verborgen pauzeert. Een negatief getal is een
+	 * typefout en krijgt hetzelfde antwoord als nul, want een ritme is het niet. Het Flags-paneel
+	 * heeft voor geen van beide een veld: wie ze zonder de URL wil bijstellen, zet
+	 * `setting:berichtenbox-poll` of `setting:berichtenbox-poll-verborgen` zelf.
 	 */
 	function ingesteldeSeconden(urlSleutel, instelling, standaard) {
 		const uitUrl = parseInt(new URLSearchParams(location.search).get(urlSleutel), 10);
@@ -880,19 +886,22 @@
 	}
 
 	function pollMag() {
-		return !pollGestopt && !pollGeparkeerd && !!ontvangerVanRonde;
+		// Ook niet tijdens een herstelronde: die vult de sessie juist, en een tik ertussendoor krijgt
+		// gegarandeerd een 409 — waarna er een tweede ronde zou starten naast de lopende.
+		return !pollGestopt && !pollGeparkeerd && !pollHerstelBezig && !!ontvangerVanRonde;
 	}
 
 	/**
-	 * De pagina gaat weg. Bewaart de browser haar (bfcache), dan komt zij ongewijzigd terug en hoort
-	 * het pollen mee terug te komen — van de inbox naar een bericht en met de terugknop terug is de
-	 * meest gelopen route in een berichtenbox. Bij een echte unload maakt het niet meer uit.
+	 * De pagina gaat weg: het pollen pauzeert. Altijd pauzeren en nooit blijvend stoppen, want
+	 * `pagehide` weet niet betrouwbaar of de browser deze pagina bewaart — Safari en iOS melden dat
+	 * niet — en `pageshow` weet het wél. Een document dat écht vernietigd wordt draait toch niets
+	 * meer, dus pauzeren kost daar niets; een document dat terugkomt zou anders dood zijn, en van de
+	 * inbox naar een bericht en met de terugknop terug is de meest gelopen route in een berichtenbox.
 	 */
-	function opWeggaan(gebeurtenis) {
+	function opWeggaan() {
 		clearTimeout(pollKlok);
 		pollKlok = null;
-		if (gebeurtenis && gebeurtenis.persisted) pollGeparkeerd = true;
-		else stopPoll();
+		pollGeparkeerd = true;
 	}
 
 	/**
@@ -903,6 +912,8 @@
 	function opTerugkomen() {
 		if (pollGestopt || !pollGeparkeerd) return;
 		pollGeparkeerd = false;
+		// De reeks begint opnieuw: wat er misging hoorde bij een pagina die weg was.
+		pollFouten = 0;
 		pollTik();
 	}
 
@@ -937,23 +948,25 @@
 	}
 
 	async function pollTik() {
-		clearTimeout(pollKlok);
-		pollKlok = null;
+		// Eerst kijken of we mogen: de klok wissen vóór die vraag laat een aanroeper die afketst — een
+		// tabwissel, een terugkeer — de geplande tik vernietigen zonder er een voor terug te zetten.
 		if (!pollMag() || pollBezig) return;
 
+		clearTimeout(pollKlok);
+		pollKlok = null;
 		pollBezig = true;
 		laatsteTikOp = Date.now();
 		// Waar deze tik bij hoort. Draait er onderweg een nieuwe ophaalronde, dan is wat hier
 		// terugkomt ouder dan wat die ronde opleverde.
-		const ronderVanTik = ronde;
+		const rondeVanTik = ronde;
 
 		try {
 			const lijst = await haalLijst(ontvangerVanRonde);
 
-			// De pagina is intussen weg, of een nieuwere ronde heeft ons ingehaald. Dit antwoord
+			// De pagina is intussen weg geweest, of een nieuwere ronde heeft ons ingehaald. Dit antwoord
 			// stilzwijgend laten vallen is hier het juiste: het zou een verouderde lijst over een
 			// nieuwere heen leggen, en de bron zou een zojuist getoond bericht weer weghalen.
-			if (!pollMag() || ronde !== ronderVanTik) return;
+			if (achterhaald(rondeVanTik)) return;
 
 			// Pas nullen als het verwerken ook lukte: een antwoord dat aankomt maar niet te lezen is,
 			// hoort mee te tellen in de foutenreeks en niet die van zijn voorgangers te wissen.
@@ -961,7 +974,7 @@
 			pollFouten = 0;
 			pollHerstelPogingen = 0;
 		} catch (fout) {
-			if (!pollMag() || ronde !== ronderVanTik) return;
+			if (achterhaald(rondeVanTik)) return;
 
 			// De sessie is weg. Doorpollen levert niets meer op: alleen een nieuwe ronde vult hem.
 			if (redenVan(fout) === "geenSessie") {
@@ -983,6 +996,22 @@
 		}
 
 		planPoll();
+	}
+
+	/**
+	 * Hoort dit antwoord nog bij de pagina zoals die er nu voor staat?
+	 *
+	 * Zo niet, dan vervalt het — maar het pollen zelf hoeft daar niet aan te stoppen. Draait er een
+	 * nieuwere ronde, dan plannen we gewoon de volgende tik; is de pagina weg of hebben we het
+	 * opgegeven, dan zorgt `opTerugkomen` of niemand voor het vervolg.
+	 */
+	function achterhaald(rondeVanTik) {
+		if (pollGestopt || pollGeparkeerd) return true;
+		if (ronde !== rondeVanTik) {
+			planPoll();
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -1014,12 +1043,35 @@
 		const overgeslagen = ruw.length - berichten.length;
 		if (overgeslagen > 0) {
 			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen tijdens het pollen.");
+			toonOnvolledig(berichten.length, ruw.length);
 		}
 
-		if (zelfdeBerichten(laatsteUitkomst.berichten, berichten)) return;
+		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
 
 		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+		laatstGemeld = berichten;
 		laatWeten();
+	}
+
+	/**
+	 * Vergeet dat deze lijst al gemeld is.
+	 *
+	 * De bron kon haar niet tonen. Zonder dit is de volgende tik "dezelfde lijst" en meldt hij niets,
+	 * waardoor een bericht dat niet gerenderd kon worden pas terugkomt als er toevallig iets anders
+	 * binnenkomt. De bron houdt zelf bij wat er wél op het scherm staat, dus dubbele rijen levert dit
+	 * niet op.
+	 */
+	function vergeetGemeldeLijst() {
+		laatstGemeld = null;
+	}
+
+	/**
+	 * Wat een ophaalronde opleverde wordt hier het ijkpunt voor het pollen: die lijst staat op het
+	 * scherm, dus een tik die hem opnieuw levert heeft niets te melden.
+	 */
+	function neemUitkomstAan(uitkomst) {
+		laatsteUitkomst = uitkomst;
+		laatstGemeld = uitkomst.berichten;
 	}
 
 	function zelfdeBerichten(vorige, nieuwe) {
@@ -1046,8 +1098,10 @@
 		}
 
 		pollHerstelPogingen += 1;
+		pollHerstelBezig = true;
 		const herstel = herhaal();
 		if (!herstel) {
+			pollHerstelBezig = false;
 			// Er valt niets te herhalen — geen kvk-nummer, dus ook geen sessie om terug te halen. Dat
 			// hoort niet voor te komen op een pagina die aan het pollen is; vandaar de regel.
 			console.error("[Berichtenbox] De sessie is verlopen, maar er valt geen ophaalronde te herhalen; het pollen stopt.");
@@ -1058,11 +1112,20 @@
 
 		herstel.then(
 			(uitkomst) => {
+				pollHerstelBezig = false;
 				// Een ronde die niets oplevert heeft zichzelf al gemeld; blijven pollen zou daar een
-				// tweede melding overheen leggen. `herhaal` zet het pollen zelf weer aan als het lukte.
-				if (!uitkomst) stopPoll();
+				// tweede melding overheen leggen.
+				if (!uitkomst) {
+					stopPoll();
+					return;
+				}
+				// De reeks mislukte tikken hoort bij de sessie die weg was, niet bij de nieuwe. En het
+				// plannen gebeurt hier: `herhaal` deed dat al toen dit slot nog dicht zat.
+				pollFouten = 0;
+				planPoll();
 			},
 			(fout) => {
+				pollHerstelBezig = false;
 				// Een uitworp betekent juist dat de foutafhandeling in de ronde er niet aan toegekomen
 				// is; die heeft dus niets gemeld. Zwijgen zou de lijst laten bevriezen zonder een woord.
 				console.error("[Berichtenbox] De herstelronde na een verlopen sessie wierp een fout; het pollen stopt.", fout);
@@ -1087,7 +1150,7 @@
 		ronde.then(
 			function (uitkomst) {
 				if (uitkomst) {
-					laatsteUitkomst = uitkomst;
+					neemUitkomstAan(uitkomst);
 					laatWeten();
 					// Ook na een eerste ronde die mislukte: dan is het pollen nooit begonnen, en zonder
 					// dit staat er een verse lijst die zich nooit meer bijwerkt.
@@ -1133,7 +1196,7 @@
 		ronde.then(
 			(uitkomst) => {
 				if (!uitkomst) return;
-				laatsteUitkomst = uitkomst;
+				neemUitkomstAan(uitkomst);
 				startPoll();
 			},
 			() => {
@@ -1184,7 +1247,7 @@
 			if (!ronde) return Promise.resolve(laatsteUitkomst);
 			return ronde.then(
 				function (uitkomst) {
-					if (uitkomst) laatsteUitkomst = uitkomst;
+					if (uitkomst) neemUitkomstAan(uitkomst);
 					return laatsteUitkomst;
 				},
 				function (fout) {
@@ -1233,7 +1296,19 @@
 		 * rijen bouwt en daarbij kan struikelen over een bericht met een onverwachte vorm.
 		 */
 		meldVerwerkingsfout: function () {
+			// De lijst is opgehaald maar niet getoond. Hem als "al gemeld" laten gelden zou betekenen
+			// dat de volgende tik zwijgt en die berichten nooit meer aangeboden worden.
+			vergeetGemeldeLijst();
 			meldStoring("verwerking");
+		},
+
+		/**
+		 * Stopt het kijken naar nieuwe berichten. Voor de render-laag: slaat die het gedrag van de bron
+		 * over — na een mislukte eerste lading — dan leest niemand meer wat hier gemeld wordt, en is
+		 * doorpollen verkeer voor een scherm dat er niets mee doet.
+		 */
+		stopPollen: function () {
+			stopPoll();
 		},
 
 		/**
