@@ -2570,12 +2570,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// dat is. De volgorde is de voorrang: is de persona aangesloten op het Federatief
 	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
 	const register = maakRegister();
+
+	// Een bericht dat binnenkomt terwijl de bezoeker kijkt, landt bovenaan pagina 1 van de inbox.
+	// Elders is het onzichtbaar, en dan gaat de melding in het live-gebied over een rij die er niet
+	// staat. Beide bronnen hebben er hetzelfde antwoord op nodig: de dataset verzint zo'n bericht
+	// alleen daar, de keten meldt het alleen daar als binnenkomer.
+	function toontBinnenkomers() {
+		return huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]");
+	}
+
 	// Een eigen eigenaar per bron: anders verdringt een melding van de ene bron die van de andere, en
 	// kan verbergPaginaMelding hem daarna niet meer opruimen.
 	register.registreer(
 		ketenBron(window.BerichtenboxKeten, {
 			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:keten"),
 			verbergMelding: () => verbergPaginaMelding("bron:keten"),
+			// Zie `toontBinnenkomers` hierboven: daarbuiten werkt de bron de hele lijst bij in plaats
+			// van elk bericht apart te melden. De dataset-bron krijgt dezelfde vraag onder de naam
+			// `magOphalen`, omdat die er iets anders mee doet: niet melden versus niet verzinnen en geen
+			// uitval starten.
+			magDruppelen: toontBinnenkomers,
 		})
 	);
 	register.registreer(
@@ -2610,7 +2624,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			magAnimeren: () => !!document.querySelector("[data-berichtenbox-progress]") && huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
 			// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 			// onzichtbaar of misleidend.
-			magOphalen: () => huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]"),
+			magOphalen: toontBinnenkomers,
 		})
 	);
 
@@ -2764,7 +2778,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}
 
 		const slot = blok.querySelector("[data-berichtenbox-storing-tekst]");
-		if (slot) slot.textContent = claim.tekst;
+		// Alleen schrijven als er iets verandert: dit blok is een live-regio, en het tekstknooppunt
+		// vervangen door hetzelfde laat een schermlezer de melding opnieuw voorlezen.
+		if (slot && slot.textContent !== claim.tekst) slot.textContent = claim.tekst;
 		blok.classList.toggle("feedback-error", claim.soort === "storing");
 		blok.classList.toggle("feedback-info", claim.soort === "info");
 
@@ -2953,7 +2969,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// Brongedrag start alleen als er ook echt een lijst staat. Na een storing zou één
 			// binnendruppelend demo-bericht zich voordoen als de hele berichtenbox — en de live-regio
 			// kondigt hem aan, ook al is hij nergens te zien.
-			if (!ladingMislukt && !laadfoutGetoond) {
+			if (ladingMislukt || laadfoutGetoond) {
+				// Zonder brongedrag leest niemand meer wat de keten meldt. Blijft die dan kijken of er
+				// nieuwe berichten zijn, dan kost dat verkeer voor een scherm dat er niets mee doet — en
+				// belandt een melding in een variabele die niemand uitleest.
+				if (window.BerichtenboxKeten && typeof window.BerichtenboxKeten.stopPollen === "function") {
+					window.BerichtenboxKeten.stopPollen();
+				}
+			} else {
 				const bron = register.actief();
 				if (bron && typeof bron.start === "function") {
 					veilig({ log: "Het gedrag van de bron", bezoeker: "Niet alles op deze pagina werkt zoals bedoeld." }, () =>

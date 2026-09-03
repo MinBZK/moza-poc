@@ -59,7 +59,19 @@ export function standaardRonde(extra = []) {
  * Draait het keten-script met een persona die aangesloten is, zodat er een ontvanger bekend is.
  * Geeft de aanroepen aan fetch terug, zodat een test kan zien wát er is opgevraagd.
  */
-export async function startKeten(perAdres) {
+/** De testaccountlijst van de demo-omgeving, voor een eigen kvk-nummer. */
+export function personasVoor(kvkNummer) {
+	return antwoord(200, [{ id: "proeftuin-een", label: "Demo-onderneming 1", ontvanger: "KVK:" + kvkNummer, bron: "keten" }]);
+}
+
+/**
+ * @param perAdres    Wat fetch per adres teruggeeft.
+ * @param pad         De pagina waarop het script draait; een test over `?poll=` geeft zijn eigen mee.
+ * @param kvkNummer   Wie de bezoeker is. Een eigen nummer per test maakt de aanroepen van dat
+ *                    exemplaar herkenbaar aan de `X-Ontvanger`-header — nodig omdat elk vorig
+ *                    exemplaar in hetzelfde document blijft bestaan en dezelfde fetch gebruikt.
+ */
+export async function startKeten(perAdres, pad = "/moza/berichtenbox/", kvkNummer = "90000011") {
 	const aanroepen = [];
 
 	vi.stubGlobal("fetch", async (pad, opties) => {
@@ -72,14 +84,15 @@ export async function startKeten(perAdres) {
 
 	document.body.innerHTML = '<article class="berichtenbox"><table data-berichtenbox-list><tbody></tbody></table></article>';
 	// Een relatief pad, dus de origin uit @vitest-environment-options blijft staan: hetzelfde
-	// harnas werkt in het http- en het https-bestand.
-	window.history.replaceState(null, "", "/moza/berichtenbox/");
+	// harnas werkt in het http- en het https-bestand. Een test die over de instellingen in de URL
+	// gaat — `?poll=` bijvoorbeeld — geeft zijn eigen pad mee.
+	window.history.replaceState(null, "", pad);
 	window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
 	// Inclusief `personas`, zoals de echte wisselaar die publiceert: de keten-bron vergelijkt de
 	// lijst van het stelsel daarmee om te melden welke testaccounts hier geen persona hebben.
 	window.Personas = {
-		actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }),
-		personas: [{ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: "90000011" } }],
+		actief: () => ({ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: kvkNummer } }),
+		personas: [{ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: kvkNummer } }],
 	};
 
 	new Function(BRON).call(window);
