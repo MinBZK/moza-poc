@@ -276,8 +276,8 @@ describe("ketenBron — berichten die tijdens het kijken binnenkomen", () => {
 	});
 
 	it("toont een geslaagde binnenkomer geen tweede keer na een mislukte batch", async () => {
-		// Struikelt de derde van drie, dan staan de eerste twee al op het scherm. Worden die daarna
-		// opnieuw gemeld, dan staat dezelfde rij er twee keer — met een dubbele ongelezen-telling.
+		// Struikelt de tweede van twee, dan staat de eerste al op het scherm. Wordt die daarna opnieuw
+		// gemeld, dan staat dezelfde rij er twee keer — met een dubbele ongelezen-telling.
 		const { keten, meld } = await gestarteBron();
 		const B4 = { id: "b-4", magazijnId: "kvk", afzender: "KVK", onderwerp: "Vierde", uitKeten: true };
 		meld.mockImplementation((wijziging) => (wijziging.nieuwBericht && wijziging.nieuwBericht.id === "b-3" ? [new Error("rij niet te bouwen")] : []));
@@ -327,5 +327,117 @@ describe("ketenBron — berichten die tijdens het kijken binnenkomen", () => {
 		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
 
 		expect(keten.meldVerwerkingsfout).toHaveBeenCalled();
+	});
+});
+
+describe("ketenBron — grenzen aan het opnieuw aanbieden", () => {
+	const B2 = { id: "b-2", magazijnId: "kvk", afzender: "KVK", onderwerp: "Aanslag", uitKeten: true };
+
+	function metAanwas(...nieuw) {
+		return { berichten: [...nieuw, ...UITKOMST.berichten], magazijnen: UITKOMST.magazijnen };
+	}
+
+	it("houdt op met aanbieden als hetzelfde bericht ontoonbaar blijft", async () => {
+		// Het transport vergeet bij elke verwerkingsfout dat het deze lijst gemeld heeft, dus zonder
+		// grens probeert de bron dit bericht elke tik opnieuw — voor altijd, en zonder teller die
+		// aanslaat.
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+		bron.start(() => [new Error("rij niet te bouwen")]);
+
+		for (let poging = 0; poging < 6; poging += 1) {
+			keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+		}
+
+		expect(keten.meldVerwerkingsfout.mock.calls.length).toBeLessThanOrEqual(3);
+	});
+
+	it("zegt het tegen de bezoeker als het opgeeft", async () => {
+		const meldStoring = vi.fn();
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten, { meldStoring });
+		await bron.geldtVoor();
+		bron.start(() => [new Error("rij niet te bouwen")]);
+
+		for (let poging = 0; poging < 6; poging += 1) {
+			keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+		}
+
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet tonen"), "storing");
+	});
+
+	it("haalt een wijziging in die viel vóórdat er een luisteraar was", async () => {
+		// Tussen `geldtVoor()` en `start()` rendert de render-laag. Landt in dat venster een polltik,
+		// dan is die bij het transport al als gemeld afgeboekt en biedt het hem nooit meer aan.
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+
+		keten.huidigeUitkomst = metAanwas(B2);
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		expect(meld).toHaveBeenCalledWith({ nieuwBericht: B2 });
+	});
+
+	it("zegt het als het keten-script geen verwerkingsfout kent", async () => {
+		// Bedradingsfout, net als bij volgVoortgang en inhoudVan: zonder die haak worden opgehaalde
+		// berichten niet getoond én nooit opnieuw aangeboden, en dat mag niet stil gebeuren.
+		const meldStoring = vi.fn();
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		delete keten.meldVerwerkingsfout;
+		const bron = ketenBron(keten, { meldStoring });
+		await bron.geldtVoor();
+		bron.start(() => [new Error("rij niet te bouwen")]);
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+
+		expect(meldStoring).toHaveBeenCalledWith(expect.stringContaining("niet tonen"), "storing");
+	});
+
+	it("trekt een melding in zodra de keten er geen meer heeft", async () => {
+		// Bleef die staan, dan vertelt de pagina over ontbrekende berichten die er intussen wél zijn.
+		const verbergMelding = vi.fn();
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST, melding: { soort: "storing", tekst: "Bronnen onbereikbaar." } });
+		const bron = ketenBron(keten, { verbergMelding });
+		await bron.geldtVoor();
+		bron.start(() => []);
+
+		keten._meld({ melding: null, uitkomst: { berichten: UITKOMST.berichten, magazijnen: UITKOMST.magazijnen } });
+
+		expect(verbergMelding).toHaveBeenCalled();
+	});
+
+	it("meldt een ongewijzigde lijst ook niet waar er niet gedruppeld mag worden", async () => {
+		// Op pagina 2 gaat elke wijziging als hele lijst. Zonder rem zou een ongewijzigde lijst daar
+		// elke tik opnieuw over het scherm gaan.
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten, { magDruppelen: () => false });
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		keten._meld({ melding: null, uitkomst: { berichten: [...UITKOMST.berichten], magazijnen: UITKOMST.magazijnen } });
+
+		expect(meld).not.toHaveBeenCalled();
+	});
+});
+
+describe("ketenBron — dezelfde melding niet twee keer", () => {
+	it("schrijft een staande melding niet bij elke wijziging opnieuw", async () => {
+		// Het meldingsblok is een live-regio. Elke voortgangsgebeurtenis van een ophaalronde komt hier
+		// langs met dezelfde staande melding; opnieuw schrijven laat een schermlezer hem voorlezen.
+		const meldStoring = vi.fn();
+		const melding = { soort: "mededeling", tekst: "Eén organisatie antwoordde niet." };
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST, melding });
+		const bron = ketenBron(keten, { meldStoring });
+		await bron.geldtVoor();
+		bron.start(() => []);
+
+		keten._meld({ melding, uitkomst: null });
+		keten._meld({ melding, uitkomst: null });
+
+		expect(meldStoring).toHaveBeenCalledTimes(1);
 	});
 });

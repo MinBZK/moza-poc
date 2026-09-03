@@ -2778,7 +2778,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}
 
 		const slot = blok.querySelector("[data-berichtenbox-storing-tekst]");
-		if (slot) slot.textContent = claim.tekst;
+		// Alleen schrijven als er iets verandert: dit blok is een live-regio, en het tekstknooppunt
+		// vervangen door hetzelfde laat een schermlezer de melding opnieuw voorlezen.
+		if (slot && slot.textContent !== claim.tekst) slot.textContent = claim.tekst;
 		blok.classList.toggle("feedback-error", claim.soort === "storing");
 		blok.classList.toggle("feedback-info", claim.soort === "info");
 
@@ -2972,6 +2974,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// nieuwe berichten zijn, dan kost dat verkeer voor een scherm dat er niets mee doet — en
 				// belandt een melding in een variabele die niemand uitleest.
 				if (window.BerichtenboxKeten && typeof window.BerichtenboxKeten.stopPollen === "function") {
+					window.BerichtenboxKeten.stopPollen();
 				}
 			} else {
 				const bron = register.actief();

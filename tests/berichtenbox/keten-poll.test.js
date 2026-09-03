@@ -30,6 +30,19 @@ function ronde(extra = []) {
 	return [...extra, ["_ophalen", () => sseAntwoord()], ["/api/v1/berichten?", () => LEEG()]];
 }
 
+/** Een ophaalronde die één organisatie bij naam noemt. */
+function sseMetNaam() {
+	const stroom = new ReadableStream({
+		start(regelaar) {
+			const noem = { event: "magazijn-bevraging-voltooid", magazijnId: "00000001000000000000", naam: "Belastingdienst", status: "OK", aantalBerichten: 0 };
+			const gereed = { event: "ophalen-gereed", totaalBerichten: 0, geslaagd: 1, mislukt: 0, totaalMagazijnen: 1 };
+			regelaar.enqueue(new TextEncoder().encode("data:" + JSON.stringify(noem) + "\n\ndata:" + JSON.stringify(gereed) + "\n\n"));
+			regelaar.close();
+		},
+	});
+	return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
+}
+
 /** Antwoorden op de berichtenlijst, één per aanroep; het laatste blijft gelden. */
 function lijstReeks(...antwoorden) {
 	let beurt = 0;
@@ -56,7 +69,7 @@ async function startPollKeten(perAdres, pad) {
 
 /** Hoe vaak déze bezoeker de berichtenlijst opvroeg, en hoe vaak er een ophaalronde langs de bronnen ging. */
 function tellingen(aanroepen, ontvanger) {
-	const vanDeze = aanroepen.filter((aanroep) => !ontvanger || !aanroep.headers["X-Ontvanger"] || aanroep.headers["X-Ontvanger"] === ontvanger);
+	const vanDeze = aanroepen.filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger);
 	return {
 		lijst: vanDeze.filter((aanroep) => aanroep.pad.indexOf("/api/v1/berichten?") !== -1).length,
 		rondes: vanDeze.filter((aanroep) => aanroep.pad.indexOf("_ophalen") !== -1).length,
@@ -172,8 +185,8 @@ describe("een tabblad dat niemand voor zich heeft", () => {
 		// Niet helemaal stoppen: de sessie bij het stelsel heeft een schuivende vervaltijd, en een
 		// berichtenbox die openstaat hoort hem in stand te houden.
 		const { aanroepen, ontvanger } = await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(LEEG())]]));
-		zetZichtbaarheid("hidden");
 		const na = tellingen(aanroepen, ontvanger);
+		zetZichtbaarheid("hidden");
 
 		await vi.advanceTimersByTimeAsync(15000);
 		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst);
@@ -401,19 +414,6 @@ describe("een antwoord in een vorm die we niet kennen", () => {
 });
 
 describe("de naam van de organisatie", () => {
-	/** Een ophaalronde die één organisatie bij naam noemt. */
-	function sseMetNaam() {
-		const stroom = new ReadableStream({
-			start(regelaar) {
-				const noem = { event: "magazijn-bevraging-voltooid", magazijnId: "00000001000000000000", naam: "Belastingdienst", status: "OK", aantalBerichten: 0 };
-				const gereed = { event: "ophalen-gereed", totaalBerichten: 0, geslaagd: 1, mislukt: 0, totaalMagazijnen: 1 };
-				regelaar.enqueue(new TextEncoder().encode("data:" + JSON.stringify(noem) + "\n\ndata:" + JSON.stringify(gereed) + "\n\n"));
-				regelaar.close();
-			},
-		});
-		return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
-	}
-
 	it("draagt de naam uit de ophaalronde over op een bericht dat later binnenkomt", async () => {
 		// De berichtenlijst geeft per bericht alleen het nummer van de organisatie. Zonder de namen
 		// van de ronde toont de rij twintig cijfers — en leest een schermlezer die voor.
@@ -463,10 +463,9 @@ describe("de pagina komt terug nadat de browser niets beloofde", () => {
 		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst + 1);
 	});
 
-	it("telt een tik die onderweg was toen de pagina wegging niet als storing", async () => {
-		// Drie keer heen en weer met de terugknop op een gezonde verbinding zou anders het pollen
-		// blijvend stilleggen: de browser breekt zo'n verzoek af, en dat is geen storing bij het stelsel.
-		let losmaken;
+	it("begint de foutenreeks opnieuw bij terugkomst", async () => {
+		// Wat er misging hoorde bij een pagina die de bezoeker verlaten had. Telde dat door, dan legt
+		// drie keer heen en weer met de terugknop het pollen stil op een gezonde verbinding.
 		let beurt = 0;
 		await startPollKeten(
 			ronde([
@@ -475,29 +474,20 @@ describe("de pagina komt terug nadat de browser niets beloofde", () => {
 					() => {
 						beurt += 1;
 						if (beurt === 1) return antwoord(200, { berichten: [] });
-						if (beurt === 2) {
-							return new Promise((_, weiger) => {
-								losmaken = () => weiger(new TypeError("Failed to fetch"));
-							});
-						}
-						// Daarna hikt het netwerk nog twee keer. Telt de afgebroken tik van de weggelegde
-						// pagina mee, dan zijn dat er drie en stopt het pollen met een melding.
 						throw new TypeError("Failed to fetch");
 					},
 				],
 			])
 		);
 
+		// Eén zichtbare hik, dan weg en terug.
 		await vi.advanceTimersByTimeAsync(15000);
 		window.dispatchEvent(new Event("pagehide"));
-
 		const terug = new Event("pageshow");
 		Object.defineProperty(terug, "persisted", { value: true });
 		window.dispatchEvent(terug);
-		// Pas nu breekt de browser het verzoek van de weggelegde pagina af. De pagina is dan alweer
-		// terug, dus alleen een generatie-onderscheid houdt deze fout buiten de reeks.
-		losmaken();
-		// Twee zichtbare hikken. Met de afgebroken tik erbij zouden het er drie zijn, en dan stopt het.
+
+		// Nog twee hikken. Telt die eerste mee, dan zijn het er drie en stopt het pollen.
 		await vi.advanceTimersByTimeAsync(20000);
 
 		expect(window.BerichtenboxKeten.melding).toBe(null);
@@ -542,8 +532,8 @@ describe("terwijl er een herstelronde loopt", () => {
 
 describe("het pollen stilzetten van buitenaf", () => {
 	it("houdt op zodra de render-laag zegt dat er niemand meekijkt", async () => {
-		// Mislukt de eerste lading, dan slaat de render-laag het gedrag van de bron over: er is dan
-		// geen luisteraar meer. Doorpollen kost verkeer en zet meldingen die niemand uitleest.
+		// Alleen de haak zelf; dat de render-laag hem aanroept na een mislukte lading staat vast in
+		// keten-render.test.js.
 		const { aanroepen, ontvanger } = await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(LEEG())]]));
 
 		window.BerichtenboxKeten.stopPollen();
@@ -563,7 +553,7 @@ describe("een lijst met berichten die nergens heen kunnen", () => {
 		await vi.advanceTimersByTimeAsync(15000);
 
 		expect(window.BerichtenboxKeten.melding).not.toBe(null);
-		expect(window.BerichtenboxKeten.melding.tekst).toContain("opgehaald");
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("ontbreken gegevens");
 	});
 });
 
@@ -625,5 +615,112 @@ describe("een lijst die de bron niet kon tonen", () => {
 		await vi.advanceTimersByTimeAsync(15000);
 
 		expect(aangeboden.size).toBe(2);
+	});
+});
+
+describe("wat het pollen aan de bron doorgeeft", () => {
+	it("houdt de organisaties van de ophaalronde vast", async () => {
+		// De lijst kent alleen nummers. Zouden de magazijnen bij een tik wegvallen, dan verdwijnt de
+		// organisatie uit de zijbalk en uit de tellers.
+		await startPollKeten([
+			["_ophalen", () => sseMetNaam()],
+			["/api/v1/berichten?", lijstReeks(LEEG(), EEN_BERICHT())],
+		]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(
+			gemeld
+				.filter(Boolean)
+				.pop()
+				.magazijnen.map((magazijn) => magazijn.naam)
+		).toEqual(["Belastingdienst"]);
+	});
+
+	it("meldt het ook als er een bericht verdwenen is", async () => {
+		// Een ingetrokken bericht is net zo goed een wijziging; blijft het staan, dan toont de lijst
+		// post die er niet meer is.
+		await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(EEN_BERICHT(), LEEG())]]));
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(gemeld.filter(Boolean).pop().berichten).toEqual([]);
+	});
+
+	it("blijft na het opgeven ook bij een tabwissel stil", async () => {
+		// Opgeven is blijvend tot een herlading. Zonder dat zwengelt de eerstvolgende tabwissel het
+		// pollen weer aan tegen hetzelfde kapotte eindpunt.
+		let beurt = 0;
+		const { aanroepen, ontvanger } = await startPollKeten(
+			ronde([
+				[
+					"/api/v1/berichten?",
+					() => {
+						beurt += 1;
+						if (beurt === 1) return antwoord(200, { berichten: [] });
+						throw new TypeError("Failed to fetch");
+					},
+				],
+			])
+		);
+
+		await vi.advanceTimersByTimeAsync(45000);
+		expect(window.BerichtenboxKeten.melding).not.toBe(null);
+		const na = tellingen(aanroepen, ontvanger);
+
+		await vi.advanceTimersByTimeAsync(6000);
+		zetZichtbaarheid("hidden");
+		zetZichtbaarheid("visible");
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst);
+	});
+
+	it("telt alleen mislukkingen die op elkaar volgen", async () => {
+		// "Drie op rij" is de belofte. Twee hikken met een geslaagde tik ertussen horen het pollen niet
+		// stil te leggen.
+		let beurt = 0;
+		await startPollKeten(
+			ronde([
+				[
+					"/api/v1/berichten?",
+					() => {
+						beurt += 1;
+						// Om en om: mislukt, gelukt, mislukt, gelukt, mislukt.
+						if (beurt === 1 || beurt % 2 === 1) return antwoord(200, { berichten: [] });
+						throw new TypeError("Failed to fetch");
+					},
+				],
+			])
+		);
+
+		await vi.advanceTimersByTimeAsync(120000);
+
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+});
+
+describe("een ronde die afrondt nadat de pagina weg is", () => {
+	it("zet het pollen niet weer aan op een pagina die niemand voor zich heeft", async () => {
+		// De bezoeker klikt op een bericht terwijl de ophaalronde nog loopt. Zou die ronde het pollen
+		// ontparkeren, dan haalt hij op voor een verlaten document — en doet `pageshow` bij terugkomst
+		// niets meer, want er valt dan niets te hervatten.
+		const { aanroepen, ontvanger } = await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(LEEG())]]));
+
+		window.dispatchEvent(new Event("pagehide"));
+		window.BerichtenboxKeten.opnieuw();
+		await vi.advanceTimersByTimeAsync(0);
+		const na = tellingen(aanroepen, ontvanger);
+
+		const terug = new Event("pageshow");
+		Object.defineProperty(terug, "persisted", { value: true });
+		window.dispatchEvent(terug);
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst + 1);
 	});
 });

@@ -152,8 +152,9 @@
 	let melding = null; // { soort: "storing" | "mededeling", tekst }
 	let voortgang = null; // { bevraagd, klaar, gevonden }
 	let laatsteUitkomst = null;
-	// De lijst die het pollen als laatste aan de bron gaf. Los van `laatsteUitkomst`, want die schuift
-	// ook op bij een ophaalronde en zegt niets over wat er getoond kon worden.
+	// De laatste berichtenlijst die als wijziging naar de bron ging. Apart van `laatsteUitkomst`, want
+	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
+	// `vergeetGemeldeLijst`), terwijl `laatsteUitkomst` de laatst bekende lijst blijft.
 	let laatstGemeld = null;
 	const kijkers = [];
 
@@ -189,7 +190,14 @@
 	// De ronde telde meer berichten dan de lijst teruggaf: meer dan één pagina, of onderweg iets
 	// kwijtgeraakt. Stil inslikken zou een halve postbus als een volledige presenteren.
 	function toonOnvolledig(getoond, gevonden) {
-		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond + " opgehaald. Probeer het opnieuw om de rest op te halen.");
+		meld("mededeling", "Er zijn " + gevonden + " berichten voor u, waarvan wij er " + getoond + " kunnen tonen. Ververs de pagina om de rest op te halen.");
+	}
+
+	// Berichten die het stelsel wel levert maar die geen id hebben. Verversen helpt daar per definitie
+	// niet tegen: zonder id is er geen sleutel en geen detailpagina. Dus geen handeling beloven die
+	// niets oplevert, maar vragen het te melden.
+	function toonOnbruikbaar(aantal) {
+		meld("mededeling", aantal === 1 ? "Van één bericht ontbreken gegevens, waardoor wij het niet kunnen tonen. Meld dit als het blijft gebeuren." : "Van " + aantal + " berichten ontbreken gegevens, waardoor wij ze niet kunnen tonen. Meld dit als het blijft gebeuren.");
 	}
 
 	function verbergMeldingen() {
@@ -273,6 +281,15 @@
 			// Op naam van deze ontvanger, anders zijn het de organisaties van een vorige persona.
 			return bewaard && bewaard.ontvanger === ontvanger && bewaard.organisaties ? bewaard.organisaties : null;
 		} catch (fout) {
+			// Zonder deze namen draait er een volledige ronde langs álle organisaties in plaats van één
+			// lijstaanroep. Dat merkt de bezoeker aan de wachttijd, dus het hoort niet spoorloos te
+			// gebeuren. En opruimen, anders struikelt dezelfde onleesbare waarde op elke pagina opnieuw.
+			console.warn("[Berichtenbox] De bewaarde organisatienamen zijn niet leesbaar; er volgt een volledige ophaalronde.", fout);
+			try {
+				sessionStorage.removeItem(ORGANISATIES_SLEUTEL);
+			} catch (opruimFout) {
+				console.warn("[Berichtenbox] De onleesbare organisatienamen zijn ook niet op te ruimen.", opruimFout);
+			}
 			return null;
 		}
 	}
@@ -784,6 +801,10 @@
 
 			if (ruw.length >= LIJST_GROOTTE) {
 				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
+			} else if (overgeslagen > 0) {
+				// Vóór de vergelijking met `gevonden`: die is null zodra de lijst uit de sessiecache komt
+				// of een andere pagina de ronde draaide, en dan valt dit stil weg.
+				toonOnbruikbaar(overgeslagen);
 			} else if (berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
 			} else if (uitvraag.stil.length > 0) {
@@ -862,7 +883,9 @@
 
 	function startPoll() {
 		if (pollGestopt) return;
-		pollGeparkeerd = false;
+		// Niet ontparkeren: een ronde die afrondt ná `pagehide` zou anders het pollen weer aanzetten op
+		// een pagina die de bezoeker verlaten heeft — en `opTerugkomen` doet bij terugkeer dan niets
+		// meer, want die ziet geen geparkeerde toestand. Alleen `pageshow` haalt het pollen terug.
 		if (!pollLuistert) {
 			document.addEventListener("visibilitychange", opZichtbaarheid);
 			// Een pagina die weggaat hoort niets meer op te halen: een tik uit een document dat niemand
@@ -1040,13 +1063,15 @@
 
 		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
 		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
+		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
+
+		// Pas melden als de lijst werkelijk veranderd is. Het meldingsblok is een live-regio: elke
+		// keer dezelfde tekst erin schrijven laat een schermlezer hem elke keer voorlezen.
 		const overgeslagen = ruw.length - berichten.length;
 		if (overgeslagen > 0) {
 			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen tijdens het pollen.");
-			toonOnvolledig(berichten.length, ruw.length);
+			toonOnbruikbaar(overgeslagen);
 		}
-
-		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
 
 		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
 		laatstGemeld = berichten;
@@ -1066,8 +1091,9 @@
 	}
 
 	/**
-	 * Wat een ophaalronde opleverde wordt hier het ijkpunt voor het pollen: die lijst staat op het
-	 * scherm, dus een tik die hem opnieuw levert heeft niets te melden.
+	 * Wat een ophaalronde opleverde wordt hier het ijkpunt voor het pollen: die lijst is aan de bron
+	 * gegeven, dus een tik die hem opnieuw levert heeft niets te melden. Wat er daadwerkelijk getoond
+	 * werd, houdt de bron zelf bij — `getoond` in keten-bron.js.
 	 */
 	function neemUitkomstAan(uitkomst) {
 		laatsteUitkomst = uitkomst;
@@ -1120,7 +1146,8 @@
 					return;
 				}
 				// De reeks mislukte tikken hoort bij de sessie die weg was, niet bij de nieuwe. En het
-				// plannen gebeurt hier: `herhaal` deed dat al toen dit slot nog dicht zat.
+				// plannen gebeurt hier: `herhaal` probeerde dat al, maar toen zat dit slot nog dicht en
+				// ketste `planPoll` af op `pollMag()`.
 				pollFouten = 0;
 				planPoll();
 			},
@@ -1284,6 +1311,15 @@
 				console.error("[Berichtenbox] berichtinhoud ophalen mislukt", fout);
 				return { fout: FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar };
 			}
+		},
+
+		/**
+		 * De lijst zoals die er nu is. Voor een bron die zich later aanmeldt: tussen het kiezen van de
+		 * bron en het aanhaken van zijn luisteraar kan er een polltik geland zijn, en die is hier al
+		 * als gemeld afgeboekt.
+		 */
+		get huidigeUitkomst() {
+			return laatsteUitkomst;
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */

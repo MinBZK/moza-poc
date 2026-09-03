@@ -51,8 +51,12 @@ function aanwasVan(getoond, nieuwe) {
 	return (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
 }
 
+/** Zoveel keer bieden we dezelfde onbruikbare aanwas opnieuw aan; daarna zeggen we het en houden op. */
+const TOON_POGINGEN = 3;
+
 export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () => {}, magDruppelen = () => true } = {}) {
 	let uitkomst = null;
+	let laatstDoorgegeven = null;
 
 	/**
 	 * Meldingen van de keten gaan langs dezelfde weg als die van elke andere bron — ook het intrekken
@@ -60,6 +64,14 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 	 * vertelt de pagina over ontbrekende berichten die er intussen wél zijn.
 	 */
 	function geefDoor(melding) {
+		// Elke wijziging bij de keten — ook voortgang, ook een verwerkingsfout — komt hier langs met
+		// dezelfde staande melding. Het meldingsblok is een live-regio: dezelfde tekst er opnieuw in
+		// schrijven laat een schermlezer hem opnieuw voorlezen, en een herstelronde langs vijftien
+		// organisaties zou dat tientallen keren in enkele seconden doen.
+		const sleutel = melding ? melding.soort + "|" + melding.tekst : null;
+		if (sleutel === laatstDoorgegeven) return;
+		laatstDoorgegeven = sleutel;
+
 		if (!melding) {
 			verbergMelding();
 			return;
@@ -182,37 +194,68 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				magazijnen: (uitkomst && uitkomst.magazijnen) || [],
 			};
 
+			// Hoe vaak dezelfde aanwas al vergeefs is aangeboden, en welke dat was. Het transport
+			// vergeet bij elke verwerkingsfout dat het de lijst gemeld heeft, dus zonder deze grens
+			// probeert de bron een bericht dat de render-laag niet kan bouwen elke tik opnieuw — voor
+			// altijd, en zonder dat een van de andere tellers aanslaat.
+			let vergeefs = 0;
+			let vergeefseAanwas = "";
+
 			keten.opWijziging((toestand) => {
 				geefDoor(toestand.melding);
+				if (!toestand.uitkomst) return;
+				verwerkWijziging(toestand.uitkomst);
+			});
 
+			// Tussen `geldtVoor()` en dit punt rendert de render-laag, en in dat venster kan er al een
+			// polltik geland zijn. Die wijziging heeft geen luisteraar gehad en is bij het transport al
+			// als gemeld afgeboekt, dus alleen hier valt hij nog in te halen.
+			if (keten.huidigeUitkomst) verwerkWijziging(keten.huidigeUitkomst);
+
+			function verwerkWijziging(nieuwe) {
 				// De vergelijking op identiteit is ook de rem op een lus: de keten meldt een
 				// verwerkingsfout langs dezelfde weg terug — `meldVerwerkingsfout` zet een melding, en
 				// elke melding gaat naar alle kijkers, deze dus ook. Omdat `uitkomst` hieronder meteen
 				// vastgelegd wordt, ziet die her-intreding dezelfde uitkomst en keert hij hier om.
-				if (!toestand.uitkomst || toestand.uitkomst === uitkomst) return;
+				if (nieuwe === uitkomst) return;
+				uitkomst = nieuwe;
 
-				{
-					const nieuwe = toestand.uitkomst;
-					uitkomst = nieuwe;
+				// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
+				// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
+				// lijst laten knipperen om niets.
+				const aanwas = aanwasVan(getoond, nieuwe);
+				if (aanwas && !aanwas.length) return;
 
-					// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
-					// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
-					// lijst laten knipperen om niets.
-					const aanwas = aanwasVan(getoond, nieuwe);
-					if (aanwas && !aanwas.length) return;
-
-					const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst(nieuwe);
-
-					// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten:
-					// die heeft zojuist gemeld dat het ophalen gelukt is. Wat wél gelukt is, staat
-					// intussen in `getoond`, dus die berichten worden niet nog een keer aangeboden en de
-					// rest komt terug zodra de lijst weer verandert.
-					if (mislukt && mislukt.length) {
-						console.error("[Berichtenbox] " + mislukt.length + " bericht(en) uit het stelsel niet getoond.");
-						if (typeof keten.meldVerwerkingsfout === "function") keten.meldVerwerkingsfout();
-					}
+				const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst(nieuwe);
+				if (!mislukt || !mislukt.length) {
+					vergeefs = 0;
+					vergeefseAanwas = "";
+					return;
 				}
-			});
+
+				// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten: die
+				// heeft zojuist gemeld dat het ophalen gelukt is. Wat wél gelukt is, staat intussen in
+				// `getoond`, dus die berichten worden niet nog een keer aangeboden; de rest komt bij de
+				// volgende tik terug, want `meldVerwerkingsfout` laat het transport vergeten dat het
+				// deze lijst al gemeld heeft.
+				const sleutel = (aanwas || nieuwe.berichten || []).map((bericht) => bericht.id).join("|");
+				vergeefs = sleutel === vergeefseAanwas ? vergeefs + 1 : 1;
+				vergeefseAanwas = sleutel;
+				console.error("[Berichtenbox] " + mislukt.length + " bericht(en) uit het stelsel niet getoond (poging " + vergeefs + ").");
+
+				if (vergeefs >= TOON_POGINGEN || typeof keten.meldVerwerkingsfout !== "function") {
+					// Verder proberen heeft geen zin meer, of kan niet: zonder die haak vergeet het
+					// transport niets en biedt het deze berichten toch nooit meer aan. Dan liever één
+					// keer zeggen wat er aan de hand is dan het stil laten doorlopen.
+					if (typeof keten.meldVerwerkingsfout !== "function") {
+						console.error("[Berichtenbox] Het keten-script kent geen meldVerwerkingsfout; deze berichten komen niet terug.");
+					}
+					meldStoring("Sommige nieuwe berichten kunnen wij niet tonen. Ververs de pagina om ze op te halen.", "storing");
+					return;
+				}
+
+				keten.meldVerwerkingsfout();
+			}
 
 			function meldLijst(nieuwe) {
 				const mislukt = meld({

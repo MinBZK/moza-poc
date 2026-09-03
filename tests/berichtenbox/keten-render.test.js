@@ -32,6 +32,7 @@ function zetKeten({ bezig = true, aangesloten = true, uitkomst, voortgang = null
 		berichten: () => (uitkomst === undefined ? wachten : Promise.resolve(uitkomst)),
 		opWijziging: (kijker) => kijkers.push(kijker),
 		meldVerwerkingsfout: vi.fn(),
+		stopPollen: vi.fn(),
 	};
 
 	return {
@@ -413,5 +414,20 @@ describe("berichten die binnenkomen terwijl de berichtenbox openstaat", () => {
 		await laatLaden();
 
 		expect(live()).toBe("");
+	});
+});
+
+describe("een lading die mislukt", () => {
+	it("zet het kijken naar nieuwe berichten stil", async () => {
+		// Zonder brongedrag is er geen luisteraar meer: het transport zou blijven ophalen voor een
+		// scherm dat de uitkomst niet leest, en bij een verlopen sessie zelfs alle organisaties
+		// opnieuw bevragen.
+		bouwPagina([bericht()]);
+		zetKeten({ aangesloten: true, uitkomst: null });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(window.BerichtenboxKeten.stopPollen).toHaveBeenCalled();
 	});
 });
