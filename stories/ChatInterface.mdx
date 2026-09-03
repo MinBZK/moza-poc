@@ -1,0 +1,115 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Ontwerppatronen/AI-chat interface" />
+
+# AI-chat interface
+
+Het scherm waarin iemand een vraag stelt aan de Digitale Assistent en antwoord krijgt. Dit patroon beschrijft de opbouw van dat scherm, het gedrag per fase en de eisen die een overheidscontext eraan stelt: de gebruiker moet altijd kunnen zien waar een antwoord vandaan komt, wanneer het systeem bezig is, en waar hij terechtkan als het antwoord hem niet verder helpt.
+
+Het patroon voor de tussenstaat — denken, zoeken, formuleren — staat apart beschreven onder [AI-statusindicator](?path=/docs/ontwerppatronen-ai-statusindicator--docs). Deze pagina gaat over het geheel eromheen.
+
+## Wanneer u dit patroon gebruikt
+
+- De gebruiker heeft een vraag die niet met één zoekterm of één formulier te beantwoorden is.
+- Het antwoord komt uit meerdere bronnen die de gebruiker zelf zou moeten combineren.
+- Doorvragen hoort bij de taak: het eerste antwoord roept een vervolgvraag op.
+
+Gebruik het **niet** als er een gewone pagina, een formulier of een lijst bestaat die het antwoord direct geeft. Een chat die een bestaande pagina navertelt, voegt een stap toe in plaats van er een weg te nemen.
+
+## Opbouw van het scherm
+
+Vijf onderdelen, in deze volgorde:
+
+1. **Het gesprek** — een `role="log"` met `aria-live="polite"`, waarin vraag en antwoord onder elkaar staan. De nieuwste berichten onderaan.
+2. **Het invoerveld** — een `<textarea>` met een label erboven, ook als dat label visueel verborgen is (`.visually-hidden`). Nooit een placeholder als enige aanduiding.
+3. **De actiegroep** — verzenden, “Nieuw gesprek starten” en “Bewaar gesprek”. De laatste twee staan op `aria-disabled="true"` zolang er geen gesprek is.
+4. **De disclaimer** — permanent zichtbaar onder het invoerveld, niet weg te klikken.
+5. **De bronnenstatus** — welke bronnen bereikbaar zijn. Staat in dit prototype achter een feature-vlag, want het is gereedschap voor wie het prototype bekijkt.
+
+De disclaimer staat er altijd, ook bij een leeg gesprek: iemand hoort te weten waar hij aan begint vóórdat hij zijn eerste vraag typt.
+
+## Gedrag per fase
+
+### Leeg gesprek
+
+Toon geen leeg vlak. De assistent opent met een korte uitleg van wat hij kan, gevolgd door voorbeeldvragen als knoppen:
+
+> Stel uw vraag, of probeer een van deze voorbeeldvragen:
+>
+> — Geldt de energiebesparingsinformatieplicht voor mij?
+> — Hoe kan ik mijn bedrijfsgegevens bekijken?
+
+De voorbeeldvragen zijn echte knoppen, geen tekst met een klikgebied. Ze verdwijnen zodra het gesprek begint en zijn terug te halen met “Toon de uitleg opnieuw” — wie de uitleg wegklikt, hoort hem niet kwijt te zijn.
+
+### Vraag verzonden
+
+De verzendknop krijgt `aria-disabled="true"` en in het gesprek verschijnt meteen een tussenstaat met beschrijvende tekst (“Vraag analyseren…”). Zie [AI-statusindicator](?path=/docs/ontwerppatronen-ai-statusindicator--docs).
+
+Gebruik `aria-disabled` en niet `disabled`: een uitgeschakelde knop verdwijnt uit de tabvolgorde en uit de aankondiging van de schermlezer, en de gebruiker weet dan niet meer dat hij bestaat.
+
+### Antwoord
+
+Het antwoord komt stapsgewijs binnen en wordt opgebouwd in hetzelfde blok. Daaronder staat, als het antwoord op bronnen steunt, de bronvermelding:
+
+> **Bron:**
+> RegelRecht (art. 5.15 Besluit activiteiten leefomgeving) — Geraadpleegd op 3 september 2026
+
+Regels voor bronnen:
+
+- **Elke bron is na te slaan.** Een bron zonder link is een bewering; koppel de naam aan het register waar hij vandaan komt.
+- **Noem de raadpleegdatum.** Wetgeving en registergegevens veranderen; een antwoord van vorige maand kan vandaag onjuist zijn.
+- **Eén bron heet “Bron:”, meer heten “Bronnen:”.** Een meervoud boven een lijst van één leest als een fout.
+- **Verzin geen bronnen.** Staat er geen bron onder een antwoord, dan is dat zelf informatie voor de gebruiker.
+
+### Vervolgstappen
+
+Leidt een antwoord tot een handeling in het portaal, dan hoort daar een knop of link bij die daar naartoe gaat — niet een beschrijving van waar de gebruiker moet klikken. Het antwoord is pas af als de volgende stap binnen bereik ligt.
+
+### Fouten
+
+Een fout is geen antwoord en hoort er ook niet als antwoord uit te zien. Benoem wat er misging, in gewone taal, en bied de weg naar een mens: een link naar de contactpagina hoort onder een foutmelding, geen bronvermelding.
+
+Loopt het bewaren van een gesprek stuk, zeg dat dan (“Het gesprek kon niet worden bewaard.”) in plaats van te doen alsof het gelukt is.
+
+## Toegankelijkheid
+
+| Eis | Hoe |
+| --- | --- |
+| Nieuwe berichten worden aangekondigd | `role="log"` met `aria-live="polite"` op het gesprek |
+| Het invoerveld heeft een naam | `<label for>`, desnoods `.visually-hidden` |
+| Knoppen blijven vindbaar als ze niet kunnen | `aria-disabled`, nooit `disabled` |
+| De statusregel onderbreekt niet | `aria-live="polite"`, geen `assertive` |
+| Bevestigingen zijn hoorbaar | een `role="status"` naast de knop, ook als er visueel niets verandert |
+
+Let bij focus op de sprong ná het verzenden. Een tekstveld matcht altijd `:focus-visible`, ook na een muisklik; verplaatst de pagina de focus daarna programmatisch, dan erft het volgende element die vlag en verschijnt er een focusring bij iemand die met de muis werkt. Het prototype lost dat op met `data-focus-stil`, dat bij de eerstvolgende toets weer verdwijnt. Houd er rekening mee dat spraakbediening en schakelaars vaak een pointer-event sturen: die missen de ring dan ook.
+
+## Schrijfwijzer
+
+- Spreek de gebruiker aan met **“u”**, ook in door AI gegenereerde antwoorden en in toestemmingsvragen.
+- Benoem wat de assistent doet, niet dat hij bezig is: “Ik controleer de regels voor uw situatie…” in plaats van “Even geduld”.
+- Beloof niets over juridische status. De disclaimer zegt dat antwoorden fouten kunnen bevatten en verwijst naar de bevoegde instantie; de antwoorden zelf horen dat niet tegen te spreken.
+- Schrijf de assistent niet menselijker dan hij is. Geen excuses, geen enthousiasme, geen “ik denk dat…”.
+
+## Verantwoording en toestemming
+
+Vraagt de assistent gegevens op die van de gebruiker zijn — een attestatie uit een wallet, gegevens uit een register — dan gebeurt dat pas ná een expliciete toestemmingsvraag in het gesprek, met daarin: welke gegevens, van welke afgever, en waarvoor. Zolang de gebruiker niet akkoord is, wordt er niets opgehaald.
+
+Dat is geen extra scherm maar een bericht in dezelfde stroom: de vraag staat op de plek waar hij ontstaat.
+
+## Grenzen van dit patroon
+
+- **Een chat is geen navigatie.** Wie een bestaande pagina zoekt, hoort die te vinden via de navigatie; de assistent is er voor vragen die daar dwars doorheen lopen.
+- **Een chat is geen advies.** Het antwoord verwijst naar de bron en naar de instantie die er wél over gaat.
+- **Een chat is geen bewijs.** Wat de assistent zegt, verandert niets aan wat er in een register staat.
+
+## Voorbeeld in dit prototype
+
+`/moza/digitale-assistent/`, gebouwd in [moza/digitale-assistent.html](../moza/digitale-assistent.html) en [assets/javascript/digitale-assistent.js](../assets/javascript/digitale-assistent.js).
+
+De chat praat met een backend die buiten deze repository staat. Het KvK-nummer van het actieve testaccount gaat mee als header en wordt daar aan een allowlist getoetst; de backend vult die identiteit server-side in bij elke bronaanroep, zodat het model haar niet zelf kan kiezen. Dat is geen authenticatie — de header is in de browser aan te passen — en dus alleen houdbaar voor een gesloten testgroep met fictieve gegevens. Zie [Over dit prototype](?path=/docs/introductie-over-dit-prototype--docs) voor wat er echt is en wat nagebootst.
+
+## Zie ook
+
+- [AI-statusindicator](?path=/docs/ontwerppatronen-ai-statusindicator--docs) — de tussenstaat terwijl de assistent werkt
+- [Interactie op inhoud](?path=/docs/ontwerppatronen-interactie-op-inhoud--docs) — bewaren, delen en relevant markeren
+- [Schrijfwijzer](?path=/docs/introductie-schrijfwijzer--docs) — aanspreking, terminologie en microcopy
