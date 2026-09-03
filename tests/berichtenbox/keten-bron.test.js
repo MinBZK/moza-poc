@@ -244,6 +244,34 @@ describe("ketenBron — berichten die tijdens het kijken binnenkomen", () => {
 		expect(meld).not.toHaveBeenCalled();
 	});
 
+	it("biedt een binnenkomer die niet te tonen was opnieuw aan", async () => {
+		// De render-laag draait bij een fout terug naar de vorige lijst. Zou de bron het bericht toch
+		// als "bekend" wegschrijven, dan is het van het scherm verdwenen en komt het nooit meer terug.
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+
+		let lukt = false;
+		const meld = vi.fn(() => (lukt ? [] : [new Error("rij niet te bouwen")]));
+		bron.start(meld);
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+		lukt = true;
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+
+		expect(meld.mock.calls.map((aanroep) => aanroep[0].nieuwBericht.id)).toEqual(["b-2", "b-2"]);
+	});
+
+	it("stopt bij de eerste binnenkomer die niet te tonen was", async () => {
+		// Doorgaan levert een lijst op met een gat erin, die van een volledige niet te onderscheiden is.
+		const { keten, meld } = await gestarteBron();
+		meld.mockImplementation(() => [new Error("rij niet te bouwen")]);
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B3, B2) });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+	});
+
 	it("zegt het tegen de keten als een binnenkomer niet te tonen was", async () => {
 		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
 		const bron = ketenBron(keten);

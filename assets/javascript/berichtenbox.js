@@ -2585,8 +2585,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		ketenBron(window.BerichtenboxKeten, {
 			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:keten"),
 			verbergMelding: () => verbergPaginaMelding("bron:keten"),
-			// Buiten de inbox en op pagina 2 werkt de bron de hele lijst bij in plaats van elk bericht
-			// apart te melden.
+			// Zie `toontBinnenkomers` hierboven: daarbuiten werkt de bron de hele lijst bij in plaats
+			// van elk bericht apart te melden. De dataset-bron krijgt dezelfde vraag onder de naam
+			// `magOphalen`, omdat die er iets anders mee doet: niet melden versus niet verzinnen.
 			magDruppelen: toontBinnenkomers,
 		})
 	);

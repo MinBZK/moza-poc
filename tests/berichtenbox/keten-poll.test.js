@@ -112,7 +112,7 @@ describe("het pollritme is in te stellen", () => {
 		expect(tellingen(aanroepen).lijst).toBe(na.lijst + 1);
 	});
 
-	it("volgt het interval uit de instellingen van het Flags-paneel", async () => {
+	it("volgt het interval uit localStorage", async () => {
 		localStorage.setItem("setting:berichtenbox-poll", "30");
 		const { aanroepen } = await startKeten(standaardRonde([["/api/v1/berichten?", lijstReeks(LEEG())]]));
 		const na = tellingen(aanroepen);
@@ -192,6 +192,20 @@ describe("een sessie die tijdens het kijken verloopt", () => {
 		expect(tellingen(aanroepen).rondes).toBe(na.rondes + 1);
 	});
 
+	it("meldt het stoppen als mededeling, niet als storing", async () => {
+		// De lijst die er staat klopt nog; alleen het bijwerken is opgehouden. Een storing zou zeggen
+		// dat er iets mis is met wat de bezoeker voor zich heeft.
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", () => sseAntwoord()],
+			["/api/v1/berichten?", lijstReeks(LEEG(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE())],
+		]);
+
+		await vi.advanceTimersByTimeAsync(600000);
+
+		expect(window.BerichtenboxKeten.melding.soort).toBe("mededeling");
+	});
+
 	it("stopt met herstellen als de sessie meteen weer weg is", async () => {
 		// Anders bevraagt een sessie die korter leeft dan het pollinterval bij elke tik alle
 		// organisaties opnieuw. Elke ronde slaagt hier; het is de sessie die er telkens weer uit ligt
@@ -255,6 +269,164 @@ describe("een hik in het netwerk", () => {
 		await vi.advanceTimersByTimeAsync(45000);
 
 		expect(window.BerichtenboxKeten.melding).not.toBe(null);
-		expect(window.BerichtenboxKeten.melding.soort).toBe("storing");
+		// Een mededeling en geen storing: de berichten die er staan kloppen nog, alleen het bijwerken
+		// is opgehouden.
+		expect(window.BerichtenboxKeten.melding.soort).toBe("mededeling");
+	});
+});
+
+describe("een pagina die weggaat en terugkomt", () => {
+	/** `pagehide` met `persisted`: de browser bewaart deze pagina in de bfcache. */
+	function bewaardWeg() {
+		const gebeurtenis = new Event("pagehide");
+		Object.defineProperty(gebeurtenis, "persisted", { value: true });
+		window.dispatchEvent(gebeurtenis);
+	}
+
+	it("pollt weer zodra de pagina uit de bfcache terugkomt", async () => {
+		// Van de inbox naar een bericht en met de terugknop terug is de meest gelopen route in een
+		// berichtenbox. Firefox en Safari geven dan hetzelfde document terug zonder het script
+		// opnieuw te draaien: bleef het pollen dan uit, dan werkt die berichtenbox zich nooit meer bij.
+		const { aanroepen } = await startKeten(standaardRonde([["/api/v1/berichten?", lijstReeks(LEEG())]]));
+		bewaardWeg();
+		await vi.advanceTimersByTimeAsync(60000);
+		const na = tellingen(aanroepen);
+
+		window.dispatchEvent(new Event("pageshow"));
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen).lijst).toBe(na.lijst + 1);
+	});
+
+	it("houdt zich stil als de pagina weg is terwijl er nog een tik onderweg is", async () => {
+		// Anders staat er bij terugkomst een storingsmelding over een verzoek dat mislukte toen er
+		// niemand meer keek.
+		let losmaken;
+		await startKeten(
+			standaardRonde([
+				[
+					"/api/v1/berichten?",
+					(() => {
+						let eerste = true;
+						return () => {
+							if (eerste) {
+								eerste = false;
+								return antwoord(200, { berichten: [] });
+							}
+							return new Promise((_, weiger) => {
+								losmaken = () => weiger(new TypeError("Failed to fetch"));
+							});
+						};
+					})(),
+				],
+			])
+		);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand));
+
+		await vi.advanceTimersByTimeAsync(15000);
+		window.dispatchEvent(new Event("pagehide"));
+		losmaken();
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+});
+
+describe("een antwoord dat te laat komt", () => {
+	it("legt een verouderde lijst niet over een nieuwere heen", async () => {
+		// De tik loopt nog terwijl een ophaalronde een nieuwere lijst aflevert. Zou het late antwoord
+		// alsnog binnenkomen, dan verdwijnt het zojuist getoonde bericht weer van het scherm.
+		let losmaken;
+		let beurt = 0;
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", () => sseAntwoord()],
+			[
+				"/api/v1/berichten?",
+				() => {
+					beurt += 1;
+					if (beurt === 1) return antwoord(200, { berichten: [] });
+					// De tik blijft hangen tot de ronde klaar is.
+					if (beurt === 2) {
+						return new Promise((klaar) => {
+							losmaken = () => klaar(antwoord(200, { berichten: [] }));
+						});
+					}
+					return antwoord(200, { berichten: [apiBericht("b-1")] });
+				},
+			],
+		]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		await vi.advanceTimersByTimeAsync(15000);
+		window.BerichtenboxKeten.opnieuw();
+		await vi.advanceTimersByTimeAsync(0);
+		losmaken();
+		await vi.advanceTimersByTimeAsync(0);
+
+		const laatste = gemeld.filter(Boolean).pop();
+		expect(laatste.berichten.map((bericht) => bericht.id)).toEqual(["b-1"]);
+	});
+});
+
+describe("een antwoord in een vorm die we niet kennen", () => {
+	it("meldt het na drie keer, in plaats van stil te blijven wachten", async () => {
+		// Een lijst zonder `berichten`-array laat de bezoeker anders naar een bevroren berichtenbox
+		// kijken die er compleet uitziet.
+		await startKeten(standaardRonde([["/api/v1/berichten?", lijstReeks(LEEG(), antwoord(200, { items: [] }))]]));
+
+		await vi.advanceTimersByTimeAsync(45000);
+
+		expect(window.BerichtenboxKeten.melding).not.toBe(null);
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("niet meer kijken of er nieuwe berichten zijn");
+	});
+});
+
+describe("de naam van de organisatie", () => {
+	/** Een ophaalronde die één organisatie bij naam noemt. */
+	function sseMetNaam() {
+		const stroom = new ReadableStream({
+			start(regelaar) {
+				const noem = { event: "magazijn-bevraging-voltooid", magazijnId: "00000001000000000000", naam: "Belastingdienst", status: "OK", aantalBerichten: 0 };
+				const gereed = { event: "ophalen-gereed", totaalBerichten: 0, geslaagd: 1, mislukt: 0, totaalMagazijnen: 1 };
+				regelaar.enqueue(new TextEncoder().encode("data:" + JSON.stringify(noem) + "\n\ndata:" + JSON.stringify(gereed) + "\n\n"));
+				regelaar.close();
+			},
+		});
+		return { ok: true, status: 200, body: stroom, headers: { get: () => "text/event-stream" } };
+	}
+
+	it("draagt de naam uit de ophaalronde over op een bericht dat later binnenkomt", async () => {
+		// De berichtenlijst geeft per bericht alleen het nummer van de organisatie. Zonder de namen
+		// van de ronde toont de rij twintig cijfers — en leest een schermlezer die voor.
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", () => sseMetNaam()],
+			["/api/v1/berichten?", lijstReeks(LEEG(), EEN_BERICHT())],
+		]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(gemeld.filter(Boolean).pop().berichten[0].afzender).toBe("Belastingdienst");
+	});
+});
+
+describe("een tabblad dat pauzeert in plaats van trager pollen", () => {
+	it("wacht met pollen tot het tabblad terug is", async () => {
+		// `pollVerborgen=0` is een pauze en geen uitschakelaar: zichtbaar hoort het gewoon door te gaan.
+		const { aanroepen } = await startKeten(standaardRonde([["/api/v1/berichten?", lijstReeks(LEEG())]]), "/moza/berichtenbox/?pollVerborgen=0");
+		zetZichtbaarheid("hidden");
+		const na = tellingen(aanroepen);
+
+		await vi.advanceTimersByTimeAsync(600000);
+		expect(tellingen(aanroepen).lijst).toBe(na.lijst);
+
+		zetZichtbaarheid("visible");
+		await vi.advanceTimersByTimeAsync(0);
+		expect(tellingen(aanroepen).lijst).toBe(na.lijst + 1);
 	});
 });

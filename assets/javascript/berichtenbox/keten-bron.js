@@ -175,27 +175,38 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				geefDoor(toestand.melding);
 
 				if (!toestand.uitkomst || toestand.uitkomst === uitkomst) return;
-				const vorige = uitkomst;
-				uitkomst = toestand.uitkomst;
+				const nieuwe = toestand.uitkomst;
 
-				// Elke pollronde levert een nieuw object met — meestal — dezelfde berichten. Alleen
-				// wat er bij komt is nieuws; de rest zou de lijst laten knipperen om niets.
-				const aanwas = aanwasVan(vorige, uitkomst);
-				if (aanwas && !aanwas.length) return;
+				// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
+				// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
+				// lijst laten knipperen om niets.
+				const aanwas = aanwasVan(uitkomst, nieuwe);
+				if (aanwas && !aanwas.length) {
+					uitkomst = nieuwe;
+					return;
+				}
 
-				const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst();
+				const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst(nieuwe);
 
 				// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten:
 				// die heeft zojuist gemeld dat het ophalen gelukt is.
-				if (mislukt && mislukt.length && typeof keten.meldVerwerkingsfout === "function") {
-					keten.meldVerwerkingsfout();
+				if (mislukt && mislukt.length) {
+					// `uitkomst` blijft staan waar het scherm staat: de render-laag heeft teruggedraaid
+					// naar de vorige lijst. Zouden we hem hier toch bijwerken, dan gelden deze berichten
+					// voortaan als bekend en biedt de volgende ronde ze nooit meer aan — weg van het
+					// scherm, zonder dat er nog iets van te zien is.
+					console.error("[Berichtenbox] " + mislukt.length + " bericht(en) uit het stelsel niet getoond; de volgende ronde biedt ze opnieuw aan.");
+					if (typeof keten.meldVerwerkingsfout === "function") keten.meldVerwerkingsfout();
+					return;
 				}
+
+				uitkomst = nieuwe;
 			});
 
-			function meldLijst() {
+			function meldLijst(nieuwe) {
 				return meld({
-					berichten: uitkomst.berichten,
-					magazijnen: uitkomst.magazijnen,
+					berichten: nieuwe.berichten,
+					magazijnen: nieuwe.magazijnen,
 					mappen: [],
 				});
 			}
@@ -207,15 +218,14 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			 * levert de nieuwste eerst — dan eindigde de oudste bovenaan.
 			 */
 			function meldBinnenkomers(berichten) {
-				const mislukt = [];
-				berichten
-					.slice()
-					.reverse()
-					.forEach((bericht) => {
-						const fouten = meld({ nieuwBericht: bericht });
-						if (fouten && fouten.length) mislukt.push(...fouten);
-					});
-				return mislukt;
+				const oudsteEerst = berichten.slice().reverse();
+				for (const bericht of oudsteEerst) {
+					const fouten = meld({ nieuwBericht: bericht });
+					// Doorgaan zou een lijst opleveren waar er middenin één ontbreekt, en dat is van een
+					// volledige lijst niet te onderscheiden. De rest wacht op de volgende ronde.
+					if (fouten && fouten.length) return fouten;
+				}
+				return [];
 			}
 		},
 	};

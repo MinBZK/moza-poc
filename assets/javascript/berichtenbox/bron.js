@@ -34,6 +34,9 @@
  * proberen", de tweede onder het uitzetten van de vlag. Allebei moeten ze de lijst opnieuw leveren —
  * de bron liet die berichten weg, dus alleen de bron kan ze teruggeven.
  *
+ * Een wijziging heeft twee vormen: een hele lijst (`{ berichten, magazijnen, mappen }`) of één
+ * binnenkomer (`{ nieuwBericht }`). De render-laag zet die laatste bovenaan en laat de rest staan.
+ *
  * De volgorde van registreren is de voorrang: de eerste bron waarvoor `geldtVoor` waar is, wint.
  * De dataset-bron hoort daarom achteraan — die is altijd van toepassing en vangt op wat geen
  * andere bron opeist.
