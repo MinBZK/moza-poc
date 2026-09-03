@@ -55,6 +55,29 @@
 	const WACHT_OP_RONDE_MS = 45000;
 	const WACHT_STAP_MS = 1500;
 
+	// Hoe vaak we kijken of er berichten bij gekomen zijn terwijl de berichtenbox openstaat.
+	//
+	// Dit is geen ophaalronde: het is `GET /api/v1/berichten`, dat de sessie leest die de ronde
+	// gevuld heeft. De organisaties merken er niets van. Bijkomend: elke aanroep schuift de
+	// vervaltijd van die sessie op, dus een openstaande berichtenbox houdt zichzelf in leven.
+	//
+	// Vijftien seconden zichtbaar, zodat een bericht dat tijdens een demonstratie wordt opgevoerd
+	// binnen een halve zin in beeld staat. Een minuut voor een tabblad dat niemand voor zich heeft:
+	// niet stoppen, want dan verloopt de sessie en kost terugkomen een volle ronde langs alle
+	// organisaties — maar ook geen verkeer voor een scherm dat niemand ziet.
+	const POLL_ZICHTBAAR_SEC = 15;
+	const POLL_VERBORGEN_SEC = 60;
+	// Ondergrens, ook als iemand om een korter interval vraagt: sneller levert geen zichtbaar
+	// verschil op en wel verkeer.
+	const POLL_MIN_SEC = 5;
+	// Zoveel mislukte pogingen op rij voordat de bezoeker het te horen krijgt. Eén hik gaat vanzelf
+	// over; er meteen een storing van maken zou een probleem tonen dat er niet meer is.
+	const POLL_FOUT_LIMIET = 3;
+	// Zoveel keer proberen we een verlopen sessie met een nieuwe ophaalronde terug te halen. Zonder
+	// deze rem bevraagt een sessie die korter leeft dan het pollinterval bij elke tik alle
+	// organisaties opnieuw.
+	const POLL_HERSTEL_LIMIET = 2;
+
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
 	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
 	// geen knop is die dat doet: `opnieuw()` hieronder heeft geen enkele aanroeper. Zolang die knop er
@@ -97,6 +120,10 @@
 	let meldingActief = false;
 	let ontvangerVanRonde = null;
 	let ronde = null;
+	// De weergavenamen van de organisaties, zoals de laatste ronde ze meldde. De berichtenlijst
+	// draagt per bericht alleen het nummer; zonder deze namen zou een bericht dat later binnenkomt
+	// van "00000001000000000000" blijken te zijn.
+	let organisatiesVanRonde = {};
 
 	// --- Wat de buitenwereld te horen krijgt ---------------------------------------------------
 
@@ -728,6 +755,10 @@
 				type: "instantie",
 			}));
 
+			// Vanaf hier kan het pollen berichten vertalen: het weet nu welke naam bij welk nummer
+			// hoort.
+			organisatiesVanRonde = uitvraag.organisaties;
+
 			// De tellers boven de lijst tonen zelf hoeveel bronnen antwoordden; alleen een
 			// onvolledige lijst of een organisatie die niet reageerde heeft een eigen melding nodig.
 			verbergVoortgang();
@@ -747,6 +778,225 @@
 			meldStoring("verwerking");
 			return null;
 		}
+	}
+
+	// --- Nieuwe berichten terwijl de berichtenbox openstaat ------------------------------------
+
+	let pollKlok = null;
+	let pollFouten = 0;
+	let pollHerstelPogingen = 0;
+	let pollGestopt = false;
+	let pollLuistert = false;
+
+	/**
+	 * Een instelling in seconden: eerst de URL, dan het Flags-paneel, anders de standaardwaarde.
+	 *
+	 * De URL wint, zodat een gedeelde demo-link zijn eigen ritme meebrengt zonder dat iemand eerst
+	 * een instelling hoeft om te zetten. `0` betekent uit.
+	 */
+	function ingesteldeSeconden(urlSleutel, instelling, standaard) {
+		const uitUrl = parseInt(new URLSearchParams(location.search).get(urlSleutel), 10);
+		if (Number.isFinite(uitUrl)) return uitUrl;
+
+		let bewaard = null;
+		try {
+			bewaard = localStorage.getItem(instelling);
+		} catch (fout) {
+			// Een browser die localStorage weigert hoort het pollen niet te breken; de standaardwaarde
+			// doet het net zo goed.
+			console.warn("[Berichtenbox] De instelling " + instelling + " is niet leesbaar; standaardwaarde gebruikt.", fout);
+		}
+
+		const getal = parseInt(bewaard, 10);
+		return Number.isFinite(getal) ? getal : standaard;
+	}
+
+	/**
+	 * De tussenpoos tot de volgende keer kijken, in milliseconden. `0` betekent: nu even niet.
+	 *
+	 * Uit staat het pollen alleen als de zichtbare tussenpoos op nul staat. Staat alleen de
+	 * verborgen tussenpoos op nul, dan is dat een pauze: zodra het tabblad terugkomt, gaat het weer
+	 * door.
+	 */
+	function pollTussenpoos() {
+		const zichtbaar = ingesteldeSeconden("poll", "setting:berichtenbox-poll", POLL_ZICHTBAAR_SEC);
+		if (zichtbaar <= 0) return 0;
+		if (document.visibilityState === "hidden") {
+			const verborgen = ingesteldeSeconden("pollVerborgen", "setting:berichtenbox-poll-verborgen", POLL_VERBORGEN_SEC);
+			return verborgen <= 0 ? 0 : Math.max(verborgen, POLL_MIN_SEC) * 1000;
+		}
+		return Math.max(zichtbaar, POLL_MIN_SEC) * 1000;
+	}
+
+	function startPoll() {
+		if (pollGestopt) return;
+		if (!pollLuistert) {
+			document.addEventListener("visibilitychange", opZichtbaarheid);
+			// Een pagina die weggaat hoort niets meer op te halen. Zonder dit blijft een tik uit een
+			// document dat de browser al opgeruimd heeft alsnog verkeer maken.
+			window.addEventListener("pagehide", stopPoll);
+			pollLuistert = true;
+		}
+		planPoll();
+	}
+
+	function planPoll() {
+		clearTimeout(pollKlok);
+		pollKlok = null;
+		if (pollGestopt || !ontvangerVanRonde) return;
+
+		const tussenpoos = pollTussenpoos();
+		if (!tussenpoos) return;
+
+		pollKlok = setTimeout(pollTik, tussenpoos);
+	}
+
+	function stopPoll() {
+		pollGestopt = true;
+		clearTimeout(pollKlok);
+		pollKlok = null;
+		if (pollLuistert) {
+			document.removeEventListener("visibilitychange", opZichtbaarheid);
+			window.removeEventListener("pagehide", stopPoll);
+			pollLuistert = false;
+		}
+	}
+
+	/**
+	 * Wie terugkomt bij een openstaande berichtenbox hoort niet nog een interval te wachten op
+	 * berichten die er intussen al zijn. Bij het weggaan volstaat opnieuw plannen: dan geldt de
+	 * tussenpoos voor een tabblad dat niemand voor zich heeft.
+	 */
+	function opZichtbaarheid() {
+		if (pollGestopt) return;
+		if (document.visibilityState !== "hidden" && pollTussenpoos()) {
+			pollTik();
+			return;
+		}
+		planPoll();
+	}
+
+	async function pollTik() {
+		clearTimeout(pollKlok);
+		pollKlok = null;
+		if (pollGestopt || !ontvangerVanRonde) return;
+
+		try {
+			const lijst = await haalLijst(ontvangerVanRonde);
+			pollFouten = 0;
+			pollHerstelPogingen = 0;
+			verwerkPolllijst(lijst);
+		} catch (fout) {
+			// De sessie is weg. Doorpollen levert niets meer op: alleen een nieuwe ronde vult hem.
+			if (redenVan(fout) === "geenSessie") {
+				herstelSessie();
+				return;
+			}
+
+			pollFouten += 1;
+			console.warn("[Berichtenbox] Kijken of er nieuwe berichten zijn, mislukte (" + pollFouten + "×).", fout);
+			if (pollFouten >= POLL_FOUT_LIMIET) {
+				stopPoll();
+				meldStoring(redenVan(fout));
+				return;
+			}
+		}
+
+		planPoll();
+	}
+
+	/**
+	 * Wat de lijst nu bevat, als er iets veranderd is.
+	 *
+	 * De magazijnen blijven die van de ronde: de lijst kent alleen nummers, en een organisatie die
+	 * niets nieuws had verdwijnt niet uit de zijbalk omdat zij niets stuurde.
+	 *
+	 * Keerzijde: komt er een bericht binnen van een organisatie die tijdens de ronde nog niet
+	 * meedeed, dan is haar naam hier onbekend en toont de rij het nummer. Een ronde draaien om dat
+	 * op te lossen zou alle organisaties bevragen voor één naam. Zolang het stelsel de naam niet
+	 * meestuurt in de berichtenlijst, is het nummer wat we eerlijk kunnen tonen.
+	 */
+	function verwerkPolllijst(lijst) {
+		if (!laatsteUitkomst) return;
+
+		const ruw = Array.isArray(lijst.berichten) ? lijst.berichten : [];
+		if (!Array.isArray(lijst.berichten)) {
+			console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", lijst);
+			return;
+		}
+
+		const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, organisatiesVanRonde));
+		if (zelfdeBerichten(laatsteUitkomst.berichten, berichten)) return;
+
+		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+		laatWeten();
+	}
+
+	function zelfdeBerichten(vorige, nieuwe) {
+		if (vorige.length !== nieuwe.length) return false;
+		const oud = new Set(vorige.map((bericht) => bericht.id));
+		return nieuwe.every((bericht) => oud.has(bericht.id));
+	}
+
+	/**
+	 * Haalt een verlopen sessie terug met een nieuwe ophaalronde, en pakt het pollen daarna weer op.
+	 *
+	 * Dit is de enige plek waar het pollen de organisaties laat bevragen. Dat mag hier: zonder
+	 * sessie is er niets te lezen, en de bezoeker die zijn berichtenbox openhoudt hoort niet stil
+	 * achter te blijven bij een lijst die niet meer bijgewerkt wordt.
+	 */
+	function herstelSessie() {
+		clearTimeout(pollKlok);
+		pollKlok = null;
+
+		if (pollHerstelPogingen >= POLL_HERSTEL_LIMIET) {
+			stopPoll();
+			meld("mededeling", "Nieuwe berichten verschijnen niet meer vanzelf. Ververs de pagina om ze op te halen.");
+			return;
+		}
+
+		pollHerstelPogingen += 1;
+		const herstel = herhaal();
+		if (!herstel) {
+			stopPoll();
+			return;
+		}
+
+		herstel.then(
+			(uitkomst) => {
+				// Een ronde die niets oplevert heeft zichzelf al gemeld; blijven pollen zou daar een
+				// tweede melding overheen leggen.
+				if (uitkomst) planPoll();
+				else stopPoll();
+			},
+			() => stopPoll()
+		);
+	}
+
+	/**
+	 * Draait de ophaalronde opnieuw en verwerkt de uitkomst. Geeft de belofte terug, of null als er
+	 * niets te herhalen valt.
+	 */
+	function herhaal() {
+		if (!kvkNummer) return null;
+
+		verbergMeldingen();
+		// Geen "0 van 0 bronnen": dat is geen voortgang maar een bewering over bronnen die nog
+		// niemand bevraagd heeft. De eerste gebeurtenis uit de stroom meldt zich vanzelf.
+		ronde = draaiRonde(kvkNummer);
+		ronde.then(
+			function (uitkomst) {
+				if (uitkomst) {
+					laatsteUitkomst = uitkomst;
+					laatWeten();
+				}
+			},
+			function (fout) {
+				console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
+				meldStoring("verwerking");
+			}
+		);
+		return ronde;
 	}
 
 	// --- Start --------------------------------------------------------------------------------
@@ -774,6 +1024,19 @@
 	// klopt.
 	if (kvkNummer) {
 		ronde = draaiRonde(kvkNummer);
+		// Pas kijken of er berichten bij komen als er iets is om mee te vergelijken. De uitkomst
+		// hier vastleggen en niet aan `berichten()` overlaten: die wordt alleen aangeroepen door een
+		// pagina met een bronregister, en het pollen houdt ook op een detailpagina de sessie warm.
+		ronde.then(
+			(uitkomst) => {
+				if (!uitkomst) return;
+				laatsteUitkomst = uitkomst;
+				startPoll();
+			},
+			() => {
+				/* een mislukte ronde meldt zichzelf; `berichten()` handelt hem af */
+			}
+		);
 	}
 
 	window.BerichtenboxKeten = {
@@ -876,25 +1139,7 @@
 		 * er niets te herhalen valt.
 		 */
 		opnieuw: function () {
-			if (!kvkNummer) return false;
-
-			verbergMeldingen();
-			// Geen "0 van 0 bronnen": dat is geen voortgang maar een bewering over bronnen die nog
-			// niemand bevraagd heeft. De eerste gebeurtenis uit de stroom meldt zich vanzelf.
-			ronde = draaiRonde(kvkNummer);
-			ronde.then(
-				function (uitkomst) {
-					if (uitkomst) {
-						laatsteUitkomst = uitkomst;
-						laatWeten();
-					}
-				},
-				function (fout) {
-					console.error("[Berichtenbox] onverwachte fout in de ophaalronde", fout);
-					meldStoring("verwerking");
-				}
-			);
-			return true;
+			return herhaal() !== null;
 		},
 	};
 })();

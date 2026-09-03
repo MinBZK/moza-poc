@@ -174,3 +174,84 @@ describe("ketenBron in het register", () => {
 		expect((await register.kies("koffiezaak")).naam).toBe("dataset");
 	});
 });
+
+describe("ketenBron — berichten die tijdens het kijken binnenkomen", () => {
+	/** De vorige lijst plus wat er bij kwam, in de volgorde die het stelsel teruggeeft: nieuwste eerst. */
+	function metAanwas(...nieuw) {
+		return { berichten: [...nieuw, ...UITKOMST.berichten], magazijnen: UITKOMST.magazijnen };
+	}
+
+	const B2 = { id: "b-2", magazijnId: "kvk", afzender: "KVK", onderwerp: "Aanslag", uitKeten: true };
+	const B3 = { id: "b-3", magazijnId: "kvk", afzender: "KVK", onderwerp: "Herinnering", uitKeten: true };
+
+	async function gestarteBron(opties) {
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten, opties);
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+		return { keten, meld };
+	}
+
+	it("meldt aanwas als los binnengekomen bericht, niet als nieuwe lijst", async () => {
+		// Zelfde weg als de dataset-bron: de render-laag zet een `nieuwBericht` bovenaan met een
+		// fade-in en meldt het in het live-gebied. Een hele lijst zou de rijen stil vervangen.
+		const { keten, meld } = await gestarteBron();
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+		expect(meld).toHaveBeenCalledWith({ nieuwBericht: B2 });
+	});
+
+	it("meldt meerdere binnenkomers oudste eerst, zodat de nieuwste bovenaan eindigt", async () => {
+		// Elk gemeld bericht komt bovenop het vorige. Zouden we de lijstvolgorde volgen — nieuwste
+		// eerst — dan staat de oudste binnenkomer straks bovenaan.
+		const { keten, meld } = await gestarteBron();
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B3, B2) });
+
+		expect(meld.mock.calls.map((aanroep) => aanroep[0].nieuwBericht.id)).toEqual(["b-2", "b-3"]);
+	});
+
+	it("meldt de hele lijst als er ook een bericht verdwenen is", async () => {
+		// Dan is het geen aanwas maar een andere lijst, en die hoort in één keer op het scherm.
+		const { keten, meld } = await gestarteBron();
+		const anders = { berichten: [B2], magazijnen: UITKOMST.magazijnen };
+
+		keten._meld({ melding: null, uitkomst: anders });
+
+		expect(meld).toHaveBeenCalledWith({ berichten: anders.berichten, magazijnen: anders.magazijnen, mappen: [] });
+	});
+
+	it("meldt de hele lijst waar een binnenkomer niet te zien zou zijn", async () => {
+		// Buiten de inbox, of op pagina 2: daar landt een `nieuwBericht` bovenaan een lijst die de
+		// bezoeker niet voor zich heeft. Dan liever de lijst zelf bijwerken.
+		const { keten, meld } = await gestarteBron({ magDruppelen: () => false });
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+
+		expect(meld).toHaveBeenCalledWith({ berichten: [B2, ...UITKOMST.berichten], magazijnen: UITKOMST.magazijnen, mappen: [] });
+	});
+
+	it("meldt niets als dezelfde berichten opnieuw langskomen", async () => {
+		// Elke pollronde levert een nieuw object met dezelfde inhoud. Dat is geen wijziging, en een
+		// melding zou de lijst laten knipperen zonder dat er iets veranderd is.
+		const { keten, meld } = await gestarteBron();
+
+		keten._meld({ melding: null, uitkomst: { berichten: [...UITKOMST.berichten], magazijnen: UITKOMST.magazijnen } });
+
+		expect(meld).not.toHaveBeenCalled();
+	});
+
+	it("zegt het tegen de keten als een binnenkomer niet te tonen was", async () => {
+		const keten = nepKeten({ bezig: true, uitkomst: UITKOMST });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+		bron.start(() => [new Error("rij niet te bouwen")]);
+
+		keten._meld({ melding: null, uitkomst: metAanwas(B2) });
+
+		expect(keten.meldVerwerkingsfout).toHaveBeenCalled();
+	});
+});

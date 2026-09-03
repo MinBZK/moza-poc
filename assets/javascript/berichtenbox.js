@@ -2570,12 +2570,24 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// dat is. De volgorde is de voorrang: is de persona aangesloten op het Federatief
 	// Berichtenstelsel, dan wint die bron, en de dataset vangt op wat overblijft.
 	const register = maakRegister();
+
+	// Een bericht dat binnenkomt terwijl de bezoeker kijkt, landt bovenaan pagina 1 van de inbox.
+	// Elders is het onzichtbaar, en dan gaat de melding in het live-gebied over een rij die er niet
+	// staat. Beide bronnen hebben er hetzelfde antwoord op nodig: de dataset verzint zo'n bericht
+	// alleen daar, de keten meldt het alleen daar als binnenkomer.
+	function toontBinnenkomers() {
+		return huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]");
+	}
+
 	// Een eigen eigenaar per bron: anders verdringt een melding van de ene bron die van de andere, en
 	// kan verbergPaginaMelding hem daarna niet meer opruimen.
 	register.registreer(
 		ketenBron(window.BerichtenboxKeten, {
 			meldStoring: (tekst, soort) => toonPaginaMelding(tekst, soort, "bron:keten"),
 			verbergMelding: () => verbergPaginaMelding("bron:keten"),
+			// Buiten de inbox en op pagina 2 werkt de bron de hele lijst bij in plaats van elk bericht
+			// apart te melden.
+			magDruppelen: toontBinnenkomers,
 		})
 	);
 	register.registreer(
@@ -2610,7 +2622,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			magAnimeren: () => !!document.querySelector("[data-berichtenbox-progress]") && huidigeView() === "inbox" && isEerstePagina && !state.eersteBezoekGehad && !ladingMislukt && !laadfoutGetoond,
 			// Binnendruppelende berichten landen bovenaan pagina 1 van de inbox; elders zijn ze
 			// onzichtbaar of misleidend.
-			magOphalen: () => huidigeView() === "inbox" && huidigePaginaUitUrl() === 1 && !ladingMislukt && !laadfoutGetoond && !!document.querySelector("[data-berichtenbox-list]"),
+			magOphalen: toontBinnenkomers,
 		})
 	);
 

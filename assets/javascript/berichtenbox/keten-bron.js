@@ -12,9 +12,43 @@
  *
  * De voortgang komt hier ook vandaan: het stelsel meldt per organisatie hoeveel er bevraagd, klaar
  * en gevonden zijn. Dat zijn echte getallen, waar de dataset-bron een nabootsing tegenover zet.
+ *
+ * En de berichten die binnenkomen terwijl de bezoeker kijkt: het transport haalt de lijst
+ * periodiek opnieuw op, deze module ziet wat erbij gekomen is en meldt dat als losse binnenkomers —
+ * dezelfde weg die de dataset-bron voor zijn nagebootste federatie gebruikt. Zo hoeft de
+ * render-laag niet te weten of een bericht verzonnen is of echt.
  */
 
-export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () => {} } = {}) {
+/** Twee lijsten magazijnen zijn hetzelfde als ze dezelfde ids bevatten. */
+function gelijkeMagazijnen(vorige, nieuwe) {
+	const oud = (vorige || []).map((magazijn) => magazijn.id).sort();
+	const nu = (nieuwe || []).map((magazijn) => magazijn.id).sort();
+	return oud.length === nu.length && oud.every((id, plek) => id === nu[plek]);
+}
+
+/**
+ * Wat er ten opzichte van de vorige lijst bij gekomen is.
+ *
+ * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, er zijn andere organisaties in
+ * beeld, of er is nog geen vorige lijst om mee te vergelijken. Dan is het een andere lijst en hoort
+ * die in één keer op het scherm, niet als een reeks binnenkomers.
+ *
+ * Een lege uitkomst betekent: dezelfde berichten, er valt niets te melden.
+ */
+function aanwasVan(vorige, nieuwe) {
+	if (!vorige) return null;
+	if (!gelijkeMagazijnen(vorige.magazijnen, nieuwe.magazijnen)) return null;
+
+	const oud = new Set((vorige.berichten || []).map((bericht) => bericht.id));
+	const nu = new Set((nieuwe.berichten || []).map((bericht) => bericht.id));
+	for (const id of oud) {
+		if (!nu.has(id)) return null;
+	}
+
+	return (nieuwe.berichten || []).filter((bericht) => !oud.has(bericht.id));
+}
+
+export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () => {}, magDruppelen = () => true } = {}) {
 	let uitkomst = null;
 
 	/**
@@ -126,8 +160,9 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		},
 
 		/**
-		 * Een volgende ronde — de knop "Opnieuw proberen" — levert een nieuwe lijst. Die gaat langs
-		 * dezelfde weg als elke andere bronwijziging.
+		 * Wat er na het eerste laden nog verandert: een volgende ronde — de knop "Opnieuw proberen" —
+		 * en de berichten die het transport onderweg ophaalt. Beide gaan langs dezelfde weg als elke
+		 * andere bronwijziging.
 		 */
 		start(meld) {
 			if (!keten) return;
@@ -140,13 +175,15 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				geefDoor(toestand.melding);
 
 				if (!toestand.uitkomst || toestand.uitkomst === uitkomst) return;
+				const vorige = uitkomst;
 				uitkomst = toestand.uitkomst;
 
-				const mislukt = meld({
-					berichten: uitkomst.berichten,
-					magazijnen: uitkomst.magazijnen,
-					mappen: [],
-				});
+				// Elke pollronde levert een nieuw object met — meestal — dezelfde berichten. Alleen
+				// wat er bij komt is nieuws; de rest zou de lijst laten knipperen om niets.
+				const aanwas = aanwasVan(vorige, uitkomst);
+				if (aanwas && !aanwas.length) return;
+
+				const mislukt = aanwas && magDruppelen() ? meldBinnenkomers(aanwas) : meldLijst();
 
 				// Komen de opgehaalde berichten niet op het scherm, dan hoort de keten dat te weten:
 				// die heeft zojuist gemeld dat het ophalen gelukt is.
@@ -154,6 +191,32 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 					keten.meldVerwerkingsfout();
 				}
 			});
+
+			function meldLijst() {
+				return meld({
+					berichten: uitkomst.berichten,
+					magazijnen: uitkomst.magazijnen,
+					mappen: [],
+				});
+			}
+
+			/**
+			 * Eén melding per binnengekomen bericht, oudste eerst.
+			 *
+			 * De render-laag zet elke binnenkomer bovenaan. Volgden we de lijstvolgorde — het stelsel
+			 * levert de nieuwste eerst — dan eindigde de oudste bovenaan.
+			 */
+			function meldBinnenkomers(berichten) {
+				const mislukt = [];
+				berichten
+					.slice()
+					.reverse()
+					.forEach((bericht) => {
+						const fouten = meld({ nieuwBericht: bericht });
+						if (fouten && fouten.length) mislukt.push(...fouten);
+					});
+				return mislukt;
+			}
 		},
 	};
 }

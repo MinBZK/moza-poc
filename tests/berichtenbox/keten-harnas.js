@@ -59,7 +59,7 @@ export function standaardRonde(extra = []) {
  * Draait het keten-script met een persona die aangesloten is, zodat er een ontvanger bekend is.
  * Geeft de aanroepen aan fetch terug, zodat een test kan zien wát er is opgevraagd.
  */
-export async function startKeten(perAdres) {
+export async function startKeten(perAdres, pad = "/moza/berichtenbox/") {
 	const aanroepen = [];
 
 	vi.stubGlobal("fetch", async (pad, opties) => {
@@ -72,8 +72,9 @@ export async function startKeten(perAdres) {
 
 	document.body.innerHTML = '<article class="berichtenbox"><table data-berichtenbox-list><tbody></tbody></table></article>';
 	// Een relatief pad, dus de origin uit @vitest-environment-options blijft staan: hetzelfde
-	// harnas werkt in het http- en het https-bestand.
-	window.history.replaceState(null, "", "/moza/berichtenbox/");
+	// harnas werkt in het http- en het https-bestand. Een test die over de instellingen in de URL
+	// gaat — `?poll=` bijvoorbeeld — geeft zijn eigen pad mee.
+	window.history.replaceState(null, "", pad);
 	window.berichtenboxData = { berichten: [], magazijnen: [], mappen: [] };
 	// Inclusief `personas`, zoals de echte wisselaar die publiceert: de keten-bron vergelijkt de
 	// lijst van het stelsel daarmee om te melden welke testaccounts hier geen persona hebben.
