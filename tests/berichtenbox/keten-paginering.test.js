@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { antwoord, sseAntwoord, PERSONAS, startKeten, ruimKetenOp } from "./keten-harnas.js";
+import { antwoord, PERSONAS, rondeMetLijst, startKeten, ruimKetenOp } from "./keten-harnas.js";
 
 /**
  * De berichtenlijst komt per pagina van honderd; wie meer post heeft, heeft meer pagina's.
@@ -28,7 +28,7 @@ function berichtenVan(paginanummer, aantal) {
 		onderwerp: "Bericht",
 		publicatietijdstip: "2026-09-03T11:19:38.351205Z",
 		magazijnId: "00000009000000000006",
-		afzender: "00000009000000000006",
+		afzenderNaam: "Belastingdienst",
 	}));
 }
 
@@ -48,11 +48,7 @@ function lijstVan(paginas) {
 
 /** De ronde met een eigen berichtenlijst; `gevonden` is wat de ophaalronde zelf telde. */
 function ronde(lijst, gevonden = 0) {
-	return [
-		["/api/demo/personas", PERSONAS],
-		["_ophalen", sseAntwoord(gevonden)],
-		["/api/v1/berichten?", lijst],
-	];
+	return [["/api/demo/personas", PERSONAS], ...rondeMetLijst(lijst, gevonden)];
 }
 
 /** De adressen waarmee de lijst opgevraagd werd, op volgorde. */
@@ -60,11 +56,18 @@ function lijstAanroepen(aanroepen) {
 	return aanroepen.filter((a) => a.pad.indexOf("/api/v1/berichten?") === 0).map((a) => a.pad);
 }
 
+/**
+ * Hetzelfde, zonder de eerste aanroep.
+ *
+ * Elke ronde begint met een vraag aan het stelsel: staat de lijst van een andere berichtenbox-pagina
+ * er al? Hier niet — die aanroep krijgt een 409 en dan draait de ronde alsnog. Het bladeren begint
+ * daarna, en daar gaan deze tests over.
+ */
+function bladeraanroepen(aanroepen) {
+	return lijstAanroepen(aanroepen).slice(1);
+}
+
 beforeEach(() => {
-	// De organisaties van een geslaagde ronde blijven in sessionStorage staan, en een volgende test
-	// zou die als "sessie bestaat nog" lezen: dan slaat de ophaalronde over en is `gevonden` niet
-	// bekend. Elke test hier begint bij nul.
-	sessionStorage.clear();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -82,7 +85,7 @@ describe("berichtenbox-keten.js — de berichtenlijst per pagina", () => {
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 
 		expect(uitkomst.berichten).toHaveLength(220);
-		expect(lijstAanroepen(aanroepen)).toEqual(["/api/v1/berichten?pagina=0&paginaGrootte=100", "/api/v1/berichten?pagina=1&paginaGrootte=100", "/api/v1/berichten?pagina=2&paginaGrootte=100"]);
+		expect(bladeraanroepen(aanroepen)).toEqual(["/api/v1/berichten?pagina=0&paginaGrootte=100", "/api/v1/berichten?pagina=1&paginaGrootte=100", "/api/v1/berichten?pagina=2&paginaGrootte=100"]);
 	});
 
 	it("vraagt één pagina op wanneer dat de hele lijst is", async () => {
@@ -91,7 +94,7 @@ describe("berichtenbox-keten.js — de berichtenlijst per pagina", () => {
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 
 		expect(uitkomst.berichten).toHaveLength(20);
-		expect(lijstAanroepen(aanroepen)).toEqual(["/api/v1/berichten?pagina=0&paginaGrootte=100"]);
+		expect(bladeraanroepen(aanroepen)).toEqual(["/api/v1/berichten?pagina=0&paginaGrootte=100"]);
 	});
 
 	it("meldt niets over een maximum zolang de lijst compleet is", async () => {
@@ -109,7 +112,7 @@ describe("berichtenbox-keten.js — de berichtenlijst per pagina", () => {
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 
 		expect(uitkomst.berichten).toHaveLength(100);
-		expect(lijstAanroepen(aanroepen)).toHaveLength(2);
+		expect(bladeraanroepen(aanroepen)).toHaveLength(2);
 	});
 
 	it("houdt op bij de bovengrens en zegt dat er meer kan zijn", async () => {
@@ -121,7 +124,7 @@ describe("berichtenbox-keten.js — de berichtenlijst per pagina", () => {
 
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 
-		expect(lijstAanroepen(aanroepen)).toHaveLength(100);
+		expect(bladeraanroepen(aanroepen)).toHaveLength(100);
 		expect(uitkomst.berichten).toHaveLength(100);
 		// Het aantal dat er staat, niet de bovengrens van de client: die zou hier honderd keer te
 		// hoog zijn en de bezoeker een getal laten lezen dat nergens op het scherm terugkomt.
@@ -140,7 +143,7 @@ describe("berichtenbox-keten.js — de berichtenlijst per pagina", () => {
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 
 		expect(uitkomst.berichten).toHaveLength(100);
-		expect(lijstAanroepen(aanroepen)).toHaveLength(1);
+		expect(bladeraanroepen(aanroepen)).toHaveLength(1);
 		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("onbekende vorm"), expect.anything());
 	});
 });
@@ -217,7 +220,7 @@ describe("berichtenbox-keten.js — als het bladeren halverwege misgaat", () => 
 		const { aanroepen } = await startKeten(ronde(altijdMeer));
 
 		expect(await window.BerichtenboxKeten.berichten()).toBe(null);
-		expect(lijstAanroepen(aanroepen).length).toBeLessThan(10);
+		expect(bladeraanroepen(aanroepen).length).toBeLessThan(10);
 		expect(window.BerichtenboxKeten.melding).toEqual({
 			soort: "storing",
 			tekst: "Wij konden uw berichtenlijst niet helemaal ophalen. Ververs de pagina om het opnieuw te proberen.",
