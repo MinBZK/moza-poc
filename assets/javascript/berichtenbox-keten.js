@@ -35,25 +35,32 @@
 	// De demo-console is een kleine lijst en hoort meteen te antwoorden. De berichtenlijst mag wat
 	// langer duren. De ophaalronde zelf krijgt geen harde limiet maar een stiltebewaking: een ronde
 	// langs tientallen organisaties mag lang duren, stilte niet.
-	// De berichtenlijst komt per pagina, en het stelsel kapt een grotere `paginaGrootte` af op
-	// honderd: om meer vragen levert er niet meer op. Alles ophalen is dus doorbladeren zolang het
-	// antwoord een volgende pagina noemt.
-	const PAGINA_GROOTTE = 100;
-	// Een bovengrens tegen een lijst die niet ophoudt — een `next` die naar zichzelf blijft wijzen,
-	// bijvoorbeeld. Ruim genomen: de proeftuinpersona met de meeste post zit rond de achthonderd
-	// berichten, dus dit ligt ver boven wat een demonstratie nodig heeft. Wordt hij toch geraakt,
-	// dan hoort de bezoeker te weten dat er meer is dan er staat in plaats van het stil af te kappen.
-	const MAX_PAGINAS = 100;
 
 	// De demo-console beantwoordt één vraag: welke persona's kent de keten. Dat hoort in
 	// milliseconden te gaan. Vijf seconden was een tijdslimiet die als wachttijd voelde: staat er
 	// geen backend, dan wacht élke bezoeker die tijd uit voordat de dataset in beeld komt.
 	const DEMO_LIMIET_MS = 1500;
+	// Per pagina van de berichtenlijst, want die lijst kost meer dan één verzoek. Daarnaast een
+	// budget over de hele reeks: honderd trage pagina's van elk een halve minuut zouden de
+	// berichtenbox drie kwartier leeg laten, en zolang wachten doet niemand.
 	const LIJST_LIMIET_MS = 30000;
+	const LIJST_TOTAAL_LIMIET_MS = 60000;
 	// Eén bericht ophalen gaat langs één magazijn, niet langs allemaal. Duurt dat langer dan dit,
 	// dan is de bezoeker beter af met de mededeling dan met een blijvend "wordt opgehaald".
 	const INHOUD_LIMIET_MS = 10000;
 	const STILTE_LIMIET_MS = 30000;
+
+	// De berichtenlijst komt per pagina, en het stelsel kapt een grotere `paginaGrootte` af op
+	// honderd: om meer vragen levert er niet meer op (gemeten tegen de test-omgeving van het
+	// stelsel; de oudere spec-notitie in `docs/superpowers/plans/2026-08-27-berichtenbox-datalaag.md`
+	// noemt nog tweehonderd). Alles ophalen is dus doorbladeren zolang het antwoord een volgende
+	// pagina noemt.
+	const PAGINA_GROOTTE = 100;
+	// Een bovengrens tegen een lijst die niet ophoudt: een stelsel dat op élke pagina een `next`
+	// blijft zetten. Ruim genomen: de proeftuinpersona met de meeste post zit rond de achthonderd
+	// berichten, dus dit ligt ver boven wat een demonstratie nodig heeft. Wordt hij toch geraakt,
+	// dan hoort de bezoeker te weten dat er meer is dan er staat in plaats van het stil af te kappen.
+	const MAX_PAGINAS = 100;
 
 	// Hoe lang we wachten op een ronde die een andere pagina al draait, en hoe vaak we tussendoor
 	// kijken of de lijst er is. Ruim genomen: een ronde langs vijftien magazijnen duurt seconden,
@@ -77,6 +84,13 @@
 		// verversen hier echt, want dan draait de ophaalronde opnieuw en zet die de sessie terug.
 		geenSessie: "Uw berichten zijn niet meer klaargezet bij het stelsel. Ververs de pagina; dan halen wij ze opnieuw op.",
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
+		// De berichtenlijst komt per pagina. Breekt dat halverwege af, dan is er niets mis bij de
+		// bronnen: die hebben hun berichten al klaargezet, en de pagina's ervoor kwamen gewoon binnen.
+		// "De bronnen reageren niet meer" zou hier dus een onwaar verhaal vertellen.
+		lijstAfgebroken: "Wij konden uw berichtenlijst niet helemaal ophalen. Ververs de pagina om het opnieuw te proberen.",
+		// Een pagina zonder leesbare berichtenlijst. Stil overslaan zou een halve postbus als een
+		// volledige tonen, en dat is precies wat de bezoeker niet kan zien.
+		lijstOnleesbaar: "Wij konden uw berichtenlijst niet goed lezen. Ververs de pagina om het opnieuw te proberen.",
 		stil: "De bronnen reageren niet meer. Ververs de pagina om het opnieuw te proberen.",
 		verwerking: "Uw berichten zijn wel opgehaald, maar we konden ze niet tonen. Meld dit als het blijft gebeuren.",
 		// Geen storing bij een bron maar een onvolledig ingerichte omgeving. Verversen verandert daar
@@ -145,10 +159,12 @@
 		meld("mededeling", namen.length > 1 ? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk." : namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
 	}
 
-	// De ronde telde meer berichten dan de lijst teruggaf: meer dan één pagina, of onderweg iets
-	// kwijtgeraakt. Stil inslikken zou een halve postbus als een volledige presenteren.
+	// De ronde telde meer berichten dan de lijst teruggaf: onderweg iets kwijtgeraakt. Stil
+	// inslikken zou een halve postbus als een volledige presenteren. Sinds de client alle pagina's
+	// ophaalt is "meer dan één pagina" geen verklaring meer; blijft dit staan, dan mist er echt iets.
 	function toonOnvolledig(getoond, gevonden) {
-		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond + " opgehaald. Probeer het opnieuw om de rest op te halen.");
+		// "Probeer het opnieuw" niet: die knop bestaat niet, zoals bij FOUT_TEKSTEN hierboven staat.
+		meld("mededeling", "De bronnen vonden " + gevonden + " berichten, maar er zijn er " + getoond + " opgehaald. Ververs de pagina om de rest op te halen.");
 	}
 
 	function verbergMeldingen() {
@@ -462,6 +478,11 @@
 	 * Zolang die ronde loopt heeft de ontvanger nog geen gevulde sessie en antwoordt de lijst met
 	 * 409. Dat is hier geen fout maar "nog niet zover". Loopt de wachttijd af, dan gooien we alsnog
 	 * `bezig`: dan zegt de melding dat er al opgehaald wordt en dat verversen zo helpt.
+	 *
+	 * Een 409 hoeft niet van die andere ronde te komen: verloopt de sessie tussen twee pagina's door,
+	 * dan zegt de lijst hetzelfde. Het onderscheid is van buitenaf niet te maken, en de handeling is
+	 * dezelfde. Elke poging begint weer bij pagina 0 — de vorige pagina's zijn dan van een sessie die
+	 * er niet meer is, en die opnieuw ophalen is goedkoper dan ze half met nieuwe mengen.
 	 */
 	async function wachtOpLijst(ontvanger) {
 		const einde = Date.now() + WACHT_OP_RONDE_MS;
@@ -484,34 +505,99 @@
 	 * bladeren zolang het stelsel een volgende pagina noemt.
 	 *
 	 * Geeft `{ berichten, afgekapt }`. `afgekapt` staat aan als we bij de bovengrens stopten terwijl
-	 * er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan zijn.
+	 * er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan zijn. Elke
+	 * andere reden om te stoppen is een fout en werpt: een halve lijst die zich voordoet als een hele
+	 * is het ergste wat hier kan gebeuren, want daar is aan het scherm niets van te zien.
 	 */
 	async function haalLijst(ontvanger) {
 		const berichten = [];
+		const gezien = new Set();
+		const einde = Date.now() + LIJST_TOTAAL_LIMIET_MS;
+
 		for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
-			const deel = await haalLijstPagina(ontvanger, pagina);
-			const ruw = Array.isArray(deel.berichten) ? deel.berichten : [];
-			if (!Array.isArray(deel.berichten)) {
-				console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", deel);
+			const resterend = einde - Date.now();
+			if (pagina > 0 && resterend <= 0) {
+				throw ketenFout("lijstAfgebroken", "de berichtenlijst duurde langer dan " + LIJST_TOTAAL_LIMIET_MS + " ms; gestopt na pagina " + pagina);
 			}
-			for (const bericht of ruw) berichten.push(bericht);
+
+			const deel = await haalLijstPagina(ontvanger, pagina, resterend);
+
+			// Een pagina zonder leesbare `berichten` is geen einde maar een fout. Als lege pagina
+			// behandelen zou de lijst hier afkappen en `afgekapt: false` teruggeven — een halve
+			// postbus, gepresenteerd als een volledige, met alleen een regel in de console.
+			if (!deel || !Array.isArray(deel.berichten)) {
+				throw ketenFout("lijstOnleesbaar", "pagina " + pagina + " van de berichtenlijst had geen `berichten`-array");
+			}
+
+			// De pagina's komen uit een sessie die een andere pagina van deze berichtenbox nog kan
+			// vullen. Groeit die lijst tussen twee verzoeken, dan schuiven berichten over de
+			// paginagrens en zien we er een twee keer. Ontdubbelen op berichtId houdt de lus
+			// herhaalbaar; dat berichten dan ook overgeslagen kunnen zijn valt hier niet te zien, dus
+			// dat gaat naar de console en niet naar de bezoeker.
+			let dubbel = 0;
+			for (const bericht of deel.berichten) {
+				const id = bericht && bericht.berichtId;
+				if (id && gezien.has(id)) {
+					dubbel++;
+					continue;
+				}
+				if (id) gezien.add(id);
+				berichten.push(bericht);
+			}
+			if (dubbel > 0) {
+				console.warn("[Berichtenbox] " + dubbel + " bericht(en) kwamen op twee pagina's voor; de lijst groeide tijdens het ophalen.");
+			}
+
 			// Een lege pagina is het einde, ook als er nog een `next` naast staat: nog een ronde langs
 			// hetzelfde antwoord levert niets nieuws op.
-			if (ruw.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false };
+			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false };
 		}
 		return { berichten: berichten, afgekapt: true };
 	}
 
-	// Het stelsel wijst met een `next`-link naar de volgende pagina; ontbreekt die, dan was dit de
-	// laatste. Het adres erin volgen we niet — we bouwen het zelf uit het paginanummer, zodat een
-	// antwoord ons niet ergens anders heen kan sturen.
+	/**
+	 * Wijst dit antwoord naar een volgende pagina?
+	 *
+	 * Het adres in `next` volgen we niet — we bouwen het zelf uit het paginanummer, zodat een
+	 * antwoord ons niet ergens anders heen kan sturen. Dat veronderstelt wel dat `pagina=N` blijft
+	 * betekenen wat `next` bedoelt; wordt dat ooit een cursor, dan moet dit mee.
+	 *
+	 * Alleen de vorm die het stelsel nu levert telt als "er is meer". Staat er een `next` in een
+	 * andere vorm — een kale string bijvoorbeeld — dan stopt de lus hier, en dat mag de bezoeker niet
+	 * stil overkomen: die krijgt de lijst die er dan staat te zien alsof het alles is.
+	 */
 	function heeftVolgende(deel) {
-		return !!(deel && deel._links && deel._links.next && deel._links.next.href);
+		if (!deel || !deel._links || !deel._links.next) return false;
+		if (typeof deel._links.next.href === "string") return true;
+		console.warn("[Berichtenbox] `_links.next` in een onbekende vorm; het bladeren stopt hier.", deel._links.next);
+		return false;
 	}
 
-	async function haalLijstPagina(ontvanger, pagina) {
+	/**
+	 * Eén pagina van de berichtenlijst.
+	 *
+	 * `resterend` is wat er van het budget voor de hele reeks over is; de tijdslimiet van deze pagina
+	 * is de kleinste van de twee. Zo kan één trage pagina het geheel niet alsnog laten uitlopen.
+	 *
+	 * Een fout ná de eerste pagina krijgt een eigen reden. De teksten van `stil` en `onbereikbaar`
+	 * gaan over de bronnen, en die hebben hier niets misdaan: de ophaalronde was klaar en de vorige
+	 * pagina's kwamen gewoon binnen. `geenSessie` blijft wél zichzelf — daar hangt het herstel aan
+	 * vast, in de `bekend`-tak en in `wachtOpLijst`.
+	 */
+	async function haalLijstPagina(ontvanger, pagina, resterend) {
+		try {
+			return await lijstPaginaOp(ontvanger, pagina, resterend);
+		} catch (fout) {
+			if (pagina === 0 || redenVan(fout) === "geenSessie") throw fout;
+			console.error("[Berichtenbox] de berichtenlijst brak af op pagina " + pagina, fout);
+			throw ketenFout("lijstAfgebroken", "pagina " + pagina + " van de berichtenlijst kwam niet binnen");
+		}
+	}
+
+	async function lijstPaginaOp(ontvanger, pagina, resterend) {
 		const adres = "/api/v1/berichten?pagina=" + pagina + "&paginaGrootte=" + PAGINA_GROOTTE;
-		const respons = await metTijdslimiet(adres, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
+		const limiet = Math.min(LIJST_LIMIET_MS, Math.max(resterend, 1));
+		const respons = await metTijdslimiet(adres, { headers: { "X-Ontvanger": ontvanger } }, limiet);
 		// De uitvraag levert de lijst uit een sessie die de ophaalronde vult. Is die er niet meer —
 		// het slot verlopen, de sessie opgeruimd — dan antwoordt hij met 409, en dat is geen storing
 		// bij een bron maar een toestand die met verversen over gaat.
@@ -751,7 +837,8 @@
 		// Vanaf hier is het ophalen gelukt en kan het alleen nog misgaan in onze eigen verwerking.
 		// "Probeer het later opnieuw" helpt daar niet tegen, dus dat krijgt een eigen tekst.
 		try {
-			// `haalLijst` voegde de pagina's al samen en logde onderweg wat niet te lezen viel.
+			// `haalLijst` voegde de pagina's al samen, ontdubbelde ze en wierp op alles wat geen
+			// leesbare lijst was. Wat hier binnenkomt is dus altijd een array.
 			const ruw = lijst.berichten;
 
 			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
@@ -772,8 +859,14 @@
 			verbergMeldingen();
 
 			if (lijst.afgekapt) {
-				meld("mededeling", "Er worden maximaal " + MAX_PAGINAS * PAGINA_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
-			} else if (berichten.length < uitvraag.gevonden) {
+				// Het aantal dat er écht staat, niet de bovengrens van de client: de lus stopt op een
+				// paginatelling, dus `MAX_PAGINAS * PAGINA_GROOTTE` zou een getal noemen dat de bezoeker
+				// nergens terugziet.
+				meld("mededeling", "Er worden " + berichten.length.toLocaleString("nl-NL") + " berichten getoond. Mogelijk heeft u er meer dan hier staan.");
+				// `gevonden` is alleen bekend na een eigen ophaalronde. Kwam de lijst uit een sessie die
+				// een andere pagina vulde, dan staat er `null`, en `berichten.length < null` is altijd
+				// onwaar: die vergelijking mag niet stilzwijgend voor "alles is er" doorgaan.
+			} else if (typeof uitvraag.gevonden === "number" && berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
 			} else if (uitvraag.stil.length > 0) {
 				toonUitval(uitvraag.stil);

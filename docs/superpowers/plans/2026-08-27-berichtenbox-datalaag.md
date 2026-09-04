@@ -1075,6 +1075,12 @@ links zonder absolute paginavoortgang"*.
 PR #135 vraagt `paginaGrootte=200` en waarschuwt bij `ruw.length >= 200`. Dat is een benadering;
 het juiste signaal is de aanwezigheid van `_links.next`. Aan te passen in Fase 2.
 
+**Achterhaald (4 september 2026):** de test-omgeving van het stelsel kapt `paginaGrootte` af op
+honderd — `?paginaGrootte=200` antwoordt met honderd berichten en `_links.self` met
+`paginaGrootte=100`. De client vraagt daarom honderd per pagina en bladert door op `_links.next`;
+zie `assets/javascript/berichtenbox-keten.js`. De "maximaal 200" hierboven komt uit de spec en is
+niet wat de omgeving doet.
+
 ### De SSE-stroom
 
 Geverifieerd tegen `libraries/fbs-berichtensessiecache/.../berichten/MagazijnEvent.kt`. De namen die
