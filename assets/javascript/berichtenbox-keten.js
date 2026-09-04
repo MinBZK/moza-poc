@@ -35,9 +35,15 @@
 	// De demo-console is een kleine lijst en hoort meteen te antwoorden. De berichtenlijst mag wat
 	// langer duren. De ophaalronde zelf krijgt geen harde limiet maar een stiltebewaking: een ronde
 	// langs tientallen organisaties mag lang duren, stilte niet.
-	// De berichtenlijst komt in één antwoord. Zit hij aan dit maximum, dan is er waarschijnlijk meer
-	// dan we tonen; dat hoort de bezoeker te weten in plaats van het stil af te kappen.
-	const LIJST_GROOTTE = 200;
+	// De berichtenlijst komt per pagina, en het stelsel kapt een grotere `paginaGrootte` af op
+	// honderd: om meer vragen levert er niet meer op. Alles ophalen is dus doorbladeren zolang het
+	// antwoord een volgende pagina noemt.
+	const PAGINA_GROOTTE = 100;
+	// Een bovengrens tegen een lijst die niet ophoudt — een `next` die naar zichzelf blijft wijzen,
+	// bijvoorbeeld. Ruim genomen: de proeftuinpersona met de meeste post zit rond de achthonderd
+	// berichten, dus dit ligt ver boven wat een demonstratie nodig heeft. Wordt hij toch geraakt,
+	// dan hoort de bezoeker te weten dat er meer is dan er staat in plaats van het stil af te kappen.
+	const MAX_PAGINAS = 100;
 
 	// De demo-console beantwoordt één vraag: welke persona's kent de keten. Dat hoort in
 	// milliseconden te gaan. Vijf seconden was een tijdslimiet die als wachttijd voelde: staat er
@@ -470,8 +476,42 @@
 		}
 	}
 
+	/**
+	 * De hele berichtenlijst, pagina voor pagina.
+	 *
+	 * Eén antwoord bevat hoogstens honderd berichten; wie meer post heeft, heeft meer pagina's. Een
+	 * demonstratie hoort de hele berichtenbox te tonen en niet de eerste honderd, dus blijven we
+	 * bladeren zolang het stelsel een volgende pagina noemt.
+	 *
+	 * Geeft `{ berichten, afgekapt }`. `afgekapt` staat aan als we bij de bovengrens stopten terwijl
+	 * er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan zijn.
+	 */
 	async function haalLijst(ontvanger) {
-		const respons = await metTijdslimiet("/api/v1/berichten?paginaGrootte=" + LIJST_GROOTTE, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
+		const berichten = [];
+		for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+			const deel = await haalLijstPagina(ontvanger, pagina);
+			const ruw = Array.isArray(deel.berichten) ? deel.berichten : [];
+			if (!Array.isArray(deel.berichten)) {
+				console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", deel);
+			}
+			for (const bericht of ruw) berichten.push(bericht);
+			// Een lege pagina is het einde, ook als er nog een `next` naast staat: nog een ronde langs
+			// hetzelfde antwoord levert niets nieuws op.
+			if (ruw.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false };
+		}
+		return { berichten: berichten, afgekapt: true };
+	}
+
+	// Het stelsel wijst met een `next`-link naar de volgende pagina; ontbreekt die, dan was dit de
+	// laatste. Het adres erin volgen we niet — we bouwen het zelf uit het paginanummer, zodat een
+	// antwoord ons niet ergens anders heen kan sturen.
+	function heeftVolgende(deel) {
+		return !!(deel && deel._links && deel._links.next && deel._links.next.href);
+	}
+
+	async function haalLijstPagina(ontvanger, pagina) {
+		const adres = "/api/v1/berichten?pagina=" + pagina + "&paginaGrootte=" + PAGINA_GROOTTE;
+		const respons = await metTijdslimiet(adres, { headers: { "X-Ontvanger": ontvanger } }, LIJST_LIMIET_MS);
 		// De uitvraag levert de lijst uit een sessie die de ophaalronde vult. Is die er niet meer —
 		// het slot verlopen, de sessie opgeruimd — dan antwoordt hij met 409, en dat is geen storing
 		// bij een bron maar een toestand die met verversen over gaat.
@@ -711,10 +751,8 @@
 		// Vanaf hier is het ophalen gelukt en kan het alleen nog misgaan in onze eigen verwerking.
 		// "Probeer het later opnieuw" helpt daar niet tegen, dus dat krijgt een eigen tekst.
 		try {
-			const ruw = Array.isArray(lijst.berichten) ? lijst.berichten : [];
-			if (!Array.isArray(lijst.berichten)) {
-				console.error("[Berichtenbox] berichtenlijst zonder `berichten`-array", lijst);
-			}
+			// `haalLijst` voegde de pagina's al samen en logde onderweg wat niet te lezen viel.
+			const ruw = lijst.berichten;
 
 			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
 			const overgeslagen = ruw.length - berichten.length;
@@ -733,8 +771,8 @@
 			verbergVoortgang();
 			verbergMeldingen();
 
-			if (ruw.length >= LIJST_GROOTTE) {
-				meld("mededeling", "Er worden maximaal " + LIJST_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
+			if (lijst.afgekapt) {
+				meld("mededeling", "Er worden maximaal " + MAX_PAGINAS * PAGINA_GROOTTE + " berichten getoond. Mogelijk heeft u meer berichten dan hier staan.");
 			} else if (berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
 			} else if (uitvraag.stil.length > 0) {
