@@ -33,11 +33,21 @@ export function antwoord(status, body, soort = "application/json") {
 	};
 }
 
-/** De ophaalronde leest een SSE-stroom; die geven we als lege maar geldige stroom terug. */
-export function sseAntwoord() {
+/**
+ * De ophaalronde leest een SSE-stroom; die geven we als lege maar geldige stroom terug.
+ *
+ * `gevonden` laat de ronde melden hoeveel berichten één organisatie had. Zonder dat getal blijft
+ * `uitvraag.gevonden` nul en is de vergelijking "opgehaald < gevonden" in de client onbereikbaar —
+ * precies de melding die zegt dat er berichten missen.
+ */
+export function sseAntwoord(gevonden = 0) {
 	const stroom = new ReadableStream({
 		start(regelaar) {
-			regelaar.enqueue(new TextEncoder().encode('data:{"event":"ophalen-gereed","totaalBerichten":0,"geslaagd":0,"mislukt":0,"totaalMagazijnen":0}\n\n'));
+			const schrijf = (regel) => regelaar.enqueue(new TextEncoder().encode(regel));
+			if (gevonden > 0) {
+				schrijf('data:{"event":"magazijn-bevraging-voltooid","magazijnId":"00000009000000000006","naam":"Demo-organisatie","status":"OK","aantalBerichten":' + gevonden + "}\n\n");
+			}
+			schrijf('data:{"event":"ophalen-gereed","totaalBerichten":' + gevonden + ',"geslaagd":0,"mislukt":0,"totaalMagazijnen":0}\n\n');
 			regelaar.close();
 		},
 	});
