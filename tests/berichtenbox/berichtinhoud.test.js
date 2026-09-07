@@ -163,11 +163,16 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
 		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf"]);
 
-		// Elke naam is een echte link naar de bijlage bij het stelsel, met de naam als bestandsnaam:
-		// het stelsel stuurt "Content-Disposition: attachment" zonder er een mee te geven.
+		// Elke naam is een echte link naar de bijlage bij het stelsel, en gewone navigatie: geen
+		// "download"-attribuut, want dat zou opslaan afdwingen wat de server ook meegeeft. Het
+		// stelsel levert een PDF inline, dus die hoort in de viewer van de browser te openen; een
+		// type dat het niet inline stuurt wordt alsnog opgeslagen, met de bestandsnaam die de keten
+		// zelf saneerde.
 		const links = [...lijst.querySelectorAll("a")];
 		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1", "/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-2"]);
-		expect(links.map((a) => a.getAttribute("download"))).toEqual(["beschikking.pdf", "toelichting.pdf"]);
+		expect(links.map((a) => a.getAttribute("download"))).toEqual([null, null]);
+		expect(links.map((a) => a.getAttribute("target"))).toEqual(["_blank", "_blank"]);
+		expect(links.map((a) => a.getAttribute("rel"))).toEqual(["noopener", "noopener"]);
 		// Met het bijlage-icoon ervoor, hetzelfde als in de berichtenrij — en daarom geen
 		// opsommingsteken. Eén renderer tekent dit voor nagebootste én echte bijlagen; toen dat twee
 		// bouwers waren, kreeg de ene een icoon en de andere een bullet.
@@ -183,9 +188,10 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(document.cookie).toContain("ontvanger=KVK:90000011");
 		document.cookie = "ontvanger=; path=" + ONTVANGER_PAD + "; Max-Age=0";
 
-		// Geen PDF-viewer: het stelsel stuurt zijn bijlagen met "Content-Disposition: attachment", en
-		// dan toont een browser ze niet in een ingesloten viewer — het kader bleef leeg. Een leeg
-		// kader is erger dan geen kader; de download-link in de lijst is de weg naar het document.
+		// Geen ingesloten viewer: de diensten van het stelsel zetten "X-Frame-Options: DENY" en
+		// "Content-Security-Policy: frame-ancestors 'none'" op elk antwoord, en DENY blokkeert
+		// framing ook binnen dezelfde origin — het kader bleef leeg. Een leeg kader is erger dan
+		// geen kader; de link in de lijst is de weg naar het document.
 		const preview = document.querySelector("[data-berichtenbox-attachments-preview]");
 		expect(preview.getAttribute("data")).toBeNull();
 		expect(document.querySelector(".berichtenbox-detail-pdf").hidden).toBe(true);

@@ -121,7 +121,14 @@ Onder elk punt staat wat u doet en wat u hoort te zien. Vink af per portaal.
 - [ ] Het bericht wordt geopend en telt daarna als gelezen.
 - [ ] Afzender, onderwerp, datum en map staan erboven.
 - [ ] Bijlagen worden geladen en zijn te openen.
-- [ ] De voorvertoning van een PDF werkt, en downloaden als PDF en als tekst werkt.
+- [ ] Bij een dataset-persona werkt de voorvertoning van een PDF, en werkt downloaden als PDF en
+      als tekst.
+- [ ] Bij een keten-persona opent een bijlage in een nieuw tabblad. Een PDF komt in de viewer van de
+      browser te staan en wordt niet opgeslagen; een type dat het stelsel niet inline levert wordt
+      wél opgeslagen. Dat is dan de dispositie van de server, niet de berichtenbox.
+- [ ] Bij een keten-persona blijft het ingesloten PDF-kader op de detailpagina dicht. Dat blijft zo
+      zolang de diensten van het stelsel `X-Frame-Options: DENY` en `frame-ancestors 'none'`
+      meesturen.
 - [ ] Een bijlage die niet laadt, geeft een zichtbare melding en geen lege plek.
 - [ ] Archiveren, verwijderen en verplaatsen vanaf de detailpagina werken en brengen u terug.
 - [ ] De demo-detailpagina (`bericht-demo`) toont het gekozen bericht, en meldt het als het bericht niet bestaat.
@@ -264,8 +271,9 @@ branch oplost; de rest is gevolg van de opzet en vraagt om een akkoord.
 ## D. Nog niet geautomatiseerd
 
 Wat noch `npm test` noch de vergelijking raakt: de gesimuleerde bronuitval en haar drie scenario's,
-het mappenpaneel, de bijlagen met hun voorvertoning en downloads, de responsieve paginanavigatie
-(jsdom kent geen breedte), en alles wat met opmaak, kleur, focusrand en beweging te maken heeft.
+het mappenpaneel, de bijlagen met hun voorvertoning en de dispositie die de browser volgt, de
+responsieve paginanavigatie (jsdom kent geen breedte), en alles wat met opmaak, kleur, focusrand en
+beweging te maken heeft.
 
 Die eerste vier zitten in de render-laag. Ze horen in een volgende stap naar de datalaag of achter
 testbare functies, zodat deel B korter wordt in plaats van langer. Voor de laatste groep is een
