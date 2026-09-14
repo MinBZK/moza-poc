@@ -146,6 +146,16 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 
 		async laad() {
 			if (!uitkomst) {
+				// Twee redenen om hier zonder berichten te staan, en ze verdienen niet hetzelfde
+				// scherm. Ging het ophalen mis, dan werpen we: de render-laag zet er een storing
+				// boven en dat klopt. Maar zegt het stelsel dat het er niet is, of dat het dit
+				// testaccount niet kent, dan is er niets misgegaan — er is alleen geen post. Dan
+				// hoort de berichtenbox leeg te zijn met de uitleg van de keten eronder, in plaats
+				// van een laadfout die die uitleg overschrijft en naar een verversing verwijst die
+				// niets oplost.
+				if (keten.nietsOpTeHalen) {
+					return { berichten: [], magazijnen: [], mappen: [] };
+				}
 				throw new Error("het ophalen bij het Federatief Berichtenstelsel is mislukt");
 			}
 			// De keten kent geen mappen; die zijn van de bezoeker en staan in de bewaarde staat.

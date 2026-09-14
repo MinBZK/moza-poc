@@ -3,12 +3,13 @@ import { ketenBron } from "../../assets/javascript/berichtenbox/keten-bron.js";
 import { maakRegister } from "../../assets/javascript/berichtenbox/bron.js";
 
 /** Een dubbel voor berichtenbox-keten.js: dezelfde vorm, zonder netwerk. */
-function nepKeten({ bezig = false, aangesloten = false, uitkomst = null, melding = null, faalt = false } = {}) {
+function nepKeten({ bezig = false, aangesloten = false, uitkomst = null, melding = null, faalt = false, nietsOpTeHalen = false } = {}) {
 	const kijkers = [];
 	return {
 		bezig,
 		aangesloten,
 		melding,
+		nietsOpTeHalen,
 		voortgang: null,
 		berichten: async () => {
 			if (faalt) return null;
@@ -66,6 +67,20 @@ describe("ketenBron — is deze bron van toepassing", () => {
 		const bron = ketenBron(nepKeten({ bezig: true, aangesloten: true, faalt: true }));
 		expect(await bron.geldtVoor()).toBe(true);
 		await expect(bron.laad()).rejects.toThrow(/mislukt/);
+	});
+
+	it("levert een lege lijst als er bij het stelsel niets op te halen valt", async () => {
+		// Het stelsel ontbreekt in deze omgeving, of het kent dit testaccount niet. Dat is een
+		// antwoord en geen storing: een lege berichtenbox met de uitleg van de keten eronder. Werpen
+		// zou daar de algemene laadfout overheen zetten, en die verwijst naar een verversing die
+		// niets verandert.
+		const bron = ketenBron(nepKeten({ bezig: true, aangesloten: true, faalt: true, nietsOpTeHalen: true }));
+		expect(await bron.geldtVoor()).toBe(true);
+
+		const inhoud = await bron.laad();
+		expect(inhoud.berichten).toEqual([]);
+		expect(inhoud.magazijnen).toEqual([]);
+		expect(inhoud.mappen).toEqual([]);
 	});
 
 	it("laat een niet-aangesloten persona door naar de dataset", async () => {

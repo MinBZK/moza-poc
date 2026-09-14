@@ -154,6 +154,9 @@
 	// Gevuld zodra de demo-omgeving bevestigt dat deze persona in de keten zit. Vanaf dat moment is
 	// de gegenereerde dataset aantoonbaar niet zijn post en mag die niet meer getoond worden.
 	let aangeslotenBevestigd = false;
+	// Er valt hier niets op te halen: het stelsel ontbreekt in deze omgeving, of het kent dit
+	// testaccount niet. Geen storing maar een antwoord, en de bron leest het zo (zie meldStelsel).
+	let nietsOpTeHalen = false;
 	let meldingActief = false;
 	let ontvangerVanRonde = null;
 	let ronde = null;
@@ -189,7 +192,7 @@
 	}
 
 	function toestand() {
-		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd || hoortBijStelsel() };
+		return { melding: melding, voortgang: voortgang, uitkomst: laatsteUitkomst, aangesloten: aangeslotenBevestigd || hoortBijStelsel(), nietsOpTeHalen: nietsOpTeHalen };
 	}
 
 	function meld(soort, tekst) {
@@ -791,8 +794,16 @@
 	}
 
 	// Zelfde weg als meldStoring, andere aanleiding: hier ging niets mis, hier is niets te halen.
+	//
+	// Dat verschil moet de bron kunnen zien. Een mislukte ronde hoort te werpen — dan staat er een
+	// storing boven een lege lijst en klopt dat. Maar "het stelsel is er niet" en "dit account is
+	// daar niet bekend" zijn antwoorden, geen storingen: dan hoort de berichtenbox leeg te zijn met
+	// deze uitleg eronder. Zonder dit onderscheid werpt `laad()` ook hier, en overschrijft de
+	// algemene laadfout (zwaarte "kritiek") juist de tekst die uitlegt wat er aan de hand is en wat
+	// de bezoeker eraan kan doen.
 	function meldStelsel(sleutel) {
 		verbergVoortgang();
+		nietsOpTeHalen = true;
 		meld("storing", STELSEL_TEKSTEN[sleutel]);
 	}
 
@@ -805,6 +816,10 @@
 	async function draaiRonde(kvkNummer) {
 		let uitvraag;
 		let lijst;
+
+		// Een nieuwe ronde weet nog niets. Bleef dit van de vorige staan, dan houdt een geslaagde
+		// herhaalronde een lege berichtenbox waar hij berichten had moeten opleveren.
+		nietsOpTeHalen = false;
 
 		let aangesloten;
 		try {
@@ -1385,6 +1400,19 @@
 		 */
 		get aangesloten() {
 			return aangeslotenBevestigd || hoortBijStelsel();
+		},
+
+		/**
+		 * Is er hier niets op te halen? Waar als het stelsel in deze omgeving ontbreekt of dit
+		 * testaccount er niet bekend is.
+		 *
+		 * Dat is iets anders dan een mislukte ronde: er is een antwoord, en het antwoord is dat er
+		 * geen post is. De bron levert dan een lege lijst in plaats van te werpen, zodat de uitleg
+		 * hierboven op het scherm blijft staan in plaats van onder een algemene laadfout te
+		 * verdwijnen.
+		 */
+		get nietsOpTeHalen() {
+			return nietsOpTeHalen;
 		},
 
 		/** De huidige melding, of null. `{ soort: "storing" | "mededeling", tekst }`. */

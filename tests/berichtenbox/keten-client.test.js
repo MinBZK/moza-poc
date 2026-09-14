@@ -133,6 +133,33 @@ describe("berichtenbox-keten.js — een testaccount van het stelsel zonder stels
 		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 
+	it("zegt dat er niets op te halen valt, zodat de bron een lege lijst levert in plaats van een fout", async () => {
+		// Hier hangt de uitleg hierboven aan. Werpt de bron, dan komt de algemene laadfout eroverheen
+		// — zwaarte "kritiek" wint van "storing" — en leest de bezoeker dat hij moet verversen,
+		// terwijl verversen niets oplost.
+		zetPersona({ id: "proeftuin-garage", stelsel: true, bedrijf: { kvkNummer: "90000014" } });
+
+		await draaiMetConsole(CONSOLE_ONBEREIKBAAR);
+
+		expect(window.BerichtenboxKeten.nietsOpTeHalen).toBe(true);
+	});
+
+	it("zegt dat ook als de console dit nummer niet kent", async () => {
+		zetPersona({ id: "proeftuin-garage", stelsel: true, bedrijf: { kvkNummer: "90000014" } });
+
+		await draaiMetConsole(CONSOLE_KENT_HET_NUMMER_NIET);
+
+		expect(window.BerichtenboxKeten.nietsOpTeHalen).toBe(true);
+	});
+
+	it("zegt het niet voor een gewone persona: daar neemt de dataset het gewoon over", async () => {
+		zetPersona();
+
+		await draaiMetConsole(CONSOLE_ONBEREIKBAAR);
+
+		expect(window.BerichtenboxKeten.nietsOpTeHalen).toBe(false);
+	});
+
 	it("eist de persona op, zodat de dataset-bron er niet overheen gaat", async () => {
 		// Dit is de schakel waar ketenBron.geldtVoor op staat: is dit false, dan neemt de dataset het
 		// over en ziet de bezoeker verzonnen post zonder dat iets dat vertelt.
