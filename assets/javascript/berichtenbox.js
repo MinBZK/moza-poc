@@ -1527,11 +1527,22 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		lijst.hidden = false;
 		bijlSec.hidden = false;
 
-		// De viewer alleen waar die kán werken. Het stelsel stuurt zijn bijlagen met
-		// `Content-Disposition: attachment`, en dan toont een browser ze niet in een ingesloten
-		// viewer — in de praktijk nagegaan: het kader bleef leeg. Een leeg kader is erger dan geen
-		// kader, dus blijft het dicht en is de download-link in de lijst de weg naar het document.
-		// Zodra het stelsel `inline` kan leveren, kan dit aan.
+		// De viewer alleen waar die kán werken — en dat hangt niet meer aan de dispositie. Het
+		// stelsel levert inline voor de typen waarvan de weergave in een browser geen code uitvoert
+		// die bij de origin van de berichtenbox kan: `application/pdf`, `image/png` en `image/jpeg`.
+		// Al het andere, en dus zeker `text/html` en `image/svg+xml`, blijft `attachment`. De link
+		// in de lijst is daarom gewone navigatie zonder `download`-attribuut: hij volgt wat de
+		// server meegeeft, dus een PDF opent in de eigen viewer van de browser en een type dat het
+		// stelsel niet inline stuurt wordt alsnog opgeslagen. Dat is dan de server die beslist, niet
+		// de berichtenbox — met de bestandsnaam die de keten zelf saneerde.
+		//
+		// Het ingesloten kader blijft toch dicht, maar om een andere reden: de diensten van het
+		// stelsel zetten op elk antwoord `X-Frame-Options: DENY` en `Content-Security-Policy:
+		// frame-ancestors 'none'`, en die passeren de proxy ongewijzigd naar de browser. `DENY`
+		// blokkeert framing ook binnen dezelfde origin, dus blijft het kader leeg — in de praktijk
+		// nagegaan. Een leeg kader is erger dan geen kader. Dit kan pas aan wanneer het stelsel die
+		// twee headers op dit ene adres versoepelt met de origins erbij benoemd; dat is een
+		// openstaande afweging aan de kant van het stelsel.
 		const pdfBlok = document.querySelector(".berichtenbox-detail-pdf");
 		if (!viewer) {
 			if (pdfBlok) pdfBlok.hidden = true;
@@ -1777,7 +1788,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * vroeger deed, slaat zo'n bericht juist over. Elke afloop moet hier dus langs, ook de mislukte:
 	 * een laadindicator die niet afloopt laat de bezoeker wachten op iets dat nooit komt.
 	 *
-	 * De namen komen op het scherm mét een werkende downloadlink: `bijlageAdres()` hieronder bouwt
+	 * De namen komen op het scherm mét een werkende link: `bijlageAdres()` hieronder bouwt
 	 * het adres bij het stelsel, en de proxy zet de ontvanger uit het cookie om in de header die het
 	 * stelsel eist. Valt er geen adres te maken, dan komt de naam er als gewone tekst te staan,
 	 * zonder link — zie `maakBijlageRegel`, dat die tak zelf toelicht.
@@ -1843,10 +1854,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			gekregen.map((bijlage) => ({
 				naam: (bijlage && bijlage.naam) || "Bijlage zonder naam",
 				adres: bijlageAdres(bijlage, bericht.id),
-				download: true,
+				nieuwTabblad: true,
 			})),
-			// Geen viewer: het stelsel levert zijn bijlagen als download, niet als iets dat een
-			// browser inline wil tonen. Zie de toelichting in toonBijlagen.
+			// Geen ingesloten kader: de frame-headers van het stelsel blokkeren dat, ook
+			// same-origin. Zie de toelichting in toonBijlagen.
 			{ tekstVersie: false, viewer: false }
 		);
 
