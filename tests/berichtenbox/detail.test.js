@@ -200,3 +200,68 @@ describe("detailpagina — de map in het kruimelpad", () => {
 		expect(kruimel().textContent).toBe("Inbox");
 	});
 });
+
+/**
+ * Een bericht in de prullenbak is al verwijderd. De knop die daar "Verwijderen" heet, hoort de weg
+ * terug te bieden: hij zet het bericht terug in de inbox. Zonder dat is weggooien onomkeerbaar, en
+ * dat is het in een prullenbak per definitie niet.
+ */
+describe("detailpagina — verwijderen ongedaan maken", () => {
+	const verwijderKnop = () => document.querySelector('[data-actie="verwijderen"]');
+
+	async function toonBericht(b, state) {
+		bouwDetailPagina(b, state ? { state } : {});
+		await laadBerichtenbox();
+		await laatLaden();
+	}
+
+	it("noemt de knop Terugzetten in inbox als het bericht in de prullenbak staat", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		expect(verwijderKnop().textContent).toContain("Terugzetten in inbox");
+	});
+
+	it("houdt Verwijderen als het bericht gewoon in de inbox staat", async () => {
+		const b = bericht();
+		await toonBericht(b);
+
+		expect(verwijderKnop().textContent).toContain("Verwijderen");
+	});
+
+	it("zet het bericht terug in de inbox", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		verwijderKnop().click();
+
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("inbox");
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/");
+	});
+
+	it("zet een teruggezet bericht niet terug in het archief", async () => {
+		// Weggooien wiste de archief-markering. Die hier alsnog herstellen zou het bericht laten
+		// verdwijnen in een map waar de bezoeker het net niet uit haalde.
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true }, gearchiveerd: { [b.id]: true } });
+
+		verwijderKnop().click();
+
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("archief");
+	});
+
+	it("blijft in de prullenbak staan als het bewaren mislukt", async () => {
+		const b = bericht();
+		bouwDetailPagina(b, { state: { verwijderd: { [b.id]: true } } });
+		opslagWeigert({ eersteBezoekGehad: true, verwijderd: { [b.id]: true } });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		verwijderKnop().click();
+
+		// Geheugen, scherm en opslag horen hetzelfde te zeggen; wegnavigeren zou de melding
+		// meenemen naar een pagina waar het bericht gewoon nog in de prullenbak staat.
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");
+		expect(window.Berichtenbox.navigatieDoel()).toBe(null);
+	});
+});
