@@ -1392,14 +1392,25 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (actiefLink) actiefLink.setAttribute("aria-current", "page");
 		}
 
+		// Alleen de tekst van de knop, niet zijn icoon of de visually-hidden span die het onderwerp
+		// draagt: textContent zetten zou die allebei wissen.
+		function zetKnopLabel(btn, tekst) {
+			if (!btn) return;
+			const labelNode = [...btn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
+			if (labelNode) labelNode.textContent = tekst;
+			else btn.append(tekst);
+		}
+
 		// Zit het bericht al in Archief, dan wordt "Archiveren" "Terugplaatsen in inbox".
 		if (statusVan(berichtId) === "archief") {
-			const archiveerBtn = content.querySelector('[data-actie="archiveren"]');
-			if (archiveerBtn) {
-				const labelNode = [...archiveerBtn.childNodes].reverse().find((n) => n.nodeType === 3 && n.textContent.trim());
-				if (labelNode) labelNode.textContent = "Terugplaatsen in inbox";
-				else archiveerBtn.append("Terugplaatsen in inbox");
-			}
+			zetKnopLabel(content.querySelector('[data-actie="archiveren"]'), "Terugplaatsen in inbox");
+		}
+
+		// Staat het in de prullenbak, dan is verwijderen al gebeurd. De knop biedt dan de weg terug:
+		// verwijderen wist ook de archief-markering, dus het bericht belandt in de inbox en niet in
+		// het archief waar het misschien vandaan kwam. Dat is wat de knop zegt.
+		if (statusVan(berichtId) === "prullenbak") {
+			zetKnopLabel(content.querySelector('[data-actie="verwijderen"]'), "Terugzetten in inbox");
 		}
 
 		content.querySelectorAll("[data-actie]").forEach((btn) => {
@@ -1438,8 +1449,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					if (!opslaan(herstelStatus)) return;
 					navigeerNaar(url(berichtenboxBasis()));
 				} else if (actie === "verwijderen") {
-					state.verwijderd[berichtId] = true;
-					delete state.gearchiveerd[berichtId];
+					if (statusVan(berichtId) === "prullenbak") {
+						// Terugzetten. Alleen de verwijder-markering weg: de archief-markering is bij het
+						// weggooien gewist en die terugzetten zou het bericht laten verdwijnen in een map
+						// waar de bezoeker het net niet vandaan haalde.
+						delete state.verwijderd[berichtId];
+					} else {
+						state.verwijderd[berichtId] = true;
+						delete state.gearchiveerd[berichtId];
+					}
 					if (!opslaan(herstelStatus)) return;
 					navigeerNaar(url(berichtenboxBasis()));
 				} else if (actie === "markeer-ongelezen") {
