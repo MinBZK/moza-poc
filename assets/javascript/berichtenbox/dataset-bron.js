@@ -71,7 +71,8 @@ function tussenpoos() {
  * @param data                  window.berichtenboxData
  * @param opties.state          Om binnengekomen berichten en het eerste bezoek te bewaren.
  * @param opties.limiet         Hoeveel binnengedruppelde berichten er hoogstens bewaard blijven.
- * @param opties.magOphalen     Of polling op deze pagina zinnig is.
+ * @param opties.magOphalen     Of deze pagina een bronwijziging kan laten zien. Bepaalt zowel of er
+ *                              berichten binnendruppelen als of een uitval hier mag beginnen.
  * @param opties.meldStoring    Waar een melding aan de bezoeker terechtkomt.
  * @param opties.zichtbaarheid  Wat de bezoeker straks écht ziet: `statusVan`, `magazijnDoorOrgFilter`,
  *                              `magazijnToegestaan`, `persoonRelevant`. De animatie moet op díe

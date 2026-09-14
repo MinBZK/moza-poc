@@ -32,9 +32,14 @@ function zetKeten({ bezig = true, aangesloten = true, uitkomst, voortgang = null
 		berichten: () => (uitkomst === undefined ? wachten : Promise.resolve(uitkomst)),
 		opWijziging: (kijker) => kijkers.push(kijker),
 		meldVerwerkingsfout: vi.fn(),
+		stopPollen: vi.fn(),
 	};
 
 	return {
+		/** Een nieuwe uitkomst van het transport, zoals de pollcyclus die meldt. */
+		meldUitkomst(u) {
+			kijkers.forEach((k) => k({ melding: null, voortgang: null, uitkomst: u }));
+		},
 		meldVoortgang(v) {
 			window.BerichtenboxKeten.voortgang = v;
 			kijkers.forEach((k) => k({ melding: null, voortgang: v, uitkomst: null }));
@@ -372,5 +377,57 @@ describe("de keten levert de lijst", () => {
 		expect(blok().hidden).toBe(true);
 		expect(lijst().hidden).toBe(false);
 		expect(rijen()).toHaveLength(2);
+	});
+});
+
+describe("berichten die binnenkomen terwijl de berichtenbox openstaat", () => {
+	const MAGAZIJNEN = [
+		{ id: "kvk", naam: "KVK" },
+		{ id: "rdw", naam: "RDW" },
+	];
+	const BINNENKOMER = { id: "fbs-3", magazijnId: "kvk", afzender: "KVK", onderwerp: "Aanslag", datum: "2026-04-02", isOngelezen: true, map: null, inhoud: "", uitKeten: true };
+
+	const live = () => document.querySelector("[data-berichtenbox-live]").textContent;
+
+	it("zet een binnenkomer bovenaan de inbox en meldt hem", async () => {
+		bouwPagina([bericht()]);
+		const keten = zetKeten({ uitkomst: { berichten: UIT_DE_KETEN, magazijnen: MAGAZIJNEN } });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		keten.meldUitkomst({ berichten: [BINNENKOMER, ...UIT_DE_KETEN], magazijnen: MAGAZIJNEN });
+		await laatLaden();
+
+		expect(rijen()[0].textContent).toContain("Aanslag");
+		expect(live()).toContain("Aanslag");
+	});
+
+	it("meldt geen binnenkomer op een pagina waar hij niet staat", async () => {
+		// Een binnenkomer landt bovenaan pagina 1. Wie pagina 2 leest, krijgt anders "Nieuw bericht
+		// van KVK" te horen over een rij die daar niet staat.
+		bouwPagina([bericht()], { pad: "/moza/berichtenbox/?pagina=2" });
+		const keten = zetKeten({ uitkomst: { berichten: UIT_DE_KETEN, magazijnen: MAGAZIJNEN } });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		keten.meldUitkomst({ berichten: [BINNENKOMER, ...UIT_DE_KETEN], magazijnen: MAGAZIJNEN });
+		await laatLaden();
+
+		expect(live()).toBe("");
+	});
+});
+
+describe("een lading die mislukt", () => {
+	it("zet het kijken naar nieuwe berichten stil", async () => {
+		// Zonder brongedrag is er geen luisteraar meer: het transport zou blijven ophalen voor een
+		// scherm dat de uitkomst niet leest, en bij een verlopen sessie zelfs alle organisaties
+		// opnieuw bevragen.
+		bouwPagina([bericht()]);
+		zetKeten({ aangesloten: true, uitkomst: null });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(window.BerichtenboxKeten.stopPollen).toHaveBeenCalled();
 	});
 });
