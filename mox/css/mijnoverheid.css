@@ -15263,8 +15263,10 @@ body {
 
 /* AANPASSINGEN PROTOTYPE */
 
+/* Alleen pagina's met de Privé/Zakelijk-tabs krijgen de witte balk bovenaan;
+   zonder tabs staat het Rijksoverheid-lint direct over de achtergrondfoto. */
 .mo-header {
-	.container:first-child {
+	.container:first-child:has(.mobu-moza-tabs) {
 		background: #fff !important;
 		max-inline-size: 100%;
 	}
@@ -15313,6 +15315,33 @@ body {
 	.lo-alert__content .lo-link, .lo-card__content a, .color-lochmara {
 		color: #154273;
 	}
+}
+
+/* Het MOZa-menu heeft één lijst met één item. De MijnOverheid-CSS behandelt de
+   laatste lo-menu__list als de grijze balk onderaan een langer menu en verbergt
+   daarin het laatste item — met één lijst raakt dat precies het enige item. */
+.mo-main-menu .lo-menu__list:first-of-type:last-of-type {
+	background-color: transparent;
+	display: block;
+	margin: 0 0 24px;
+}
+.mo-main-menu .lo-menu__list:first-of-type:last-of-type .lo-menu__item {
+	border-radius: 8px;
+	margin-block-end: 8px;
+}
+.mo-main-menu .lo-menu__list:first-of-type:last-of-type .lo-menu__item:last-of-type {
+	display: block;
+}
+.mo-main-menu .lo-menu__list:first-of-type:last-of-type .lo-menu__link {
+	font-size: 18px;
+	font-weight: normal;
+	margin-inline-start: 0;
+	padding: 4px 24px 4px 52px;
+}
+.mo-main-menu .lo-menu__list:first-of-type:last-of-type .lo-menu__icon {
+	block-size: 20px;
+	inline-size: 20px;
+	inset-inline-start: 16px;
 }
 
 .lo-button-eherkenning {
