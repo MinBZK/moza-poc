@@ -15344,6 +15344,80 @@ body {
 	inset-inline-start: 16px;
 }
 
+/* De gekozen organisatie in de balk bovenaan, met een lijst om te wisselen.
+   Een <details> in plaats van eigen JavaScript: openen, sluiten en bediening
+   met het toetsenbord doet de browser zelf. */
+.mox-organisatie {
+	position: relative;
+}
+.mox-organisatie > summary {
+	cursor: pointer;
+	font-weight: bold;
+	list-style: none;
+	padding-inline-end: 20px;
+	position: relative;
+}
+.mox-organisatie > summary::-webkit-details-marker {
+	display: none;
+}
+.mox-organisatie > summary::after {
+	background: url("../packages/ui/assets/images/icons/chevron down blue.svg") no-repeat center / contain;
+	block-size: 12px;
+	content: "";
+	inline-size: 12px;
+	inset-block-start: 50%;
+	inset-inline-end: 0;
+	position: absolute;
+	transform: translateY(-50%);
+}
+.mox-organisatie[open] > summary::after {
+	transform: translateY(-50%) rotate(180deg);
+}
+.mox-organisatie__lijst {
+	background-color: #fff;
+	border-radius: 8px;
+	box-shadow: 0 0 6px rgb(0 0 0 / 16%);
+	inset-block-start: 100%;
+	inset-inline-end: 0;
+	list-style: none;
+	margin: 4px 0 0;
+	min-inline-size: 100%;
+	padding: 8px 0;
+	position: absolute;
+	white-space: nowrap;
+	z-index: 100;
+}
+.mox-organisatie__lijst li {
+	margin: 0;
+	padding: 0;
+}
+.mox-organisatie__lijst a,
+.mox-organisatie__lijst span {
+	display: block;
+	padding: 8px 16px;
+	text-decoration: none;
+}
+.mox-organisatie__lijst a:hover,
+.mox-organisatie__lijst a:focus {
+	background-color: #f3f3f3;
+}
+.mox-organisatie__lijst [aria-current] {
+	font-weight: bold;
+}
+
+/* Keuzescherm: de organisaties als volledige knoppen onder elkaar. */
+.mox-keuzelijst {
+	list-style: none;
+	margin-inline: 0;
+	padding-inline: 0;
+}
+.mox-keuzelijst .lo-button__label span {
+	color: #696969;
+	display: block;
+	font-size: 14px;
+	font-weight: normal;
+}
+
 .lo-button-eherkenning {
 	background-color: #de0367;
 	margin-block-start: 16px;
