@@ -183,7 +183,8 @@ ${storing}
 			<button class="icon-button" data-actie="markeren" aria-pressed="false">Markeren</button>
 			<button class="icon-button" data-actie="markeer-ongelezen"><svg></svg>Markeer als ongelezen</button>
 			<button class="icon-button" data-actie="archiveren">Archiveren</button>
-			<button class="icon-button" data-actie="verwijderen">Verwijderen</button>
+			<button class="icon-button" data-actie="verwijderen"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 10h44v44H10z"/></svg>Verwijderen</button>
+			<button class="icon-button" data-actie="voorgoed-verwijderen" hidden aria-expanded="false"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 10h44v44H10z"/></svg>Voorgoed verwijderen</button>
 		</div>
 	</section>
 </article>
