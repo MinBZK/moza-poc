@@ -887,6 +887,105 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		actieveVerplaatsKnop = knop;
 	}
 
+	// Voorgoed verwijderen kan niet teruggedraaid worden, dus het gaat niet op één klik. Zelfde
+	// inline-paneel als bij verplaatsen: het hoort bij de knop waarop geklikt is, en niet bij de
+	// pagina als geheel. Sluit met Escape, met Annuleren, of door buiten het paneel te klikken.
+	let actiefVoorgoedPaneel = null;
+	let actieveVoorgoedKnop = null;
+
+	function sluitVoorgoedPaneel({ focusTerug = false } = {}) {
+		if (!actiefVoorgoedPaneel) return;
+		const knop = actieveVoorgoedKnop;
+		actiefVoorgoedPaneel.remove();
+		if (knop) knop.setAttribute("aria-expanded", "false");
+		actiefVoorgoedPaneel = null;
+		actieveVoorgoedKnop = null;
+		// Na Escape of Annuleren hoort de focus terug bij de knop; anders valt hij terug naar het
+		// begin van de pagina en is de bezoeker zijn plek kwijt.
+		if (focusTerug && knop) knop.focus();
+	}
+
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && actiefVoorgoedPaneel) sluitVoorgoedPaneel({ focusTerug: true });
+	});
+	document.addEventListener("click", (e) => {
+		if (!actiefVoorgoedPaneel) return;
+		if (actiefVoorgoedPaneel.contains(e.target)) return;
+		if (actieveVoorgoedKnop && actieveVoorgoedKnop.contains(e.target)) return;
+		sluitVoorgoedPaneel();
+	});
+
+	function toonVoorgoedPaneel(berichtId, knop) {
+		if (actiefVoorgoedPaneel) {
+			sluitVoorgoedPaneel({ focusTerug: true });
+			return;
+		}
+
+		const paneel = document.createElement("div");
+		paneel.className = "berichtenbox-move-panel";
+		paneel.setAttribute("role", "group");
+		paneel.setAttribute("aria-label", "Bericht voorgoed verwijderen");
+		paneel.dataset.voorgoedPaneel = "";
+
+		const vraag = document.createElement("p");
+		vraag.textContent = "Dit bericht voorgoed verwijderen?";
+		const uitleg = document.createElement("p");
+		uitleg.textContent = "U kunt het daarna niet meer terugzetten.";
+		paneel.appendChild(vraag);
+		paneel.appendChild(uitleg);
+
+		const acties = document.createElement("div");
+		acties.className = "action-group";
+
+		const bevestig = document.createElement("button");
+		bevestig.type = "button";
+		bevestig.className = "negative";
+		bevestig.textContent = "Voorgoed verwijderen";
+		bevestig.dataset.voorgoedBevestig = "";
+
+		const annuleer = document.createElement("button");
+		annuleer.type = "button";
+		annuleer.className = "secondary";
+		annuleer.textContent = "Annuleren";
+
+		bevestig.addEventListener("click", () => {
+			const voorVoorgoed = state.voorgoedVerwijderd[berichtId];
+			state.voorgoedVerwijderd[berichtId] = true;
+
+			// Niets doen alsof: lukt het bewaren niet, dan blijft het paneel staan en staat het
+			// bericht na een verversing gewoon weer in de prullenbak.
+			if (
+				!opslaan(() => {
+					if (voorVoorgoed === undefined) delete state.voorgoedVerwijderd[berichtId];
+					else state.voorgoedVerwijderd[berichtId] = voorVoorgoed;
+				})
+			)
+				return;
+
+			sluitVoorgoedPaneel();
+			// Terug naar de prullenbak en niet naar de inbox: daar kwam de bezoeker vandaan, en daar
+			// is te zien dat het bericht er niet meer staat.
+			navigeerNaar(url(berichtenboxBasis() + "berichtenbox-prullenbak/"));
+		});
+
+		annuleer.addEventListener("click", () => sluitVoorgoedPaneel({ focusTerug: true }));
+
+		acties.appendChild(bevestig);
+		acties.appendChild(annuleer);
+		paneel.appendChild(acties);
+
+		const actionGroup = knop.closest(".action-group, .action-options");
+		if (actionGroup) actionGroup.parentNode.insertBefore(paneel, actionGroup.nextSibling);
+		else knop.parentNode.insertBefore(paneel, knop.nextSibling);
+
+		knop.setAttribute("aria-expanded", "true");
+		actiefVoorgoedPaneel = paneel;
+		actieveVoorgoedKnop = knop;
+		// De vraag staat in het paneel; zonder de focus daarheen te verplaatsen hoort een
+		// schermlezergebruiker hem niet en staat hij nog bij de knop die hij net indrukte.
+		bevestig.focus();
+	}
+
 	function updateMapLabelDetail(mapSlug) {
 		const meta = document.querySelector(".berichtenbox-detail-meta [data-maplabel]");
 		if (!mapSlug) {
@@ -1401,6 +1500,21 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			else btn.append(tekst);
 		}
 
+		// Hetzelfde icoon als in de navigatie naar de Berichtenbox: `assets/icons/icon-berichtenbox.svg`.
+		// Hier inline, want dit icoon komt pas in beeld nadat JavaScript weet waar het bericht staat,
+		// en de icoon-shortcode van Eleventy draait alleen bij de build. `aria-hidden` omdat de knop
+		// zijn naam uit zijn tekst haalt.
+		const ICOON_BERICHTENBOX =
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" /><path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" /></svg>';
+
+		// Alleen het icoon vervangen, de tekst en de visually-hidden span laten staan.
+		function zetKnopIcoon(btn, svg) {
+			if (!btn) return;
+			const oud = btn.querySelector("svg");
+			if (oud) oud.outerHTML = svg;
+			else btn.insertAdjacentHTML("afterbegin", svg);
+		}
+
 		// Zit het bericht al in Archief, dan wordt "Archiveren" "Terugplaatsen in inbox".
 		if (statusVan(berichtId) === "archief") {
 			zetKnopLabel(content.querySelector('[data-actie="archiveren"]'), "Terugplaatsen in inbox");
@@ -1410,7 +1524,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// verwijderen wist ook de archief-markering, dus het bericht belandt in de inbox en niet in
 		// het archief waar het misschien vandaan kwam. Dat is wat de knop zegt.
 		if (statusVan(berichtId) === "prullenbak") {
-			zetKnopLabel(content.querySelector('[data-actie="verwijderen"]'), "Terugzetten in inbox");
+			const terugKnop = content.querySelector('[data-actie="verwijderen"]');
+			zetKnopLabel(terugKnop, "Terugzetten");
+			// Icoon én kleur horen bij de handeling, niet bij de knop. Een prullenbak met "Terugzetten
+			// in inbox" ernaast zegt het tegenovergestelde van wat er gebeurt, en het rood van
+			// verwijderen waarschuwt voor iets wat hier juist ongedaan gemaakt wordt.
+			zetKnopIcoon(terugKnop, ICOON_BERICHTENBOX);
+			if (terugKnop) terugKnop.dataset.terugzetten = "";
+
+			// Alleen hier heeft voorgoed verwijderen betekenis: elders zou het een stap overslaan die
+			// de bezoeker juist de kans geeft zich te bedenken.
+			const voorgoedKnop = content.querySelector('[data-actie="voorgoed-verwijderen"]');
+			if (voorgoedKnop) voorgoedKnop.hidden = false;
 		}
 
 		content.querySelectorAll("[data-actie]").forEach((btn) => {
@@ -1460,6 +1585,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					}
 					if (!opslaan(herstelStatus)) return;
 					navigeerNaar(url(berichtenboxBasis()));
+				} else if (actie === "voorgoed-verwijderen") {
+					// Onomkeerbaar, dus eerst vragen. Het paneel doet de wijziging zelf zodra de
+					// bezoeker bevestigt; hier houdt het op.
+					toonVoorgoedPaneel(berichtId, btn);
 				} else if (actie === "markeer-ongelezen") {
 					// Toggle gelezen/ongelezen; geen navigatie, blijf op het bericht.
 					const wordtOngelezen = !isOngelezen(berichtId, false);

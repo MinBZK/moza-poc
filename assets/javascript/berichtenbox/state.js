@@ -23,7 +23,7 @@ export const LS_KEY = "berichtenbox";
 /** Meer dan dit aantal binnengedruppelde berichten bewaren heeft geen demo-waarde. */
 export const NIEUWE_BERICHTEN_LIMIET = 5;
 
-const SLEUTELS_MET_OBJECT = ["gelezen", "ongelezenToegevoegd", "gearchiveerd", "verwijderd", "gemarkeerd", "mapOverride"];
+const SLEUTELS_MET_OBJECT = ["gelezen", "ongelezenToegevoegd", "gearchiveerd", "verwijderd", "voorgoedVerwijderd", "gemarkeerd", "mapOverride"];
 
 function defaults() {
 	return {
@@ -34,6 +34,9 @@ function defaults() {
 		ongelezenToegevoegd: {},
 		gearchiveerd: {},
 		verwijderd: {},
+		// Uit de prullenbak gehaald door de bezoeker zelf. Blijft als markering staan: de berichten
+		// komen bij elke lading opnieuw uit de bron, dus zonder dit zouden ze weer verschijnen.
+		voorgoedVerwijderd: {},
 		gemarkeerd: {},
 		mapOverride: {},
 		eigenMappen: [],
@@ -139,6 +142,9 @@ export function maakState(opslag, persona = null) {
 		},
 
 		statusVan(berichtId) {
+			// Vóór de rest: dit bericht hoort nergens meer te staan, ook niet in de prullenbak waar
+			// het vandaan kwam. Elke weergave filtert op zijn eigen naam, dus "weg" valt overal af.
+			if (ruw.voorgoedVerwijderd[berichtId]) return "weg";
 			if (ruw.verwijderd[berichtId]) return "prullenbak";
 			if (ruw.gearchiveerd[berichtId]) return "archief";
 			return "inbox";

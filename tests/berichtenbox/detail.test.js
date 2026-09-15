@@ -229,6 +229,33 @@ describe("detailpagina — verwijderen ongedaan maken", () => {
 		expect(verwijderKnop().textContent).toContain("Verwijderen");
 	});
 
+	it("ruilt de prullenbak in voor het berichtenbox-icoon", async () => {
+		// Een prullenbak naast "Terugzetten in inbox" zegt het tegenovergestelde van wat er gebeurt.
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		const svg = verwijderKnop().querySelector("svg");
+		expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+		expect(verwijderKnop().querySelectorAll("svg")).toHaveLength(1);
+	});
+
+	it("laat het rood van verwijderen los", async () => {
+		// De CSS kleurt `[data-actie="verwijderen"]:not([data-terugzetten])`; deze markering haalt de
+		// waarschuwingskleur eraf, want hier wordt niets weggegooid.
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		expect(verwijderKnop().hasAttribute("data-terugzetten")).toBe(true);
+	});
+
+	it("houdt icoon en kleur zoals ze waren bij een gewoon bericht", async () => {
+		const b = bericht();
+		await toonBericht(b);
+
+		expect(verwijderKnop().querySelector("svg").getAttribute("viewBox")).toBe("0 0 64 64");
+		expect(verwijderKnop().hasAttribute("data-terugzetten")).toBe(false);
+	});
+
 	it("zet het bericht terug in de inbox", async () => {
 		const b = bericht();
 		await toonBericht(b, { verwijderd: { [b.id]: true } });
@@ -263,5 +290,90 @@ describe("detailpagina — verwijderen ongedaan maken", () => {
 		// meenemen naar een pagina waar het bericht gewoon nog in de prullenbak staat.
 		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");
 		expect(window.Berichtenbox.navigatieDoel()).toBe(null);
+	});
+});
+
+/**
+ * Uit de prullenbak halen kan twee kanten op: terug in de inbox, of voorgoed weg. Dat tweede is niet
+ * terug te draaien, dus het gaat niet op één klik en het bericht verdwijnt daarna uit élke weergave.
+ */
+describe("detailpagina — voorgoed verwijderen", () => {
+	const voorgoedKnop = () => document.querySelector('[data-actie="voorgoed-verwijderen"]');
+	const paneel = () => document.querySelector("[data-voorgoed-paneel]");
+	const bevestigKnop = () => document.querySelector("[data-voorgoed-bevestig]");
+
+	async function toonBericht(b, state) {
+		bouwDetailPagina(b, state ? { state } : {});
+		await laadBerichtenbox();
+		await laatLaden();
+	}
+
+	it("toont de knop alleen als het bericht in de prullenbak staat", async () => {
+		const b = bericht();
+		await toonBericht(b);
+		expect(voorgoedKnop().hidden).toBe(true);
+
+		await toonBericht(bericht(), { verwijderd: {} });
+		expect(voorgoedKnop().hidden).toBe(true);
+	});
+
+	it("toont de knop in de prullenbak", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		expect(voorgoedKnop().hidden).toBe(false);
+	});
+
+	it("verwijdert niet op één klik, maar vraagt het eerst", async () => {
+		// Zonder deze tussenstap is één misklik genoeg om een bericht kwijt te zijn.
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		voorgoedKnop().click();
+
+		expect(paneel()).not.toBe(null);
+		expect(paneel().textContent).toContain("U kunt het daarna niet meer terugzetten.");
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");
+	});
+
+	it("laat het bericht uit elke weergave verdwijnen na bevestigen", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		voorgoedKnop().click();
+		bevestigKnop().click();
+
+		// "weg" is geen weergave, dus geen enkele lijst toont dit bericht nog.
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("weg");
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
+	});
+
+	it("doet niets als de bezoeker annuleert", async () => {
+		const b = bericht();
+		await toonBericht(b, { verwijderd: { [b.id]: true } });
+
+		voorgoedKnop().click();
+		[...paneel().querySelectorAll("button")].find((k) => k.textContent === "Annuleren").click();
+
+		expect(paneel()).toBe(null);
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");
+		expect(window.Berichtenbox.navigatieDoel()).toBe(null);
+	});
+
+	it("verwijdert niets als het bewaren mislukt", async () => {
+		const b = bericht();
+		bouwDetailPagina(b, { state: { verwijderd: { [b.id]: true } } });
+		opslagWeigert({ eersteBezoekGehad: true, verwijderd: { [b.id]: true } });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		voorgoedKnop().click();
+		bevestigKnop().click();
+
+		// Het paneel blijft staan en het bericht ook: anders lijkt het weg terwijl het na een
+		// verversing gewoon terug is.
+		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");
+		expect(window.Berichtenbox.navigatieDoel()).toBe(null);
+		expect(paneel()).not.toBe(null);
 	});
 });
