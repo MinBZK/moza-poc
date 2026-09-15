@@ -52,7 +52,7 @@ eleventyExcludeFromCollections: true
 		<nav id="skiplink">
 			<ul>
 				<li>
-					<a href="#main_content" tabindex="1" title="Direct naar de inhoud">Ga direct naar: inhoud</a>
+					<a href="#main_content" tabindex="1" title="Direct naar de inhoud"> Ga direct naar: inhoud </a>
 				</li>
 			</ul>
 		</nav>
@@ -61,36 +61,29 @@ eleventyExcludeFromCollections: true
 				<header class="header">
 					<div>
 						<label class="sr-only" for="language-select">Kies taal</label>
-						<select id="language-select" class="service-menu" name="language-select">
+						<select name="language-select" id="language-select" class="service-menu">
 							<option selected="selected" value="nl">Nederlands</option>
 							<option value="en">English (Engels)</option>
 							<option value="pap">Papiamentu (Papiamentu)</option>
 						</select>
 
-						<a href="#">
-							<img class="rijksoverheid-logo" alt="Logo Rijksoverheid - Ga naar www.digid.nl" title="Logo Rijksoverheid - Ga naar www.digid.nl" src="/assets/inloggen/images/ro-logo.svg" />
-						</a>
+						<a href="#"><img alt="Logo Rijksoverheid - Ga naar www.digid.nl" class="rijksoverheid-logo" title="Logo Rijksoverheid - Ga naar www.digid.nl" src="/assets/inloggen/images/ro-logo.svg" /></a>
 						<nav class="header-navigation"></nav>
 					</div>
 					<div class="margin-top-15px"></div>
 				</header>
 				<div class="main">
-					<img class="mydigid-logo" alt="DigiD" title="DigiD" src="/assets/inloggen/images/digid-logo.svg" />
-					<section id="main_content" class="main-content no-outline" tabindex="-1">
+					<img alt="DigiD" class="mydigid-logo" title="DigiD" src="/assets/inloggen/images/digid-logo.svg" />
+					<section class="main-content no-outline" id="main_content" tabindex="-1">
 						<div class="heading_with_icon">
-							<h1 class="h2">
-								<img class="digid-logo" alt="DigiD" src="/assets/inloggen/images/digid-logo.svg" />
-								<strong>Inloggen bij</strong>
-								<br />
-								Mijn DigiD
-							</h1>
+							<h1 class="h2"><img alt="DigiD" class="digid-logo" src="/assets/inloggen/images/digid-logo.svg" /><strong>Inloggen bij</strong><br />Mijn DigiD</h1>
 						</div>
 
-						<h2 id="authentication_heading" class="orange_heading">Hoe wilt u inloggen?</h2>
-						<p id="session_countdown" aria-live="assertive" data-finished='&lt;strong&gt;Helaas kunt u niet verder:&lt;/strong&gt;&lt;br /&gt; Er was langer dan 15 minuten geen activiteit in het scherm.&lt;br /&gt; &lt;br /&gt; Begin opnieuw met &lt;a href="#"&gt;Inloggen bij &lt;strong&gt;Mijn DigiD&lt;/strong&gt;&lt;/a&gt; of ga naar de homepage van DigiD (&lt;a href="#"&gt;www.digid.nl&lt;/a&gt;).&lt;br /&gt; &lt;br /&gt; Lukt het niet? &lt;ul class="parent"&gt; &lt;li&gt;Sluit en open de browser&lt;/li&gt; &lt;li&gt;Of verwijder de oude cookies en wis de browsergeschiedenis&lt;/li&gt; &lt;li&gt;Of log in via een andere browser&lt;/li&gt; &lt;/ul&gt;' data-minutes="15" data-progress="U heeft nog #countdown minuten om in te loggen. Daarna verloopt uw sessie.">U heeft nog tot 15:43 uur (Nederlandse tijd) om in te loggen. Daarna verloopt uw sessie.</p>
+						<h2 class="orange_heading" id="authentication_heading">Hoe wilt u inloggen?</h2>
+						<p aria-live="assertive" data-finished='&lt;strong&gt;Helaas kunt u niet verder:&lt;/strong&gt;&lt;br /&gt; Er was langer dan 15 minuten geen activiteit in het scherm.&lt;br /&gt; &lt;br /&gt; Begin opnieuw met &lt;a href="#"&gt;Inloggen bij &lt;strong&gt;Mijn DigiD&lt;/strong&gt;&lt;/a&gt; of ga naar de homepage van DigiD (&lt;a href="#"&gt;www.digid.nl&lt;/a&gt;).&lt;br /&gt; &lt;br /&gt; Lukt het niet? &lt;ul class="parent"&gt; &lt;li&gt;Sluit en open de browser&lt;/li&gt; &lt;li&gt;Of verwijder de oude cookies en wis de browsergeschiedenis&lt;/li&gt; &lt;li&gt;Of log in via een andere browser&lt;/li&gt; &lt;/ul&gt;' data-minutes="15" data-progress="U heeft nog #countdown minuten om in te loggen. Daarna verloopt uw sessie." id="session_countdown">U heeft nog tot 15:43 uur (Nederlandse tijd) om in te loggen. Daarna verloopt uw sessie.</p>
 
 						<div class="authentications">
-							<a id="authentication_type_account_app" class="authentication login_tile app active" aria-label="Inlogoptie 1 van 4: Inloggen Met de DigiD app" href="/inloggen/digid-app/zakelijk/">
+							<a aria-label="Inlogoptie 1 van 4: Inloggen Met de DigiD app" class="authentication login_tile app active" href="/inloggen/digid-app/zakelijk/" id="authentication_type_account_app">
 								<h2>
 									<span>Met de DigiD app</span>
 									<p class="description">De makkelijkste manier om veilig in te loggen</p>
@@ -98,7 +91,7 @@ eleventyExcludeFromCollections: true
 								<i class="icon-3941-delta-links-24px right" aria-hidden="true" aria-label="3941-delta-links- icoon"></i>
 							</a>
 
-							<a id="authentication_type_account_midden" class="authentication login_tile" aria-label="Inlogoptie 2 van 4: Inloggen Met een sms-controle" href="/inloggen/digid-app/zakelijk/">
+							<a aria-label="Inlogoptie 2 van 4: Inloggen Met een sms-controle" class="authentication login_tile" href="/inloggen/digid-app/zakelijk/" id="authentication_type_account_midden">
 								<h2>
 									<i class="icon-midden" aria-hidden="true" aria-label="midden icoon"></i>
 									<span>Met een sms-controle</span>
@@ -107,7 +100,7 @@ eleventyExcludeFromCollections: true
 								<i class="icon-3941-delta-links-24px right" aria-hidden="true" aria-label="3941-delta-links- icoon"></i>
 							</a>
 
-							<a id="authentication_type_account_hoog_driving_licence" class="authentication login_tile" aria-label="Inlogoptie 3 van 4: Inloggen Met mijn rijbewijs" href="/inloggen/digid-app/zakelijk/">
+							<a aria-label="Inlogoptie 3 van 4: Inloggen Met mijn rijbewijs" class="authentication login_tile" href="/inloggen/digid-app/zakelijk/" id="authentication_type_account_hoog_driving_licence">
 								<h2>
 									<i class="icon-hoog_driving_licence" aria-hidden="true" aria-label="hoog_driving_licence icoon"></i>
 									<span>Met mijn rijbewijs</span>
@@ -116,7 +109,7 @@ eleventyExcludeFromCollections: true
 								<i class="icon-3941-delta-links-24px right" aria-hidden="true" aria-label="3941-delta-links- icoon"></i>
 							</a>
 
-							<a id="authentication_type_account_hoog_id_card" class="authentication login_tile" aria-label="Inlogoptie 4 van 4: Inloggen Met mijn identiteitskaart" href="/inloggen/digid-app/zakelijk/">
+							<a aria-label="Inlogoptie 4 van 4: Inloggen Met mijn identiteitskaart" class="authentication login_tile" href="/inloggen/digid-app/zakelijk/" id="authentication_type_account_hoog_id_card">
 								<h2>
 									<i class="icon-hoog_id_card" aria-hidden="true" aria-label="hoog_id_card icoon"></i>
 									<span>Met mijn identiteitskaart</span>
@@ -126,10 +119,7 @@ eleventyExcludeFromCollections: true
 							</a>
 						</div>
 						<div class="actions">
-							<form class="button_to" method="post" action="#">
-								<button class="actions__left--button arrow" arrow="true" type="submit">Annuleren</button>
-								<input type="hidden" name="authenticity_token" value="WKOc5-C-ajBKU2cQRUvvcz5P9rT-vup7BbOT32K9_AlsBxx7qLfdcddE_F50m3u5NH3_rTPyxaCz9TQQ5aRBYQ" autocomplete="off" />
-							</form>
+							<form class="button_to" method="post" action="#"><button arrow="true" class="actions__left--button arrow" type="submit">Annuleren</button><input type="hidden" name="authenticity_token" value="WKOc5-C-ajBKU2cQRUvvcz5P9rT-vup7BbOT32K9_AlsBxx7qLfdcddE_F50m3u5NH3_rTPyxaCz9TQQ5aRBYQ" autocomplete="off" /></form>
 						</div>
 						Kunt u niet verder? Download dan de
 						<a target="_blank" href="#">DigiD app</a>
@@ -158,7 +148,11 @@ eleventyExcludeFromCollections: true
 							<div class="questions-answer">
 								<p>U kunt uw gebruikersnaam op twee manieren opvragen. U kunt inloggen in Mijn DigiD met een geactiveerde DigiD app. Daar kunt u uw gebruikersnaam bekijken. Of u kunt uw BSN en DigiD-wachtwoord invullen om uw gebruikersnaam op te vragen. Uw telefoonnummer en e-mailadres moeten wel bij DigiD bekend zijn.</p>
 
-								<p>Klik <a href="#">hier</a> om uw gebruikersnaam op te vragen.</p>
+								<p>
+									Klik
+									<a href="#">hier</a>
+									om uw gebruikersnaam op te vragen.
+								</p>
 							</div>
 						</li>
 						<li class="questions-item">
@@ -178,12 +172,20 @@ eleventyExcludeFromCollections: true
 								<div class="accessibility__information">Dit antwoord is momenteel verborgen. Selecteer de vraag om het antwoord te openen.</div>
 							</a>
 							<div class="questions-answer">
-								<p>Download de app alleen via de officiële stores. Voordat u de app kunt gebruiken, moet u deze activeren. Meer informatie vindt u op <a href="#">www.digid.nl</a></p>
+								<p>
+									Download de app alleen via de officiële stores. Voordat u de app kunt gebruiken, moet u deze activeren. Meer informatie vindt u op
+									<a href="#">www.digid.nl</a>
+								</p>
 							</div>
 						</li>
 					</ul>
 					<h4>Geen antwoord op uw vraag?</h4>
-					<p><a target="_blank" href="#">Bekijk de DigiD website</a> [opent in een nieuw venster] of <a target="_blank" href="#">neem contact op</a> [opent in een nieuw venster] met de DigiD helpdesk.</p>
+					<p>
+						<a target="_blank" href="#">Bekijk de DigiD website</a>
+						[opent in een nieuw venster] of
+						<a target="_blank" href="#">neem contact op</a>
+						[opent in een nieuw venster] met de DigiD helpdesk.
+					</p>
 				</div>
 			</footer>
 		</div>
