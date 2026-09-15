@@ -15405,6 +15405,23 @@ body {
 	font-weight: bold;
 }
 
+/* Onder sm verbergt het design system het hele gebruikersmenu. Daar staat de
+   switch in het uitklapmenu, en schuift de lijst de rest gewoon naar beneden
+   in plaats van eroverheen te zweven. */
+.mox-organisatie--in-menu {
+	background-color: #fff;
+	inline-size: 288px;
+	margin: 0;
+	padding: 0 24px 8px 4px;
+}
+.mox-organisatie--in-menu .mox-organisatie__lijst {
+	box-shadow: none;
+	inset-inline-end: auto;
+	margin: 0;
+	padding: 4px 0 0;
+	position: static;
+}
+
 /* Keuzescherm: de organisaties als volledige knoppen onder elkaar. */
 .mox-keuzelijst {
 	list-style: none;

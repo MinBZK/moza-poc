@@ -111,6 +111,28 @@ permalink: "/mox/kvk-gegevens-{{ organisatie.slug }}.html"
 									</div>
 								</div>
 
+								<details class="mox-organisatie mox-organisatie--in-menu d-md-none">
+									<summary>
+										<span class="sr-only">Gekozen organisatie:</span>
+										{{ organisatie.naam }}
+									</summary>
+									<ul class="mox-organisatie__lijst">
+										{%- for o in moxOrganisaties.organisaties %}
+											<li>
+												{%- if o.slug == organisatie.slug %}
+													<span aria-current="true">
+														{{ o.naam }}
+													</span>
+												{%- else %}
+													<a href="{{ ('/mox/kvk-gegevens-' + o.slug + '.html') | url }}">
+														{{ o.naam }}
+													</a>
+												{%- endif %}
+											</li>
+										{%- endfor %}
+									</ul>
+								</details>
+
 								<nav id="main-menu" class="lo-menu lo-menu--primary" aria-labelledby="main-menu-title">
 									<span id="main-menu-title" class="sr-only">Hoofdmenu</span>
 
