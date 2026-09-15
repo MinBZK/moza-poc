@@ -2,38 +2,24 @@
  * kvk-gegevens.js
  *
  * De KVK-pagina op de echte MijnOverheid is Vue; in dit prototype is het platte
- * HTML. Twee dingen moeten dan alsnog werken: het open- en dichtklappen van een
- * organisatie, en de ⓘ-knop die de uitleg bij een veld toont.
+ * HTML. Twee dingen moeten dan alsnog werken: de ⓘ-knop die de uitleg bij een
+ * veld toont, en het menu op smalle schermen.
  *
  * Eén listener op document in plaats van per knop: dat blijft werken als er
- * later organisaties of velden bij komen.
+ * later velden bij komen.
  */
 
 (function () {
 	"use strict";
 
-	function toggle(button) {
-		var panel = document.getElementById(button.getAttribute("aria-controls"));
-		if (!panel) return;
-		var open = button.getAttribute("aria-expanded") === "true";
-		button.setAttribute("aria-expanded", String(!open));
-		panel.hidden = open;
-		return !open;
-	}
-
 	document.addEventListener("click", function (e) {
-		var accordion = e.target.closest(".lo-accordion-item__toggle-btn");
-		if (accordion) {
-			var open = toggle(accordion);
-			var icon = accordion.querySelector(".lo-accordion-item__icon");
-			if (icon) icon.classList.toggle("lo-accordion-item__icon--rotated", open);
-			accordion.closest(".lo-accordion-item").classList.toggle("lo-accordion-item--opened", open);
-			return;
-		}
-
 		var info = e.target.closest(".lo-auxiliary-list__button");
 		if (info) {
-			toggle(info);
+			var panel = document.getElementById(info.getAttribute("aria-controls"));
+			if (!panel) return;
+			var open = info.getAttribute("aria-expanded") === "true";
+			info.setAttribute("aria-expanded", String(!open));
+			panel.hidden = open;
 			return;
 		}
 

@@ -1,5 +1,9 @@
 ---
-permalink: /mox/kvk-gegevens.html
+pagination:
+  data: moxOrganisaties.organisaties
+  size: 1
+  alias: organisatie
+permalink: "/mox/kvk-gegevens-{{ organisatie.slug }}.html"
 ---
 
 <!doctype html>
@@ -34,6 +38,7 @@ permalink: /mox/kvk-gegevens.html
 		</div> -->
 
 	<body class="moza">
+	<body class="moza">
 		<div id="mijnoverheid" class="mo-container">
 			<a class="lo-link lo-link--skip" href="#skip-content">Naar hoofdinhoud</a>
 
@@ -43,7 +48,7 @@ permalink: /mox/kvk-gegevens.html
 						<div class="col">
 							<a class="position-absolute top-0 right-0 mt-2 font-size-16 color-mine-shaft lo-link mo-language-link mr-3" href="{{ '/mox/about/' | url }}" title="" aria-label="English">English</a>
 
-							<a class="mo-header__logo" href="{{ '/mox/kvk-gegevens.html' | url }}" title="Ga terug naar de homepagina van MijnOverheid Zakelijk">
+							<a class="mo-header__logo" href="{{ '/mox/kiezen.html' | url }}" title="Ga terug naar de homepagina van MijnOverheid Zakelijk">
 								<div class="ro-banner">
 									<div class="ro-banner__crest" aria-label="Logo Rijksoverheid op blauwe achtergrond" role="img" data-pin-nopin="true"></div>
 								</div>
@@ -56,11 +61,33 @@ permalink: /mox/kvk-gegevens.html
 							<nav id="gebruikers-menu" class="mo-user-menu d-none d-sm-block mr-md-3" aria-labelledby="gebruikers-menu-title">
 								<span id="gebruikers-menu-title" class="sr-only">Gebruikersmenu</span>
 
-								<div class="mo-menu__item mo-user-menu__username d-inline-block mr-0 mr-md-6">
+								<div class="mo-menu__item mo-user-menu__username d-inline-block mr-0 mr-md-4">
 									<span class="lo-button__icon"><i class="lo-icon lo-icon--user lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
 									<span class="sr-only">Uw gebruikersnaam:</span>
 									R. Bakker
 								</div>
+
+								<details class="mox-organisatie mo-menu__item d-none d-md-inline-block mr-md-6">
+									<summary>
+										<span class="sr-only">Gekozen organisatie:</span>
+										{{ organisatie.naam }}
+									</summary>
+									<ul class="mox-organisatie__lijst">
+										{%- for o in moxOrganisaties.organisaties %}
+											<li>
+												{%- if o.slug == organisatie.slug %}
+													<span aria-current="true">
+														{{ o.naam }}
+													</span>
+												{%- else %}
+													<a href="{{ ('/mox/kvk-gegevens-' + o.slug + '.html') | url }}">
+														{{ o.naam }}
+													</a>
+												{%- endif %}
+											</li>
+										{%- endfor %}
+									</ul>
+								</details>
 
 								<div class="mo-menu__item mo-user-menu__logout d-none d-md-inline-block">
 									<a class="lo-button lo-button--align-right lo-button--with-icon-left" href="{{ '/mox/index.html' | url }}" title="Uitloggen"><span class="lo-button__icon lo-button__icon--left"><i class="lo-icon lo-icon--logout-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span> <span class="lo-button__label">Uitloggen</span></a>
@@ -84,12 +111,34 @@ permalink: /mox/kvk-gegevens.html
 									</div>
 								</div>
 
+								<details class="mox-organisatie mox-organisatie--in-menu d-md-none">
+									<summary>
+										<span class="sr-only">Gekozen organisatie:</span>
+										{{ organisatie.naam }}
+									</summary>
+									<ul class="mox-organisatie__lijst">
+										{%- for o in moxOrganisaties.organisaties %}
+											<li>
+												{%- if o.slug == organisatie.slug %}
+													<span aria-current="true">
+														{{ o.naam }}
+													</span>
+												{%- else %}
+													<a href="{{ ('/mox/kvk-gegevens-' + o.slug + '.html') | url }}">
+														{{ o.naam }}
+													</a>
+												{%- endif %}
+											</li>
+										{%- endfor %}
+									</ul>
+								</details>
+
 								<nav id="main-menu" class="lo-menu lo-menu--primary" aria-labelledby="main-menu-title">
 									<span id="main-menu-title" class="sr-only">Hoofdmenu</span>
 
 									<ul class="lo-menu__list">
 										<li class="lo-menu__item lo-menu__item--active">
-											<a class="lo-menu__link" href="{{ '/mox/kvk-gegevens.html' | url }}" aria-current="page">KVK-gegevens <span class="sr-only">- Huidige pagina</span> <span class="lo-menu__icon"><i class="lo-icon lo-icon--career-blue lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span></a>
+											<a class="lo-menu__link" href="{{ ('/mox/kvk-gegevens-' + organisatie.slug + '.html') | url }}" aria-current="page">KVK-gegevens <span class="sr-only">- Huidige pagina</span> <span class="lo-menu__icon"><i class="lo-icon lo-icon--career-blue lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span></a>
 										</li>
 									</ul>
 								</nav>
@@ -101,7 +150,7 @@ permalink: /mox/kvk-gegevens.html
 								<span id="breadcrumbs-title" class="sr-only">Kruimelpad</span>
 								<ul class="lo-breadcrumb__list">
 									<li class="lo-breadcrumb__item">
-										<a class="lo-breadcrumb__link" href="{{ '/mox/kvk-gegevens.html' | url }}" title="Home">Home</a>
+										<a class="lo-breadcrumb__link" href="{{ '/mox/kiezen.html' | url }}" title="Home">Home</a>
 									</li>
 									<li class="lo-breadcrumb__item">
 										<span class="lo-breadcrumb__text">KVK</span>
@@ -116,181 +165,84 @@ permalink: /mox/kvk-gegevens.html
 									<div class="col-12 col-xl-8">
 										<div class="lo-card">
 											<div class="lo-card__content">
-												<p>Hieronder staan gegevens van organisaties waarin u genoemd staat. Heeft u vragen over deze gegevens? Of wilt u ze aanpassen? Neem dan contact op met KVK. Hun contactinformatie vindt u op deze pagina.</p>
+												<h2>{{ organisatie.naam }}</h2>
+												<p>Hieronder staan de gegevens die KVK over deze organisatie heeft. Heeft u vragen over deze gegevens? Of wilt u ze aanpassen? Neem dan contact op met KVK. Hun contactinformatie vindt u op deze pagina.</p>
 
-												<div class="lo-accordion-infolist my-3" aria-live="polite">
-													<div id="organisatie-001" class="lo-accordion-item lo-accordion-item--opened">
-														<div class="lo-accordion-item__header">
-															<button class="lo-accordion-item__toggle-btn" type="button" aria-controls="organisatie-001-content" aria-expanded="true">
-																<i class="lo-icon lo-icon--chevron-right lo-accordion-item__icon lo-accordion-item__icon--rotated" aria-hidden="true"></i>
-																<div id="organisatie-001-title" class="lo-accordion-item__title">Stichting De juiste naam</div>
-															</button>
-														</div>
-
-														<div id="organisatie-001-content" class="lo-accordion-item__content" aria-labelledby="organisatie-001-title" role="region">
-															<div class="my-2">
-																<div class="container-fluid ml-0">
-																	<dl class="row lo-auxiliary-list">
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">KVK-nummer</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">50000004</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Handelsnaam</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			Stichting De juiste naam
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org1-handelsnaam-content" aria-expanded="false" aria-label="Informatie Handelsnaam"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org1-handelsnaam-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">Een handelsnaam is de naam van een bedrijf.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Rechtsvorm</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			Eenmanszaak
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org1-rechtsvorm-content" aria-expanded="false" aria-label="Informatie Rechtsvorm"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org1-rechtsvorm-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">Een rechtsvorm is de juridische vorm van een organisatie.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Functies</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">Eigenaar</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">SBI-code</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			0010 activiteiten code
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org1-sbi-content" aria-expanded="false" aria-label="Informatie SBI-code"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org1-sbi-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">De SBI-code is een cijfercode die alle bedrijven en organisaties krijgen, die duidelijk maakt wat hun activiteiten zijn. SBI staat voor Standaard Bedrijfsindeling.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Telefoonnummer</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">0031-0123456789</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">E-mailadres</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">mijn@overheid.nl</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Website</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.test.org" title="(opent in nieuw venster)">https://www.test.org</a>
-																		</dd>
-																	</dl>
-
-																	<p>
-																		Bekijk meer gegevens van Stichting De juiste naam op Mijn KVK:
-																		<br />
-																		<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.kvk.nl/mijn-kvk" title="(opent in nieuw venster)">https://www.kvk.nl/mijn-kvk</a>
-																	</p>
+												<div class="my-2">
+													<div class="container-fluid ml-0">
+														<dl class="row lo-auxiliary-list">
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">KVK-nummer</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">{{ organisatie.kvkNummer }}</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Handelsnaam</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
+																{{ organisatie.handelsnaam }}
+																<div class="lo-auxiliary-list__toggle">
+																	<button class="lo-auxiliary-list__button" type="button" aria-controls="uitleg-handelsnaam-content" aria-expanded="false" aria-label="Informatie Handelsnaam"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
 																</div>
-															</div>
-														</div>
-													</div>
-
-													<div id="organisatie-002" class="lo-accordion-item">
-														<div class="lo-accordion-item__header">
-															<button class="lo-accordion-item__toggle-btn" type="button" aria-controls="organisatie-002-content" aria-expanded="false">
-																<i class="lo-icon lo-icon--chevron-right lo-accordion-item__icon" aria-hidden="true"></i>
-																<div id="organisatie-002-title" class="lo-accordion-item__title">Bakker en De Wit VOF</div>
-															</button>
-														</div>
-
-														<div id="organisatie-002-content" class="lo-accordion-item__content" aria-labelledby="organisatie-002-title" role="region" hidden>
-															<div class="my-2">
-																<div class="container-fluid ml-0">
-																	<dl class="row lo-auxiliary-list">
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">KVK-nummer</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">50000005</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Handelsnaam</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			Bakker en De Wit VOF
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org2-handelsnaam-content" aria-expanded="false" aria-label="Informatie Handelsnaam"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org2-handelsnaam-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">Een handelsnaam is de naam van een bedrijf.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Rechtsvorm</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			Vennootschap onder firma
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org2-rechtsvorm-content" aria-expanded="false" aria-label="Informatie Rechtsvorm"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org2-rechtsvorm-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">Een rechtsvorm is de juridische vorm van een organisatie.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Functies</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">Vennoot</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">SBI-code</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			6201 activiteiten code
-																			<div class="lo-auxiliary-list__toggle">
-																				<button class="lo-auxiliary-list__button" type="button" aria-controls="org2-sbi-content" aria-expanded="false" aria-label="Informatie SBI-code"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
-																			</div>
-																		</dd>
-																		<dd id="org2-sbi-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
-																			<div class="mt-1 lo-alert lo-alert--info">
-																				<div class="lo-alert__prefix">
-																					<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
-																				</div>
-																				<div class="lo-alert__main">
-																					<div class="lo-alert__content">De SBI-code is een cijfercode die alle bedrijven en organisaties krijgen, die duidelijk maakt wat hun activiteiten zijn. SBI staat voor Standaard Bedrijfsindeling.</div>
-																				</div>
-																			</div>
-																		</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Telefoonnummer</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">0031-0123456790</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">E-mailadres</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">info@overheid.nl</dd>
-																		<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Website</dt>
-																		<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
-																			<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.test.nl" title="(opent in nieuw venster)">https://www.test.nl</a>
-																		</dd>
-																	</dl>
-
-																	<p>
-																		Bekijk meer gegevens van Bakker en De Wit VOF op Mijn KVK:
-																		<br />
-																		<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.kvk.nl/mijn-kvk" title="(opent in nieuw venster)">https://www.kvk.nl/mijn-kvk</a>
-																	</p>
+															</dd>
+															<dd id="uitleg-handelsnaam-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
+																<div class="mt-1 lo-alert lo-alert--info">
+																	<div class="lo-alert__prefix">
+																		<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
+																	</div>
+																	<div class="lo-alert__main">
+																		<div class="lo-alert__content">Een handelsnaam is de naam van een bedrijf.</div>
+																	</div>
 																</div>
-															</div>
-														</div>
+															</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Rechtsvorm</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
+																{{ organisatie.rechtsvorm }}
+																<div class="lo-auxiliary-list__toggle">
+																	<button class="lo-auxiliary-list__button" type="button" aria-controls="uitleg-rechtsvorm-content" aria-expanded="false" aria-label="Informatie Rechtsvorm"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
+																</div>
+															</dd>
+															<dd id="uitleg-rechtsvorm-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
+																<div class="mt-1 lo-alert lo-alert--info">
+																	<div class="lo-alert__prefix">
+																		<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
+																	</div>
+																	<div class="lo-alert__main">
+																		<div class="lo-alert__content">Een rechtsvorm is de juridische vorm van een organisatie.</div>
+																	</div>
+																</div>
+															</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Functies</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">{{ organisatie.functies }}</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">SBI-code</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
+																{{ organisatie.sbiCode }}
+																<div class="lo-auxiliary-list__toggle">
+																	<button class="lo-auxiliary-list__button" type="button" aria-controls="uitleg-sbi-content" aria-expanded="false" aria-label="Informatie SBI-code"><i class="lo-icon lo-icon--info" aria-hidden="true"></i></button>
+																</div>
+															</dd>
+															<dd id="uitleg-sbi-content" class="col-sm-12 px-0 lo-auxiliary-list__description" hidden>
+																<div class="mt-1 lo-alert lo-alert--info">
+																	<div class="lo-alert__prefix">
+																		<i class="lo-icon lo-icon--info" aria-hidden="true"></i>
+																	</div>
+																	<div class="lo-alert__main">
+																		<div class="lo-alert__content">De SBI-code is een cijfercode die alle bedrijven en organisaties krijgen, die duidelijk maakt wat hun activiteiten zijn. SBI staat voor Standaard Bedrijfsindeling.</div>
+																	</div>
+																</div>
+															</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Telefoonnummer</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">{{ organisatie.telefoonnummer }}</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">E-mailadres</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">{{ organisatie.email }}</dd>
+															<dt class="text-hyphenate color-dove-gray font-size-14 col-sm-12 col-md-4 lo-auxiliary-list__term">Website</dt>
+															<dd class="col-md-8 col-sm-12 lo-auxiliary-list__definition">
+																<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="{{ organisatie.website }}" title="(opent in nieuw venster)">{{ organisatie.website }}</a>
+															</dd>
+														</dl>
+
+														<p>
+															Bekijk meer gegevens van
+															{{ organisatie.naam }}
+															op Mijn KVK:
+															<br />
+															<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.kvk.nl/mijn-kvk" title="(opent in nieuw venster)">https://www.kvk.nl/mijn-kvk</a>
+														</p>
 													</div>
 												</div>
 											</div>
@@ -400,7 +352,6 @@ permalink: /mox/kvk-gegevens.html
 
 												<a class="lo-link" href="#">Veelgestelde vragen</a>
 											</li>
-
 
 										</ul>
 									</nav>
