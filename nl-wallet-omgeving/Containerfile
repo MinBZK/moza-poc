@@ -61,11 +61,15 @@ COPY rootfs/ /
 COPY moza/ /opt/nlw/moza/
 RUN chmod +x /opt/nlw/sbin/* /opt/nlw/shims/* /opt/nlw/moza/inrichten.sh /opt/nlw/bin/*
 
-# Alles draait als gebruiker wallet (uid 1000). Wat moet blijven bestaan staat in /data,
-# het persistente volume; zie /opt/nlw/sbin/start.
+# Alles draait als gebruiker wallet (uid 1000), maar het platform kan de container ook onder een
+# willekeurige uid starten. Daarom zijn de schrijfbare mappen van groep 0 en groep-schrijfbaar,
+# en mag /etc/passwd een regel voor die uid krijgen (zie /opt/nlw/sbin/start). Wat moet blijven
+# bestaan staat in /data, het persistente volume.
 RUN useradd --uid 1000 --create-home --home-dir /home/wallet wallet \
 	&& mkdir -p /data \
-	&& chown -R wallet:wallet /data /opt/nl-wallet /opt/nl-rdo-max /opt/nlw /etc/nginx /var/lib/nginx /var/log/nginx
+	&& chown -R wallet:0 /data /opt/nl-wallet /opt/nl-rdo-max /opt/nlw /etc/nginx /var/lib/nginx /var/log/nginx \
+	&& chmod -R g=u /data /opt/nl-wallet /opt/nl-rdo-max /opt/nlw /etc/nginx /var/lib/nginx /var/log/nginx \
+	&& chmod g=u /etc/passwd
 
 ENV PATH=/opt/nlw/sbin:/opt/nlw/bin:/usr/share/dotnet:${PATH} \
 	HOME=/data/home \

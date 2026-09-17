@@ -16,6 +16,13 @@ set -euo pipefail
 
 source /opt/nlw/sbin/omgeving
 
+# Onder een willekeurige uid (zie het Containerfile) is er geen passwd-regel; initdb weigert dan
+# en softhsm2 vindt geen thuismap. Voeg er een toe.
+echo "Draait als $(id)"
+if ! getent passwd "$(id -u)" > /dev/null; then
+	echo "wallet:x:$(id -u):0:NL Wallet:${HOME}:/bin/bash" >> /etc/passwd
+fi
+
 mkdir -p "${HOME}" "${NLW_DATA}/devenv-target" "${NLW_DATA}/wallet-core-target" "${NLW_DATA}/rdo-max-secrets"
 
 koppel() {
