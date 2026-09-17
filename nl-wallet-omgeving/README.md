@@ -24,7 +24,7 @@ Binnen het project (bijvoorbeeld vanuit MOZa) geeft `http://nlw:8080` de interne
 
 ## Bouwen
 
-`.github/workflows/nl-wallet-omgeving.yml` checkt NL Wallet uit op de commit in `versies.env`, bouwt de binaries (`bouw-binaries.sh`) en daarna de images `ghcr.io/minbzk/moza-poc/nl-wallet` en `nl-wallet-proxy`. Op `main` rolt de workflow ze uit naar ZAD.
+`.github/workflows/nl-wallet-omgeving.yml` checkt NL Wallet uit op de commit in `versies.env`, bouwt de binaries (`bouw-binaries.sh`) en daarna de images, als tags `nl-wallet-sha-…` en `nl-wallet-proxy-sha-…` in het openbare package `ghcr.io/minbzk/moza-poc`. De images bevatten geen geheimen; sleutels ontstaan bij de eerste start. Op `main` rolt de workflow ze uit naar ZAD.
 
 De app op het toestel moet met dezelfde NL Wallet-commit gebouwd zijn. Verander je `NL_WALLET_REF`, bouw dan ook de app opnieuw.
 

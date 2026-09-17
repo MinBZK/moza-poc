@@ -40,10 +40,12 @@ jobs:
         id: namen
         run: |
           cat nl-wallet-omgeving/versies.env | grep -v '^#' >> "$GITHUB_ENV"
+          # Als tags in het openbare moza-poc-package, zodat ZAD ze zonder inlog kan ophalen.
+          # De images bevatten geen geheimen: sleutels ontstaan bij de eerste start.
           basis="${REGISTRY}/${GITHUB_REPOSITORY,,}"
-          tag="sha-${GITHUB_SHA::7}"
-          echo "kern=${basis}/nl-wallet:${tag}" >> "$GITHUB_OUTPUT"
-          echo "proxy=${basis}/nl-wallet-proxy:${tag}" >> "$GITHUB_OUTPUT"
+          sha="sha-${GITHUB_SHA::7}"
+          echo "kern=${basis}:nl-wallet-${sha}" >> "$GITHUB_OUTPUT"
+          echo "proxy=${basis}:nl-wallet-proxy-${sha}" >> "$GITHUB_OUTPUT"
 
       - name: Schijfruimte vrijmaken
         run: |
