@@ -3,7 +3,13 @@
 # draait. De Host-header gaat ongewijzigd mee, daarop kiest de kerncontainer de service.
 FROM docker.io/nginxinc/nginx-unprivileged:alpine
 
+# NLW_KERN is het interne adres van de kerncontainer; per omgeving te overschrijven als env-var.
 ENV NLW_KERN=nlw:8080 \
-	NGINX_ENVSUBST_FILTER=^NLW_
+	NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+	NGINX_ENVSUBST_FILTER='^(NLW_|NGINX_LOCAL_RESOLVERS)'
 
 COPY default.conf.template /etc/nginx/templates/default.conf.template
+COPY 05-nlw-diagnose.sh /docker-entrypoint.d/05-nlw-diagnose.sh
+USER root
+RUN chmod +x /docker-entrypoint.d/05-nlw-diagnose.sh
+USER nginx
