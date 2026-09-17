@@ -27,4 +27,12 @@ if [[ -z "${binary}" ]]; then
 fi
 [[ "${1:-}" == "--" ]] && shift
 
+# `cargo run` zet CARGO_MANIFEST_DIR; de binaries zoeken daarmee hun configuratiebestand
+# (prefix_local_path in wallet_core/lib/utils).
+case "${binary}" in
+	gba_encrypt) crate=gba_hc_converter ;;
+	*) crate="${binary}" ;;
+esac
+export CARGO_MANIFEST_DIR="/opt/nl-wallet/wallet_core/${crate}"
+
 exec "/opt/nlw/bin/${binary}" "$@"

@@ -29,7 +29,8 @@ RUN cat /tmp/patches/from-v403-to-main.patch /tmp/patches/from-main-to-current.p
 	&& npm run build \
 	&& rm -rf node_modules .git \
 	&& bash scripts/setup-config.sh \
-	&& bash scripts/setup-saml.sh
+	&& bash scripts/setup-saml.sh \
+	&& rm -rf saml/tvs
 RUN pip install --no-cache-dir poetry==2.3.1 \
 	&& POETRY_VIRTUALENVS_CREATE=false poetry install --without dev --no-interaction --no-root \
 	&& pip uninstall -y poetry
@@ -39,7 +40,7 @@ FROM ${PYTHON_IMAGE}
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
-		bash ca-certificates curl gettext-base gnutls-bin jq libxmlsec1t64-openssl nginx-light \
+		bash ca-certificates curl gettext-base gnutls-bin jq libxmlsec1t64-openssl make nginx-light \
 		openssl postgresql procps redis-server softhsm2 supervisor xxd zlib1g libstdc++6 \
 	&& rm -rf /var/lib/apt/lists/*
 
