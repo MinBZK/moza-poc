@@ -1,0 +1,16 @@
+build/nl-wallet/.git
+build/nl-wallet/wallet_core/target
+build/nl-wallet/wallet_core/flutter_api
+build/nl-wallet/wallet_core/uniffi-bindgen
+build/nl-wallet/wallet_app/*
+!build/nl-wallet/wallet_app/pubspec.yaml
+build/nl-wallet/wallet_web
+build/nl-wallet/wallet_docs
+build/nl-wallet/wallet_admin_portal
+build/nl-wallet/uiautomation
+build/nl-wallet/browsertests
+build/nl-wallet/fastlane
+build/nl-wallet/testreporting
+build/nl-wallet/deploy
+build/nl-wallet/demo
+build/nl-wallet/nl-rdo-max

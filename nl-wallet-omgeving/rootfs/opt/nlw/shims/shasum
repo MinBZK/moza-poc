@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# scripts/configuration.sh gebruikt `shasum -a1` (perl); sha1sum doet hetzelfde.
+[[ "${1:-}" == "-a1" ]] && shift
+exec sha1sum "$@"

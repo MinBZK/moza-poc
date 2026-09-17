@@ -1,0 +1,80 @@
+# NL Wallet-testomgeving voor MOZa: alle NL Wallet-services van de lokale ontwikkelomgeving
+# (scripts/start-devenv.sh in github.com/MinBZK/nl-wallet) in één container, met PostgreSQL,
+# redis, SoftHSM, de mock-DigiD (nl-rdo-max) en de BRP-proxy erbij. Zie README.md.
+#
+# De workflow zet vóór de build twee dingen in de context:
+#   build/nl-wallet  een checkout van NL Wallet op NL_WALLET_REF (versies.env)
+#   build/bin        de binaries uit bouw-binaries.sh
+
+ARG BRPPROXY_IMAGE
+ARG PYTHON_IMAGE=docker.io/library/python:3.11-slim-trixie
+
+# 1) BRP-proxy (Haal Centraal): een .NET-app die de leeftijd uitrekent die pid_issuer nodig heeft
+FROM ${BRPPROXY_IMAGE} AS brpproxy
+
+# 2) nl-rdo-max, de DigiD-connector met mock-DigiD, gepatcht zoals scripts/setup-devenv.sh doet
+FROM ${PYTHON_IMAGE} AS rdo-max
+ARG RDO_MAX_REF
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends git curl ca-certificates make gcc pkg-config \
+		libxmlsec1-dev libxmlsec1t64-openssl zlib1g-dev nodejs npm \
+	&& rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/nl-rdo-max
+RUN git clone --depth 1 --branch "${RDO_MAX_REF}" https://github.com/minvws/nl-rdo-max.git .
+COPY build/nl-wallet/scripts/devenv/digid-connector/*.patch /tmp/patches/
+RUN cat /tmp/patches/from-v403-to-main.patch /tmp/patches/from-main-to-current.patch \
+		/tmp/patches/from-current-to-fixes.patch | git apply \
+	&& npm uninstall @minvws/nl-rdo-rijksoverheid-ui-theme \
+	&& bash scripts/setup-npm.sh \
+	&& npm run build \
+	&& rm -rf node_modules .git \
+	&& bash scripts/setup-config.sh \
+	&& bash scripts/setup-saml.sh
+RUN pip install --no-cache-dir poetry==2.3.1 \
+	&& POETRY_VIRTUALENVS_CREATE=false poetry install --without dev --no-interaction --no-root \
+	&& pip uninstall -y poetry
+
+# 3) De omgeving zelf
+FROM ${PYTHON_IMAGE}
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		bash ca-certificates curl gettext-base gnutls-bin jq libxmlsec1t64-openssl nginx-light \
+		openssl postgresql procps redis-server softhsm2 supervisor xxd zlib1g libstdc++6 \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Publieke TLS-roots voor de certificate pinning in de app: het platform geeft
+# Let's Encrypt-certificaten uit.
+RUN mkdir -p /opt/nlw/tls \
+	&& curl -fsSL -o /opt/nlw/tls/isrg-root-x1.der https://letsencrypt.org/certs/isrgrootx1.der \
+	&& curl -fsSL -o /opt/nlw/tls/isrg-root-x2.der https://letsencrypt.org/certs/isrg-root-x2.der
+
+COPY --from=rdo-max /usr/local /usr/local
+COPY --from=rdo-max /opt/nl-rdo-max /opt/nl-rdo-max
+COPY --from=brpproxy /usr/share/dotnet /usr/share/dotnet
+COPY --from=brpproxy /app /opt/brpproxy
+
+COPY build/bin/ /opt/nlw/bin/
+COPY build/nl-wallet/ /opt/nl-wallet/
+COPY rootfs/ /
+COPY moza/ /opt/nlw/moza/
+RUN chmod +x /opt/nlw/sbin/* /opt/nlw/shims/* /opt/nlw/moza/inrichten.sh /opt/nlw/bin/*
+
+# Alles draait als gebruiker wallet (uid 1000). Wat moet blijven bestaan staat in /data,
+# het persistente volume; zie /opt/nlw/sbin/start.
+RUN useradd --uid 1000 --create-home --home-dir /home/wallet wallet \
+	&& mkdir -p /data \
+	&& chown -R wallet:wallet /data /opt/nl-wallet /opt/nl-rdo-max /opt/nlw /etc/nginx /var/lib/nginx /var/log/nginx
+
+ENV PATH=/opt/nlw/sbin:/opt/nlw/bin:/usr/share/dotnet:${PATH} \
+	HOME=/data/home \
+	NLW_DATA=/data \
+	NLW_DOMEIN=moza.rijksapp.dev \
+	MOZA_ORIGIN=https://proef.moza.rijksapp.dev \
+	DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+	RUST_LOG=info
+
+USER 1000
+WORKDIR /opt/nl-wallet
+EXPOSE 8080
+ENTRYPOINT ["/opt/nlw/sbin/start"]

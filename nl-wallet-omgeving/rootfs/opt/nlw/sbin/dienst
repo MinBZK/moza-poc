@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# Start één NL Wallet-service vanuit zijn crate-map, zoals start-devenv.sh (de services lezen
+# <naam>.toml uit de werkmap). Wacht eerst op de migraties.
+#
+# Gebruik: dienst <binary> <map onder wallet_core>
+
+set -euo pipefail
+
+source /opt/nlw/sbin/omgeving
+
+until [[ -f /tmp/migraties-klaar ]]; do
+	sleep 1
+done
+
+cd "/opt/nl-wallet/wallet_core/$2"
+exec "/opt/nlw/bin/$1"

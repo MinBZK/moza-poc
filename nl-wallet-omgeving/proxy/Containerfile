@@ -1,0 +1,9 @@
+# Doorgeefluik voor één publieke hostnaam van de NL Wallet-testomgeving. ZAD geeft elk component
+# één hostnaam; zo krijgt elke NL Wallet-service er een, terwijl alles in de kerncontainer `nlw`
+# draait. De Host-header gaat ongewijzigd mee, daarop kiest de kerncontainer de service.
+FROM docker.io/nginxinc/nginx-unprivileged:alpine
+
+ENV NLW_KERN=nlw:8080 \
+	NGINX_ENVSUBST_FILTER=^NLW_
+
+COPY default.conf.template /etc/nginx/templates/default.conf.template

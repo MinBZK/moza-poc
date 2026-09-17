@@ -1,0 +1,14 @@
+# Gedeelde omgevingsvariabelen voor start, inrichten, migraties en dienst (source, niet uitvoeren).
+
+export NLW_DATA="${NLW_DATA:-/data}"
+export HOME="${NLW_DATA}/home"
+
+for naam in wp static ups pid issuance verifier; do
+	export "NLW_URL_${naam^^}=https://nlw-${naam}.${NLW_DOMEIN:?}"
+done
+export MOZA_JSON="${NLW_DATA}/moza.json"
+
+export DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD=postgres
+export HSM_LIBRARY_PATH=/usr/lib/softhsm/libsofthsm2.so
+export HSM_TOKEN_DIR="${NLW_DATA}/softhsm/tokens"
+export SOFTHSM2_CONF="${HOME}/.config/softhsm2/softhsm2.conf"

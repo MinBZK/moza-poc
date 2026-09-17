@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# Entrypoint van de kerncontainer. Alles wat moet blijven bestaan staat op het volume in /data:
+#   pgdata/              PostgreSQL
+#   softhsm/, home/      HSM-token en softhsm2.conf
+#   devenv-target/       scripts/devenv/target: CA's, sleutels, certificaten
+#   wallet-core-target/  wallet_core/target: statuslijsten
+#   rdo-max-secrets/     sleutels van de mock-DigiD
+#   gegenereerd.tar      de configuratiebestanden die de inrichting in de checkout schreef
+#
+# Sleutels en configuratie horen bij elkaar: de publieke HSM-sleutels staan in de getekende
+# wallet-config en in de certificaten. Een nieuw volume is dus een nieuwe omgeving, en wallets
+# die tegen de oude geregistreerd zijn werken daarna niet meer.
+
+set -euo pipefail
+
+source /opt/nlw/sbin/omgeving
+
+mkdir -p "${HOME}" "${NLW_DATA}/devenv-target" "${NLW_DATA}/wallet-core-target" "${NLW_DATA}/rdo-max-secrets"
+
+koppel() {
+	rm -rf "$2"
+	ln -s "$1" "$2"
+}
+koppel "${NLW_DATA}/devenv-target" /opt/nl-wallet/scripts/devenv/target
+koppel "${NLW_DATA}/wallet-core-target" /opt/nl-wallet/wallet_core/target
+koppel "${NLW_DATA}/rdo-max-secrets" /opt/nl-rdo-max/secrets
+
+if [[ -f "${NLW_DATA}/gegenereerd.tar" ]]; then
+	tar -xpf "${NLW_DATA}/gegenereerd.tar" -C /
+fi
+
+if [[ ! -f "${NLW_DATA}/ingericht" ]]; then
+	echo "Eerste start op dit volume: omgeving inrichten"
+	touch /tmp/voor-inrichting
+	sleep 1
+	/opt/nlw/sbin/inrichten
+	find /opt/nl-wallet /opt/nl-rdo-max -newer /tmp/voor-inrichting \( -type f -o -type l \) -print0 \
+		| tar --null -cpf "${NLW_DATA}/gegenereerd.tar" -T -
+	date -u +%FT%TZ > "${NLW_DATA}/ingericht"
+fi
+
+pgbin="$(echo /usr/lib/postgresql/*/bin)"
+if [[ ! -f "${NLW_DATA}/pgdata/PG_VERSION" ]]; then
+	"${pgbin}/initdb" --pgdata="${NLW_DATA}/pgdata" --username=postgres --auth=trust --encoding=UTF8 --locale=C.UTF-8
+fi
+export NLW_PGBIN="${pgbin}"
+
+rm -f /tmp/migraties-klaar
+exec supervisord --nodaemon --configuration /opt/nlw/supervisord.conf

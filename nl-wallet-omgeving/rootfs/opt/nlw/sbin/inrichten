@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# Eerste inrichting van de NL Wallet-testomgeving: sleutels, certificaten, HSM-token en
+# configuratie. Draait één keer, bij de eerste start op een leeg volume (zie start).
+#
+# Het meeste doet scripts/setup-devenv.sh van NL Wallet zelf. Daaromheen:
+#   1. publiek-maken.py zet de templates om naar de publieke https-adressen;
+#   2. de mock-DigiD (nl-rdo-max) krijgt zijn sleutels hier, omdat setup-devenv.sh daarvoor
+#      docker gebruikt (SKIP_DIGID_CONNECTOR);
+#   3. moza/inrichten.sh voegt de MOZa-verifier, de testpersonen en de KVK-bevoegdheid toe.
+
+set -euo pipefail
+
+source /opt/nlw/sbin/omgeving
+
+echo "== Templates publiek maken"
+python3 /opt/nlw/sbin/publiek-maken.py
+
+echo "== NL Wallet setup-devenv.sh"
+mkdir -p "${HSM_TOKEN_DIR}"
+PATH="/opt/nlw/shims:${PATH}" SKIP_DIGID_CONNECTOR=1 SKIP_KEYCLOAK=1 SKIP_WALLET_WEB=1 \
+	bash /opt/nl-wallet/scripts/setup-devenv.sh
+
+echo "== Mock-DigiD (nl-rdo-max)"
+DEVENV=/opt/nl-wallet/scripts/devenv
+TARGET="${DEVENV}/target"
+cd /opt/nl-rdo-max
+# Dezelfde CA als waar setup-devenv.sh DIGID_CA_CRT (de trust anchor van pid_issuer) van maakte.
+cp "${TARGET}/digid/ca.crt.pem" secrets/cacert.crt
+cp "${TARGET}/digid/ca.key.pem" secrets/cacert.key
+bash scripts/setup-secrets.sh
+
+SERVICES_HOST=localhost RDO_MAX_PORT=8006 PID_ISSUER_PORT=3003 DIGID_CLIENT_ID=3e58016e-bc2e-40d5-b4b1-a3e25f6193b9
+export SERVICES_HOST RDO_MAX_PORT PID_ISSUER_PORT DIGID_CLIENT_ID
+for bestand in max.conf clients.json login_methods.json; do
+	envsubst < "${DEVENV}/digid-connector/${bestand}" > "${bestand}"
+done
+sed -i 's/^host = redis$/host = 127.0.0.1/' max.conf
+
+# Servercertificaat met SAN localhost, zoals generate_ssl_key_pair_with_san in scripts/utils.sh.
+openssl req -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=US/CN=localhost" -nodes -sha256 \
+	-keyout secrets/ssl/server.key -out /tmp/rdo-max-server.csr -config "${DEVENV}/openssl-san.cfg"
+openssl x509 -req -sha256 -in /tmp/rdo-max-server.csr -days 3650 \
+	-CA secrets/cacert.crt -CAkey secrets/cacert.key \
+	-out secrets/ssl/server.crt -extensions req_ext -extfile "${DEVENV}/openssl-san.cfg"
+
+# De echte sleutel waarmee pid_issuer het BSN uit rdo-max ontsleutelt, in plaats van de lege
+# placeholder die setup-devenv.sh zet als de DigiD-connector wordt overgeslagen. Zonder `kid`,
+# zie setup-devenv.sh.
+BSN_PRIVKEY="$(python tools/create-jwk.py secrets/clients/test_client/test_client.key | jq -c 'del(.kid)')"
+python3 - /opt/nl-wallet/wallet_core/wallet_server/pid_issuer/pid_issuer.toml "${BSN_PRIVKEY}" <<'PY'
+import sys
+pad, sleutel = sys.argv[1:3]
+placeholder = """bsn_privkey = '{"kty":"RSA","n":"","e":"","d":"","p":"","q":"","dp":"","dq":"","qi":""}'"""
+tekst = open(pad, encoding="utf-8").read()
+if placeholder not in tekst:
+    sys.exit("Placeholder voor bsn_privkey niet gevonden in " + pad)
+open(pad, "w", encoding="utf-8").write(tekst.replace(placeholder, f"bsn_privkey = '{sleutel}'"))
+PY
+
+echo "== MOZa"
+PATH="/opt/nlw/shims:${PATH}" bash /opt/nlw/moza/inrichten.sh
+
+echo "== Inrichting klaar"

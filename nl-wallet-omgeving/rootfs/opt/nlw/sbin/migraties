@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Maakt de databases aan als ze er nog niet zijn en draait de migraties met `up`.
+# Nooit `fresh` zoals start-devenv.sh: dat wist de gegevens van wallets die al geregistreerd zijn.
+
+set -euo pipefail
+
+source /opt/nlw/sbin/omgeving
+
+until pg_isready --host=127.0.0.1 --quiet; do
+	sleep 1
+done
+
+for db in wallet_provider wallet_provider_audit_log verification_server issuance_server pid_issuer; do
+	if [[ -z "$(psql --host=127.0.0.1 --username=postgres --tuples-only --no-align \
+		--command="select 1 from pg_database where datname = '${db}'")" ]]; then
+		psql --host=127.0.0.1 --username=postgres --command="create database ${db}"
+	fi
+done
+
+migreer() {
+	echo "Migraties ${1} op ${2}"
+	DATABASE_URL="postgres://postgres:postgres@127.0.0.1:5432/${2}" "/opt/nlw/bin/${1}" up
+}
+migreer audit_log_migrations wallet_provider_audit_log
+migreer wallet_provider_migrations wallet_provider
+migreer pid_issuer_migrations pid_issuer
+migreer issuance_server_migrations issuance_server
+migreer verification_server_migrations verification_server
+
+touch /tmp/migraties-klaar
+echo "Migraties klaar"

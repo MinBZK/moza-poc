@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# Vervangt `cargo run ... --bin <naam> [--] <argumenten>` uit de NL Wallet-scripts door de
+# binary die al in het image staat. Andere cargo-opdrachten horen hier niet voor te komen.
+
+set -euo pipefail
+
+if [[ "${1:-}" != "run" ]]; then
+	echo "cargo-shim: alleen 'cargo run' wordt ondersteund, niet: cargo $*" >&2
+	exit 1
+fi
+shift
+
+binary=""
+while [[ $# -gt 0 && -z "${binary}" ]]; do
+	case "$1" in
+		--bin) binary="$2"; shift 2 ;;
+		--manifest-path | --package | -p | --features) shift 2 ;;
+		--quiet | -q | --release | --locked) shift ;;
+		*) echo "cargo-shim: onbekend argument vóór --bin: $1" >&2; exit 1 ;;
+	esac
+done
+
+if [[ -z "${binary}" ]]; then
+	echo "cargo-shim: geen --bin opgegeven" >&2
+	exit 1
+fi
+[[ "${1:-}" == "--" ]] && shift
+
+exec "/opt/nlw/bin/${binary}" "$@"
