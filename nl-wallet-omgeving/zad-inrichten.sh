@@ -18,24 +18,29 @@ zad() {
 	command zad --no-rollout "$@"
 }
 
-# Kerncontainer: niet publiek, wel een persistent volume. Alles draait in één pod, dus ruimer
-# geheugen dan een gewone webapp; resource-tuning van het platform stelt het daarna bij.
-zad component add nlw --port 8080 --memory-limit 2Gi --cpu-limit 2
+# Kerncontainer: niet publiek, wel een persistent volume. Geheugen en CPU stelt het platform
+# zelf bij (resource-tuning); --memory-limit/--cpu-limit gaven bij het aanmaken een 422.
+zad component add nlw --port 8080
 zad service persistent-storage add data --component nlw --size 1Gi --mount-path /data
 
 for component in "${proxy_componenten[@]}"; do
 	zad component add "${component}" --port 8080 --service publish-on-web
 done
 
-# Hostnamen <component>.moza.rijksapp.dev, zoals proef.moza.rijksapp.dev bij deployment poc.
+# Hostnamen <component>.nlw.moza.rijksapp.nl. Het subdomein moza op rijksapp.dev is van deployment
+# poc (proef.moza.rijksapp.dev) en kan niet door een tweede deployment gebruikt worden; op
+# rijksapp.nl delen de onderzoeksreleases het al met domain-format deployment.subdomain.
 zad deployment create "${deployment}" --component nlw --image "${kern}" \
-	--base-domain rijksapp.dev --subdomain moza --domain-format component.subdomain --yes
+	--base-domain rijksapp.nl --subdomain moza --domain-format component.deployment.subdomain --yes
 for component in "${proxy_componenten[@]}"; do
 	zad component assign "${component}" "${deployment}" --image "${proxy}"
 done
 zad service config set publish-on-web --target deployment --deployment "${deployment}" \
-	--set base-domain=rijksapp.dev --set subdomain=moza --set domain-format=component.subdomain \
+	--set base-domain=rijksapp.nl --set subdomain=moza --set domain-format=component.deployment.subdomain \
 	--set issuer=letsencrypt --yes
+
+# De kerncontainer bouwt zijn publieke adressen uit dit domein (zie rootfs/opt/nlw/sbin/omgeving).
+zad env add NLW_DOMEIN=nlw.moza.rijksapp.nl --component nlw --deployment "${deployment}" --yes
 
 command zad project refresh
 command zad deployment describe "${deployment}"

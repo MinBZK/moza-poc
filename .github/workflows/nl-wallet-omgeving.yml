@@ -118,7 +118,7 @@ jobs:
       deployments: write
     environment:
       name: nl-wallet
-      url: https://nlw-pid.moza.rijksapp.dev/
+      url: https://nlw-pid.nlw.moza.rijksapp.nl/
     steps:
       - name: Deploy to ZAD
         uses: RijksICTGilde/zad-actions/deploy@v4

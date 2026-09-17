@@ -11,12 +11,14 @@ ZAD-project `pm-5sj`, deployment `nlw`.
 | Component | Hostnaam | Wat |
 |---|---|---|
 | `nlw` | geen (intern) | Kerncontainer: alle services, PostgreSQL, redis, SoftHSM, mock-DigiD (nl-rdo-max), BRP-proxy. Persistent volume op `/data`. |
-| `nlw-wp` | nlw-wp.moza.rijksapp.dev | wallet_provider |
-| `nlw-static` | nlw-static.moza.rijksapp.dev | static_server: wallet-config, WIA-statuslijsten, WRPAC-CRL |
-| `nlw-ups` | nlw-ups.moza.rijksapp.dev | update_policy_server |
-| `nlw-pid` | nlw-pid.moza.rijksapp.dev | pid_issuer, met de mock-DigiD-inlogpagina |
-| `nlw-issuance` | nlw-issuance.moza.rijksapp.dev | issuance_server (KVK-bevoegdheid van "KVK Demo") |
-| `nlw-verifier` | nlw-verifier.moza.rijksapp.dev | verification_server (publieke kant) |
+| `nlw-wp` | nlw-wp.nlw.moza.rijksapp.nl | wallet_provider |
+| `nlw-static` | nlw-static.nlw.moza.rijksapp.nl | static_server: wallet-config, WIA-statuslijsten, WRPAC-CRL |
+| `nlw-ups` | nlw-ups.nlw.moza.rijksapp.nl | update_policy_server |
+| `nlw-pid` | nlw-pid.nlw.moza.rijksapp.nl | pid_issuer, met de mock-DigiD-inlogpagina |
+| `nlw-issuance` | nlw-issuance.nlw.moza.rijksapp.nl | issuance_server (KVK-bevoegdheid van "KVK Demo") |
+| `nlw-verifier` | nlw-verifier.nlw.moza.rijksapp.nl | verification_server (publieke kant) |
+
+De hostnamen staan op `rijksapp.nl`: het subdomein `moza` op `rijksapp.dev` hoort bij deployment `poc` en is niet voor een tweede deployment beschikbaar. `zad-inrichten.sh` maakt de deployment eenmalig aan.
 
 ZAD geeft elk component één hostnaam. De `nlw-*`-componenten zijn daarom kleine nginx-proxy's (`proxy/`) die met de oorspronkelijke Host-header doorsturen naar `nlw:8080`. De nginx in de kerncontainer kiest op die hostnaam de service (`rootfs/opt/nlw/nginx.conf`).
 
