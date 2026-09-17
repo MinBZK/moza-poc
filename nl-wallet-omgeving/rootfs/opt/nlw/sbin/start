@@ -51,6 +51,9 @@ pgbin="$(echo /usr/lib/postgresql/*/bin)"
 if [[ ! -f "${NLW_DATA}/pgdata/PG_VERSION" ]]; then
 	"${pgbin}/initdb" --pgdata="${NLW_DATA}/pgdata" --username=postgres --auth=trust --encoding=UTF8 --locale=C.UTF-8
 fi
+# Kubernetes verruimt bij het koppelen van het volume de groepsrechten (fsGroup); PostgreSQL
+# weigert dan te starten ("data directory has invalid permissions"). Elke start terugzetten.
+chmod 0700 "${NLW_DATA}/pgdata"
 export NLW_PGBIN="${pgbin}"
 
 rm -f /tmp/migraties-klaar

@@ -20,9 +20,9 @@ ZAD-project `pm-5sj`, deployment `nlw`.
 
 De hostnamen staan op `rijksapp.nl`: het subdomein `moza` op `rijksapp.dev` hoort bij deployment `poc` en is niet voor een tweede deployment beschikbaar. `zad-inrichten.sh` maakt de deployment eenmalig aan.
 
-ZAD geeft elk component één hostnaam. De `nlw-*`-componenten zijn daarom kleine nginx-proxy's (`proxy/`) die met de oorspronkelijke Host-header doorsturen naar `nlw:8080`. De nginx in de kerncontainer kiest op die hostnaam de service (`rootfs/opt/nlw/nginx.conf`).
+ZAD geeft elk component één hostnaam. De `nlw-*`-componenten zijn daarom kleine nginx-proxy's (`proxy/`) die met de oorspronkelijke Host-header doorsturen naar de kerncontainer (`NLW_KERN`, op ZAD `nlw-nlw:8080`: een Service heet daar `<deployment>-<component>`). De nginx in de kerncontainer kiest op die hostnaam de service (`rootfs/opt/nlw/nginx.conf`).
 
-Binnen het project (bijvoorbeeld vanuit MOZa) geeft `http://nlw:8080` de interne API van de verification_server, en `http://nlw:8080/moza.json` de links voor "bevoegdheid toevoegen".
+Binnen het project (bijvoorbeeld vanuit MOZa) geeft `http://nlw-nlw:8080` de interne API van de verification_server, en `http://nlw-nlw:8080/moza.json` de links voor "bevoegdheid toevoegen".
 
 ## Bouwen
 

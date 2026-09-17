@@ -40,7 +40,13 @@ zad service config set publish-on-web --target deployment --deployment "${deploy
 	--set issuer=letsencrypt --yes
 
 # De kerncontainer bouwt zijn publieke adressen uit dit domein (zie rootfs/opt/nlw/sbin/omgeving).
-zad env add NLW_DOMEIN=nlw.moza.rijksapp.nl --component nlw --deployment "${deployment}" --yes
+zad env add NLW_DOMEIN=nlw.moza.rijksapp.nl --component nlw --deployment "${deployment}"
+
+# Een Service heet op ZAD <deployment>-<component>; de proxy's melden bij het starten alle
+# *_SERVICE_HOST-variabelen, mocht dat ooit anders zijn.
+for component in "${proxy_componenten[@]}"; do
+	zad env add "NLW_KERN=${deployment}-nlw:8080" --component "${component}" --deployment "${deployment}"
+done
 
 command zad project refresh
 command zad deployment describe "${deployment}"
