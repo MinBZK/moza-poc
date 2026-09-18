@@ -14,7 +14,7 @@
 # draai dit script daarna nog een keer.
 #
 # Gebruik:
-#   NL_WALLET_DIR="$HOME/Documents/GitHub/NL wallet" server/nl-wallet/lokaal-inrichten.sh
+#   NL_WALLET_DIR="$HOME/Documents/GitHub/NL wallet" bash server/nl-wallet/lokaal-inrichten.sh
 
 set -euo pipefail
 

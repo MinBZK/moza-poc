@@ -68,7 +68,7 @@ Vereist een lokale NL Wallet-ontwikkelomgeving (`scripts/setup-devenv.sh` en `sc
 
 ```sh
 # 1. Verifier voor MOZa inrichten (certificaat, usecase moza_inloggen, CORS)
-NL_WALLET_DIR="$HOME/Documents/GitHub/NL wallet" server/nl-wallet/lokaal-inrichten.sh
+NL_WALLET_DIR="$HOME/Documents/GitHub/NL wallet" bash server/nl-wallet/lokaal-inrichten.sh
 
 # 2. Site bouwen en de server starten
 npm run build
