@@ -98,6 +98,16 @@ Certificaten (MOZa als verifier, KVK Demo als uitgever) maakt het script alleen 
 | `NL_WALLET_CONFIG`      | `server/nl-wallet/lokaal.json` | JSON met per onderneming de links voor “bevoegdheid toevoegen” en lokaal het pad naar de APK; `lokaal-inrichten.sh` schrijft dit bestand (niet in git) |
 | `NL_WALLET_APP_URL`     | leeg                           | Online downloadadres van NL Wallet MOZa; zonder deze variabele serveert de server de lokale APK                                                        |
 
+## Online testomgeving
+
+De NL Wallet-kant draait online in [MinBZK/moza-wallet-testomgeving](https://github.com/MinBZK/moza-wallet-testomgeving), ZAD-project `mwt-ked`, met `moza/inrichten.sh` als tegenhanger van `lokaal-inrichten.sh` (houd beide gelijk bij wijzigingen in testpersonen of attestaties). De testapp voor die omgeving staat als release bij die repo. Zolang het subdomein `moza-wallet.rijksapp.dev` op goedkeuring wacht, zijn de adressen `nlw-<dienst>-nlw-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl`.
+
+Voor de koppeling op proef.moza.rijksapp.dev (vervolg-PR) betekent dat:
+
+- `NL_WALLET_VS_PUBLIC` wijst naar de publieke verification_server (`nlw-verifier`);
+- de interne API en de bevoegdheidslinks (`/moza.json`) staan in een ander ZAD-project dan proef (`pm-5sj`), dus niet bereikbaar als `nlw-nlw:8080`. Of ZAD's cross-domain-access tussen de projecten, of een publieke route met `NL_WALLET_API_KEY` op de interne API;
+- `NL_WALLET_APP_URL` naar de release van de testapp.
+
 ## Naar pre-prod
 
 Met de NL Wallet-app van pre-prod werkt dit pas na de [community onboarding](https://edi.pleio.nl/page/view/0c9b8ee6-cadc-4b2b-b84f-5d27cd264b1e/nl-wallet-community) van NL Wallet. De app vertrouwt alleen verifiers met een WRPAC-certificaat van een CA die het NL Wallet-team heeft opgenomen. Wat daarna verandert:
