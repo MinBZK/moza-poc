@@ -105,7 +105,7 @@ De NL Wallet-kant draait online in [MinBZK/moza-wallet-testomgeving](https://git
 
 ### Op proef en op PR-previews
 
-De sessie-endpoints draaien op ZAD als eigen component `nlw-api` (image uit `container/nl-wallet-api/Containerfile`, gebouwd door `production.yml` en `preview.yml` als tag `<versie>-nl-wallet-api` in het package van deze repo (bij een preview begint die met `pr-<N>-`, zodat de opruimstap hem meeneemt)) naast `proef`, in dezelfde deployment. De nginx van `proef` proxyt `/api/nl-wallet/` en `/downloads/nl-wallet-moza.apk` ernaartoe; het adres volgt uit `DEPLOYMENT_NAME` (`<deployment>-nlw-api:8095`, zie `container/16-nl-wallet-backend.envsh`), dus elke PR-preview heeft automatisch zijn eigen.
+De sessie-endpoints draaien op ZAD als eigen component `nlw-api` (image uit `container/nl-wallet-api/Containerfile`, gebouwd door `production.yml` en `preview.yml` als tag `<versie>-nl-wallet-api` in het package van deze repo (bij een preview begint die met `pr-<N>-`, zodat de opruimstap hem meeneemt)) naast `proef`, in dezelfde deployment. De nginx van `proef` proxyt `/api/nl-wallet/` en `/downloads/nl-wallet-moza.apk` ernaartoe; het adres volgt uit `DEPLOYMENT_NAME` en het zoekdomein van de pod (`<deployment>-nlw-api.<namespace>.svc.cluster.local:8095`, zie `container/16-nl-wallet-backend.envsh`; de resolver van nginx kent geen zoekdomeinen), dus elke PR-preview heeft automatisch zijn eigen.
 
 Eenmalig in ZAD-project `pm-5sj` gedaan (met de CLI):
 

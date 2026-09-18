@@ -1,9 +1,11 @@
 #!/bin/sh
 # Adres van het component nlw-api (container/nl-wallet-api) als BACKEND_NL_WALLET leeg is. Op ZAD
-# heet een Service <deployment>-<component>, en DEPLOYMENT_NAME staat in elke pod. Lokaal (zonder
-# DEPLOYMENT_NAME) blijft de variabele leeg en antwoordt nginx op /api/nl-wallet/ met een 502 die
-# dat zegt.
+# heet een Service <deployment>-<component>, en DEPLOYMENT_NAME staat in elke pod. De resolver van
+# nginx kent de zoekdomeinen van de pod niet, dus de naam wordt aangevuld met het eerste zoekdomein
+# uit resolv.conf (<namespace>.svc.cluster.local). Lokaal (zonder DEPLOYMENT_NAME) blijft de
+# variabele leeg en antwoordt nginx op /api/nl-wallet/ met een 502 die dat zegt.
 if [ -z "${BACKEND_NL_WALLET}" ] && [ -n "${DEPLOYMENT_NAME}" ]; then
-	export BACKEND_NL_WALLET="http://${DEPLOYMENT_NAME}-nlw-api:8095"
+	zoekdomein="$(awk '/^search/ { print $2; exit }' /etc/resolv.conf)"
+	export BACKEND_NL_WALLET="http://${DEPLOYMENT_NAME}-nlw-api${zoekdomein:+.${zoekdomein}}:8095"
 fi
 echo "nl-wallet: BACKEND_NL_WALLET=${BACKEND_NL_WALLET:-<leeg>}"
