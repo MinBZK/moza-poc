@@ -86,11 +86,12 @@ header {
 		display: flex;
 		gap: var(--toepassing-space-layout-md);
 	}
-	/* Toon fallback-naam als accountwisselaar verborgen is, anders verbergen */
+	/* Toon fallback-naam als accountwisselaar verborgen is, anders verbergen. Een fallback die zelf
+	   hidden is (na inloggen met NL Wallet, zie nl-wallet-portaal.js) blijft verborgen. */
 	.account-switcher-fallback {
 		display: none;
 	}
-	.account-switcher[hidden] ~ .account-switcher-fallback {
+	.account-switcher[hidden] ~ .account-switcher-fallback:not([hidden]) {
 		display: inline-flex;
 	}
 }
@@ -2767,6 +2768,63 @@ button {
 
 /* Inlog-pagina’s */
 
+/* -- NL WALLET -- */
+
+/* De knoppen van wallet_web staan onzichtbaar op de pagina: nl-wallet-inloggen.js klikt ze aan vanuit
+   de gewone inlogkaart. Alleen het venster met de QR-code is te zien; dat blijft van NL Wallet zelf,
+   zodat het bij elke relying party hetzelfde is. */
+.nl-wallet-onzichtbaar::part(button) {
+	display: none;
+}
+
+/* Titel boven en link onder het venster, in de grijze overlay. Beide vensters van NL Wallet (inloggen en
+   bevoegdheid toevoegen) zien er hetzelfde uit; de titel zegt waar deze QR-code voor is. Kleine donkere
+   labels, zodat de witte tekst leesbaar blijft boven wat er achter de overlay ligt. Het venster heeft
+   z-index 1045 (wallet_web, position: fixed in de shadow DOM); de labels liggen er net boven. */
+.nl-wallet-overlay-titel,
+.nl-wallet-overlay-hint {
+	background: var(--toepassing-color-background-inverse);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-text-inverse);
+	inline-size: fit-content;
+	inset-inline: 0;
+	margin-block: 0;
+	margin-inline: auto;
+	max-inline-size: calc(100% - 2 * var(--toepassing-space-padding-md));
+	padding-block: var(--toepassing-space-padding-xs);
+	padding-inline: var(--toepassing-space-padding-sm);
+	position: fixed;
+	text-align: center;
+	z-index: 1046;
+}
+
+.nl-wallet-overlay-titel {
+	font: var(--toepassing-text-heading-h5);
+	inset-block-start: var(--toepassing-space-padding-xs);
+}
+
+.nl-wallet-overlay-hint {
+	font-size: var(--toepassing-text-size-body-sm);
+	inset-block-end: var(--toepassing-space-padding-xs);
+	p {
+		margin: 0;
+		max-inline-size: none;
+	}
+	a {
+		color: inherit;
+		text-decoration: underline;
+		&:hover,
+		&:focus-visible {
+			color: inherit;
+			text-decoration-thickness: 2px;
+		}
+	}
+}
+
+.nl-wallet-meldingen:not(:has(> :not([hidden]))) {
+	display: none;
+}
+
 .page-login {
 	article:first-of-type {
 		container-type: initial;
@@ -2790,6 +2848,11 @@ button {
 			color: var(--rijkshuisstijl-color-hemelblauw-600);
 			text-decoration: underline;
 			text-underline-offset: 2px;
+		}
+		/* Een knop in de vorm van een link houdt de knopstijl, anders staat er blauwe tekst op een blauwe knop. */
+		a.btn-cta {
+			color: var(--toepassing-color-text-inverse);
+			text-decoration: none;
 		}
 	}
 	.login-selection {

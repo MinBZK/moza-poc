@@ -14,6 +14,7 @@
 		"vite:build": "vite build",
 		"format": "prettier --write .",
 		"proxy": "node server/proxy.js",
+		"nl-wallet": "node server/nl-wallet.js",
 		"test:vergelijk": "vitest run --config tests-vergelijking/vitest.config.js",
 		"test:keten": "vitest run --config tests-integratie/vitest.config.js",
 		"generate:profiel": "openapi-typescript ./react-islands/dependencies/profiel-service/openapi.yaml -o ./react-islands/src/network/profiel/generated.ts --enum-values"

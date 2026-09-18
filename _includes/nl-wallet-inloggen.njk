@@ -1,0 +1,56 @@
+{#
+	Inloggen met NL Wallet: meldingen, de link in de overlay en de plek voor de onzichtbare knoppen
+	van NL Wallet. Het venster opent via een element met data-nl-wallet-inloggen op dezelfde pagina.
+	Zie assets/javascript/nl-wallet-inloggen.js en server/nl-wallet/README.md.
+#}
+<div class="nl-wallet-meldingen">
+	<div class="feedback feedback-info" hidden data-nl-wallet-status="bezig" role="status">
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Uw gegevens uit NL Wallet worden opgehaald.</p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-success" hidden data-nl-wallet-status="ingelogd" role="status">
+		{% include "icon-feedback-success.njk" %}
+		<div>
+			<p>U bent ingelogd als <b data-nl-wallet-naam></b> voor <b data-nl-wallet-onderneming></b>. <a href="{{ '/moza/' | url }}" data-nl-wallet-vervolg>Verder naar MijnOverheid Zakelijk</a></p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-error" hidden data-nl-wallet-status="mislukt" role="alert">
+		{% include "icon-feedback-error.njk" %}
+		<div>
+			<p>Inloggen met NL Wallet is niet gelukt. Controleer of uw bevoegdheid voor uw onderneming in uw NL Wallet staat en probeer het opnieuw.</p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-error" hidden data-nl-wallet-status="andere-persoon" role="alert">
+		{% include "icon-feedback-error.njk" %}
+		<div>
+			<p>Deze bevoegdheid komt uit de NL Wallet van iemand anders dan wie is ingelogd. Voeg een onderneming toe met uw eigen NL Wallet.</p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-warning" hidden data-nl-wallet-bevoegdheid-status="niet-ingericht" role="status">
+		{% include "icon-feedback-warning.njk" %}
+		<div>
+			<p>Een bevoegdheid toevoegen aan NL Wallet kan in deze omgeving nog niet.</p>
+		</div>
+	</div>
+</div>
+
+{# Titel boven en link onder het venster van NL Wallet, per venster. Het venster zelf is voor inloggen
+en voor de bevoegdheid gelijk (“Scan de QR-code met je NL Wallet app”); de titel maakt het verschil. #}
+<p class="nl-wallet-overlay-titel" hidden data-nl-wallet-overlay="inloggen"><span data-nl-wallet-titel-inloggen>Inloggen bij MijnOverheid Zakelijk</span></p>
+<div class="nl-wallet-overlay-hint" hidden data-nl-wallet-overlay="inloggen">
+	<p>Nog geen NL Wallet met Claudia van Dam? <a href="{{ '/inloggen/nl-wallet/app/' | url }}" target="_blank" rel="noopener">Installeer de app</a></p>
+	<p data-nl-wallet-bevoegdheden hidden>Nog geen bevoegdheid in uw NL Wallet? Voeg toe voor <span data-nl-wallet-bevoegdheid-links></span></p>
+</div>
+<p class="nl-wallet-overlay-titel" hidden data-nl-wallet-overlay="bevoegdheid">Bevoegdheid voor <span data-nl-wallet-titel-onderneming>uw onderneming</span> toevoegen aan uw NL Wallet</p>
+<p class="nl-wallet-overlay-hint" hidden data-nl-wallet-overlay="bevoegdheid">Staat uw bevoegdheid in uw NL Wallet? <a href="#" data-nl-wallet-naar-inloggen>Ga verder met inloggen</a></p>
+
+<div data-nl-wallet-knoppen></div>
+
+<script type="module" src="{{ '/assets/javascript/vendor/nl-wallet-web.iife.js' | url }}"></script>
+<script src="{{ '/assets/javascript/nl-wallet-inloggen.js' | url }}" defer></script>

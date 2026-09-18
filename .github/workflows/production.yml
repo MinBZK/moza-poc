@@ -18,6 +18,7 @@ jobs:
       packages: write
     outputs:
       image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+      nl-wallet-api: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-nl-wallet-api
     steps:
       - name: Lowercase image name
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
@@ -55,6 +56,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Inloggen met NL Wallet: de sessie-endpoints als eigen image, een tag in hetzelfde
+      # (openbare) package. Zie container/nl-wallet-api/Containerfile.
+      - name: Build and push NL Wallet-API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./container/nl-wallet-api/Containerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-nl-wallet-api
+          cache-from: type=gha,scope=nl-wallet-api
+          cache-to: type=gha,mode=max,scope=nl-wallet-api
+
   deploy:
     runs-on: ubuntu-latest
     permissions:
@@ -71,6 +84,12 @@ jobs:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: pm-5sj
           deployment-name: poc
-          component: proef
-          image: ${{ needs.build.outputs.image }}
+          # Twee componenten: de site (proef) en de NL Wallet-sessie-endpoints (nlw-api). Het
+          # component nlw-api is eenmalig in ZAD gedefinieerd (poort 8095, env NL_WALLET_*); zie
+          # server/nl-wallet/README.md.
+          components: >-
+            [
+              {"name": "proef", "image": "${{ needs.build.outputs.image }}"},
+              {"name": "nlw-api", "image": "${{ needs.build.outputs.nl-wallet-api }}"}
+            ]
           wait-for-ready: true

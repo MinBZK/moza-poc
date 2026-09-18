@@ -39,3 +39,5 @@ node_modules
 
 # React
 react-islands/dist
+# Lokale NL Wallet-links, gegenereerd door server/nl-wallet/lokaal-inrichten.sh
+server/nl-wallet/lokaal.json

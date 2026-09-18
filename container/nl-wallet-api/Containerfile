@@ -1,0 +1,25 @@
+# De sessie-endpoints voor "Inloggen met NL Wallet" (server/nl-wallet.js) als eigen container,
+# naast de statische site. Op ZAD draait dit als component `nlw-api` in dezelfde deployment
+# als `proef`; de nginx daar proxyt /api/nl-wallet/ en /downloads/nl-wallet-moza.apk hierheen
+# (zie container/default.conf.template). Lokaal doet server/nl-wallet.js beide, zie
+# server/nl-wallet/README.md.
+#
+# Instellingen komen als omgevingsvariabelen (zie de README): NL_WALLET_VS_INTERNAL,
+# NL_WALLET_VS_PUBLIC, NL_WALLET_CONFIG_URL, NL_WALLET_APP_URL en eventueel NL_WALLET_API_KEY.
+# Het publieke adres voor de terugkeer-URL leidt de server af uit het verzoek.
+FROM docker.io/library/node:22-alpine
+
+ENV NODE_ENV=production \
+	NL_WALLET_PORT=8095
+
+WORKDIR /app
+# Alleen express, met de versie uit package-lock.json. Niet via package.json: daar staat express als
+# devDependency (voor de lokale server), en `npm install --omit=dev` haalt hem dan juist weg.
+RUN npm install --no-audit --no-fund --ignore-scripts express@4.22.2 \
+	&& rm -rf ~/.npm
+COPY server/nl-wallet.js server/
+COPY server/nl-wallet/verifier.js server/nl-wallet/
+
+USER node
+EXPOSE 8095
+CMD ["node", "server/nl-wallet.js"]
