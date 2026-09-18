@@ -19,6 +19,11 @@ const app = express();
 app.set("trust proxy", true);
 app.use(express.json({ limit: "1kb" }));
 
+// fetch() meldt alleen "fetch failed"; de reden (ENOTFOUND, ECONNREFUSED, timeout) zit in de cause.
+function oorzaak(e) {
+	return e && e.cause ? "(" + (e.cause.code || e.cause.message) + ")" : "";
+}
+
 function publiekAdres(req) {
 	if (process.env.MOZA_PUBLIC_URL) return process.env.MOZA_PUBLIC_URL;
 	return req.protocol + "://" + req.get("host");
@@ -58,7 +63,7 @@ app.post("/api/nl-wallet/sessies", async (req, res) => {
 		zetSessieCookie(req, res, sessie.session_token);
 		res.json(sessie);
 	} catch (e) {
-		console.error("[nl-wallet]", e.message);
+		console.error("[nl-wallet]", e.message, oorzaak(e));
 		res.status(502).json({ fout: "De NL Wallet-koppeling is niet bereikbaar" });
 	}
 });
@@ -71,7 +76,7 @@ app.get("/api/nl-wallet/sessies/:token/gegevens", async (req, res) => {
 		if (!inlog) return res.status(422).json({ fout: "Geen naam ontvangen uit de NL Wallet" });
 		res.json(inlog);
 	} catch (e) {
-		console.error("[nl-wallet]", e.message);
+		console.error("[nl-wallet]", e.message, oorzaak(e));
 		res.status(502).json({ fout: "De gegevens uit de NL Wallet zijn niet op te halen" });
 	}
 });
@@ -92,7 +97,7 @@ app.get("/api/nl-wallet/sessie", async (req, res) => {
 		if (["FAILED", "CANCELLED", "EXPIRED"].includes(status)) zetSessieCookie(req, res, null);
 		res.json({ status });
 	} catch (e) {
-		console.error("[nl-wallet]", e.message);
+		console.error("[nl-wallet]", e.message, oorzaak(e));
 		res.status(502).json({ fout: "De status van de NL Wallet-sessie is niet op te halen" });
 	}
 });
@@ -120,7 +125,7 @@ async function leesOmgeving() {
 		if (!antwoord.ok) throw new Error("HTTP " + antwoord.status + " van " + CONFIG_URL);
 		configCache = { tot: Date.now() + CONFIG_CACHE_MS, omgeving: await antwoord.json() };
 	} catch (e) {
-		console.error("[nl-wallet] omgevingsconfiguratie:", e.message);
+		console.error("[nl-wallet] omgevingsconfiguratie:", e.message, oorzaak(e));
 		configCache = { tot: Date.now() + 5000, omgeving: configCache.omgeving };
 	}
 	return configCache.omgeving;
