@@ -33,6 +33,13 @@ describe("scriptvolgorde in base.njk", () => {
 		expect(positie("personas.js")).toBeLessThan(positie("content-interactions.js"));
 	});
 
+	it("laadt personas.js vóór nl-wallet-portaal.js", () => {
+		// nl-wallet-portaal.js zoekt de actieve persona op via window.Personas, dat personas.js
+		// aanmaakt. Andersom krijgt geen enkele onderneming in "Mijn ondernemingen" aria-current.
+		expect(positie("nl-wallet-portaal.js")).toBeGreaterThanOrEqual(0);
+		expect(positie("personas.js")).toBeLessThan(positie("nl-wallet-portaal.js"));
+	});
+
 	it("laadt berichtenbox-keten.js vóór berichtenbox.js", () => {
 		// De ophaalronde moet zo vroeg mogelijk beginnen; berichtenbox.js is een module en draait
 		// hoe dan ook ná alle defer-scripts.

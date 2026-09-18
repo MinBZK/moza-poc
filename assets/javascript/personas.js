@@ -10,6 +10,10 @@
  *   data-profiel="achternaam"        → persoon.achternaam
  *   data-profiel="naam"              → persoon.voornaam + " " + persoon.achternaam
  *   data-profiel="voornaam-bedrijf"  → persoon.voornaam + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
+ *
+ * Na inloggen met NL Wallet (nl-wallet-inloggen.js) komen voornaam en achternaam
+ * uit sessionStorage "inlog:persoon" in plaats van uit de persona: de persona is het
+ * bedrijf, de wallet zegt wie er inlogt. Die naam verdwijnt met het tabblad.
  *   data-profiel="handelsnaam"       → bedrijf.handelsnaam
  *   data-profiel="functies"          → bedrijf.functies
  *   data-profiel="website"           → bedrijf.website (als klikbare link)
@@ -240,8 +244,22 @@
 		}
 	}
 
+	// Voornaam en achternaam uit een NL Wallet-inlog, of null. Alleen twee strings;
+	// wat er verder in sessionStorage staat vertrouwen we niet.
+	function ingelogdePersoon() {
+		try {
+			var inlog = JSON.parse(sessionStorage.getItem("inlog:persoon"));
+			if (inlog && typeof inlog.voornaam === "string" && typeof inlog.achternaam === "string") {
+				return { voornaam: inlog.voornaam, achternaam: inlog.achternaam };
+			}
+		} catch (e) {
+			/* geen sessionStorage of onleesbare waarde */
+		}
+		return null;
+	}
+
 	function waarde(persona, sleutel) {
-		var p = persona.persoon;
+		var p = ingelogdePersoon() || persona.persoon;
 		var b = persona.bedrijf;
 		switch (sleutel) {
 			case "voornaam":
