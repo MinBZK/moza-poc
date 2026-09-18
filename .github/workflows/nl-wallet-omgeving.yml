@@ -1,7 +1,7 @@
 name: NL Wallet-testomgeving
 
 # Bouwt de NL Wallet-testomgeving (nl-wallet-omgeving/) en rolt hem op main uit naar ZAD,
-# deployment `nlw` in project pm-5sj. Een PR bouwt alleen de images.
+# deployment `nlw` in project mwt-ked (MOZa wallet testomgeving). Een PR bouwt alleen de images.
 
 on:
   push:
@@ -118,13 +118,14 @@ jobs:
       deployments: write
     environment:
       name: nl-wallet
-      url: https://nlw-pid.nlw.moza.rijksapp.nl/
+      url: https://nlw-pid-nlw-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl/
     steps:
       - name: Deploy to ZAD
         uses: RijksICTGilde/zad-actions/deploy@v4
         with:
-          api-key: ${{ secrets.ZAD_API_KEY }}
-          project-id: pm-5sj
+          # De key van project mwt-ked; ZAD_API_KEY is die van pm-5sj (proef).
+          api-key: ${{ secrets.ZAD_API_KEY_MWT }}
+          project-id: mwt-ked
           deployment-name: nlw
           components: >-
             [

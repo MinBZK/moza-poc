@@ -3,8 +3,17 @@
 export NLW_DATA="${NLW_DATA:-/data}"
 export HOME="${NLW_DATA}/home"
 
+# Publieke adressen. Standaard nlw-<naam>.<NLW_DOMEIN>. Zolang ZAD-beheer een eigen subdomein
+# nog niet heeft goedgekeurd, serveert het platform op het clusteradres zonder punten
+# (nlw-<naam>-<deployment>-<project>.<clusterdomein>); NLW_HOST_PATROON geeft dan de vorm,
+# met {naam} op de plek van wp, static, ups, pid, issuance of verifier.
 for naam in wp static ups pid issuance verifier; do
-	export "NLW_URL_${naam^^}=https://nlw-${naam}.${NLW_DOMEIN:?}"
+	if [[ -n "${NLW_HOST_PATROON:-}" ]]; then
+		host="${NLW_HOST_PATROON//\{naam\}/${naam}}"
+	else
+		host="nlw-${naam}.${NLW_DOMEIN:?}"
+	fi
+	export "NLW_URL_${naam^^}=https://${host}"
 done
 export MOZA_JSON="${NLW_DATA}/moza.json"
 

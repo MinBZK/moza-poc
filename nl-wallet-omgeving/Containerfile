@@ -74,7 +74,7 @@ RUN useradd --uid 1000 --create-home --home-dir /home/wallet wallet \
 ENV PATH=/opt/nlw/sbin:/opt/nlw/bin:/usr/share/dotnet:${PATH} \
 	HOME=/data/home \
 	NLW_DATA=/data \
-	NLW_DOMEIN=nlw.moza.rijksapp.nl \
+	NLW_DOMEIN=moza-wallet.rijksapp.dev \
 	MOZA_ORIGIN=https://proef.moza.rijksapp.dev \
 	DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
 	RUST_LOG=info

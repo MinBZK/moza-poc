@@ -6,19 +6,19 @@ Alleen voor testen met fictieve gegevens. De omgeving gebruikt SoftHSM, een gesi
 
 ## Opzet
 
-ZAD-project `pm-5sj`, deployment `nlw`.
+ZAD-project `mwt-ked` (MOZa wallet testomgeving), deployment `nlw`.
 
 | Component | Hostnaam | Wat |
 |---|---|---|
 | `nlw` | geen (intern) | Kerncontainer: alle services, PostgreSQL, redis, SoftHSM, mock-DigiD (nl-rdo-max), BRP-proxy. Persistent volume op `/data`. |
-| `nlw-wp` | nlw-wp.nlw.moza.rijksapp.nl | wallet_provider |
-| `nlw-static` | nlw-static.nlw.moza.rijksapp.nl | static_server: wallet-config, WIA-statuslijsten, WRPAC-CRL |
-| `nlw-ups` | nlw-ups.nlw.moza.rijksapp.nl | update_policy_server |
-| `nlw-pid` | nlw-pid.nlw.moza.rijksapp.nl | pid_issuer, met de mock-DigiD-inlogpagina |
-| `nlw-issuance` | nlw-issuance.nlw.moza.rijksapp.nl | issuance_server (KVK-bevoegdheid van "KVK Demo") |
-| `nlw-verifier` | nlw-verifier.nlw.moza.rijksapp.nl | verification_server (publieke kant) |
+| `nlw-wp` | nlw-wp.moza-wallet.rijksapp.dev | wallet_provider |
+| `nlw-static` | nlw-static.moza-wallet.rijksapp.dev | static_server: wallet-config, WIA-statuslijsten, WRPAC-CRL |
+| `nlw-ups` | nlw-ups.moza-wallet.rijksapp.dev | update_policy_server |
+| `nlw-pid` | nlw-pid.moza-wallet.rijksapp.dev | pid_issuer, met de mock-DigiD-inlogpagina |
+| `nlw-issuance` | nlw-issuance.moza-wallet.rijksapp.dev | issuance_server (KVK-bevoegdheid van "KVK Demo") |
+| `nlw-verifier` | nlw-verifier.moza-wallet.rijksapp.dev | verification_server (publieke kant) |
 
-De hostnamen staan op `rijksapp.nl`: het subdomein `moza` op `rijksapp.dev` hoort bij deployment `poc` en is niet voor een tweede deployment beschikbaar. `zad-inrichten.sh` maakt de deployment eenmalig aan.
+Het subdomein `moza-wallet.rijksapp.dev` moet ZAD-beheer goedkeuren. Tot die tijd serveert het platform op `nlw-<dienst>-nlw-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl`; de kerncontainer krijgt die vorm dan via `NLW_HOST_PATROON`. Let op: de hostnamen zitten in sleutels, configuratie en de app, dus overstappen op het eigen subdomein betekent opnieuw inrichten (schoon volume) en een nieuwe app-build. `zad-inrichten.sh` maakt de deployment eenmalig aan.
 
 ZAD geeft elk component één hostnaam. De `nlw-*`-componenten zijn daarom kleine nginx-proxy's (`proxy/`) die met de oorspronkelijke Host-header doorsturen naar de kerncontainer (`NLW_KERN`, op ZAD `nlw-nlw:8080`: een Service heet daar `<deployment>-<component>`). De nginx in de kerncontainer kiest op die hostnaam de service (`rootfs/opt/nlw/nginx.conf`).
 

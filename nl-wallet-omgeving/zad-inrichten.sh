@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Richt deployment `nlw` in ZAD-project pm-5sj in. Eenmalig, met de zad-cli
-# (https://github.com/RijksICTGilde/zad-cli) en een project-key (`zad project use pm-5sj`).
+# Richt deployment `nlw` in ZAD-project mwt-ked (MOZa wallet testomgeving) in. Eenmalig, met de zad-cli
+# (https://github.com/RijksICTGilde/zad-cli) en een project-key (`zad project use mwt-ked`).
 # Daarna houdt de workflow de images bij.
 #
 # Gebruik: zad-inrichten.sh <kern-image> <proxy-image>
@@ -27,20 +27,22 @@ for component in "${proxy_componenten[@]}"; do
 	zad component add "${component}" --port 8080 --service publish-on-web
 done
 
-# Hostnamen <component>.nlw.moza.rijksapp.nl. Het subdomein moza op rijksapp.dev is van deployment
-# poc (proef.moza.rijksapp.dev) en kan niet door een tweede deployment gebruikt worden; op
-# rijksapp.nl delen de onderzoeksreleases het al met domain-format deployment.subdomain.
+# Hostnamen nlw-<dienst>.moza-wallet.rijksapp.dev. Een eigen subdomein moet ZAD-beheer goedkeuren;
+# tot die tijd serveert het platform op nlw-<dienst>-nlw-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl
+# en moet NLW_HOST_PATROON (hieronder) die vorm aan de kerncontainer vertellen.
 zad deployment create "${deployment}" --component nlw --image "${kern}" \
-	--base-domain rijksapp.nl --subdomain moza --domain-format component.deployment.subdomain --yes
+	--base-domain rijksapp.dev --subdomain moza-wallet --domain-format component.subdomain --yes
 for component in "${proxy_componenten[@]}"; do
 	zad component assign "${component}" "${deployment}" --image "${proxy}"
 done
 zad service config set publish-on-web --target deployment --deployment "${deployment}" \
-	--set base-domain=rijksapp.nl --set subdomain=moza --set domain-format=component.deployment.subdomain \
+	--set base-domain=rijksapp.dev --set subdomain=moza-wallet --set domain-format=component.subdomain \
 	--set issuer=letsencrypt --yes
 
 # De kerncontainer bouwt zijn publieke adressen uit dit domein (zie rootfs/opt/nlw/sbin/omgeving).
-zad env add NLW_DOMEIN=nlw.moza.rijksapp.nl --component nlw --deployment "${deployment}"
+# Zolang het subdomein niet is goedgekeurd: in plaats daarvan het clusteradres als patroon.
+zad env add NLW_DOMEIN=moza-wallet.rijksapp.dev --component nlw --deployment "${deployment}"
+zad env add "NLW_HOST_PATROON=nlw-{naam}-${deployment}-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl" --component nlw --deployment "${deployment}"
 
 # Een Service heet op ZAD <deployment>-<component>; de proxy's melden bij het starten alle
 # *_SERVICE_HOST-variabelen, mocht dat ooit anders zijn.
