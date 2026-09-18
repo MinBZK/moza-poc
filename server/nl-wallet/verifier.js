@@ -16,6 +16,7 @@
 
 const PID_DOCTYPE = "urn:eudi:pid:nl:1";
 const BEVOEGDHEID_VCT = "com.example.kvk_bevoegdheid";
+const RETURN_PAD = "/inloggen/nl-wallet/terug/?session_token={session_token}";
 
 function inlogQuery() {
 	return {
@@ -44,7 +45,7 @@ function maakConfig(env) {
 		publiek: (env.NL_WALLET_VS_PUBLIC || "http://localhost:3011").replace(/\/$/, ""),
 		usecase: env.NL_WALLET_USECASE || "moza_inloggen",
 		apiKey: env.NL_WALLET_API_KEY || "",
-		returnUrlTemplate: publiek + "/inloggen/nl-wallet/terug/?session_token={session_token}",
+		returnUrlTemplate: publiek + RETURN_PAD,
 	};
 }
 
@@ -60,14 +61,17 @@ function geldigToken(token) {
 	return typeof token === "string" && /^[A-Za-z0-9]{16,128}$/.test(token);
 }
 
-async function startSessie(config, doeFetch) {
+// `publiek` is het adres waarop de bezoeker MOZa ziet (uit het verzoek afgeleid); zonder dat geldt
+// MOZA_PUBLIC_URL uit de configuratie.
+async function startSessie(config, doeFetch, publiek) {
+	const returnUrlTemplate = publiek ? publiek.replace(/\/$/, "") + RETURN_PAD : config.returnUrlTemplate;
 	const antwoord = await doeFetch(config.intern + "/disclosure/sessions", {
 		method: "POST",
 		headers: headers(config, { "Content-Type": "application/json" }),
 		body: JSON.stringify({
 			usecase: config.usecase,
 			dcql_query: inlogQuery(),
-			return_url_template: config.returnUrlTemplate,
+			return_url_template: returnUrlTemplate,
 		}),
 	});
 	if (!antwoord.ok) throw new Error("Sessie starten mislukt: HTTP " + antwoord.status);

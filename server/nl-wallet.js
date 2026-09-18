@@ -13,7 +13,16 @@ const PORT = process.env.NL_WALLET_PORT || 8095;
 const config = maakConfig(process.env);
 
 const app = express();
+// Achter de nginx van de site (lokaal en op ZAD): Host en X-Forwarded-Proto zijn dan die van de
+// bezoeker, en daaruit volgt het publieke adres voor de terugkeer-URL. Zo hoeft dat adres niet
+// per omgeving ingesteld te worden en klopt het ook op een PR-preview.
+app.set("trust proxy", true);
 app.use(express.json({ limit: "1kb" }));
+
+function publiekAdres(req) {
+	if (process.env.MOZA_PUBLIC_URL) return process.env.MOZA_PUBLIC_URL;
+	return req.protocol + "://" + req.get("host");
+}
 
 app.use((req, res, next) => {
 	if (req.path.startsWith("/api/")) console.log(`[nl-wallet] ${req.method} ${req.path}`);
@@ -45,7 +54,7 @@ app.post("/api/nl-wallet/sessies", async (req, res) => {
 		return res.status(400).json({ fout: "Onbekende usecase" });
 	}
 	try {
-		const sessie = await startSessie(config, fetch);
+		const sessie = await startSessie(config, fetch, publiekAdres(req));
 		zetSessieCookie(req, res, sessie.session_token);
 		res.json(sessie);
 	} catch (e) {
@@ -90,19 +99,35 @@ app.get("/api/nl-wallet/sessie", async (req, res) => {
 
 // Instellingen van deze omgeving: per onderneming de links om de bevoegdheid in de wallet te zetten,
 // en waar de app te downloaden is. Lokaal geschreven door server/nl-wallet/lokaal-inrichten.sh; elders
-// via NL_WALLET_CONFIG (pad naar een JSON-bestand in hetzelfde formaat).
+// via NL_WALLET_CONFIG (pad naar een JSON-bestand in hetzelfde formaat) of NL_WALLET_CONFIG_URL (de
+// testomgeving serveert het als /moza.json; kort gecachet, want de links veranderen zelden).
 const CONFIG_PAD = process.env.NL_WALLET_CONFIG || path.join(__dirname, "nl-wallet", "lokaal.json");
+const CONFIG_URL = process.env.NL_WALLET_CONFIG_URL || "";
+const CONFIG_CACHE_MS = 60 * 1000;
+let configCache = { tot: 0, omgeving: {} };
 
-function leesOmgeving() {
-	try {
-		return JSON.parse(fs.readFileSync(CONFIG_PAD, "utf8"));
-	} catch (e) {
-		return {};
+async function leesOmgeving() {
+	if (!CONFIG_URL) {
+		try {
+			return JSON.parse(fs.readFileSync(CONFIG_PAD, "utf8"));
+		} catch (e) {
+			return {};
+		}
 	}
+	if (Date.now() < configCache.tot) return configCache.omgeving;
+	try {
+		const antwoord = await fetch(CONFIG_URL, { headers: config.apiKey ? { Authorization: "Bearer " + config.apiKey } : {} });
+		if (!antwoord.ok) throw new Error("HTTP " + antwoord.status + " van " + CONFIG_URL);
+		configCache = { tot: Date.now() + CONFIG_CACHE_MS, omgeving: await antwoord.json() };
+	} catch (e) {
+		console.error("[nl-wallet] omgevingsconfiguratie:", e.message);
+		configCache = { tot: Date.now() + 5000, omgeving: configCache.omgeving };
+	}
+	return configCache.omgeving;
 }
 
-app.get("/api/nl-wallet/config", (req, res) => {
-	const omgeving = leesOmgeving();
+app.get("/api/nl-wallet/config", async (req, res) => {
+	const omgeving = await leesOmgeving();
 	const bevoegdheden = Array.isArray(omgeving.bevoegdheden) ? omgeving.bevoegdheden : [];
 	res.json({
 		bevoegdheden: bevoegdheden.map(({ id, handelsnaam, kvkNummer, same_device_ul, cross_device_ul }) => ({ id, handelsnaam, kvkNummer, same_device_ul, cross_device_ul })),
@@ -111,9 +136,10 @@ app.get("/api/nl-wallet/config", (req, res) => {
 });
 
 // De app NL Wallet MOZa (Android). Online een vaste URL; lokaal de APK uit de NL Wallet-build.
-app.get("/downloads/nl-wallet-moza.apk", (req, res) => {
+app.get("/downloads/nl-wallet-moza.apk", async (req, res) => {
 	if (process.env.NL_WALLET_APP_URL) return res.redirect(process.env.NL_WALLET_APP_URL);
-	const apk = leesOmgeving().app && leesOmgeving().app.apk;
+	const omgeving = await leesOmgeving();
+	const apk = omgeving.app && omgeving.app.apk;
 	if (!apk || !fs.existsSync(apk)) return res.status(404).send("NL Wallet MOZa is in deze omgeving niet te downloaden.");
 	res.download(apk, "nl-wallet-moza.apk");
 });

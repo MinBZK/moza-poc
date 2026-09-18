@@ -94,19 +94,25 @@ Certificaten (MOZa als verifier, KVK Demo als uitgever) maakt het script alleen 
 | `NL_WALLET_VS_PUBLIC`   | `http://localhost:3011`        | Publieke (wallet) API; de browser pollt hier de status                                                                                                 |
 | `NL_WALLET_USECASE`     | `moza_inloggen`                | Usecase in de verification_server                                                                                                                      |
 | `NL_WALLET_API_KEY`     | leeg                           | Bearer-token voor de interne API, als die er een eist                                                                                                  |
-| `MOZA_PUBLIC_URL`       | `http://localhost:8095`        | Basis voor de return-URL na inloggen op dezelfde telefoon                                                                                              |
+| `MOZA_PUBLIC_URL`       | leeg                           | Basis voor de return-URL na inloggen op dezelfde telefoon; leeg betekent: afleiden uit het verzoek (Host en X-Forwarded-Proto), zodat ook een PR-preview klopt |
 | `NL_WALLET_CONFIG`      | `server/nl-wallet/lokaal.json` | JSON met per onderneming de links voor “bevoegdheid toevoegen” en lokaal het pad naar de APK; `lokaal-inrichten.sh` schrijft dit bestand (niet in git) |
+| `NL_WALLET_CONFIG_URL`  | leeg                           | Hetzelfde JSON van een URL in plaats van een bestand; de testomgeving serveert het als `/moza.json`. Heeft voorrang op `NL_WALLET_CONFIG`                |
 | `NL_WALLET_APP_URL`     | leeg                           | Online downloadadres van NL Wallet MOZa; zonder deze variabele serveert de server de lokale APK                                                        |
 
 ## Online testomgeving
 
 De NL Wallet-kant draait online in [MinBZK/moza-wallet-testomgeving](https://github.com/MinBZK/moza-wallet-testomgeving), ZAD-project `mwt-ked`, met `moza/inrichten.sh` als tegenhanger van `lokaal-inrichten.sh` (houd beide gelijk bij wijzigingen in testpersonen of attestaties). De testapp voor die omgeving staat als release bij die repo. Zolang het subdomein `moza-wallet.rijksapp.dev` op goedkeuring wacht, zijn de adressen `nlw-<dienst>-nlw-mwt-ked.rig.prd1.gn2.quattro.rijksapps.nl`.
 
-Voor de koppeling op proef.moza.rijksapp.dev (vervolg-PR) betekent dat:
+### Op proef en op PR-previews
 
-- `NL_WALLET_VS_PUBLIC` wijst naar de publieke verification_server (`nlw-verifier`);
-- de interne API en de bevoegdheidslinks (`/moza.json`) staan in een ander ZAD-project dan proef (`pm-5sj`), dus niet bereikbaar als `nlw-nlw:8080`. Of ZAD's cross-domain-access tussen de projecten, of een publieke route met `NL_WALLET_API_KEY` op de interne API;
-- `NL_WALLET_APP_URL` naar de release van de testapp.
+De sessie-endpoints draaien op ZAD als eigen component `nlw-api` (image uit `container/nl-wallet-api/Containerfile`, gebouwd door `production.yml` en `preview.yml` als tag `<versie>-nl-wallet-api` in het package van deze repo (bij een preview begint die met `pr-<N>-`, zodat de opruimstap hem meeneemt)) naast `proef`, in dezelfde deployment. De nginx van `proef` proxyt `/api/nl-wallet/` en `/downloads/nl-wallet-moza.apk` ernaartoe; het adres volgt uit `DEPLOYMENT_NAME` (`<deployment>-nlw-api:8095`, zie `container/16-nl-wallet-backend.envsh`), dus elke PR-preview heeft automatisch zijn eigen.
+
+Eenmalig in ZAD-project `pm-5sj` gedaan (met de CLI):
+
+- component `nlw-api` (poort 8095) met de variabelen `NL_WALLET_VS_INTERNAL=http://nlw-nlw.rig-prd-mwt-ked.svc.cluster.local:8080`, `NL_WALLET_VS_PUBLIC=https://nlw-verifier.moza-wallet.rijksapp.dev`, `NL_WALLET_CONFIG_URL=http://nlw-nlw.rig-prd-mwt-ked.svc.cluster.local:8080/moza.json` en `NL_WALLET_APP_URL` (de release van de testapp);
+- `cross-domain-access`: een outbound-regel van `nlw-api` naar `mwt-ked`/`nlw`/`nlw` poort 8080, en in project `mwt-ked` de bijbehorende inbound-regel vanaf `pm-5sj`/`nlw-api`. Pods van verschillende ZAD-projecten mogen elkaar anders niet bereiken. De regel laat de deployment open, zodat ook previews (`pr<N>`) erbij mogen.
+
+De deploy-stap van beide workflows geeft de deployment twee componenten (`proef` en `nlw-api`).
 
 ## Naar pre-prod
 

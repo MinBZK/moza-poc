@@ -37,6 +37,11 @@ server {
     set $backend_profiel "${BACKEND_PROFIEL}";
     set $backend_api_2 "${BACKEND_API_2}";
 
+    # De sessie-endpoints van "Inloggen met NL Wallet" (container/nl-wallet-api). Op ZAD is dat het
+    # component nlw-api in dezelfde deployment; 16-nl-wallet-backend.envsh leidt het adres af uit
+    # DEPLOYMENT_NAME als BACKEND_NL_WALLET niet gezet is, zodat elke PR-preview zijn eigen heeft.
+    set $backend_nl_wallet "${BACKEND_NL_WALLET}";
+
     # Federatief Berichtenstelsel: de berichtenuitvraag levert de berichten, de demo-console de
     # testaccounts. Twee backends, omdat alleen de eerste een dienst van het stelsel is.
     set $backend_keten "${BACKEND_KETEN}";
@@ -188,6 +193,33 @@ server {
         proxy_pass $backend_api_2$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Inloggen met NL Wallet ---
+    # Sessie starten en volgen, de omgevingsconfiguratie en de download van de testapp. De
+    # terugkeerpagina en de rest van /inloggen/ zijn statisch en blijven hier. De server leidt het
+    # publieke adres voor de terugkeer-URL af uit X-Forwarded-Proto en Host.
+    location /api/nl-wallet/ {
+        default_type text/plain;
+        if ($backend_nl_wallet = "") {
+            add_header X-Proxy-Configuratie "BACKEND_NL_WALLET" always;
+            return 502 "BACKEND_NL_WALLET is niet gezet op deze container en DEPLOYMENT_NAME evenmin, dus er is geen adres voor Inloggen met NL Wallet.";
+        }
+
+        proxy_pass $backend_nl_wallet$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /downloads/nl-wallet-moza.apk {
+        if ($backend_nl_wallet = "") {
+            return 404;
+        }
+
+        proxy_pass $backend_nl_wallet$request_uri;
+        proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 

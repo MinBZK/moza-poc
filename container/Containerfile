@@ -69,10 +69,15 @@ ENV BACKEND_ORIGIN=http://dabackend:8000 \
     BACKEND_KETEN_HOST=uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
     BACKEND_DEMO_HOST= \
     BACKEND_PERSONAS_HOST=demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_NL_WALLET= \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
     NGINX_ENVSUBST_FILTER='^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$'
 
 COPY container/default.conf.template /etc/nginx/templates/default.conf.template
+# Leidt BACKEND_NL_WALLET af uit DEPLOYMENT_NAME (ZAD zet die in elke pod): het component nlw-api
+# in dezelfde deployment heet <deployment>-nlw-api. Een .envsh wordt door de entrypoint ge-sourcet,
+# mits uitvoerbaar, en draait vóór 20-envsubst-on-templates.sh.
+COPY --chmod=755 container/16-nl-wallet-backend.envsh /docker-entrypoint.d/16-nl-wallet-backend.envsh
 
 # Guards die vanuit meerdere locations ingesloten worden. Geen template: er staat geen ${...} in,
 # dus envsubst hoeft er niet langs.
