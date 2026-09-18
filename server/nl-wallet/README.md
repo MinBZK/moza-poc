@@ -110,7 +110,7 @@ De sessie-endpoints draaien op ZAD als eigen component `nlw-api` (image uit `con
 Eenmalig in ZAD-project `pm-5sj` gedaan (met de CLI):
 
 - component `nlw-api` (poort 8095) met de variabelen `NL_WALLET_VS_INTERNAL=http://nlw-nlw.rig-prd-mwt-ked.svc.cluster.local:8080`, `NL_WALLET_VS_PUBLIC=https://nlw-verifier.moza-wallet.rijksapp.dev`, `NL_WALLET_CONFIG_URL=http://nlw-nlw.rig-prd-mwt-ked.svc.cluster.local:8080/moza.json` en `NL_WALLET_APP_URL` (de release van de testapp);
-- `cross-domain-access`: een outbound-regel van `nlw-api` naar `mwt-ked`/`nlw`/`nlw` poort 8080, en in project `mwt-ked` de bijbehorende inbound-regel vanaf `pm-5sj`/`nlw-api`. Pods van verschillende ZAD-projecten mogen elkaar anders niet bereiken. De regel laat de deployment open, zodat ook previews (`pr<N>`) erbij mogen.
+- `cross-domain-access`: een outbound-regel van `nlw-api` naar `mwt-ked`/`nlw`/`nlw` poort 8080, en in project `mwt-ked` per MOZa-deployment een inbound-regel vanaf `pm-5sj`/`<deployment>`/`nlw-api` (`poc` en `pr162` staan erin). Pods van verschillende ZAD-projecten mogen elkaar anders niet bereiken, en een inbound-regel zonder deployment van de tegenpartij telt niet. Wil je inloggen met NL Wallet op een andere PR-preview testen, voeg dan in `mwt-ked` een regel voor die `pr<N>` toe (zie de README van moza-wallet-testomgeving).
 
 De deploy-stap van beide workflows geeft de deployment twee componenten (`proef` en `nlw-api`).
 
