@@ -20,6 +20,20 @@
 				</button>
 				{% include "account-switcher-menu.njk" %}
 			</div>
+			{# Na inloggen met NL Wallet: de ondernemingen waarvan de gebruiker in deze sessie een bevoegdheid
+			   heeft gedeeld, en een link om er nog een toe te voegen. Gevuld en getoond door nl-wallet-portaal.js. #}
+			<div class="account-switcher" hidden data-nl-wallet-ondernemingen>
+				<button class="account-switcher-toggle icon-label group-label-business" aria-expanded="false" aria-haspopup="true">
+					{% icon "/assets/icons/icon-werk.svg" %}
+					<span data-profiel="voornaam-bedrijf">Robin Vogel van Kwekerij De Bloesem</span>
+				</button>
+				<ul class="account-switcher-menu" role="menu" hidden>
+					<li class="account-switcher-group-label group-label-business">{% icon "/assets/icons/icon-werk.svg" %} Mijn ondernemingen</li>
+					<li role="menuitem" data-nl-wallet-toevoegen-item>
+						<a href="{{ '/inloggen/zakelijk/' | url }}?onderneming=toevoegen">Andere onderneming toevoegen met NL Wallet</a>
+					</li>
+				</ul>
+			</div>
 			<span class="icon-label account-switcher-fallback">
 				{% include "icon-persoon.njk" %}
 				<span data-profiel="naam">Robin Vogel</span>

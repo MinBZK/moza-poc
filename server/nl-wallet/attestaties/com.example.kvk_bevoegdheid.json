@@ -1,0 +1,114 @@
+{
+	"vct": "com.example.kvk_bevoegdheid",
+	"name": "Bevoegdheid onderneming",
+	"description": "Fictieve demo-attestatie voor MijnOverheid Zakelijk: voor welke onderneming de houder bevoegd is",
+	"display": [
+		{
+			"locale": "nl-NL",
+			"name": "Bevoegdheid onderneming",
+			"description": "Voor welke onderneming u bevoegd bent (demo)",
+			"summary": "{{handelsnaam}}",
+			"rendering": {
+				"simple": {
+					"background_color": "#154273",
+					"text_color": "#ffffff"
+				}
+			}
+		},
+		{
+			"locale": "en-US",
+			"name": "Company authorisation",
+			"description": "Which company you are authorised for (demo)",
+			"summary": "{{handelsnaam}}",
+			"rendering": {
+				"simple": {
+					"background_color": "#154273",
+					"text_color": "#ffffff"
+				}
+			}
+		}
+	],
+	"claims": [
+		{
+			"path": ["kvk_nummer"],
+			"display": [
+				{
+					"locale": "nl-NL",
+					"label": "KVK-nummer",
+					"description": "Het KVK-nummer van de onderneming"
+				},
+				{
+					"locale": "en-US",
+					"label": "Chamber of Commerce number",
+					"description": "The Chamber of Commerce number of the company"
+				}
+			],
+			"sd": "always"
+		},
+		{
+			"path": ["handelsnaam"],
+			"display": [
+				{
+					"locale": "nl-NL",
+					"label": "Handelsnaam",
+					"description": "De handelsnaam van de onderneming"
+				},
+				{
+					"locale": "en-US",
+					"label": "Trade name",
+					"description": "The trade name of the company"
+				}
+			],
+			"sd": "always",
+			"svg_id": "handelsnaam"
+		},
+		{
+			"path": ["rechtsvorm"],
+			"display": [
+				{
+					"locale": "nl-NL",
+					"label": "Rechtsvorm",
+					"description": "De rechtsvorm van de onderneming"
+				},
+				{
+					"locale": "en-US",
+					"label": "Legal form",
+					"description": "The legal form of the company"
+				}
+			],
+			"sd": "always"
+		},
+		{
+			"path": ["functie"],
+			"display": [
+				{
+					"locale": "nl-NL",
+					"label": "Functie",
+					"description": "Uw functie bij de onderneming"
+				},
+				{
+					"locale": "en-US",
+					"label": "Position",
+					"description": "Your position at the company"
+				}
+			],
+			"sd": "always"
+		},
+		{
+			"path": ["bevoegdheid"],
+			"display": [
+				{
+					"locale": "nl-NL",
+					"label": "Bevoegdheid",
+					"description": "Wat u namens de onderneming mag doen"
+				},
+				{
+					"locale": "en-US",
+					"label": "Authority",
+					"description": "What you may do on behalf of the company"
+				}
+			],
+			"sd": "always"
+		}
+	]
+}

@@ -10,6 +10,8 @@ layout: "base.njk"
 	<h1>Inloggen bij <b>MijnOverheid Zakelijk</b></h1>
 	<p>Kies een inlogmiddel. <a href="#">Hoe kies ik een inlogmiddel?</a></p>
 
+	{% include "nl-wallet-inloggen.njk" %}
+
 	<div class="login-selection">
 		<section>
 			<section>
@@ -96,7 +98,7 @@ layout: "base.njk"
 						</a>
 					</div>
 					<div class="card">
-						<a href="#">
+						<a href="#" data-nl-wallet-inloggen>
 							<h3>
 								<img src="/assets/inloggen/images/logo-wallets.svg" alt="" />
 								Inloggen met een wallet

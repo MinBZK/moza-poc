@@ -96,6 +96,8 @@
 		     content-interactions.js ná personas.js, want personas.js wist bij een wisseling de
 		     gegevens van de vorige persona (hidden:, read:, favorite:) die dát script leest. -->
 		<script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
+		<!-- nl-wallet-portaal.js ná personas.js: het zoekt de actieve persona op via window.Personas. -->
+		<script src="{{ '/assets/javascript/nl-wallet-portaal.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/content-interactions.js' | url }}" defer></script>
 		<script>
 			window.personasData = {{ personas | dump | safe }};
