@@ -13,8 +13,9 @@
  * De voortgang komt hier ook vandaan: het stelsel meldt per organisatie hoeveel er bevraagd, klaar
  * en gevonden zijn. Dat zijn echte getallen, waar de dataset-bron een nabootsing tegenover zet.
  *
- * En de berichten die binnenkomen terwijl de bezoeker kijkt: het transport haalt de lijst
- * periodiek opnieuw op, deze module ziet wat erbij gekomen is en meldt dat als losse binnenkomers —
+ * En de berichten die binnenkomen terwijl de bezoeker kijkt: het transport hoort ze van het stelsel
+ * (of vraagt de lijst periodiek na, als dat niet lukt), deze module ziet wat erbij gekomen is en
+ * meldt dat als losse binnenkomers —
  * dezelfde weg die de dataset-bron voor zijn nagebootste federatie gebruikt. Zo hoeft de
  * render-laag niet te weten of een bericht verzonnen is of echt.
  */
