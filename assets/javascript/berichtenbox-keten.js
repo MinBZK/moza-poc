@@ -88,13 +88,14 @@
 	// Ondergrens, ook als iemand om een korter interval vraagt: sneller levert geen zichtbaar
 	// verschil op en wel verkeer.
 	const POLL_MIN_SEC = 5;
-	// Zoveel mislukte pogingen op rij voordat de bezoeker het te horen krijgt en het pollen ermee
-	// ophoudt tot een herlading. Eén hik gaat vanzelf over; er meteen een melding van maken zou een
-	// probleem tonen dat er niet meer is.
+	// Zoveel mislukte pogingen op rij om de lijst op te halen voordat de bezoeker het te horen krijgt
+	// en het bijwerken ermee ophoudt tot een herlading — ook over de stroom, want ook daar hangt de
+	// lijst aan. Eén hik gaat vanzelf over; er meteen een melding van maken zou een probleem tonen
+	// dat er niet meer is.
 	const POLL_FOUT_LIMIET = 3;
 	// Zoveel keer proberen we een verlopen sessie met een nieuwe ophaalronde terug te halen. Zonder
-	// deze rem bevraagt een sessie die korter leeft dan het pollinterval bij elke tik alle
-	// organisaties opnieuw.
+	// deze rem bevraagt een sessie die korter leeft dan het pollinterval bij elke tik of
+	// herverbinding alle organisaties opnieuw.
 	const POLL_HERSTEL_LIMIET = 2;
 
 	// Het volgen: een verbinding waarop het stelsel zelf meldt dat er een bericht bij is, in plaats
@@ -116,7 +117,7 @@
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
 	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
 	// geen knop is die dat doet: `opnieuw()` hieronder heeft nog steeds geen aanroeper in de interface.
-	// `herhaal()` wél — het pollen haalt daarmee een verlopen sessie terug — maar dat gebeurt buiten
+	// `herhaal()` wél — het pollen en het volgen halen daarmee een verlopen sessie terug — maar dat gebeurt buiten
 	// het zicht van de bezoeker. Zolang die knop er niet is, is verversen wat hem rest, en dat is ook
 	// wat de render-laag overal zegt.
 	const FOUT_TEKSTEN = {
@@ -130,7 +131,7 @@
 		// "Zijn nog niet opgehaald": er is geen sessie meer. Anders dan bij de andere meldingen helpt
 		// verversen hier echt, want dan draait de ophaalronde opnieuw en zet die de sessie terug. Deze
 		// tekst hoort bij het eerste laden; verloopt de sessie terwijl de bezoeker kijkt, dan vangt
-		// `pollTik` deze reden af en draait `herstelSessie` de ronde zelf opnieuw.
+		// `pollTik` of `verbindStroom` dat af en draait `herstelSessie` de ronde zelf opnieuw.
 		geenSessie: "Uw berichten zijn niet meer klaargezet bij het stelsel. Ververs de pagina; dan halen wij ze opnieuw op.",
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		// De berichtenlijst komt per pagina. Breekt dat halverwege af, dan is er niets mis bij de
@@ -179,7 +180,7 @@
 	let ronde = null;
 	// De organisaties die de laatste eigen ronde meldde. Niet voor hun namen — die draagt elk bericht
 	// zelf — maar voor wie er niets te leveren had: zonder hen valt een organisatie uit het filter
-	// zodra het pollen de lijst vervangt, terwijl ze er bij het laden wél in stond.
+	// zodra het pollen of de stroom de lijst vervangt, terwijl ze er bij het laden wél in stond.
 	let organisatiesVanRonde = {};
 
 	// --- Wat de buitenwereld te horen krijgt ---------------------------------------------------
@@ -403,11 +404,11 @@
 	 *
 	 * `opLeven` hoort élk binnenkomend blok, ook een keep-alive zonder gebeurtenis: dat is wat een
 	 * stiltebewaking nodig heeft. `opGebeurtenis` krijgt het geparste JSON-object en geeft `true` terug
-	 * om te stoppen. Een frame dat geen JSON is, werpt: een stroom waarvan we de helft niet kunnen
-	 * lezen, is geen stroom om op te vertrouwen. De stroom wordt altijd afgesloten, anders blijft de
+	 * om te stoppen. Een frame dat geen JSON is, werpt, tenzij er een `opOnleesbaar` is: de ophaalronde
+	 * vertrouwt een stroom waarvan ze de helft niet kan lezen niet, het volgen slaat zo'n melding over. De stroom wordt altijd afgesloten, anders blijft de
 	 * backend doorwerken voor een lezer die er niet meer is.
 	 */
-	async function leesSse(body, opLeven, opGebeurtenis) {
+	async function leesSse(body, opLeven, opGebeurtenis, opOnleesbaar) {
 		const lezer = body.getReader();
 		const decoder = new TextDecoder();
 		let buffer = "";
@@ -432,7 +433,16 @@
 						.filter((regel) => regel.indexOf("data:") === 0)
 						.map((regel) => regel.slice(5).replace(/^ /, ""))
 						.join("\n");
-					if (payload.trim() !== "" && opGebeurtenis(JSON.parse(payload)) === true) return;
+					if (payload.trim() === "") continue;
+					let gebeurtenis;
+					try {
+						gebeurtenis = JSON.parse(payload);
+					} catch (fout) {
+						if (!opOnleesbaar) throw fout;
+						opOnleesbaar(payload, fout);
+						continue;
+					}
+					if (opGebeurtenis(gebeurtenis) === true) return;
 				}
 			}
 		} finally {
@@ -952,8 +962,8 @@
 
 			const magazijnen = magazijnenVan(berichten, uitvraag.organisaties);
 
-			// Het pollen bouwt het filter op dezelfde manier op, dus het krijgt dezelfde organisaties
-			// mee.
+			// Het pollen en de stroom bouwen het filter op dezelfde manier op, dus ze krijgen dezelfde
+			// organisaties mee.
 			organisatiesVanRonde = uitvraag.organisaties;
 
 			// De tellers boven de lijst tonen zelf hoeveel bronnen antwoordden; alleen een
@@ -1012,10 +1022,13 @@
 	// weghaalt en afbreekt, sluit de stroom bewust en wil geen vervolg.
 	let volgAfbreker = null;
 	let volgKlok = null;
-	// Waar we zijn in de reeks tussenpozen, en hoeveel verbindingen op rij niet tot stand kwamen.
-	// Allebei terug naar nul bij elke `volgen-gestart`.
+	// Waar we zijn in de reeks tussenpozen, en hoeveel verbindingen op rij niet gezond werden. Allebei
+	// terug naar nul bij de eerste hartslag van een verbinding, en bij `pageshow`.
 	let volgPoging = 0;
 	let volgMislukt = 0;
+	// Hoe vaak `_volgen` op rij met 409 antwoordde. Eén keer is een verlopen sessie; twee keer, met een
+	// ronde ertussen, is iets anders.
+	let volgConflicten = 0;
 	// Blijvend: de stroom werkt hier niet, en tot een herlading geldt het periodiek navragen.
 	let volgTeruggevallen = false;
 	// Wat de stroom meldde terwijl er een tik liep. Die tik kan een lijst opleveren die van vóór zo'n
@@ -1023,14 +1036,16 @@
 	let bijgekomenTijdensTik = null;
 
 	/**
-	 * Een instelling in seconden: eerst de URL, dan localStorage, anders de standaardwaarde.
+	 * Een getal uit de instellingen: eerst de URL, dan localStorage, anders de standaardwaarde. Meestal
+	 * seconden; voor `volgen` is het een aan/uit, waarbij nul uit is.
 	 *
 	 * De URL wint, zodat een gedeelde demo-link zijn eigen ritme meebrengt zonder dat iemand eerst
 	 * iets hoeft om te zetten. Wat nul of minder betekent, beslist de aanroeper: zie `pollTussenpoos`
 	 * hieronder, waar de zichtbare nul uitzet en de verborgen pauzeert. Een negatief getal is een
 	 * typefout en krijgt hetzelfde antwoord als nul, want een ritme is het niet. Het Flags-paneel
-	 * heeft voor geen van beide een veld: wie ze zonder de URL wil bijstellen, zet
-	 * `setting:berichtenbox-poll` of `setting:berichtenbox-poll-verborgen` zelf.
+	 * heeft voor geen van drieën een veld: wie ze zonder de URL wil bijstellen, zet
+	 * `setting:berichtenbox-poll`, `setting:berichtenbox-poll-verborgen` of
+	 * `setting:berichtenbox-volgen` zelf.
 	 */
 	function ingesteldeSeconden(urlSleutel, instelling, standaard) {
 		const uitUrl = parseInt(new URLSearchParams(location.search).get(urlSleutel), 10);
@@ -1120,7 +1135,8 @@
 	}
 
 	/**
-	 * De pagina gaat weg: het pollen pauzeert. Altijd pauzeren en nooit blijvend stoppen, want
+	 * De pagina gaat weg: het volgen pauzeert. De stroom gaat dicht en een geplande tik vervalt.
+	 * Altijd pauzeren en nooit blijvend stoppen, want
 	 * `pagehide` weet niet betrouwbaar of de browser deze pagina bewaart — Safari en iOS melden dat
 	 * niet — en `pageshow` weet het wél. Een document dat écht vernietigd wordt draait toch niets
 	 * meer, dus pauzeren kost daar niets; een document dat terugkomt zou anders dood zijn, en van de
@@ -1135,8 +1151,10 @@
 
 	/**
 	 * De pagina is terug uit de bfcache: het script draaide niet opnieuw, dus alleen wij kunnen het
-	 * pollen weer aanzetten. Meteen kijken en niet een interval wachten — er kan intussen van alles
-	 * binnengekomen zijn, en de sessie bij het stelsel kan verlopen zijn.
+	 * volgen weer aanzetten. Meteen, en niet een interval wachten — er kan intussen van alles
+	 * binnengekomen zijn, en de sessie bij het stelsel kan verlopen zijn. Over de stroom haalt
+	 * `volgen-gestart` de lijst bij; anders kijken we zelf. Is er intussen een andere persona
+	 * gekozen, dan houdt deze pagina op met volgen.
 	 */
 	function opTerugkomen() {
 		if (pollGestopt || !pollGeparkeerd) return;
@@ -1152,6 +1170,7 @@
 		pollFouten = 0;
 		volgPoging = 0;
 		volgMislukt = 0;
+		volgConflicten = 0;
 		// Over de stroom haalt `volgen-gestart` de lijst bij; anders kijken we meteen.
 		if (volgtStroom()) {
 			verbindStroom();
@@ -1239,11 +1258,13 @@
 				return;
 			}
 			// Over de stroom komt er geen volgende tik vanzelf, en deze lijst was de aansluiting op
-			// wat er vóór het volgen binnenkwam. Opnieuw verbinden levert een nieuwe `volgen-gestart`
-			// en dus een nieuwe tik.
+			// wat er vóór het volgen binnenkwam. Dus zelf opnieuw proberen, in het ritme van het
+			// navragen: dan overleeft de berichtenbox een hapering van de lijst net zo lang als bij
+			// het navragen. De stroom zelf werkt en blijft open; die afbreken en opnieuw verbinden zou
+			// elke seconde een tik opleveren, en na drie daarvan houdt het bijwerken op.
 			if (volgtStroom()) {
-				sluitStroom();
-				planHerverbinding(0);
+				clearTimeout(pollKlok);
+				pollKlok = setTimeout(lijstTik, POLL_ZICHTBAAR_SEC * 1000);
 				return;
 			}
 		} finally {
@@ -1261,9 +1282,10 @@
 	/**
 	 * Hoort dit antwoord nog bij de pagina zoals die er nu voor staat?
 	 *
-	 * Zo niet, dan vervalt het — maar het pollen zelf hoeft daar niet aan te stoppen. Draait er een
-	 * nieuwere ronde, dan plannen we gewoon de volgende tik; is de pagina weg of hebben we het
-	 * opgegeven, dan zorgt `opTerugkomen` of niemand voor het vervolg.
+	 * Zo niet, dan vervalt het — maar het volgen zelf hoeft daar niet aan te stoppen. Draait er een
+	 * nieuwere ronde, dan plannen we bij het navragen gewoon de volgende tik; over de stroom neemt
+	 * die ronde het over, via `herhaal` en `hervat`. Is de pagina weg of hebben we het opgegeven,
+	 * dan zorgt `opTerugkomen` of niemand voor het vervolg.
 	 */
 	function achterhaald(rondeVanTik) {
 		if (pollGestopt || pollGeparkeerd) return true;
@@ -1303,12 +1325,12 @@
 			}
 		}
 
-		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
-		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
-		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
-
 		// Pas melden als de lijst werkelijk veranderd is. Het meldingsblok is een live-regio: elke
 		// keer dezelfde tekst erin schrijven laat een schermlezer hem elke keer voorlezen.
+		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
+
+		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
+		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
 		const overgeslagen = ruw.length - berichten.length;
 		if (overgeslagen > 0) {
 			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen tijdens het pollen.");
@@ -1349,9 +1371,10 @@
 	}
 
 	/**
-	 * Haalt een verlopen sessie terug met een nieuwe ophaalronde, en pakt het pollen daarna weer op.
+	 * Haalt een verlopen sessie terug met een nieuwe ophaalronde, en pakt het volgen daarna weer op:
+	 * de stroom, of het navragen.
 	 *
-	 * Dit is de enige plek waar het pollen de organisaties laat bevragen. Dat mag hier: zonder
+	 * Dit is de enige plek waar het volgen de organisaties laat bevragen. Dat mag hier: zonder
 	 * sessie is er niets te lezen, en de bezoeker die zijn berichtenbox openhoudt hoort niet stil
 	 * achter te blijven bij een lijst die niet meer bijgewerkt wordt.
 	 */
@@ -1447,9 +1470,16 @@
 	 * `voegBijgekomenToe` en de bron kijken allebei naar het `berichtId`. Opnieuw verbinden na een
 	 * haperende verbinding gaat precies zo, en daarna is de lijst dus weer compleet.
 	 *
-	 * Wat er misgaat, blijft stil voor de bezoeker. De lijst die er staat klopt, en wie niet verbonden
-	 * raakt, krijgt het periodiek navragen: nieuwe berichten verschijnen dan wat later, maar ze
-	 * verschijnen wel. Alleen de console zegt wat er aan de hand is.
+	 * Een verbinding die niet tot stand komt of wegvalt, blijft stil voor de bezoeker: de lijst die er
+	 * staat klopt, en wie niet verbonden raakt, krijgt het periodiek navragen. Nieuwe berichten
+	 * verschijnen dan wat later, maar ze verschijnen wel; alleen de console zegt wat er aan de hand
+	 * is. Een mededeling komt er alleen als het bijwerken helemaal ophoudt: een sessie die niet terug
+	 * te halen is, of een lijst die drie keer op rij niet binnenkomt — dezelfde als bij het navragen.
+	 *
+	 * Een verbinding telt pas als gezond na haar eerste hartslag, en niet al bij `volgen-gestart`. Een
+	 * stroom die telkens net na de start wegvalt — een tussenlaag die hem sluit, een time-out korter
+	 * dan de hartslag — zou anders elke seconde opnieuw verbinden en de lijst ophalen, zonder ooit op
+	 * te geven.
 	 */
 	async function verbindStroom() {
 		clearTimeout(volgKlok);
@@ -1464,54 +1494,85 @@
 			waakhond = setTimeout(() => afbreker.abort(), VOLG_WAAKHOND_MS);
 		};
 
-		// Hoe de stroom eindigde: "afgebroken" (opnieuw verbinden), "sessie" (eerst een nieuwe
-		// ophaalronde), of "ontbreekt" (deze keten kent `_volgen` niet).
+		// Hoe de stroom eindigde: "afgebroken" (opnieuw verbinden), "verlopen" (het stelsel meldde dat
+		// de sessie weg is), "conflict" (een 409 bij het openen) of "ontbreekt" (deze keten kent
+		// `_volgen` niet).
 		let einde = "afgebroken";
-		let gestart = false;
+		let status = null;
+		let gezond = false;
 		let wachtMinstens = 0;
+		const geopend = Date.now();
 
+		// Vóór de fetch, niet erna: na een slaapstand blijft juist het openen hangen.
 		herstartWaakhond();
 		try {
 			const respons = await fetch("/api/v1/berichten/_volgen", {
 				headers: { "X-Ontvanger": ontvangerVanRonde, Accept: "text/event-stream" },
 				signal: afbreker.signal,
 			});
+			status = respons.status;
 
 			// Een keten zonder `_volgen` leest dit pad als `GET /berichten/{berichtId}`: 404 zonder
 			// `Accept`, en 406 mét — dat adres levert alleen JSON. Gemeten tegen de publieke omgeving.
-			if (respons.status === 404 || respons.status === 405 || respons.status === 406) {
+			if (status === 404 || status === 405 || status === 406) {
 				einde = "ontbreekt";
-			} else if (respons.status === 409) {
+			} else if (status === 409) {
 				// Nog niet opgehaald, of een ronde die al loopt: dezelfde toestand als een 409 op de lijst.
-				einde = "sessie";
-			} else if (!respons.ok || !respons.body) {
-				// Een 503 zegt hoe lang we moeten wachten: het stelsel is druk, of er staan voor deze
-				// ontvanger al te veel berichtenboxen open.
-				if (respons.status === 503) wachtMinstens = wachttijdVan(respons);
-				console.warn("[Berichtenbox] Het volgen van nieuwe berichten kwam niet tot stand (" + respons.status + ").");
+				einde = "conflict";
+			} else if (!respons.ok || !respons.body || !isStroom(respons)) {
+				// Een 503 of 429 zegt hoe lang we moeten wachten: het stelsel is druk, of er staan voor
+				// deze ontvanger al te veel berichtenboxen open. Een 200 zonder stroom is een tussenlaag
+				// die iets anders teruggeeft, een foutpagina bijvoorbeeld; daar valt niets uit te lezen.
+				if (status === 503 || status === 429) wachtMinstens = wachttijdVan(respons);
+				console.warn("[Berichtenbox] Het volgen van nieuwe berichten kwam niet tot stand (" + status + (respons.ok ? ", geen text/event-stream" : "") + ").");
 			} else {
-				await leesSse(respons.body, herstartWaakhond, (gebeurtenis) => {
-					if (gebeurtenis.event === "volgen-gestart") {
-						gestart = true;
-						volgPoging = 0;
-						volgMislukt = 0;
-						lijstTik();
-					} else if (gebeurtenis.event === "bericht-bijgekomen") {
-						voegBijgekomenToe(gebeurtenis.bericht);
-					} else if (gebeurtenis.event === "sessie-verlopen") {
-						einde = "sessie";
-						return true;
+				await leesSse(
+					respons.body,
+					herstartWaakhond,
+					(gebeurtenis) => {
+						// Eén gebeurtenis die we niet kunnen verwerken, is geen weggevallen verbinding. Zou
+						// die fout de stroom meenemen, dan verbindt de berichtenbox opnieuw, struikelt de
+						// lijst over hetzelfde bericht, en houdt het bijwerken na drie rondes op — onder de
+						// noemer "verbinding weggevallen", die de oorzaak juist verbergt.
+						try {
+							return verwerkVolgGebeurtenis(gebeurtenis);
+						} catch (fout) {
+							console.error("[Berichtenbox] Een melding uit de stroom kon niet verwerkt worden; overgeslagen.", gebeurtenis, fout);
+							return false;
+						}
+					},
+					(frame, fout) => {
+						console.error("[Berichtenbox] Een melding uit de stroom was geen JSON; overgeslagen.", frame, fout);
 					}
-					// `hartslag` en alles wat we niet kennen: niets te doen. Dat er iets kwam, is al
-					// genoeg voor de waakhond.
-					return false;
-				});
+				);
+				console.info("[Berichtenbox] De stroom met nieuwe berichten eindigde na " + Math.round((Date.now() - geopend) / 1000) + " s.");
 			}
 		} catch (fout) {
-			// De waakhond, het netwerk, of een gebeurtenis die geen JSON was. Allemaal: opnieuw verbinden.
-			if (volgAfbreker === afbreker) console.warn("[Berichtenbox] De verbinding voor nieuwe berichten viel weg.", fout);
+			// De waakhond of het netwerk: opnieuw verbinden.
+			if (volgAfbreker === afbreker) console.warn("[Berichtenbox] De verbinding voor nieuwe berichten viel weg na " + Math.round((Date.now() - geopend) / 1000) + " s.", fout);
 		} finally {
 			clearTimeout(waakhond);
+		}
+
+		function verwerkVolgGebeurtenis(gebeurtenis) {
+			const soort = gebeurtenis && gebeurtenis.event;
+			if (soort === "volgen-gestart") {
+				lijstTik();
+			} else if (soort === "hartslag") {
+				if (!gezond) {
+					gezond = true;
+					volgPoging = 0;
+					volgMislukt = 0;
+					volgConflicten = 0;
+				}
+			} else if (soort === "bericht-bijgekomen") {
+				voegBijgekomenToe(gebeurtenis.bericht);
+			} else if (soort === "sessie-verlopen") {
+				einde = "verlopen";
+				return true;
+			}
+			// Alles wat we niet kennen: niets te doen. Dat er iets kwam, is al genoeg voor de waakhond.
+			return false;
 		}
 
 		// Weggehaald door `sluitStroom`: de pagina gaat weg, of we houden ermee op. Dan geen vervolg.
@@ -1520,22 +1581,42 @@
 		if (!pollMag()) return;
 
 		if (einde === "ontbreekt") {
-			valTerug("deze keten kent _volgen niet");
+			valTerug("deze keten kent _volgen niet, status " + status);
 			return;
 		}
-		if (einde === "sessie") {
+		if (einde === "verlopen") {
+			console.info("[Berichtenbox] Het stelsel meldt dat de sessie verlopen is; er volgt een nieuwe ophaalronde.");
 			herstelSessie();
 			return;
 		}
-		if (!gestart) {
+		if (einde === "conflict") {
+			// Eén keer is een verlopen sessie, en dan hoort er een ronde bij. Blijft `_volgen` met 409
+			// antwoorden terwijl er net een ronde gedraaid heeft, dan ligt het niet aan de sessie:
+			// verder herstellen bevraagt telkens alle organisaties, en houdt na twee keer op met een
+			// mededeling, terwijl het navragen gewoon werkt.
+			volgConflicten += 1;
+			if (volgConflicten >= 2) {
+				valTerug("_volgen antwoordt ook na een nieuwe ophaalronde met 409");
+				return;
+			}
+			console.info("[Berichtenbox] _volgen antwoordde met 409; er volgt een nieuwe ophaalronde.");
+			herstelSessie();
+			return;
+		}
+		if (!gezond) {
 			volgMislukt += 1;
 			if (volgMislukt >= VOLG_FOUT_LIMIET) {
-				valTerug(volgMislukt + " verbindingen op rij kwamen niet tot stand");
+				valTerug(volgMislukt + " verbindingen op rij kwamen niet tot een hartslag" + (status && status !== 200 ? ", laatste status " + status : ""));
 				return;
 			}
 		}
 		// Ook een stroom die netjes eindigt: die duurt bij het stelsel hoogstens een uur.
 		planHerverbinding(wachtMinstens);
+	}
+
+	function isStroom(respons) {
+		const soort = respons.headers && typeof respons.headers.get === "function" ? respons.headers.get("Content-Type") : null;
+		return !!soort && soort.indexOf("text/event-stream") === 0;
 	}
 
 	/** Sluit de stroom, zonder vervolg. */
@@ -1637,7 +1718,7 @@
 		ronde = draaiRonde(kvkNummer);
 		// Pas kijken of er berichten bij komen als er iets is om mee te vergelijken. De uitkomst
 		// hier vastleggen en niet aan `berichten()` overlaten: die wordt alleen aangeroepen door een
-		// pagina met een bronregister, en het pollen houdt ook op een detailpagina de sessie warm.
+		// pagina met een bronregister, en het volgen houdt ook op een detailpagina de sessie warm.
 		ronde.then(
 			(uitkomst) => {
 				if (!uitkomst) return;
@@ -1746,8 +1827,8 @@
 
 		/**
 		 * De lijst zoals die er nu is. Voor een bron die zich later aanmeldt: tussen het kiezen van de
-		 * bron en het aanhaken van zijn luisteraar kan er een polltik geland zijn, en die is hier al
-		 * als gemeld afgeboekt.
+		 * bron en het aanhaken van zijn luisteraar kan er een polltik of een bericht uit de stroom
+		 * geland zijn, en dat is hier al als gemeld afgeboekt.
 		 */
 		get huidigeUitkomst() {
 			return laatsteUitkomst;

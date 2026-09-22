@@ -50,6 +50,9 @@ function maakStroom(signaal) {
 		stuur(gebeurtenis) {
 			regelaar.enqueue(new TextEncoder().encode("data:" + JSON.stringify(gebeurtenis) + "\n\n"));
 		},
+		stuurRauw(tekst) {
+			regelaar.enqueue(new TextEncoder().encode(tekst));
+		},
 		sluit() {
 			regelaar.close();
 		},
@@ -85,7 +88,7 @@ function volgAdres(...antwoorden) {
 	let beurt = 0;
 	const geef = (pad, opties) => {
 		const vast = antwoorden[beurt++];
-		if (vast) return typeof vast === "function" ? vast() : vast;
+		if (vast) return typeof vast === "function" ? vast(opties) : vast;
 		const stroom = maakStroom(opties && opties.signal);
 		stromen.push(stroom);
 		return stroom.respons;
@@ -194,10 +197,47 @@ describe("de stroom opent na de ronde", () => {
 
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
 		volg.stromen[0].stuur({ event: "iets-nieuws", wat: 1 });
-		await vi.advanceTimersByTimeAsync(0);
+		await vi.advanceTimersByTimeAsync(5000);
 
+		// Ook niet stil geëindigd en opnieuw verbonden: dan was er een tweede stroom.
+		expect(volg.stromen.length).toBe(1);
 		expect(volg.stromen[0].afgebroken).toBe(false);
 		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+
+	it("slaat een melding over die het niet kan verwerken, en blijft verbonden", async () => {
+		// Een fout in één bericht is geen weggevallen verbinding. Nam die fout de stroom mee, dan
+		// verbond de berichtenbox opnieuw en hield het bijwerken na drie rondes op.
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		const laatste = volgGemeld();
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur(null);
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-kapot", { publicatietijdstip: 20260921 }) });
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(volg.stromen.length).toBe(1);
+		expect(volg.stromen[0].afgebroken).toBe(false);
+		expect(ids(laatste())).toEqual(["b-2", "b-1"]);
+		expect(console.error).toHaveBeenCalled();
+	});
+
+	it("slaat een melding over die geen JSON is, en blijft verbonden", async () => {
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		const laatste = volgGemeld();
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuurRauw("data:{kapot\n\n");
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(volg.stromen.length).toBe(1);
+		expect(ids(laatste())).toEqual(["b-2", "b-1"]);
 	});
 });
 
@@ -243,7 +283,7 @@ describe("de waakhond", () => {
 		await vi.advanceTimersByTimeAsync(45000);
 		expect(volg.stromen[0].afgebroken).toBe(true);
 
-		// Eerste tussenpoos: een seconde, met spreiding.
+		// Eerste tussenpoos: een seconde; de spreiding staat in deze tests op nul, 1500 ms is marge.
 		await vi.advanceTimersByTimeAsync(1500);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
 	});
@@ -295,12 +335,13 @@ describe("opnieuw verbinden", () => {
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
 	});
 
-	it("wacht steeds langer, en begint na een geslaagde `volgen-gestart` weer van voren", async () => {
-		// Een breuk na `volgen-gestart`, dan twee pogingen die mislukken: 1, 2 en 5 seconden. Na een
-		// nieuwe `volgen-gestart` wacht de volgende breuk weer één seconde, geen tien.
+	it("wacht steeds langer, en begint na de eerste hartslag weer van voren", async () => {
+		// Een gezonde stroom breekt, dan twee pogingen die mislukken: 1, 2 en 5 seconden. Na een
+		// nieuwe hartslag wacht de volgende breuk weer één seconde, geen tien.
 		const volg = volgAdres(null, antwoord(500, {}), antwoord(500, {}));
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
 		await vi.advanceTimersByTimeAsync(0);
 		volg.stromen[0].breek();
 
@@ -316,10 +357,32 @@ describe("opnieuw verbinden", () => {
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(4);
 
 		volg.stromen[1].stuur({ event: "volgen-gestart" });
+		volg.stromen[1].stuur({ event: "hartslag" });
 		await vi.advanceTimersByTimeAsync(0);
 		volg.stromen[1].breek();
 		await vi.advanceTimersByTimeAsync(1100);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(5);
+	});
+
+	it("geeft een stroom die telkens na de start wegvalt op, in plaats van eindeloos opnieuw te verbinden", async () => {
+		// Een tussenlaag die de stroom na `volgen-gestart` sluit, vóór de eerste hartslag. Telde
+		// `volgen-gestart` als gezond, dan verbond de berichtenbox elke seconde opnieuw en haalde
+		// hij elke keer de lijst op, zonder ooit op te geven.
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		for (let keer = 0; keer < 3; keer++) {
+			volg.stromen[keer].stuur({ event: "volgen-gestart" });
+			await vi.advanceTimersByTimeAsync(0);
+			volg.stromen[keer].sluit();
+			await vi.advanceTimersByTimeAsync(6000);
+		}
+		const na = tellingen(aanroepen, ontvanger);
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(na.volgen).toBe(3);
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(3);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 });
 
@@ -346,12 +409,33 @@ describe("een verlopen sessie", () => {
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
 	});
 
-	it("houdt op na twee vergeefse herstelrondes, met een mededeling", async () => {
-		const volg = volgAdres(GEEN_SESSIE(), GEEN_SESSIE(), GEEN_SESSIE(), GEEN_SESSIE());
-		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), GEEN_SESSIE(), lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+	it("valt stil terug als `_volgen` ook na een nieuwe ronde met 409 antwoordt", async () => {
+		// Dan ligt het niet aan de sessie: de lijst werkt. Verder herstellen bevraagt telkens alle
+		// organisaties en houdt na twee keer op met een mededeling, terwijl navragen gewoon werkt.
+		const volg = volgAdres(GEEN_SESSIE(), GEEN_SESSIE(), GEEN_SESSIE());
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+		const voor = tellingen(aanroepen, ontvanger);
 
-		expect(tellingen(aanroepen, ontvanger).rondes).toBe(2);
-		expect(window.BerichtenboxKeten.melding.soort).toBe("mededeling");
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(voor.rondes).toBe(1);
+		expect(voor.volgen).toBe(2);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(1);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+
+	it("sluit de stroom en draait een ronde als de lijst meldt dat de sessie weg is", async () => {
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), GEEN_SESSIE(), GEEN_SESSIE(), lijstMet())]]);
+		const voor = tellingen(aanroepen, ontvanger);
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(volg.stromen[0].afgebroken).toBe(true);
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(voor.rondes + 1);
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(voor.volgen + 1);
 	});
 });
 
@@ -384,8 +468,8 @@ describe("terugvallen op periodiek navragen", () => {
 		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 
-	it("wacht na een 503 de opgegeven `Retry-After` af", async () => {
-		const druk = { ok: false, status: 503, headers: { get: (naam) => (naam === "Retry-After" ? "30" : null) } };
+	it.each([503, 429])("wacht na een %i de opgegeven `Retry-After` af", async (code) => {
+		const druk = { ok: false, status: code, headers: { get: (naam) => (naam === "Retry-After" ? "30" : null) } };
 		const volg = volgAdres(druk);
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 
@@ -393,6 +477,107 @@ describe("terugvallen op periodiek navragen", () => {
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(1);
 		await vi.advanceTimersByTimeAsync(1500);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
+	});
+});
+
+describe("een lijst die hapert terwijl de stroom openstaat", () => {
+	it("laat de stroom staan en probeert de lijst na vijftien seconden opnieuw", async () => {
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), antwoord(502, {}), lijstMet("b-1"))]]);
+		const laatste = volgGemeld();
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const na = tellingen(aanroepen, ontvanger);
+
+		await vi.advanceTimersByTimeAsync(14000);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst);
+		await vi.advanceTimersByTimeAsync(1500);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst + 1);
+		expect(volg.stromen[0].afgebroken).toBe(false);
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(1);
+		expect(ids(laatste())).toEqual(["b-1"]);
+	});
+
+	it("houdt een storing van een halve minuut vol, net als het navragen", async () => {
+		// Drie mislukkingen op rij zetten het bijwerken stil. Kwamen die elke seconde, dan was dat
+		// na drie seconden al zo; nu zitten er vijftien tussen.
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), antwoord(502, {}), antwoord(502, {}), antwoord(502, {}))]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		await vi.advanceTimersByTimeAsync(29000);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(window.BerichtenboxKeten.melding.soort).toBe("mededeling");
+		expect(volg.stromen[0].afgebroken).toBe(true);
+	});
+
+	it("haalt de lijst nog een keer op als `volgen-gestart` komt terwijl er een tik loopt", async () => {
+		// De lopende tik begon vóór het volgen; wat er tussendoor binnenkwam, staat in geen van beide.
+		let geefTraag;
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), () => new Promise((klaar) => (geefTraag = () => klaar(lijstMet("b-1")))), lijstMet("b-2", "b-1"))]]);
+		const laatste = volgGemeld();
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const tijdensTik = tellingen(aanroepen, ontvanger);
+
+		// De verbinding valt weg en komt terug terwijl de eerste tik nog onderweg is.
+		volg.stromen[0].breek();
+		await vi.advanceTimersByTimeAsync(1500);
+		volg.stromen[1].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(tijdensTik.lijst);
+
+		geefTraag();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(tijdensTik.lijst + 1);
+		expect(ids(laatste())).toEqual(["b-2", "b-1"]);
+	});
+
+	it("biedt de lijst opnieuw aan als de bron hem niet kon tonen", async () => {
+		// Over de stroom komt er geen volgende tik vanzelf; zonder deze tik blijft de melding staan
+		// en verschijnen die berichten niet meer.
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger);
+
+		window.BerichtenboxKeten.meldVerwerkingsfout();
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+	});
+});
+
+describe("een verbinding die niet op gang komt", () => {
+	it("breekt ook een openen dat blijft hangen af", async () => {
+		// Na een slaapstand blijft juist de fetch hangen, nog vóór er een antwoord is.
+		// Zoals een echte fetch: hij antwoordt nooit, maar geeft op zodra hij afgebroken wordt.
+		const hangt = (opties) => new Promise((_, weiger) => opties.signal.addEventListener("abort", () => weiger(new DOMException("afgebroken", "AbortError"))));
+		const volg = volgAdres(hangt);
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		await vi.advanceTimersByTimeAsync(45000 + 1500);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
+	});
+
+	it("telt een 200 zonder `text/event-stream` als mislukte verbinding", async () => {
+		// Een tussenlaag die een foutpagina teruggeeft. Daar valt niets uit te lezen.
+		const html = { ok: true, status: 200, body: new ReadableStream(), headers: { get: () => "text/html" } };
+		const volg = volgAdres(html, html, html);
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(3);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 });
 
@@ -404,8 +589,10 @@ describe("de levenscyclus van de pagina", () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		window.dispatchEvent(new Event("pagehide"));
-		await vi.advanceTimersByTimeAsync(60000);
+		// Meteen, en niet pas na een minuut: dan had de waakhond hem ook al afgebroken.
+		await vi.advanceTimersByTimeAsync(0);
 		expect(volg.stromen[0].afgebroken).toBe(true);
+		await vi.advanceTimersByTimeAsync(60000);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(1);
 
 		const voor = tellingen(aanroepen, ontvanger);
@@ -420,13 +607,22 @@ describe("de levenscyclus van de pagina", () => {
 
 	it("blijft verbonden in een verborgen tabblad", async () => {
 		const volg = volgAdres();
-		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger);
 
 		zetZichtbaarheid("hidden");
+		for (let keer = 0; keer < 4; keer++) {
+			await vi.advanceTimersByTimeAsync(20000);
+			volg.stromen[0].stuur({ event: "hartslag" });
+		}
+		// Terug naar zichtbaar: over de stroom komt het vanzelf, dus geen extra tik.
+		zetZichtbaarheid("visible");
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(volg.stromen[0].afgebroken).toBe(false);
+		expect(tellingen(aanroepen, ontvanger)).toEqual(voor);
 	});
 
 	it("verbindt niet opnieuw als er intussen een andere persona gekozen is", async () => {
@@ -447,9 +643,10 @@ describe("de levenscyclus van de pagina", () => {
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 
 		window.BerichtenboxKeten.stopPollen();
-		await vi.advanceTimersByTimeAsync(60000);
-
+		await vi.advanceTimersByTimeAsync(0);
 		expect(volg.stromen[0].afgebroken).toBe(true);
+
+		await vi.advanceTimersByTimeAsync(60000);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(1);
 	});
 });

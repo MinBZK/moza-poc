@@ -117,16 +117,6 @@ app.use(
 				// ignore if headers already sent
 			}
 
-			// Server-Sent Events (`_ophalen`, `_volgen`) are long-lived and quiet between events: the
-			// keten sends a heartbeat every 20 s, so the 15 s proxyTimeout above would cut every
-			// stream. Disable both timeouts for these responses, and don't collect their body — a
-			// stream can run for an hour.
-			if (String(proxyRes.headers["content-type"] || "").startsWith("text/event-stream")) {
-				proxyRes.req.setTimeout(0);
-				req.socket.setTimeout(0);
-				return;
-			}
-
 			// Collect upstream response body for debugging if status >= 400
 			let body = "";
 			proxyRes.on("data", (chunk) => {
