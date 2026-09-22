@@ -20,9 +20,9 @@
  * tegelijk de sessie bij het stelsel warm zolang de bezoeker kijkt.
  *
  * Berichten uit de keten komen niet in localStorage. Wat eerder opgehaald is staat op de server, in
- * een sessiecache per ontvanger. Elke berichtenbox-pagina draait daarom zijn eigen ronde — ook het
- * archief, de prullenbak en een detailpagina. Dat kan niet anders: de berichtenlijst geeft per
- * bericht het OIN van de organisatie, en de naam komt alleen uit de ophaalronde zelf.
+ * een sessiecache per ontvanger. Elke berichtenbox-pagina vraagt daarom zelf de lijst op — ook het
+ * archief, de prullenbak en een detailpagina — en draait alleen een ophaalronde als die sessie er
+ * nog niet is. De lijst draagt per bericht de naam van de afzender, dus meer is er niet nodig.
  *
  * Er is geen stille terugval. Lukt het ophalen niet voor een persona die aantoonbaar aangesloten
  * is, dan blijft deze bron de bron en zegt de melding wat er misging; terugvallen op de dataset zou
@@ -160,9 +160,9 @@
 	let meldingActief = false;
 	let ontvangerVanRonde = null;
 	let ronde = null;
-	// De weergavenamen van de organisaties, zoals de laatste ronde ze meldde. De berichtenlijst
-	// draagt per bericht alleen het nummer; zonder deze namen zou een bericht dat later binnenkomt
-	// van "00000001000000000000" blijken te zijn.
+	// De organisaties die de laatste eigen ronde meldde. Niet voor hun namen — die draagt elk bericht
+	// zelf — maar voor wie er niets te leveren had: zonder hen valt een organisatie uit het filter
+	// zodra het pollen de lijst vervangt, terwijl ze er bij het laden wél in stond.
 	let organisatiesVanRonde = {};
 
 	// --- Wat de buitenwereld te horen krijgt ---------------------------------------------------
@@ -271,52 +271,6 @@
 		if (!variabele) return "onbereikbaar";
 		console.error("[Berichtenbox] " + wat + " kan niet: " + variabele + " is niet gezet op deze container. Zet die runtime-variabele in de omgeving; verversen helpt niet.");
 		return "configuratie";
-	}
-
-	// De namen van de aangesloten organisaties, bewaard per ontvanger.
-	//
-	// `_ophalen` bouwt bij het stelsel de sessie op; daarna levert `GET /api/v1/berichten` die lijst
-	// zonder dat er iets opnieuw bevraagd hoeft te worden. Elke berichtenbox-pagina is hier een eigen
-	// document — inbox, archief, prullenbak — en die draaiden allemaal hun eigen ronde. Bij een
-	// ontvanger met vijftien magazijnen loopt de eerste dan nog wanneer de tweede begint, en dat
-	// antwoordt het stelsel terecht met 409: één ontvanger, één ronde tegelijk.
-	//
-	// Alleen de lijst gebruiken kan niet zomaar: die draagt als `afzender` hetzelfde nummer als
-	// `magazijnId`, en de leesbare naam staat uitsluitend in de gebeurtenissen van de ronde. Daarom
-	// bewaren we die namen; dan kan een volgende pagina de lijst nemen en toch "Belastingdienst"
-	// tonen in plaats van twintig cijfers. sessionStorage en niet localStorage: dit hoort bij deze
-	// zitting, net als de sessie bij het stelsel zelf.
-	const ORGANISATIES_SLEUTEL = "berichtenbox-keten-organisaties";
-
-	function bewaarOrganisaties(ontvanger, organisaties) {
-		if (!ontvanger || !organisaties || !Object.keys(organisaties).length) return;
-		try {
-			sessionStorage.setItem(ORGANISATIES_SLEUTEL, JSON.stringify({ ontvanger: ontvanger, organisaties: organisaties }));
-		} catch (fout) {
-			// Geen ramp: zonder deze namen draait de volgende pagina gewoon zijn eigen ronde.
-			console.warn("[Berichtenbox] de namen van de organisaties konden niet bewaard worden.", fout);
-		}
-	}
-
-	function bewaardeOrganisaties(ontvanger) {
-		try {
-			const rauw = sessionStorage.getItem(ORGANISATIES_SLEUTEL);
-			if (!rauw) return null;
-			const bewaard = JSON.parse(rauw);
-			// Op naam van deze ontvanger, anders zijn het de organisaties van een vorige persona.
-			return bewaard && bewaard.ontvanger === ontvanger && bewaard.organisaties ? bewaard.organisaties : null;
-		} catch (fout) {
-			// Zonder deze namen draait er een volledige ronde langs álle organisaties in plaats van één
-			// lijstaanroep. Dat merkt de bezoeker aan de wachttijd, dus het hoort niet spoorloos te
-			// gebeuren. En opruimen, anders struikelt dezelfde onleesbare waarde op elke pagina opnieuw.
-			console.warn("[Berichtenbox] De bewaarde organisatienamen zijn niet leesbaar; er volgt een volledige ophaalronde.", fout);
-			try {
-				sessionStorage.removeItem(ORGANISATIES_SLEUTEL);
-			} catch (opruimFout) {
-				console.warn("[Berichtenbox] De onleesbare organisatienamen zijn ook niet op te ruimen.", opruimFout);
-			}
-			return null;
-		}
 	}
 
 	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
@@ -649,7 +603,7 @@
 	 * Een fout ná de eerste pagina krijgt een eigen reden. De teksten van `stil` en `onbereikbaar`
 	 * gaan over de bronnen, en die hebben hier niets misdaan: de ophaalronde was klaar en de vorige
 	 * pagina's kwamen gewoon binnen. `geenSessie` blijft wél zichzelf — daar hangt het herstel aan
-	 * vast, in de `bekend`-tak en in `wachtOpLijst`.
+	 * vast: een ronde draaien, en in `wachtOpLijst` opnieuw kijken.
 	 */
 	async function haalLijstPagina(ontvanger, pagina, resterend) {
 		try {
@@ -714,13 +668,16 @@
 		return !!bericht && typeof bericht.berichtId === "string" && bericht.berichtId !== "";
 	}
 
-	// `organisaties` komt uit de ophaalronde: die draagt per magazijn de weergavenaam. Het
-	// afzender-veld van een bericht is het nummer van de organisatie, niet haar naam.
-	function naarBerichtenboxVorm(bericht, organisaties) {
+	// Elk bericht draagt de weergavenaam van zijn afzender: `afzenderNaam` is verplicht in de
+	// berichtenlijst van de uitvraag en nooit leeg. De terugval dekt alleen een uitvraag van vóór die
+	// wijziging — dan is `magazijnId` het enige wat er over de afzender in staat. Dat is een
+	// twintigcijferig nummer dat een schermlezer cijfer voor cijfer voorleest, maar wel waar; een
+	// verzonnen naam is dat niet.
+	function naarBerichtenboxVorm(bericht) {
 		return {
 			id: bericht.berichtId,
 			magazijnId: bericht.magazijnId,
-			afzender: organisaties[bericht.magazijnId] || bericht.afzender || bericht.magazijnId || "Onbekende afzender",
+			afzender: bericht.afzenderNaam || bericht.magazijnId || "Onbekende afzender",
 			onderwerp: bericht.onderwerp || "Bericht zonder onderwerp",
 			inhoud: bericht.inhoud || "",
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
@@ -731,6 +688,32 @@
 			// detailpagina, want die worden bij de build uit de dataset gegenereerd.
 			uitKeten: true,
 		};
+	}
+
+	/**
+	 * De organisaties voor het filter boven de lijst.
+	 *
+	 * Uit de berichten zelf, want die dragen de naam van hun afzender. Dat dicht een gat: een
+	 * organisatie die een bericht aanleverde nadat de ronde langs haar was — of die haar bericht
+	 * buiten een ronde om in de sessie zette — stond niet in het filter, terwijl haar bericht wél in
+	 * de lijst staat. En het werkt zonder ronde, want een pagina die de sessie van een andere pagina
+	 * gebruikt kent die ronde niet.
+	 *
+	 * De organisaties uit een eigen ronde komen erachteraan. Die antwoordden, maar hadden niets te
+	 * leveren; zonder hen zou het filter alleen tonen wie post stuurde, en niet bij wie er niets ligt.
+	 */
+	function magazijnenVan(berichten, organisaties) {
+		const namen = new Map();
+
+		for (const bericht of berichten) {
+			if (bericht.magazijnId && !namen.has(bericht.magazijnId)) namen.set(bericht.magazijnId, bericht.afzender);
+		}
+
+		for (const id of Object.keys(organisaties)) {
+			if (!namen.has(id)) namen.set(id, organisaties[id]);
+		}
+
+		return Array.from(namen, ([id, naam]) => ({ id: id, naam: naam, type: "instantie" }));
 	}
 
 	// --- Paginabereik -------------------------------------------------------------------------
@@ -875,26 +858,27 @@
 			ontvangerVanRonde = aangesloten.ontvanger;
 			zetOntvangerCookie(aangesloten.ontvanger);
 
-			// De sessie bij het stelsel is van de ontvanger en niet van deze pagina. Kennen we de
-			// organisaties van een eerdere ronde in deze zitting, dan is die sessie er waarschijnlijk
-			// nog en volstaat de lijst — geen tweede ronde, geen 409, en geen voortgangsbalk voor
-			// werk dat al gedaan is. Is de sessie tóch weg, dan zegt de lijst dat met een 409 en
-			// draaien we alsnog een ronde.
-			const bekend = bewaardeOrganisaties(aangesloten.ontvanger);
-			if (bekend) {
-				try {
-					lijst = await haalLijst(aangesloten.ontvanger);
-					uitvraag = { organisaties: bekend, stil: [], gevonden: null };
-				} catch (fout) {
-					if (redenVan(fout) !== "geenSessie") throw fout;
-					lijst = null;
-				}
+			// De sessie bij het stelsel is van de ontvanger en niet van deze pagina: inbox, archief,
+			// prullenbak en een detailpagina zijn hier eigen documenten, en de eerste die opengaat
+			// vult de sessie voor de rest. Daarom eerst de lijst proberen — dat scheelt elke pagina
+			// daarna een ronde langs alle magazijnen, een 409 op een ronde die al loopt, en een
+			// voortgangsbalk voor werk dat al gedaan is.
+			//
+			// De vraag "bestaat die sessie nog" stellen we aan het stelsel en niet aan onszelf. Een
+			// aantekening in deze zitting zou hem in een tweede tabblad missen — sessionStorage hoort
+			// bij één tabblad, de sessie bij de ontvanger — en dan draait daar alsnog een hele ronde
+			// terwijl de berichten klaarstaan. Het antwoord kost één verzoek bij de eerste pagina van
+			// een zitting: een 409, en daarna draaien we de ronde zelf.
+			try {
+				lijst = await haalLijst(aangesloten.ontvanger);
+				uitvraag = { organisaties: {}, stil: [], gevonden: null };
+			} catch (fout) {
+				if (redenVan(fout) !== "geenSessie") throw fout;
 			}
 
 			if (!lijst) {
 				try {
 					uitvraag = await haalOp(aangesloten.ontvanger);
-					bewaarOrganisaties(aangesloten.ontvanger, uitvraag.organisaties);
 					lijst = await haalLijst(aangesloten.ontvanger);
 				} catch (fout) {
 					if (redenVan(fout) !== "bezig") throw fout;
@@ -903,7 +887,7 @@
 					// dus wachten levert de bezoeker precies wat hij zocht. Een storingsmelding zou
 					// hier zeggen dat er iets kapot is terwijl het werk gewoon loopt.
 					lijst = await wachtOpLijst(aangesloten.ontvanger);
-					uitvraag = { organisaties: bewaardeOrganisaties(aangesloten.ontvanger) || {}, stil: [], gevonden: null };
+					uitvraag = { organisaties: {}, stil: [], gevonden: null };
 				}
 			}
 		} catch (fout) {
@@ -918,20 +902,16 @@
 			// leesbare lijst was. Wat hier binnenkomt is dus altijd een array.
 			const ruw = lijst.berichten;
 
-			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, uitvraag.organisaties));
+			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht));
 			const overgeslagen = ruw.length - berichten.length;
 			if (overgeslagen > 0) {
 				console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen.");
 			}
 
-			const magazijnen = Object.keys(uitvraag.organisaties).map((id) => ({
-				id: id,
-				naam: uitvraag.organisaties[id],
-				type: "instantie",
-			}));
+			const magazijnen = magazijnenVan(berichten, uitvraag.organisaties);
 
-			// Vanaf hier kan het pollen berichten vertalen: het weet nu welke naam bij welk nummer
-			// hoort.
+			// Het pollen bouwt het filter op dezelfde manier op, dus het krijgt dezelfde organisaties
+			// mee.
 			organisatiesVanRonde = uitvraag.organisaties;
 
 			// De tellers boven de lijst tonen zelf hoeveel bronnen antwoordden; alleen een
@@ -1186,13 +1166,9 @@
 	/**
 	 * Wat de lijst nu bevat, als er iets veranderd is.
 	 *
-	 * De magazijnen blijven die van de ronde: de lijst kent alleen nummers, en een organisatie die
-	 * niets nieuws had verdwijnt niet uit de zijbalk omdat zij niets stuurde.
-	 *
-	 * Keerzijde: komt er een bericht binnen van een organisatie die tijdens de ronde nog niet
-	 * meedeed, dan is haar naam hier onbekend en toont de rij het nummer. Een ronde draaien om dat
-	 * op te lossen zou alle organisaties bevragen voor één naam. Zolang het stelsel de naam niet
-	 * meestuurt in de berichtenlijst, is het nummer wat we eerlijk kunnen tonen.
+	 * Het filter wordt net zo opgebouwd als bij het laden: uit de berichten zelf, aangevuld met de
+	 * organisaties van de ronde. Komt er post van een organisatie die er nog niet in stond, dan staat
+	 * zij er daarna wél in, met haar naam.
 	 */
 	function verwerkPolllijst(lijst) {
 		// Beide gevallen zijn fouten en geen non-events: stil niets doen laat de bezoeker naar een
@@ -1205,7 +1181,7 @@
 		}
 
 		const ruw = lijst.berichten;
-		const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht, organisatiesVanRonde));
+		const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht));
 
 		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
 		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
@@ -1219,7 +1195,7 @@
 			toonOnbruikbaar(overgeslagen);
 		}
 
-		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+		laatsteUitkomst = { berichten: berichten, magazijnen: magazijnenVan(berichten, organisatiesVanRonde) };
 		laatstGemeld = berichten;
 		laatWeten();
 	}
@@ -1356,11 +1332,10 @@
 	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() && hoortBijStelsel() ? actiefKvkNummer() : null;
 
 	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
-	// ophaalde staat op de server (sessiecache per ontvanger, schuivende TTL), maar de
-	// organisatienamen zitten alleen in de ophaalronde — de berichtenlijst geeft per bericht het
-	// OIN, niet de naam. Dus draait elke berichtenbox-pagina zijn eigen ronde, ook het archief, de
-	// prullenbak en een detailpagina. Trager dan een cache uit de vorige pagina, en het enige wat
-	// klopt.
+	// ophaalde staat op de server, in een sessiecache per ontvanger met een schuivende TTL, en de
+	// berichtenlijst draagt alles wat het scherm nodig heeft — de naam van de afzender inbegrepen.
+	// Elke berichtenbox-pagina vraagt die lijst dus opnieuw op, en draait alleen een ophaalronde als
+	// er nog geen sessie is.
 	if (kvkNummer) {
 		ronde = draaiRonde(kvkNummer);
 		// Pas kijken of er berichten bij komen als er iets is om mee te vergelijken. De uitkomst

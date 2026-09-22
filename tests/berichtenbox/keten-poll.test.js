@@ -15,13 +15,15 @@ import { antwoord, personasVoor, ruimKetenOp, sseAntwoord, startKeten } from "./
  */
 
 /** Eén bericht in de vorm die de berichtenuitvraag teruggeeft. */
-function apiBericht(id) {
+function apiBericht(id, extra = {}) {
 	return {
 		berichtId: id,
 		magazijnId: "00000001000000000000",
+		afzenderNaam: "Belastingdienst",
 		onderwerp: "Bericht " + id,
 		publicatietijdstip: "2026-09-03T09:00:00Z",
 		status: "ongelezen",
+		...extra,
 	};
 }
 
@@ -215,7 +217,8 @@ describe("een sessie die tijdens het kijken verloopt", () => {
 		// nieuwe ronde langs de organisaties vult hem opnieuw; blijven pollen levert niets op.
 		const { aanroepen, ontvanger } = await startPollKeten([
 			["_ophalen", () => sseAntwoord()],
-			["/api/v1/berichten?", lijstReeks(LEEG(), GEEN_SESSIE(), EEN_BERICHT())],
+			// De herstelronde vraagt net als elke ronde eerst de lijst; zonder sessie is dat weer een 409.
+			["/api/v1/berichten?", lijstReeks(LEEG(), GEEN_SESSIE(), GEEN_SESSIE(), EEN_BERICHT())],
 		]);
 		const na = tellingen(aanroepen, ontvanger);
 
@@ -245,8 +248,9 @@ describe("een sessie die tijdens het kijken verloopt", () => {
 			["_ophalen", () => sseAntwoord()],
 			[
 				"/api/v1/berichten?",
-				// Om en om: elke ronde levert een lijst, elke tik daarna vindt de sessie weer weg.
-				lijstReeks(LEEG(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE()),
+				// Elke ronde levert een lijst, elke tik daarna vindt de sessie weer weg. Per herstel twee
+				// keer 409: de tik zelf, en de lijst die de herstelronde eerst probeert.
+				lijstReeks(LEEG(), GEEN_SESSIE(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE(), GEEN_SESSIE(), LEEG(), GEEN_SESSIE()),
 			],
 		]);
 		const na = tellingen(aanroepen, ontvanger);
@@ -414,19 +418,21 @@ describe("een antwoord in een vorm die we niet kennen", () => {
 });
 
 describe("de naam van de organisatie", () => {
-	it("draagt de naam uit de ophaalronde over op een bericht dat later binnenkomt", async () => {
-		// De berichtenlijst geeft per bericht alleen het nummer van de organisatie. Zonder de namen
-		// van de ronde toont de rij twintig cijfers — en leest een schermlezer die voor.
+	it("komt uit de berichtenlijst, ook voor een organisatie die de ronde niet noemde", async () => {
+		// Zonder `afzenderNaam` toont de rij twintig cijfers, en leest een schermlezer die voor. En een
+		// organisatie die buiten de ronde om post aanleverde, hoort daarna ook in het filter te staan.
 		await startPollKeten([
 			["_ophalen", () => sseMetNaam()],
-			["/api/v1/berichten?", lijstReeks(LEEG(), EEN_BERICHT())],
+			["/api/v1/berichten?", lijstReeks(GEEN_SESSIE(), LEEG(), antwoord(200, { berichten: [apiBericht("b-1", { magazijnId: "00000002000000000000", afzenderNaam: "RVO" })] }))],
 		]);
 		const gemeld = [];
 		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
 
 		await vi.advanceTimersByTimeAsync(15000);
 
-		expect(gemeld.filter(Boolean).pop().berichten[0].afzender).toBe("Belastingdienst");
+		const laatste = gemeld.filter(Boolean).pop();
+		expect(laatste.berichten[0].afzender).toBe("RVO");
+		expect(laatste.magazijnen.map((magazijn) => magazijn.naam)).toContain("RVO");
 	});
 });
 
@@ -512,7 +518,9 @@ describe("terwijl er een herstelronde loopt", () => {
 					});
 				},
 			],
-			["/api/v1/berichten?", lijstReeks(LEEG(), GEEN_SESSIE(), GEEN_SESSIE(), LEEG())],
+			// Eerst 409, zodat het laden een ronde draait; daarna een tik die de sessie kwijt is, en de
+			// lijst die de herstelronde eerst probeert.
+			["/api/v1/berichten?", lijstReeks(GEEN_SESSIE(), LEEG(), GEEN_SESSIE(), GEEN_SESSIE(), LEEG())],
 		]);
 
 		await vi.advanceTimersByTimeAsync(15000);
@@ -620,11 +628,12 @@ describe("een lijst die de bron niet kon tonen", () => {
 
 describe("wat het pollen aan de bron doorgeeft", () => {
 	it("houdt de organisaties van de ophaalronde vast", async () => {
-		// De lijst kent alleen nummers. Zouden de magazijnen bij een tik wegvallen, dan verdwijnt de
-		// organisatie uit de zijbalk en uit de tellers.
+		// Een organisatie die in de ronde antwoordde maar niets te leveren had, staat alleen in de
+		// ronde en niet in de lijst. Viel zij bij een tik weg, dan verdwijnt ze uit het filter en uit
+		// de tellers.
 		await startPollKeten([
 			["_ophalen", () => sseMetNaam()],
-			["/api/v1/berichten?", lijstReeks(LEEG(), EEN_BERICHT())],
+			["/api/v1/berichten?", lijstReeks(GEEN_SESSIE(), LEEG(), antwoord(200, { berichten: [apiBericht("b-1", { magazijnId: "00000002000000000000", afzenderNaam: "RVO" })] }))],
 		]);
 		const gemeld = [];
 		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
@@ -636,7 +645,7 @@ describe("wat het pollen aan de bron doorgeeft", () => {
 				.filter(Boolean)
 				.pop()
 				.magazijnen.map((magazijn) => magazijn.naam)
-		).toEqual(["Belastingdienst"]);
+		).toEqual(["RVO", "Belastingdienst"]);
 	});
 
 	it("meldt het ook als er een bericht verdwenen is", async () => {

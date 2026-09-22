@@ -24,7 +24,6 @@ beforeEach(() => {
 afterEach(() => {
 	// De cookiejar en de adresbalk van jsdom leven per bestand, niet per test: wat de ene test zet,
 	// ziet de volgende terug.
-	sessionStorage.clear();
 	ruimKetenOp();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
@@ -63,31 +62,25 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(gezet).not.toContain("%3A");
 	});
 
-	it("draait geen tweede ophaalronde als de organisaties van deze zitting al bekend zijn", async () => {
+	it("draait geen eigen ophaalronde als de sessie bij het stelsel al gevuld is", async () => {
 		// _ophalen bouwt de sessie bij het stelsel op; daarna levert de lijst diezelfde gegevens.
 		// Elke berichtenbox-pagina is een eigen document — inbox, archief, prullenbak — en die
 		// draaiden allemaal hun eigen ronde. Bij vijftien magazijnen loopt de eerste dan nog als de
-		// tweede begint, en antwoordt het stelsel terecht met 409.
-		sessionStorage.setItem(
-			"berichtenbox-keten-organisaties",
-			JSON.stringify({ ontvanger: ONTVANGER, organisaties: { "00000009000000000006": "Belastingdienst" } })
-		);
-
+		// tweede begint, en antwoordt het stelsel terecht met 409. Vandaar eerst de lijst: antwoordt
+		// die, dan is de sessie er en is er niets op te halen.
 		const { aanroepen } = await startKeten([
 			["/api/demo/personas", PERSONAS],
-			["_ophalen", sseAntwoord()],
 			[
 				"/api/v1/berichten?",
 				antwoord(200, {
-					berichten: [{ berichtId: "m1", magazijnId: "00000009000000000006", onderwerp: "Een besluit", publicatietijdstip: "2026-02-19T10:00:00Z" }],
+					berichten: [{ berichtId: "m1", magazijnId: "00000009000000000006", afzenderNaam: "Belastingdienst", onderwerp: "Een besluit", publicatietijdstip: "2026-02-19T10:00:00Z" }],
 				}),
 			],
 		]);
 
 		expect(aanroepen.some((a) => a.pad.indexOf("_ophalen") !== -1)).toBe(false);
 
-		// En de naam uit de bewaarde ronde komt terug op het scherm, want de lijst draagt als
-		// afzender hetzelfde nummer als magazijnId — twintig cijfers.
+		// En zonder die ronde staat de naam er toch: de lijst draagt hem per bericht.
 		const uitkomst = await window.BerichtenboxKeten.berichten();
 		expect(uitkomst.berichten[0].afzender).toBe("Belastingdienst");
 	});
