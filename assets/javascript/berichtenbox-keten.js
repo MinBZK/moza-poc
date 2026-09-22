@@ -18,7 +18,9 @@
  * En zolang de pagina openstaat volgt hij wat er binnenkomt. Standaard over een verbinding waarop
  * het stelsel zelf meldt dat er een bericht bij is (`_volgen`); lukt die niet, dan kijkt hij
  * periodiek of de lijst veranderd is. Allebei zonder ophaalronde, dus de organisaties merken er
- * niets van, en allebei houden ze de sessie bij het stelsel warm zolang de bezoeker kijkt.
+ * niets van, en allebei houden ze de sessie bij het stelsel warm zolang de bezoeker kijkt: de lijst
+ * verlengt haar bij elke aanroep, de stroom bij de hartslag (zo ontworpen in
+ * MinBZK/moza-poc-fbs-berichtenbox#336).
  *
  * Berichten uit de keten komen niet in localStorage. Wat eerder opgehaald is staat op de server, in
  * een sessiecache per ontvanger. Elke berichtenbox-pagina vraagt daarom zelf de lijst op — ook het
@@ -110,9 +112,18 @@
 	// tabbladen die tegelijk hun verbinding verloren niet ook tegelijk terugkomen.
 	const VOLG_TUSSENPOZEN_SEC = [1, 2, 5, 10, 30];
 	const VOLG_SPREIDING = 0.2;
-	// Zoveel verbindingen op rij die niet tot stand komen, en we vallen terug op het periodiek
-	// navragen. Stil: de berichtenbox werkt dan gewoon, nieuwe berichten verschijnen alleen wat later.
+	// Zoveel verbindingen op rij die niet gezond worden — geen hartslag, en ook een 503, 429 of 200
+	// zonder stroom — en we vallen terug op het periodiek navragen. Stil: de berichtenbox werkt dan
+	// gewoon, nieuwe berichten verschijnen alleen wat later.
 	const VOLG_FOUT_LIMIET = 3;
+	// Na zo'n terugval proberen we de stroom na vijf minuten opnieuw. Drie mislukkingen binnen een
+	// paar seconden zijn vaker een wifi-wissel dan een keten die niet kan volgen. Alleen een keten die
+	// `_volgen` aantoonbaar niet kent, of die ook na een nieuwe ronde met 409 blijft antwoorden, laat
+	// de stroom tot een herlading met rust.
+	const VOLG_HERKANSING_MS = 5 * 60 * 1000;
+	// Hoogstens zo lang wachten we op een `Retry-After`. Zolang we wachten, verschijnt er niets
+	// nieuws, en een uur lang niets is erger dan een stelsel dat het na een minuut nog eens hoort.
+	const VOLG_MAX_WACHT_MS = 60 * 1000;
 
 	// Constructief en handelingsgericht: benoem wat er misging en wat de bezoeker kan doen.
 	// Handelingsgericht, en de handeling moet ook kúnnen. "Probeer het opnieuw" stond hier terwijl er
@@ -197,6 +208,8 @@
 	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
 	// `vergeetGemeldeLijst`), terwijl `laatsteUitkomst` de laatst bekende lijst blijft.
 	let laatstGemeld = null;
+	// Hoeveel berichten zonder id het navragen het laatst meldde. Alleen een ander aantal is nieuws.
+	let gemeldOvergeslagen = 0;
 	const kijkers = [];
 
 	function laatWeten() {
@@ -1026,11 +1039,16 @@
 	// terug naar nul bij de eerste hartslag van een verbinding, en bij `pageshow`.
 	let volgPoging = 0;
 	let volgMislukt = 0;
-	// Hoe vaak `_volgen` op rij met 409 antwoordde. Eén keer is een verlopen sessie; twee keer, met een
-	// ronde ertussen, is iets anders.
+	// Hoe vaak `_volgen` met 409 antwoordde sinds de laatste gezonde verbinding. Eén keer is een
+	// verlopen sessie; twee keer, met een ronde ertussen, is iets anders.
 	let volgConflicten = 0;
-	// Blijvend: de stroom werkt hier niet, en tot een herlading geldt het periodiek navragen.
-	let volgTeruggevallen = false;
+	// Waarom we navragen in plaats van volgen: `null` (we volgen), "tijdelijk" (de verbinding kwam niet
+	// op gang; over vijf minuten weer proberen) of "blijvend" (deze keten kan het niet; tot een
+	// herlading navragen).
+	let volgTeruggevallen = null;
+	// Soorten gebeurtenissen die we niet kennen en al in de console noemden. Eén keer per soort: de
+	// hartslag komt elke twintig seconden, en een onbekende soort mogelijk net zo vaak.
+	const onbekendeSoorten = new Set();
 	// Wat de stroom meldde terwijl er een tik liep. Die tik kan een lijst opleveren die van vóór zo'n
 	// bericht is; zonder dit haalt hij het weer van het scherm.
 	let bijgekomenTijdensTik = null;
@@ -1171,6 +1189,9 @@
 		volgPoging = 0;
 		volgMislukt = 0;
 		volgConflicten = 0;
+		// Een tijdelijke terugval hoorde bij de verbinding van toen; de klok voor de herkansing is bij
+		// het weggaan gestopt.
+		if (volgTeruggevallen === "tijdelijk") volgTeruggevallen = null;
 		// Over de stroom haalt `volgen-gestart` de lijst bij; anders kijken we meteen.
 		if (volgtStroom()) {
 			verbindStroom();
@@ -1198,8 +1219,8 @@
 	 * tussenpoos voor een tabblad dat niemand voor zich heeft.
 	 */
 	function opZichtbaarheid() {
-		// Een verborgen tabblad blijft verbonden: de hartslag houdt de sessie warm, en een stille
-		// verbinding kost niets.
+		// Een verborgen tabblad blijft verbonden: het stelsel verlengt de sessie bij elke hartslag, en
+		// een stille verbinding kost niets.
 		if (!pollMag() || volgtStroom()) return;
 
 		// Wel meteen kijken, niet bij élke tabwissel: heen en weer schakelen zou anders een reeks
@@ -1238,7 +1259,11 @@
 			// hoort mee te tellen in de foutenreeks en niet die van zijn voorgangers te wissen.
 			verwerkPolllijst(lijst);
 			pollFouten = 0;
-			pollHerstelPogingen = 0;
+			// Over de stroom zegt een geslaagde tik niets over de sessie: die komt meteen na een
+			// herstelronde, als de sessie net gevuld is. Daar zet de eerste hartslag de rem terug;
+			// deed deze tik dat, dan draaide een sessie die korter leeft dan één cyclus eindeloos
+			// rondes langs alle organisaties.
+			if (!volgtStroom()) pollHerstelPogingen = 0;
 		} catch (fout) {
 			if (achterhaald(rondeVanTik)) return;
 
@@ -1258,8 +1283,8 @@
 				return;
 			}
 			// Over de stroom komt er geen volgende tik vanzelf, en deze lijst was de aansluiting op
-			// wat er vóór het volgen binnenkwam. Dus zelf opnieuw proberen, in het ritme van het
-			// navragen: dan overleeft de berichtenbox een hapering van de lijst net zo lang als bij
+			// wat er vóór het volgen binnenkwam. Dus zelf opnieuw proberen, na de standaard zichtbare
+			// tussenpoos van het navragen (15 s): dan overleeft de berichtenbox een hapering van de lijst net zo lang als bij
 			// het navragen. De stroom zelf werkt en blijft open; die afbreken en opnieuw verbinden zou
 			// elke seconde een tik opleveren, en na drie daarvan houdt het bijwerken op.
 			if (volgtStroom()) {
@@ -1314,7 +1339,11 @@
 		}
 
 		const ruw = lijst.berichten;
-		const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht));
+		const bruikbare = ruw.filter(bruikbaar);
+		// Vóór het samenvoegen hieronder tellen: een binnenkomer uit de stroom maakt de lijst weer even
+		// lang en verstopt zo een bericht zonder id.
+		const overgeslagen = ruw.length - bruikbare.length;
+		const berichten = bruikbare.map((bericht) => naarBerichtenboxVorm(bericht));
 
 		// Wat de stroom meldde terwijl deze lijst onderweg was, kan er nog niet in staan. Het staat al
 		// op het scherm; zonder dit ziet de bron het verdwijnen en haalt hij het weer weg.
@@ -1325,17 +1354,20 @@
 			}
 		}
 
-		// Pas melden als de lijst werkelijk veranderd is. Het meldingsblok is een live-regio: elke
-		// keer dezelfde tekst erin schrijven laat een schermlezer hem elke keer voorlezen.
-		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
-
 		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
 		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
-		const overgeslagen = ruw.length - berichten.length;
-		if (overgeslagen > 0) {
+		// Vóór de vergelijking hieronder: is zo'n bericht de enige wijziging, dan is de lijst verder
+		// dezelfde en kwam het nooit ter sprake. Alleen als het aantal verandert, want het meldingsblok
+		// is een live-regio: dezelfde tekst er elke tik opnieuw in schrijven laat een schermlezer hem
+		// elke keer voorlezen.
+		if (overgeslagen > 0 && overgeslagen !== gemeldOvergeslagen) {
 			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen tijdens het pollen.");
 			toonOnbruikbaar(overgeslagen);
 		}
+		gemeldOvergeslagen = overgeslagen;
+
+		// Pas een lijst melden als die werkelijk veranderd is; om dezelfde reden.
+		if (laatstGemeld && zelfdeBerichten(laatstGemeld, berichten)) return;
 
 		laatsteUitkomst = { berichten: berichten, magazijnen: magazijnenVan(berichten, organisatiesVanRonde) };
 		laatstGemeld = berichten;
@@ -1494,7 +1526,8 @@
 			waakhond = setTimeout(() => afbreker.abort(), VOLG_WAAKHOND_MS);
 		};
 
-		// Hoe de stroom eindigde: "afgebroken" (opnieuw verbinden), "verlopen" (het stelsel meldde dat
+		// Hoe de stroom eindigde: "afgebroken" (ook netjes geëindigd of niet geopend: opnieuw
+		// verbinden), "verlopen" (het stelsel meldde dat
 		// de sessie weg is), "conflict" (een 409 bij het openen) of "ontbreekt" (deze keten kent
 		// `_volgen` niet).
 		let einde = "afgebroken";
@@ -1517,19 +1550,29 @@
 			if (status === 404 || status === 405 || status === 406) {
 				einde = "ontbreekt";
 			} else if (status === 409) {
-				// Nog niet opgehaald, of een ronde die al loopt: dezelfde toestand als een 409 op de lijst.
+				// Zelfde betekenis als een 409 op de lijst: er is (nog) geen sessie, dus een herstelronde.
 				einde = "conflict";
 			} else if (!respons.ok || !respons.body || !isStroom(respons)) {
 				// Een 503 of 429 zegt hoe lang we moeten wachten: het stelsel is druk, of er staan voor
 				// deze ontvanger al te veel berichtenboxen open. Een 200 zonder stroom is een tussenlaag
 				// die iets anders teruggeeft, een foutpagina bijvoorbeeld; daar valt niets uit te lezen.
-				if (status === 503 || status === 429) wachtMinstens = wachttijdVan(respons);
+				if (status === 503 || status === 429) wachtMinstens = Math.min(wachttijdVan(respons), VOLG_MAX_WACHT_MS);
+				// Een open body van een antwoord dat we niet lezen, houdt bij het stelsel een plek
+				// bezet; per ontvanger zijn er vijf.
+				if (respons.body) {
+					respons.body.cancel().catch(() => {
+						/* al dicht */
+					});
+				}
 				console.warn("[Berichtenbox] Het volgen van nieuwe berichten kwam niet tot stand (" + status + (respons.ok ? ", geen text/event-stream" : "") + ").");
 			} else {
+				// De waakhond herstart op een gebeurtenis die we konden lezen, niet op elk binnenkomend
+				// blok: een stroom die alleen onleesbare frames levert, bleef anders een uur open.
 				await leesSse(
 					respons.body,
-					herstartWaakhond,
+					() => {},
 					(gebeurtenis) => {
+						herstartWaakhond();
 						// Eén gebeurtenis die we niet kunnen verwerken, is geen weggevallen verbinding. Zou
 						// die fout de stroom meenemen, dan verbindt de berichtenbox opnieuw, struikelt de
 						// lijst over hetzelfde bericht, en houdt het bijwerken na drie rondes op — onder de
@@ -1537,7 +1580,11 @@
 						try {
 							return verwerkVolgGebeurtenis(gebeurtenis);
 						} catch (fout) {
+							// Overgeslagen, maar niet vergeten: de lijst brengt het bericht alsnog. Gaat het
+							// mis in de vertaling die de lijst ook gebruikt, dan faalt die tik net zo, en
+							// houdt het bijwerken na drie keer op met de bestaande mededeling.
 							console.error("[Berichtenbox] Een melding uit de stroom kon niet verwerkt worden; overgeslagen.", gebeurtenis, fout);
+							planLijstTik();
 							return false;
 						}
 					},
@@ -1564,24 +1611,30 @@
 					volgPoging = 0;
 					volgMislukt = 0;
 					volgConflicten = 0;
+					pollHerstelPogingen = 0;
 				}
 			} else if (soort === "bericht-bijgekomen") {
 				voegBijgekomenToe(gebeurtenis.bericht);
 			} else if (soort === "sessie-verlopen") {
 				einde = "verlopen";
 				return true;
+			} else if (!onbekendeSoorten.has(soort)) {
+				// Niets te doen, maar wel één keer zeggen: een hernoemde `bericht-bijgekomen` zou er
+				// anders net zo uitzien als een stroom waarop niets gebeurt.
+				onbekendeSoorten.add(soort);
+				console.warn("[Berichtenbox] Onbekende melding uit de stroom genegeerd: " + soort);
 			}
-			// Alles wat we niet kennen: niets te doen. Dat er iets kwam, is al genoeg voor de waakhond.
 			return false;
 		}
 
-		// Weggehaald door `sluitStroom`: de pagina gaat weg, of we houden ermee op. Dan geen vervolg.
+		// Weggehaald door `sluitStroom`: de pagina gaat weg, we houden ermee op, of een herstelronde
+		// verbindt straks zelf opnieuw. Hier dan geen vervolg.
 		if (volgAfbreker !== afbreker) return;
 		volgAfbreker = null;
 		if (!pollMag()) return;
 
 		if (einde === "ontbreekt") {
-			valTerug("deze keten kent _volgen niet, status " + status);
+			valTerug("blijvend", "deze keten kent _volgen niet, status " + status);
 			return;
 		}
 		if (einde === "verlopen") {
@@ -1596,7 +1649,7 @@
 			// mededeling, terwijl het navragen gewoon werkt.
 			volgConflicten += 1;
 			if (volgConflicten >= 2) {
-				valTerug("_volgen antwoordt ook na een nieuwe ophaalronde met 409");
+				valTerug("blijvend", "_volgen antwoordt ook na een nieuwe ophaalronde met 409");
 				return;
 			}
 			console.info("[Berichtenbox] _volgen antwoordde met 409; er volgt een nieuwe ophaalronde.");
@@ -1606,7 +1659,7 @@
 		if (!gezond) {
 			volgMislukt += 1;
 			if (volgMislukt >= VOLG_FOUT_LIMIET) {
-				valTerug(volgMislukt + " verbindingen op rij kwamen niet tot een hartslag" + (status && status !== 200 ? ", laatste status " + status : ""));
+				valTerug("tijdelijk", volgMislukt + " verbindingen op rij kwamen niet tot een hartslag" + (status && status !== 200 ? ", laatste status " + status : ""));
 				return;
 			}
 		}
@@ -1638,14 +1691,44 @@
 	}
 
 	/**
-	 * Voortaan periodiek navragen, tot de pagina herladen wordt. Geen melding: de berichtenbox werkt
-	 * gewoon, en dat nieuwe berichten wat later verschijnen, hoeft de bezoeker niet te weten.
+	 * Periodiek navragen in plaats van volgen. Geen melding: de berichtenbox werkt gewoon, en dat nieuwe
+	 * berichten wat later verschijnen, hoeft de bezoeker niet te weten.
+	 *
+	 * `soort` is "blijvend" (tot een herlading) of "tijdelijk": dan proberen we de stroom over vijf
+	 * minuten opnieuw, en ook als de pagina uit de bfcache terugkomt.
 	 */
-	function valTerug(reden) {
-		console.info("[Berichtenbox] Nieuwe berichten volgen lukt hier niet (" + reden + "); de berichtenbox kijkt voortaan periodiek.");
-		volgTeruggevallen = true;
+	function valTerug(soort, reden) {
+		console.warn("[Berichtenbox] Nieuwe berichten volgen lukt nu niet (" + reden + "); de berichtenbox kijkt " + (soort === "blijvend" ? "voortaan" : "voorlopig") + " periodiek.");
+		volgTeruggevallen = soort;
 		sluitStroom();
 		planPoll();
+		if (soort === "tijdelijk") volgKlok = setTimeout(herkansStroom, VOLG_HERKANSING_MS);
+	}
+
+	/**
+	 * Na een tijdelijke terugval: de stroom opnieuw proberen. De reeks tussenpozen loopt door waar ze
+	 * was, dus lukt het weer niet, dan wachten de volgende pogingen 10 en 30 seconden.
+	 */
+	function herkansStroom() {
+		if (volgTeruggevallen !== "tijdelijk") return;
+		volgTeruggevallen = null;
+		volgMislukt = 0;
+		clearTimeout(pollKlok);
+		pollKlok = null;
+		verbindStroom();
+	}
+
+	/**
+	 * De lijst over een paar seconden ophalen, één keer, ook als er meer aanleidingen komen. Voor een
+	 * bericht dat de stroom meldde maar dat we niet konden verwerken, en voor een lijst die de bron
+	 * niet kon tonen: over de stroom komt er geen volgende tik vanzelf.
+	 */
+	function planLijstTik() {
+		if (pollKlok) return;
+		pollKlok = setTimeout(() => {
+			pollKlok = null;
+			lijstTik();
+		}, POLL_MIN_SEC * 1000);
 	}
 
 	/** `Retry-After` in milliseconden: seconden of een datum, en nul als hij ontbreekt. */
@@ -1677,6 +1760,8 @@
 	function voegBijgekomenToe(ruw) {
 		if (!bruikbaar(ruw)) {
 			console.error("[Berichtenbox] De stroom meldde een bericht zonder berichtId; overgeslagen.", ruw);
+			// De lijst telt het mee en zegt de bezoeker dat er een bericht niet te tonen is.
+			planLijstTik();
 			return;
 		}
 		const bericht = naarBerichtenboxVorm(ruw);
@@ -1850,7 +1935,7 @@
 			meldStoring("verwerking");
 			// Periodiek navragen biedt de lijst bij de volgende tik vanzelf opnieuw aan. Over de stroom
 			// komt er geen volgende tik, dus vragen we er zelf een, na de ondergrens van het navragen.
-			if (volgtStroom()) setTimeout(lijstTik, POLL_MIN_SEC * 1000);
+			if (volgtStroom()) planLijstTik();
 		},
 
 		/**

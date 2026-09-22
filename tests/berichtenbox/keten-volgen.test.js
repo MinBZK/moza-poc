@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { antwoord, personasVoor, ruimKetenOp, sseAntwoord, startKeten } from "./keten-harnas.js";
+import { ketenBron } from "../../assets/javascript/berichtenbox/keten-bron.js";
 
 /**
  * Het volgen van `berichtenbox-keten.js`: een verbinding waarop het stelsel zelf meldt dat er een
@@ -209,7 +210,9 @@ describe("de stroom opent na de ronde", () => {
 		// Een fout in één bericht is geen weggevallen verbinding. Nam die fout de stroom mee, dan
 		// verbond de berichtenbox opnieuw en hield het bijwerken na drie rondes op.
 		const volg = volgAdres();
-		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		// De lijst na het overgeslagen bericht bevat b-2 al: het stelsel zet elk bericht eerst in de
+		// sessie en meldt het dan pas.
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), lijstMet("b-1"), lijstMet("b-2", "b-1"))]]);
 		const laatste = volgGemeld();
 
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
@@ -280,7 +283,9 @@ describe("de waakhond", () => {
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
 
-		await vi.advanceTimersByTimeAsync(45000);
+		await vi.advanceTimersByTimeAsync(44000);
+		expect(volg.stromen[0].afgebroken).toBe(false);
+		await vi.advanceTimersByTimeAsync(1000);
 		expect(volg.stromen[0].afgebroken).toBe(true);
 
 		// Eerste tussenpoos: een seconde; de spreiding staat in deze tests op nul, 1500 ms is marge.
@@ -327,6 +332,7 @@ describe("opnieuw verbinden", () => {
 		const volg = volgAdres();
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
 		await vi.advanceTimersByTimeAsync(0);
 
 		volg.stromen[0].sluit();
@@ -548,10 +554,18 @@ describe("een lijst die hapert terwijl de stroom openstaat", () => {
 		await vi.advanceTimersByTimeAsync(0);
 		const voor = tellingen(aanroepen, ontvanger);
 
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => {
+			if (toestand.uitkomst) gemeld.push(toestand.uitkomst);
+		});
 		window.BerichtenboxKeten.meldVerwerkingsfout();
+		const naMelding = gemeld.length;
 		await vi.advanceTimersByTimeAsync(5000);
 
 		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+		// Dezelfde lijst, maar opnieuw aangeboden: zonder `vergeetGemeldeLijst` zou de tik zwijgen.
+		expect(gemeld.length).toBeGreaterThan(naMelding);
+		expect(ids(gemeld[gemeld.length - 1])).toEqual(["b-1"]);
 	});
 });
 
@@ -578,6 +592,191 @@ describe("een verbinding die niet op gang komt", () => {
 
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(3);
 		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+});
+
+describe("tweede reviewronde", () => {
+	it("houdt de herstelrem vast als de stroom telkens na de start `sessie-verlopen` meldt", async () => {
+		// Een sessie die korter leeft dan één cyclus. De lijst-tik na `volgen-gestart` slaagt altijd,
+		// want de ronde heeft de sessie net gevuld; zette die tik de rem terug, dan draaide de
+		// berichtenbox om de paar seconden een ronde langs alle organisaties, zonder einde.
+		let sessie = true;
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([
+			volg.adres,
+			[
+				"_ophalen",
+				() => {
+					sessie = true;
+					return sseAntwoord();
+				},
+			],
+			["/api/v1/berichten?", () => (sessie ? lijstMet() : GEEN_SESSIE())],
+		]);
+
+		for (let stroom = 0; stroom < 6 && volg.stromen[stroom]; stroom++) {
+			volg.stromen[stroom].stuur({ event: "volgen-gestart" });
+			await vi.advanceTimersByTimeAsync(100);
+			sessie = false;
+			volg.stromen[stroom].stuur({ event: "sessie-verlopen" });
+			await vi.advanceTimersByTimeAsync(100);
+		}
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBeLessThanOrEqual(2);
+		expect(window.BerichtenboxKeten.melding.soort).toBe("mededeling");
+	});
+
+	it("meldt een bericht zonder id, ook als er tijdens de tik een bericht uit de stroom bijkwam", async () => {
+		let geefLijst;
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), () => new Promise((klaar) => (geefLijst = () => klaar(antwoord(200, { berichten: [apiBericht("b-1"), { onderwerp: "Zonder id" }] })))))]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
+		await vi.advanceTimersByTimeAsync(0);
+		geefLijst();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(window.BerichtenboxKeten.melding && window.BerichtenboxKeten.melding.tekst).toContain("ontbreken gegevens");
+	});
+
+	it.each([
+		["zonder id", { onderwerp: "Zonder id" }],
+		["met een onleesbaar veld", apiBericht("b-kapot", { publicatietijdstip: 20260921 })],
+	])("haalt de lijst op als een bericht uit de stroom %s overgeslagen werd", async (_, bericht) => {
+		// Anders blijft dat bericht weg tot de volgende `volgen-gestart`, en die kan een uur op zich
+		// laten wachten.
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger);
+
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: bericht });
+		await vi.advanceTimersByTimeAsync(5500);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+	});
+
+	it("laat de waakhond niet voeden door meldingen die niets zeggen", async () => {
+		// Een stroom die alleen onleesbare frames levert, zou anders een uur openblijven en nooit als
+		// mislukt tellen.
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
+
+		for (let keer = 0; keer < 5; keer++) {
+			await vi.advanceTimersByTimeAsync(10000);
+			if (!volg.stromen[0].afgebroken) volg.stromen[0].stuurRauw("data:{kapot\n\n");
+		}
+
+		expect(volg.stromen[0].afgebroken).toBe(true);
+	});
+
+	it("wacht een `Retry-After` van een uur niet helemaal af", async () => {
+		const druk = { ok: false, status: 503, headers: { get: (naam) => (naam === "Retry-After" ? "3600" : null) } };
+		const volg = volgAdres(druk);
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		await vi.advanceTimersByTimeAsync(61000);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
+	});
+
+	it("probeert de stroom na een netwerkstoring later opnieuw", async () => {
+		// Drie mislukte pogingen binnen een paar seconden zijn een wifi-wissel, geen keten zonder
+		// `_volgen`. Tijdelijk navragen, daarna de stroom weer proberen.
+		const volg = volgAdres(antwoord(500, {}), antwoord(500, {}), antwoord(500, {}));
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		await vi.advanceTimersByTimeAsync(4000);
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(3);
+
+		await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(4);
+		expect(volg.stromen.length).toBe(1);
+	});
+
+	it("probeert de stroom niet opnieuw bij een keten zonder `_volgen`", async () => {
+		const volg = volgAdres(antwoord(404, {}));
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(1);
+	});
+});
+
+describe("wat de eerste hartslag terugzet", () => {
+	it("telt mislukkingen van vóór een gezonde verbinding niet meer mee", async () => {
+		// Twee mislukkingen, een gezonde verbinding, en dan weer één: dat is geen reeks van drie.
+		const volg = volgAdres(antwoord(500, {}), antwoord(500, {}), null, antwoord(500, {}));
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		await vi.advanceTimersByTimeAsync(3100);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].breek();
+
+		await vi.advanceTimersByTimeAsync(4000);
+
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(5);
+		expect(volg.stromen.length).toBe(2);
+	});
+
+	it("vergeet een 409 van vóór een gezonde verbinding", async () => {
+		// Twee 409's met uren gezonde verbinding ertussen zijn twee verlopen sessies, geen keten die
+		// het niet kan.
+		const volg = volgAdres(GEEN_SESSIE(), null, GEEN_SESSIE());
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), GEEN_SESSIE(), lijstMet(), lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(1);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		volg.stromen[0].breek();
+		await vi.advanceTimersByTimeAsync(1500);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(2);
+		expect(volg.stromen.length).toBe(2);
+	});
+});
+
+describe("een antwoord dat we niet lezen", () => {
+	it("sluit de body van een 200 zonder stroom", async () => {
+		// Anders blijft zo'n verbinding bij het stelsel open, en per ontvanger zijn er vijf.
+		let gesloten = false;
+		const html = { ok: true, status: 200, body: new ReadableStream({ cancel: () => (gesloten = true) }), headers: { get: () => "text/html" } };
+		const volg = volgAdres(html);
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+
+		expect(gesloten).toBe(true);
+	});
+});
+
+describe("van stroom tot bron", () => {
+	it("maakt van een bericht uit de stroom één binnenkomer, ook als de lijst het ook heeft", async () => {
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), lijstMet("b-2", "b-1"))]]);
+		const bron = ketenBron(window.BerichtenboxKeten);
+		expect(await bron.geldtVoor()).toBe(true);
+		await bron.laad();
+		const gemeld = [];
+		bron.start((wijziging) => {
+			gemeld.push(wijziging);
+			return [];
+		});
+
+		// Grensvlak: b-2 staat in de lijst van de tik én komt over de stroom.
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
+		await vi.advanceTimersByTimeAsync(0);
+
+		const binnenkomers = gemeld.filter((wijziging) => wijziging.nieuwBericht).map((wijziging) => wijziging.nieuwBericht.id);
+		expect(binnenkomers).toEqual(["b-2"]);
+		expect(gemeld.filter((wijziging) => wijziging.berichten)).toEqual([]);
 	});
 });
 
