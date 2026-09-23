@@ -1,0 +1,179 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Ontwerppatronen/Digitale assistent" />
+
+# Digitale assistent
+
+De huidige digitale assistent is een chat waarin een ondernemer vragen stelt en taken laat voorbereiden, zoals uitzoeken welke regels gelden of een rapportage indienen. De antwoorden worden door AI gegenereerd. Daarom is het patroon gebouwd op drie beloftes: de ondernemer ziet **waar een antwoord vandaan komt**, bepaalt **zelf welke gegevens gedeeld worden** en kan **altijd verder**, ook als de assistent vastloopt.
+
+**Let wel: de assistent is een proof of concept. De backend leeft in een eigen repository ([moza-poc-digitale-assistent](https://github.com/MinBZK/moza-poc-digitale-assistent)); dit patroon beschrijft de voorkant.**
+
+## Ontwerpdoel
+
+Onderzoeken hoe een AI-assistent in een overheidsportaal betrouwbaar kan zijn zonder te beweren dat die onfeilbaar is. Dat vraagt om een chat die meer doet dan tekst tonen: hij toont bronnen, vraagt toestemming en stelt gestructureerde vragen in plaats van de ondernemer alles te laten typen.
+
+## Opbouw van het scherm
+
+- **Gesprek**: één `role="log"` met `aria-live="polite"`. Een schermlezer hoort nieuwe berichten zonder dat de focus verspringt.
+- **Invoer**: een `<textarea>` met een (visueel verborgen) label. Enter verstuurt, Shift+Enter maakt een nieuwe regel. Het veld groeit mee met de tekst.
+- **Acties**: “Vraag stellen”, “Nieuw gesprek starten” en “Bewaar gesprek”, in een `action-group`.
+- **Disclaimer**: onder het gesprek, altijd zichtbaar. Zegt dat de antwoorden door AI gemaakt worden en fouten kunnen bevatten, noemt de bronnen en verwijst naar een adviseur of de bevoegde instantie voor juridisch advies.
+- **Status van bronnen**: achter de feature flag “Status van bronnen in de Digitale assistent” (standaard uit). Zie [Status van bronnen](#status-van-bronnen).
+
+## Instappen
+
+### Eerste bezoek
+
+Bij het eerste bezoek stelt de assistent zich voor middels drie tekstballonnen, elk na een korte interval: wie die is, wat die kan en dat gegevens pas gebruikt worden **als de ondernemer daar toestemming voor geeft**. Daarna volgen drie voorbeeldvragen. Dat de uitleg gezien is, staat in `localStorage`. Bij een volgend bezoek komen alleen de voorbeeldvragen, met de knop “Toon de uitleg opnieuw”.
+
+### Met een vraag binnenkomen
+
+Bij subsidies, regelingen en buurtberichten staat in de actiegroep de link “Vraag aan de digitale assistent”. Die opent de assistent met `?vraag=` en verstuurt de vraag direct. De uitleg valt dan weg, ook bij een eerste bezoek: wie een vraag stelt, wil een antwoord en geen drie tekstballonnen ertussen die op dat moment niet relevant zijn. De uitleg wordt niet als gezien gemarkeerd, dus wie later zonder vraag binnenkomt krijgt hem alsnog.
+
+De vraag komt uit één bron, `assets/javascript/assistent-vraag.js`. Eleventy gebruikt die als filter voor de detailpagina's, de browser als script voor de kaarten op de homepage. Zo stelt dezelfde knop op twee plekken dezelfde vraag. Een vraag die de redactie in de data heeft gezet (`assistentVraag`) gaat altijd voor.
+
+## Wachten
+
+Zodra een vraag verstuurd is, staat er een wachtindicator met een tekst die zegt wat de assistent doet (“Vraag analyseren…”, dan de naam van de bron die geraadpleegd wordt). De verzendknop krijgt `aria-disabled` en er kan geen tweede vraag tegelijk verstuurd worden. Dit patroon staat uitgewerkt onder [AI-statusindicator](?path=/docs/ontwerppatronen-ai-statusindicator--docs).
+
+Ook zonder vraag “denkt” de assistent kort voordat die iets zegt: bij een nieuw gesprek en bij het laden van de pagina. Een scherm dat meteen met kant-en-klare tekst begint, leest niet als een gesprek.
+
+## Antwoord met bronvermelding
+
+Elk antwoord krijgt eronder de bronnen die de assistent geraadpleegd heeft: de naam van de bron, waar die over ging en de datum van raadpleging. De naam is een link naar de bron zelf (met het externe-link-icoon), zodat de ondernemer het kan nalezen. Eén bron heet “Bron:”, meer bronnen “Bronnen:”.
+
+<div className="sb-unstyled">
+	<div className="chat-messages" style={{ blockSize: "auto", overflow: "visible" }}>
+		<div className="chat-message chat-message-user">
+			<p>Geldt de energiebesparingsinformatieplicht voor mij?</p>
+		</div>
+		<div className="chat-message chat-message-assistant">
+			<p>Ja, die geldt voor uw bedrijf. U gebruikt per jaar meer dan 50.000 kWh elektriciteit, en dan bent u verplicht energie te besparen en te rapporteren welke maatregelen u heeft genomen.</p>
+			<p>U rapporteert uiterlijk 1 december 2026 bij de RVO.</p>
+			<p className="chat-bronnen-label">Bronnen:</p>
+			<ul className="list-plain chat-bronnen">
+				<li>
+					<a rel="external noopener" target="_blank" href="https://wetten.overheid.nl/BWBR0022762/">
+						KOOP Regelingenbank: Activiteitenbesluit milieubeheer, artikel 2.15
+					</a>
+					<small className="chat-bron-datum">Geraadpleegd op 23 september 2026</small>
+				</li>
+				<li>
+					<a rel="external noopener" target="_blank" href="https://www.rvo.nl/onderwerpen/informatieplicht-energiebesparing">
+						RVO: Informatieplicht energiebesparing, rapportagetermijn
+					</a>
+					<small className="chat-bron-datum">Geraadpleegd op 23 september 2026</small>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+Hoe dat werkt:
+
+- De bronnen komen bij voorkeur als data mee in het antwoord (`bronnen`). Zet de backend ze als slotregel in de tekst (“Bron: RegelRecht (art. 5.15 …)”), dan haalt de chat die regel eruit en toont hem op dezelfde manier. Een opsomming midden in een antwoord blijft inhoud en wordt geen bron.
+- Noemt de assistent alleen de naam van een bron, dan komt de link uit de lijst met bekende bronnen in `digitale-assistent.js`. Een bron zonder publieke pagina (de Business Wallet is in dit prototype een nabootsing) blijft zonder link.
+- De tekst van een antwoord wordt beperkt opgemaakt: alinea's, opsommingen, vet, cursief en links. Een kop uit het antwoord wordt vetgedrukt en geen `<h2>`–`<h6>`: de ballon staat midden in de kopstructuur van de pagina.
+
+### In beeld brengen
+
+Past een nieuw bericht in het venster, dan schuift de chat door naar onderen. Is het langer, dan komt de **bovenkant** in beeld: anders begint de ondernemer aan het eind van een antwoord dat die nog moet lezen.
+
+## Toestemming vragen (deelverzoek)
+
+De assistent raadpleegt een bron met gegevens van het bedrijf pas nadat de ondernemer daar toestemming voor gaf. Is die toestemming er nog niet, dan komt er na de uitleg een kaart met de vraag, de bron en wat er gedeeld wordt.
+
+<div className="sb-unstyled">
+	<div className="chat-messages" style={{ blockSize: "auto", overflow: "visible" }}>
+		<div className="wallet-card">
+			<div className="wallet-consent">
+				<h3>Deelverzoek uit Business Wallet</h3>
+				<p>De assistent wil uw energieverbruik-attestatie gebruiken (afgegeven door uw netbeheerder). Er wordt niets opgehaald voordat u hier akkoord geeft.</p>
+				<div className="action-group">
+					<button type="button">Delen</button>
+					<button type="button" className="secondary">
+						Niet delen
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+- **Een besluit, geen tekst**: de focus gaat naar “Delen” en niet naar het invoerveld. De kop en de uitleg hangen via `aria-describedby` aan de knop, zodat een schermlezer de vraag voorleest.
+- **Delen** vervangt de kaart door “Toestemming gegeven voor [bron].” en stuurt een beurt met het contractveld `toestemming`. De kaart verdwijnt niet: de ondernemer moet terug kunnen lezen waar die ja tegen zei.
+- **Niet delen** toont dat de assistent deze bron niet raadpleegt en stuurt dat als bericht mee. Anders blijft de assistent wachten op een antwoord dat al gegeven is.
+- Toestemming wordt vastgelegd, nooit stilzwijgend ingetrokken of aangenomen: de chat stuurt het veld alleen mee in de beurt waarin de ondernemer op “Delen” drukte.
+
+Na “Delen” toont in het huidige scenario de energiekaart de gedeelde gegevens als `<dl>`, met de uitgever, het peiljaar en per waarde of die boven of onder de wettelijke grens ligt. Die grens komt uit RegelRecht, niet uit de code van de voorkant.
+
+## Vragen van de assistent als formulier
+
+Heeft de assistent gestructureerde antwoorden nodig, bijvoorbeeld welke maatregelen van de Erkende Maatregelenlijst zijn uitgevoerd, dan krijgt de ondernemer een formulier in plaats van een open vraag.
+
+- Elke vraag is een `<fieldset>` met `<legend>`; keuzes zijn checkboxes of radio buttons, geen vrij tekstveld dat het model weer moet interpreteren.
+- **Getrapte keuze** bij lange lijsten: eerst het onderdeel (Gebouwen, Faciliteiten, Processen), daarna alleen de categorieën daaronder. Wie een onderdeel weer uitvinkt, verliest ook de vinkjes eronder: die zouden anders onzichtbaar meegestuurd worden.
+- **Voorgevuld met herkomst**: heeft de backend een antwoord afgeleid uit een registratie, dan staat dat al aangevinkt, met een toelichting waar het vandaan komt. Zo kan de ondernemer het tegenspreken.
+- **“Leg mij dit uit”** stuurt de titel en de vragen van het formulier mee. Het formulier blijft staan, zodat de ondernemer na de uitleg alsnog antwoordt.
+- **Onvolledig verstuurd**: een melding boven de knoppen vraagt om elke vraag te beantwoorden.
+- **Na versturen** blijven de antwoorden zichtbaar maar vergrendeld, en maken de knoppen plaats voor “Antwoord verstuurd”. De antwoorden gaan als leesbaar bericht mee én als losse `opgaven` per veld, zodat de regel aan de andere kant niet hoeft te raden welk antwoord bij welke vraag hoort.
+- Het formulier krijgt dezelfde bronvermelding als een antwoord: het vraagt gegevens namens een regeling, dus de herkomst hoort erbij.
+
+## Focus
+
+- Vraagt de assistent iets in het gesprek (deelverzoek, formulier), dan gaat de focus naar het eerste veld of de eerste knop, met de kop en inleiding als `aria-describedby`.
+- Staat er half getypte tekst in het invoerveld, dan blijft de focus daar. Iemand midden in een zin de cursor afpakken is erger dan een extra Tab.
+- De focusring verschijnt alleen voor wie met het toetsenbord werkt. Een tekstveld matcht `:focus-visible` ook na een muisklik, en een element dat daarna programmatisch focus krijgt erft die ring. De chat houdt daarom zelf bij wat de laatste invoer was en zet `data-focus-stil` waar de ring niet hoort. Bij de eerste toets die de focus verplaatst is de ring er weer.
+
+## Vervolgstap
+
+Onder een bericht staat alleen een knop als die klopt bij wat er net gebeurde. Een knop die er altijd staat, wijst net zo vaak de verkeerde kant op als de goede.
+
+- Heeft de assistent een zaak ingediend, dan staat onder het antwoord “Bekijk in Lopende zaken”. De zaak staat meteen bij Lopende zaken, en de teller in de zijnavigatie werkt direct bij.
+- Loopt het vast, dan staat onder de foutmelding “Neem contact op”.
+
+## Foutmeldingen
+
+Een fout is een `feedback-error` in het gesprek, met een tekst die zegt wat er aan de hand is en wat de ondernemer kan doen:
+
+- De assistent reageerde te lang niet. Probeer het opnieuw.
+- De assistent heeft een technisch probleem. Probeer het later opnieuw.
+- De assistent is niet bereikbaar. Controleer uw internetverbinding en probeer het opnieuw.
+
+Wie niet ingelogd is als bedrijf dat de assistent kent, krijgt “log eerst in” als gewoon antwoord en niet als fout. Er is niets stuk; er ontbreekt een stap.
+
+## Gesprek bewaren en opnieuw beginnen
+
+- **Binnen een tabblad blijft het gesprek staan**: wie naar Lopende zaken klikt en terugkomt, vindt het terug. Het staat in `sessionStorage` en is weg als het tabblad sluit, zodat er op een gedeelde computer geen gesprek achterblijft.
+- **Per bedrijf een eigen gesprek**: wisselt de persona, dan wisselt het gesprek mee. Het gesprek van een ander bedrijf loopt niet door.
+- **“Nieuw gesprek starten”** en **“Bewaar gesprek”** staan uit (`aria-disabled`, niet `disabled`) tot er een vraag gesteld is. Zo blijven ze bereikbaar voor toetsenbord en schermlezer. Tijdens een antwoord doen ze niets, anders verdwijnt het gesprek onder het lopende antwoord.
+- **“Bewaar gesprek”** zet het gesprek bij Bewaarde items, onder “Gesprekken met de digitale assistent”. De titel is de eerste vraag. De knop wordt “Gesprek bewaard” en een statusmelding bevestigt dat. Lukt bewaren niet, dan zegt de melding dat, in plaats van te doen alsof het gelukt is.
+- **Een bewaard gesprek openen** zet het terug in de chat (`?gesprek=`). Een vervolgvraag begint bij de backend een nieuw gesprek: de oude sessie is daar inmiddels opgeruimd.
+
+## Status van bronnen
+
+Achter een feature flag staat onder het gesprek welke bronnen de assistent gebruikt en of die nu bereikbaar zijn.
+
+- De status staat in woorden in een uitleg bij de naam van de bron; het icoon is decoratief. De naam is met het toetsenbord te bereiken en de uitleg is met Escape te sluiten (WCAG 1.4.13, Content on Hover or Focus).
+- Een bron die in deze omgeving bewust uit staat, ontbreekt in de lijst in plaats van als “niet bereikbaar” te verschijnen. Een besluit is geen storing, en een respondent leest “niet bereikbaar” als “er is iets kapot”.
+
+## Identiteit
+
+De chat stuurt het KvK-nummer van de actieve persona mee in de header `X-Test-User`. De backend toetst dat aan een allowlist en zet het zelf bij elke bronaanroep; het model kan de identiteit niet kiezen. **Dit is geen authenticatie**: de header is in de browser aan te passen. Voor een gesloten testgroep met fictieve gegevens is dat aanvaardbaar.
+
+## Demo-modus
+
+Onder **Flags** staat de demo-modus: de assistent speelt dan een vast draaiboek af (`digitale-assistent-demo.js`) in plaats van een model. Het draaiboek levert dezelfde events als de backend, en de chat verwerkt ze langs hetzelfde renderpad. Wat in de demo te zien is, is dus wat een gebruiker live krijgt: de toestemmingsvraag, de energiekaart, de formulieren, de zaak en de foutmelding. Er zit geen willekeur in, zodat een demo in gebruikersonderzoek en presentaties elke keer hetzelfde doet.
+
+## Technische opbouw
+
+- `moza/digitale-assistent.html`: de pagina, met gesprek, formulier, disclaimer en bronstatus.
+- `assets/javascript/digitale-assistent.js`: het gedrag. Praat met de backend via `/chat/stream` (Server-Sent Events: `status`, `tool`, `case`, `answer`, `error`, `done`) en verwerkt elk event in `verwerkEvent()`.
+- `assets/javascript/digitale-assistent-demo.js`: het draaiboek voor de demo-modus.
+- `assets/javascript/assistent-vraag.js`: de openingsvraag vanaf subsidies, regelingen en buurtberichten.
+- `_includes/action-group.njk`: de link “Vraag aan de digitale assistent”.
+- `style/style.css`: de klassen `chat-*`, `wallet-*` en `vraag-form`.
+
+## Openstaande punten
+
+- **“Je” in plaats van “u”**: een aantal teksten in `digitale-assistent.js` spreekt de ondernemer nog aan met “je” (onder meer de deelverzoek-kaarten, de energiekaart en “Beantwoord elke vraag voordat je verstuurt”). Volgens de [Schrijfwijzer](?path=/docs/introductie-schrijfwijzer--docs) hoort dat “u” te zijn. De voorbeelden hierboven gebruiken al “u”.

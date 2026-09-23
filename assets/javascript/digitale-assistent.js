@@ -723,7 +723,7 @@
 		var totaal = (data.verbruik && data.verbruik.totaal) || {};
 		var kwh = Number(totaal.jaarlijks_elektriciteitsverbruik_kwh || 0);
 		var m3 = Number(totaal.jaarlijks_gasverbruik_m3 || 0);
-		var uitgever = cred.uitgegeven_door || (provenance && provenance.issuer) || "je netbeheerder";
+		var uitgever = cred.uitgegeven_door || (provenance && provenance.issuer) || "uw netbeheerder";
 		var peiljaar = cred.peiljaar;
 		var metToestemming = !!(data.toestemming && data.toestemming.met_toestemming_ondernemer);
 
@@ -734,7 +734,7 @@
 		var badge = metToestemming ? '<span class="wallet-badge">' + ICON_SUCCES + "Geverifieerd, met toestemming gedeeld</span>" : "";
 		var uitgeverRegel = "Afgegeven door: " + escapeHTML(uitgever) + (peiljaar ? " · peiljaar " + escapeHTML(peiljaar) : "");
 
-		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit je Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + bronnenHTML([{ label: "Business Wallet", titel: "Energieverbruik-attestatie, afgegeven door " + uitgever }]);
+		el.innerHTML = '<h3 tabindex="-1">' + stapIcoon("wet") + "Energieverbruik (uit uw Business Wallet)</h3>" + '<p class="wallet-uitgever">' + uitgeverRegel + " " + badge + "</p>" + '<dl class="wallet-cijfers">' + walletCijfer("Elektriciteit", kwh, "kWh", walletDrempel ? walletDrempel.kwh : null) + walletCijfer("Gas", m3, "m³", walletDrempel ? walletDrempel.gas : null) + "</dl>" + bronnenHTML([{ label: "Business Wallet", titel: "Energieverbruik-attestatie, afgegeven door " + uitgever }]);
 		return el;
 	}
 
@@ -848,12 +848,12 @@
 	// De kaart draagt `data-verzoek="backend"`, want alleen deze variant moet bij
 	// "Delen" een beurt versturen. De demo-kaart blijft lokaal.
 	function renderDeelverzoek(info) {
-		var bron = (info && info.bron) || "je Business Wallet";
+		var bron = (info && info.bron) || "uw Business Wallet";
 		// De backend zegt per bron wat er gedeeld wordt (toestemming_nodig.omschrijving):
 		// sinds toestemming per bron geldt, kan dit verzoek ook over het
 		// Handelsregister gaan. De wallet-tekst blijft de terugval voor een
 		// backend die het veld nog niet meestuurt.
-		var omschrijving = (info && info.omschrijving) || "De assistent wil je energieverbruik-attestatie gebruiken (afgegeven door je netbeheerder). Er wordt niets opgehaald voordat je hier akkoord geeft.";
+		var omschrijving = (info && info.omschrijving) || "De assistent wil uw energieverbruik-attestatie gebruiken (afgegeven door uw netbeheerder). Er wordt niets opgehaald voordat u hier akkoord geeft.";
 		var card = document.createElement("div");
 		card.className = "wallet-card";
 		card.setAttribute("data-verzoek", "backend");
@@ -871,7 +871,7 @@
 		var nietGedeeld = document.createElement("div");
 		nietGedeeld.className = "wallet-niet-gedeeld";
 		nietGedeeld.hidden = true;
-		nietGedeeld.innerHTML = "<p>Je hebt geen toestemming gegeven voor " + escapeHTML(bron) + ". De assistent raadpleegt deze bron niet.</p>";
+		nietGedeeld.innerHTML = "<p>U hebt geen toestemming gegeven voor " + escapeHTML(bron) + ". De assistent raadpleegt deze bron niet.</p>";
 		card.appendChild(nietGedeeld);
 
 		messages.appendChild(card);
@@ -891,7 +891,7 @@
 		var kaartId = "wallet-" + ++kaartTeller;
 		var vraag = document.createElement("div");
 		vraag.className = "wallet-consent";
-		vraag.innerHTML = '<h3 id="' + kaartId + '-kop" tabindex="-1">' + stapIcoon("gegevensdeling") + "Deelverzoek uit je Business Wallet</h3>" + '<p id="' + kaartId + '-uitleg">De assistent wil je energieverbruik-attestatie uit je Business Wallet gebruiken (afgegeven door je netbeheerder). Je bepaalt zelf of je deze gegevens deelt.</p>' + '<div class="action-group"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
+		vraag.innerHTML = '<h3 id="' + kaartId + '-kop" tabindex="-1">' + stapIcoon("gegevensdeling") + "Deelverzoek uit uw Business Wallet</h3>" + '<p id="' + kaartId + '-uitleg">De assistent wil uw energieverbruik-attestatie uit uw Business Wallet gebruiken (afgegeven door uw netbeheerder). U bepaalt zelf of u deze gegevens deelt.</p>' + '<div class="action-group"><button type="button" class="wallet-delen">Delen</button><button type="button" class="secondary wallet-niet-delen">Niet delen</button></div>';
 		card.appendChild(vraag);
 
 		card.appendChild(buildWalletEnergie(data, provenance));
@@ -899,7 +899,7 @@
 		var nietGedeeld = document.createElement("div");
 		nietGedeeld.className = "wallet-niet-gedeeld";
 		nietGedeeld.hidden = true;
-		nietGedeeld.innerHTML = "<p>Je hebt je energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met je Business Wallet-gegevens controleren.</p>";
+		nietGedeeld.innerHTML = "<p>U hebt uw energieverbruik niet gedeeld. De assistent kan de informatieplicht dan niet automatisch met uw Business Wallet-gegevens controleren.</p>";
 		card.appendChild(nietGedeeld);
 
 		messages.appendChild(card);
@@ -1547,7 +1547,7 @@
 				melding.className = "vraag-melding form-field-error";
 				f.querySelector(".action-group").insertAdjacentElement("beforebegin", melding);
 			}
-			melding.textContent = "Beantwoord elke vraag voordat je verstuurt.";
+			melding.textContent = "Beantwoord elke vraag voordat u verstuurt.";
 			return;
 		}
 		var bericht = "Mijn antwoorden: " + delen.join("; ") + ".";
@@ -1925,9 +1925,9 @@
 		jaNee: function () {
 			return renderAssistentVraag({
 				titel: "Vraag van de assistent",
-				tekst: "Heeft je bedrijf een koelinstallatie?",
+				tekst: "Heeft uw bedrijf een koelinstallatie?",
 				bron: "RegelRecht",
-				velden: [{ naam: "koelinstallatie", label: "Heeft je bedrijf een koelinstallatie?", type: "radio", opties: ["Ja", "Nee"] }],
+				velden: [{ naam: "koelinstallatie", label: "Heeft uw bedrijf een koelinstallatie?", type: "radio", opties: ["Ja", "Nee"] }],
 			});
 		},
 	};
