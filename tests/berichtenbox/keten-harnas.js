@@ -122,7 +122,7 @@ export async function startKeten(perAdres, pad = "/moza/berichtenbox/", kvkNumme
 	const aanroepen = [];
 
 	vi.stubGlobal("fetch", async (pad, opties) => {
-		aanroepen.push({ pad, headers: (opties && opties.headers) || {} });
+		aanroepen.push({ pad, headers: (opties && opties.headers) || {}, methode: (opties && opties.method) || "GET", body: opties && opties.body });
 		for (const [patroon, geef] of perAdres) {
 			if (pad.indexOf(patroon) !== -1) return typeof geef === "function" ? geef(pad) : geef;
 		}

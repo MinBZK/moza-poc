@@ -499,7 +499,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		const alleMappen = [...data.mappen, ...state.eigenMappen];
 		alleMappen.forEach((m) => {
-			const el = document.querySelector(`[data-berichtenbox-count="map:${m.slug}"]`);
+			const el = document.querySelector(`[data-berichtenbox-count="map:${CSS.escape(m.slug)}"]`);
 			if (!el) return;
 			const n = data.berichten.filter((b) => {
 				if (statusVan(b.id) !== "inbox") return false;
@@ -1023,6 +1023,93 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		lijst.appendChild(li);
 	}
 
+	// Heeft de bron al mappen geleverd? Tot dan komt het overzicht uit de voortgang van de ronde.
+	let mappenVanBron = false;
+
+	const MAP_ICOON = '<svg xmlns="http://www.w3.org/2000/svg" class="icon-sm" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M58 15H29v-2c0-1.1-.9-2-2-2H12c-1.1 0-2 .9-2 2v4.69c7.13.47 40.09 2.62 40.59 2.75.28.07.38.21.4.34 0 .04.02.23-.01.23H4.53c-1.29 0-2.24 1.2-1.95 2.46l7.06 30c.27 1.16 1.18 1.54 2.36 1.54h46a2 2 0 0 0 2-2V17c0-1.1-.9-2-2-2" /></svg>';
+
+	/**
+	 * Zet de mappen in de tabbalk gelijk aan wat de bron levert.
+	 *
+	 * Het sjabloon zet de mappen van de dataset neer, verborgen: bij het bouwen is niet te weten welke
+	 * persona er kijkt, en een persona die zijn berichten uit het stelsel haalt heeft andere mappen —
+	 * of geen. Pas als de bron zegt welke mappen er zijn, komen ze in beeld. Een map die de bron niet
+	 * meer noemt, verdwijnt; dat is ook hoe een map zonder berichten verdwijnt.
+	 *
+	 * Draagt een map een aantal (`aantalBerichten`), dan staat dat erbij. Tijdens een ophaalronde
+	 * groeit het overzicht zo mee met wat de organisaties melden.
+	 *
+	 * Bestaande items blijven staan en schuiven alleen op hun plek: een item vervangen zou de focus
+	 * weghalen bij wie er met het toetsenbord op staat.
+	 */
+	function werkMappenBij(mappen) {
+		const scheiding = document.querySelector(".tablist .list-separation");
+		if (!scheiding) return;
+		const lijst = scheiding.parentNode;
+
+		const bestaand = new Map();
+		lijst.querySelectorAll(".berichtenbox-folder-user").forEach((li) => bestaand.set(li.dataset.mapSlug, li));
+
+		const actief = huidigeView() === "inbox" ? new URLSearchParams(location.search).get("map") : null;
+		const gezien = new Set();
+
+		mappen.forEach((map) => {
+			if (!map || typeof map.slug !== "string" || gezien.has(map.slug)) return;
+			gezien.add(map.slug);
+
+			let li = bestaand.get(map.slug);
+			if (!li) {
+				li = document.createElement("li");
+				li.className = "berichtenbox-folder-user";
+				li.dataset.mapSlug = map.slug;
+				const a = document.createElement("a");
+				a.href = url(berichtenboxBasis() + "?map=" + encodeURIComponent(map.slug) + "#hoofd-inhoud");
+				a.innerHTML = MAP_ICOON;
+				a.appendChild(document.createTextNode(" " + map.naam + " "));
+				li.appendChild(a);
+			}
+
+			const a = li.querySelector("a");
+			let aantal = li.querySelector("[data-berichtenbox-map-aantal]");
+			// Een map met een aantal komt uit de berichten zelf. Die zijn zichtbaar, ook nu de mappen
+			// van de dataset in de stijl tijdelijk verborgen staan.
+			li.toggleAttribute("data-map-uit-berichten", typeof map.aantalBerichten === "number");
+			if (typeof map.aantalBerichten === "number") {
+				// Geen bolletje: dat staat bij de inbox voor "ongelezen", en dit is het totaal in de map.
+				if (!aantal && a) {
+					aantal = document.createElement("span");
+					aantal.dataset.berichtenboxMapAantal = "";
+					a.appendChild(aantal);
+				}
+				if (aantal) {
+					aantal.textContent = "\u00a0(" + map.aantalBerichten;
+					const eenheid = document.createElement("span");
+					eenheid.className = "visually-hidden";
+					eenheid.textContent = map.aantalBerichten === 1 ? " bericht" : " berichten";
+					aantal.appendChild(eenheid);
+					aantal.appendChild(document.createTextNode(")"));
+				}
+			} else if (aantal) {
+				aantal.remove();
+			}
+
+			if (a && actief === map.slug) a.setAttribute("aria-current", "page");
+
+			li.hidden = false;
+			lijst.appendChild(li);
+		});
+
+		bestaand.forEach((li, slug) => {
+			if (!gezien.has(slug)) li.remove();
+		});
+
+		scheiding.hidden = gezien.size === 0;
+
+		// Binnen het Belastingdienst-portaal horen de mappen bij de andere organisaties en staan ze
+		// alleen als die zichtbaar zijn. Dat geldt ook voor wat hier net in beeld kwam.
+		werkMappenZichtbaarheidBij();
+	}
+
 	// Vlag-knop voor de Gemarkeerd-kolom; spiegelt de markup uit berichtenbox-row.njk.
 	function maakMarkKnop(gemarkeerd) {
 		const knop = document.createElement("button");
@@ -1431,7 +1518,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		const mapFilter = mapUitUrl();
 		if (mapFilter) {
-			const mapTab = document.querySelector('[data-map-slug="' + mapFilter + '"] a');
+			// Een mapnaam uit het stelsel komt woordelijk mee, met spaties en al wat een organisatie erin
+			// zette. Ongeëscaped breekt een aanhalingsteken de selector en daarmee dit hele blok.
+			const mapTab = document.querySelector('[data-map-slug="' + CSS.escape(mapFilter) + '"] a');
 			if (mapTab) {
 				mapTab.setAttribute("aria-current", "page");
 				mapTab.setAttribute("aria-selected", "true");
@@ -1444,8 +1533,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					inboxLink.removeAttribute("aria-selected");
 				}
 			}
+			// Een map die uit de berichten is afgeleid — die draagt een aantal — heeft geen aanmaakdatum:
+			// hij bestaat zolang er een bericht in zit. Daar een datum noemen zou iets verzinnen.
+			const map = data.mappen.find((m) => m.slug === mapFilter);
 			const counterP = document.querySelector("[data-berichtenbox-toolbar] > p");
-			if (counterP) counterP.textContent = "Deze map heeft u aangemaakt op 7 april 2026.";
+			if (counterP && !(map && typeof map.aantalBerichten === "number")) counterP.textContent = "Deze map heeft u aangemaakt op 7 april 2026.";
 		}
 		pasFilterToe();
 	}
@@ -1504,8 +1596,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Hier inline, want dit icoon komt pas in beeld nadat JavaScript weet waar het bericht staat,
 		// en de icoon-shortcode van Eleventy draait alleen bij de build. `aria-hidden` omdat de knop
 		// zijn naam uit zijn tekst haalt.
-		const ICOON_BERICHTENBOX =
-			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" /><path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" /></svg>';
+		const ICOON_BERICHTENBOX = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" /><path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" /></svg>';
 
 		// Alleen het icoon vervangen, de tekst en de visually-hidden span laten staan.
 		function zetKnopIcoon(btn, svg) {
@@ -2189,18 +2280,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		document.title = "MijnOverheid Zakelijk: " + bericht.onderwerp;
 
-		const effMap = mapVan(bericht.id, bericht.map);
-		const metaEl = detail.querySelector("[data-demo-meta]");
-		if (metaEl) {
-			metaEl.textContent = bericht.afzender + " \u00b7 " + datumNL(bericht.datum);
-			if (effMap) {
-				const span = document.createElement("span");
-				span.dataset.maplabel = "";
-				span.textContent = effMap;
-				metaEl.appendChild(document.createTextNode(" \u00b7 "));
-				metaEl.appendChild(span);
-			}
-		}
+		schrijfDemoMeta(detail, bericht, mapVan(bericht.id, bericht.map));
 
 		const bodyEl = detail.querySelector("[data-demo-body]");
 		if (bodyEl) {
@@ -2231,6 +2311,72 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (laden) laden.textContent = "Bijlagen ophalen bij " + bericht.afzender + "\u2026";
 			}
 		}
+	}
+
+	function schrijfDemoMeta(detail, bericht, map) {
+		const metaEl = detail.querySelector("[data-demo-meta]");
+		if (!metaEl) return;
+		metaEl.textContent = bericht.afzender + " \u00b7 " + datumNL(bericht.datum);
+		if (map) {
+			const span = document.createElement("span");
+			span.dataset.maplabel = "";
+			span.textContent = map;
+			metaEl.appendChild(document.createTextNode(" \u00b7 "));
+			metaEl.appendChild(span);
+		}
+	}
+
+	/**
+	 * De knop "Haal uit map" op de detailpagina.
+	 *
+	 * Alleen als het bericht in een map staat en de bron het kan. Bij het stelsel is een map een
+	 * eigenschap van het bericht, opgeslagen bij de organisatie die het stuurde; de bron stuurt de
+	 * wijziging daarheen. Er is geen map om leeg achter te laten: was dit het laatste bericht erin,
+	 * dan is de map daarna weg uit het overzicht.
+	 *
+	 * `aria-disabled` en niet `disabled` zolang het verzoek loopt, zodat de knop voor een
+	 * schermlezer te vinden blijft.
+	 */
+	function bindUitMap() {
+		const knop = document.querySelector('[data-actie="uit-map"]');
+		const detail = document.querySelector("[data-demo-detail]");
+		if (!knop || !detail) return;
+
+		const bron = register.actief();
+		if (!bron || typeof bron.haalUitMap !== "function") return;
+
+		const berichtId = detail.dataset.berichtId;
+		const bericht = data.berichten.find((b) => b.id === berichtId);
+		if (!bericht || !bericht.map) return;
+
+		knop.hidden = false;
+		knop.addEventListener("click", async () => {
+			if (knop.getAttribute("aria-disabled") === "true") return;
+			knop.setAttribute("aria-disabled", "true");
+
+			const mapNaam = bericht.map;
+			const uitkomst = await bron.haalUitMap(berichtId);
+			knop.removeAttribute("aria-disabled");
+
+			if (uitkomst && uitkomst.fout) {
+				toonPaginaMelding(uitkomst.fout, "storing", "uit-map");
+				return;
+			}
+			verbergPaginaMelding("uit-map");
+
+			// De bron heeft de lijst al bijgewerkt; wat hier staat volgt.
+			const nu = data.berichten.find((b) => b.id === berichtId) || bericht;
+			schrijfDemoMeta(detail, nu, null);
+			werkMapKruimelBij();
+
+			// De knop gaat weg, dus de focus moet ergens heen waar de bezoeker verder kan.
+			knop.hidden = true;
+			const volgende = detail.querySelector(".action-group [data-actie]:not([hidden])");
+			if (volgende) volgende.focus();
+
+			const status = detail.querySelector("[data-demo-inhoud-status]");
+			if (status) status.textContent = "Dit bericht staat niet meer in de map " + mapNaam + ". U vindt het in uw inbox.";
+		});
 	}
 
 	function toonMappenZijbalk() {
@@ -2362,6 +2508,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			bron.volgVoortgang((voortgang) => {
 				laatste = voortgang;
+
+				// Het mappenoverzicht groeit mee met wat de organisaties tijdens de ronde melden, los van
+				// de drempel voor de balk: een map die er al is hoort er te staan, ook bij een korte ronde.
+				//
+				// Alleen tot de bron voor het eerst geleverd heeft. Daarna is de lijst de bron: een latere
+				// ronde — een herstel na een verlopen sessie — zou mappen die nog niet gemeld zijn even
+				// weghalen, met de focus en de actieve map erbij, en eindigen op de tellingen van de ronde.
+				if (voortgang && Array.isArray(voortgang.mappen) && !mappenVanBron) {
+					veilig({ log: "Het mappenoverzicht tijdens het ophalen", bezoeker: "De mappen zijn op dit moment niet volledig te zien." }, () => werkMappenBij(voortgang.mappen));
+				}
 
 				// Geen voortgang meer: de ronde is klaar of afgebroken. Wat er voor haar verborgen is,
 				// hoort dan weer op het scherm — ook als deze bron nooit aan tonen toekwam, want de
@@ -2711,6 +2867,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Eigen afscherming: gaat dit mis, dan staat er "Inbox" in het kruimelpad terwijl het bericht
 		// elders staat. Vervelend, maar geen reden om de knoppen hierboven mee te nemen.
 		veilig({ log: "De map in het kruimelpad", bezoeker: "Het kruimelpad laat niet zien waar dit bericht staat." }, werkMapKruimelBij);
+		veilig({ log: "De knop Haal uit map", bezoeker: "U kunt dit bericht nu niet uit zijn map halen." }, bindUitMap);
 
 		// Ná het register: dit hangt aan de bron. De wéérgave hoeft hier niet bijgewerkt te worden —
 		// de lading meldt zich als bronwijziging, en die luisteraar doet het.
@@ -2830,6 +2987,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}
 
 		try {
+			if (!inhoud.nieuwBericht) {
+				werkMappenBij(data.mappen);
+				mappenVanBron = true;
+			}
 			werkMappenZichtbaarheidBij();
 			toonBerichten();
 			render(huidigeView());
@@ -2843,6 +3004,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// De rijen zijn mogelijk al vervangen voordat het misging. Alleen `data` terugzetten laat
 			// het scherm iets tonen wat nergens meer bestaat.
 			try {
+				werkMappenBij(data.mappen);
 				toonBerichten();
 				render(huidigeView());
 			} catch (herstelFout) {

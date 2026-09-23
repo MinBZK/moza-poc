@@ -1618,7 +1618,12 @@ button.is-marked {
 }
 
 .berichtenbox-folder-user {
-	display: none; /* Tijdelijk verbergen */
+	display: none; /* Tijdelijk verbergen: de mappen van de gegenereerde dataset */
+	/* Mappen uit het Federatief Berichtenstelsel wel: die volgen uit de berichten zelf, en wat er
+	   ontbreekt of verdwijnt is daar precies wat er te zien moet zijn. */
+	&[data-map-uit-berichten] {
+		display: revert;
+	}
 	a {
 		color: var(--toepassing-color-text-subtle-2);
 	}
