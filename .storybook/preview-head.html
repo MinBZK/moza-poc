@@ -32,6 +32,21 @@
 		font-size: inherit !important;
 		padding: 0;
 	}
+	/* Takenlijst uit Markdown (- [ ], via remark-gfm): het vakje vervangt het opsommingsteken */
+	/* en een afgebroken regel loopt door onder de tekst, niet onder het vakje. */
+	.sbdocs .contains-task-list {
+		list-style: none;
+		padding-inline-start: 0;
+	}
+	.sbdocs .task-list-item {
+		padding-inline-start: 2.5em;
+		position: relative;
+	}
+	.sbdocs .task-list-item > input {
+		inset-inline-start: 0;
+		margin: 0;
+		position: absolute;
+	}
 	/* Storybook story-containers: hoogte aanpassen aan content */
 	#storybook-root,
 	.sb-show-main {
