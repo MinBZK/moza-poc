@@ -8,7 +8,9 @@ subNavActive: "/moza/contactvoorkeuren/"
 <article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
 			<li>
 				<a href="{{ '/moza/contactvoorkeuren/' | url }}">Contactvoorkeuren</a>
 			</li>
@@ -18,7 +20,7 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 	<h1>Contactvoorkeuren</h1>
 
-	<a href="{{ '/moza/contactvoorkeuren/' | url }}" class="back-link">Terug naar Contactvoorkeuren</a>
+	<a class="back-link" href="{{ '/moza/contactvoorkeuren/' | url }}">Terug naar Contactvoorkeuren</a>
 
 	<section class="card">
 		<h2>Berichtgevingen</h2>
@@ -30,22 +32,40 @@ subNavActive: "/moza/contactvoorkeuren/"
 				<dt id="bm-ontvangst">Ontvangstbevestiging</dt>
 				<dd role="group" aria-labelledby="bm-ontvangst">
 					<ul class="list-plain">
-						<li><input type="checkbox" id="contact-message-receiptconfirmation-email" checked /><label for="contact-message-receiptconfirmation-email">E-mail</label></li>
-						<li><input type="checkbox" id="contact-message-receiptconfirmation-post" checked /><label for="contact-message-receiptconfirmation-post">Post</label></li>
+						<li>
+							<input id="contact-message-receiptconfirmation-email" type="checkbox" checked />
+							<label for="contact-message-receiptconfirmation-email">E-mail</label>
+						</li>
+						<li>
+							<input id="contact-message-receiptconfirmation-post" type="checkbox" checked />
+							<label for="contact-message-receiptconfirmation-post">Post</label>
+						</li>
 					</ul>
 				</dd>
 				<dt id="bm-status">Statuswijzigingen</dt>
 				<dd role="group" aria-labelledby="bm-status">
 					<ul class="list-plain">
-						<li><input type="checkbox" id="contact-message-statuschange-email" checked /><label for="contact-message-statuschange-email">E-mail</label></li>
-						<li><input type="checkbox" id="contact-message-statuschange-post" /><label for="contact-message-statuschange-post">Post</label></li>
+						<li>
+							<input id="contact-message-statuschange-email" type="checkbox" checked />
+							<label for="contact-message-statuschange-email">E-mail</label>
+						</li>
+						<li>
+							<input id="contact-message-statuschange-post" type="checkbox" />
+							<label for="contact-message-statuschange-post">Post</label>
+						</li>
 					</ul>
 				</dd>
 				<dt id="bm-besluiten">Besluiten</dt>
 				<dd role="group" aria-labelledby="bm-besluiten">
 					<ul class="list-plain">
-						<li><input type="checkbox" id="contact-message-decision-email" checked /><label for="contact-message-decision-email">E-mail</label></li>
-						<li><input type="checkbox" id="contact-message-decision-post" /><label for="contact-message-decision-post">Post</label></li>
+						<li>
+							<input id="contact-message-decision-email" type="checkbox" checked />
+							<label for="contact-message-decision-email">E-mail</label>
+						</li>
+						<li>
+							<input id="contact-message-decision-post" type="checkbox" />
+							<label for="contact-message-decision-post">Post</label>
+						</li>
 					</ul>
 				</dd>
 				<dt id="bm-taken">Taken</dt>
@@ -57,15 +77,21 @@ subNavActive: "/moza/contactvoorkeuren/"
 						</div>
 					</div>
 					<ul class="list-plain">
-						<li><input type="checkbox" id="contact-message-task-email" /><label for="contact-message-task-email">E-mail</label></li>
-						<li><input type="checkbox" id="contact-message-task-post" /><label for="contact-message-task-post">Post</label></li>
+						<li>
+							<input id="contact-message-task-email" type="checkbox" />
+							<label for="contact-message-task-email">E-mail</label>
+						</li>
+						<li>
+							<input id="contact-message-task-post" type="checkbox" />
+							<label for="contact-message-task-post">Post</label>
+						</li>
 					</ul>
 				</dd>
 			</dl>
 
 			<div class="action-group">
 				<button type="submit">Opslaan</button>
-				<button type="button" class="secondary">Annuleren</button>
+				<button class="secondary" type="button">Annuleer</button>
 			</div>
 		</form>
 	</section>

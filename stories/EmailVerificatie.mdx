@@ -5,19 +5,19 @@ import * as FeedbackStories from "./Feedback.stories";
 
 # E-mailverificatie
 
-Wanneer een gebruiker een e-mailadres toevoegt of wijzigt, moet dit geverifieerd worden voordat het actief wordt. Dit patroon beschrijft deze flow, zowel de ‘happy-flow’ als situaties waarin het mis kan gaan.
+Wanneer een gebruiker een e-mailadres toevoegt of wijzigt, moet dit geverifieerd worden voordat het actief wordt. Dit patroon beschrijft wat er gebeurt als alles goed gaat (de _happy flow_) en wat er gebeurt als het misgaat (de _unhappy flows_).
 
 ## Waarom verificatie?
 
 Een e-mailadres is een communicatiekanaal waarlangs de overheid notificaties stuurt. Een foutief of niet-bereikbaar adres kan ertoe leiden dat de gebruiker belangrijke berichten mist. Verificatie beschermt zowel de gebruiker als de organisatie.
 
-## Happy-flow
+## Als alles goed gaat (happy flow)
 
 De gebruiker wijzigt het e-mailadres en bevestigt dit succesvol.
 
 ### 1. Invoer
 
-De gebruiker voert een nieuw e-mailadres in met de actie **Contactgegevens wijzigen** op de pagina **Contactvoorkeuren** en klikt op **Opslaan**.
+De gebruiker voert een nieuw e-mailadres in met de actie **Contactgegevens wijzigen** op de pagina **Contactvoorkeuren** en kiest **Opslaan**.
 
 #### Validatie bij invoer
 
@@ -47,7 +47,7 @@ In de domeinnaam (na de `@`):
 
 **Technische implementatie:**
 
-- Het invoerveld gebruikt `type="email"`, dit zorgt ondermeer voor het juiste toetsenbord op mobiele apparaten
+- Het invoerveld gebruikt `type="email"`, dit zorgt onder meer voor het juiste toetsenbord op mobiele apparaten
 - `novalidate` op het formulier onderdrukt standaard browser-validatie popups
 - `autocomplete="email"` en `spellcheck="false"` op het invoerveld conform [WCAG 2.2 criterium 1.3.5](https://www.w3.org/WAI/WCAG21/Understanding/identify-input-purpose.html)
 - Verplichte velden zijn gemarkeerd met `aria-required="true"` in plaats van het `required`-attribuut
@@ -79,7 +79,7 @@ De gebruiker vult de verificatiecode uit de bevestigingsmail in. De gebruiker ko
 - Het oude adres wordt direct vervangen
 - De pagina Contactvoorkeuren toont het nieuwe adres
 
-## Unhappy-flows
+## Als het misgaat (unhappy flows)
 
 ### Ongeldig e-mailadres formaat
 
@@ -148,7 +148,7 @@ De verificatiemail kan niet worden afgeleverd (_hard bounce_):
 				<code>feedback-info</code>
 			</td>
 			<td>Actief</td>
-			<td>Opnieuw versturen, Annuleren</td>
+			<td>Opnieuw versturen, Annuleer</td>
 		</tr>
 		<tr>
 			<td>Verificatie voltooid</td>
@@ -187,16 +187,16 @@ De verificatiemail kan niet worden afgeleverd (_hard bounce_):
 
 ## Toegankelijkheid
 
-- Feedbackmeldingen worden aangekondigd via een `aria-live="polite"` regio, zodat screenreaders de statuswijziging communiceren
+- Feedbackmeldingen worden aangekondigd via een `aria-live="polite"` regio, zodat schermlezers de statuswijziging voorlezen
 - De verificatiecode in de e-mail moet duidelijk beschrijven wat er gebeurt: _“Bevestig uw e-mailadres voor MijnOverheid Zakelijk door deze code in te voeren in het veld **Verificatiecode**”_ in de tekst van de e-mail
 - Foutmeldingen bij het formulier worden gekoppeld via `aria-describedby` aan het invoerveld
 - De **Opnieuw versturen**-knop communiceert na klik de nieuwe staat (niet alleen visueel)
 
 ## Openstaande vragen
 
-- **Geldigheidsduur**; hoe lang is de verificatielink geldig? Momenteel is deze in het prototype vastgesteld op 20 minuten.
-- **Gedeelde mailbox**; als het e-mailadres een gedeelde bedrijfsmailbox is, wie bevestigt dan? De wijziging hoeft niet door dezelfde persoon bevestigd te worden
-- **Terugvaloptie**; moet er een alternatief verificatiemechanisme zijn als e-mail niet werkt (bijvoorbeeld sms-code)?
+- **Geldigheidsduur**: hoe lang is de verificatielink geldig? Momenteel is deze in het prototype vastgesteld op 20 minuten.
+- **Gedeelde mailbox**: als het e-mailadres een gedeelde bedrijfsmailbox is, wie bevestigt dan? De wijziging hoeft niet door dezelfde persoon bevestigd te worden.
+- **Terugvaloptie**: moet er een alternatief verificatiemechanisme zijn als e-mail niet werkt (bijvoorbeeld sms-code)?
 
 ## Bronnen
 
@@ -206,7 +206,7 @@ De verificatiemail kan niet worden afgeleverd (_hard bounce_):
 
 **[GOV.UK — Email addresses (input)](https://design-system.service.gov.uk/patterns/email-addresses/)**
 
-- Richtlijnen voor het invoerveld: gebruik `type="email"`, `autocomplete="email"` (WCAG 2.2, 1.3.5), `spellcheck="false"`. Laat ruimte voor minimaal 30 tekens. Sta plakken altijd toe. Overweeg te waarschuwen bij veelvoorkomende typfouten in domeinnamen (bijvoorbeeld "homtail.com").
+- Richtlijnen voor het invoerveld: gebruik `type="email"`, `autocomplete="email"` (WCAG 2.2, 1.3.5), `spellcheck="false"`. Laat ruimte voor minimaal 30 tekens. Sta plakken altijd toe. Overweeg te waarschuwen bij veelvoorkomende typfouten in domeinnamen (bijvoorbeeld “homtail.com”).
 
 **[NNGroup — How to Report Errors in Forms](https://www.nngroup.com/articles/errors-forms-design-guidelines/)**
 
@@ -214,16 +214,16 @@ De verificatiemail kan niet worden afgeleverd (_hard bounce_):
 
 **[Smashing Magazine — Accessible Form Validation](https://www.smashingmagazine.com/2023/02/guide-accessible-form-validation/)**
 
-- Gebruik `aria-describedby` om foutmeldingen te koppelen aan het veld (niet `aria-errormessage`, onvoldoende screenreader-ondersteuning). Gebruik `aria-invalid="true"` op foutieve velden. Onderdrukt native validatie met `novalidate` op het formulier en gebruik `aria-required="true"` in plaats van `required`. Schakel de verstuurknop nooit uit.
+- Gebruik `aria-describedby` om foutmeldingen te koppelen aan het veld (niet `aria-errormessage`, schermlezers ondersteunen dat onvoldoende). Gebruik `aria-invalid="true"` op foutieve velden. Onderdruk native validatie met `novalidate` op het formulier en gebruik `aria-required="true"` in plaats van `required`. Schakel de verstuurknop nooit uit.
 
 **[Smashing Magazine — Inline Validation (Reward Early, Punish Late)](https://www.smashingmagazine.com/2022/09/inline-validation-web-forms-ux/)**
 
-- Het "reward early, punish late" patroon: bevestig correcties direct (reward early), maar wacht met het tonen van nieuwe fouten tot de gebruiker het veld verlaat (punish late). Verwijder foutmeldingen zodra de invoer geldig wordt, wacht niet op blur.
+- Het “reward early, punish late” patroon: bevestig correcties direct (reward early), maar wacht met het tonen van nieuwe fouten tot de gebruiker het veld verlaat (punish late). Verwijder foutmeldingen zodra de invoer geldig wordt, wacht niet op blur.
 
 **[WCAG 3.3.1 — Error Identification](https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html)**
 
-- Foutmeldingen moeten het foutveld identificeren en de fout in tekst beschrijven. Relevant voor de validatie bij invoer en de unhappy-flows.
+- Foutmeldingen moeten het foutveld identificeren en de fout in tekst beschrijven. Relevant voor de validatie bij invoer en de unhappy flows.
 
 **[WCAG 4.1.3 — Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)**
 
-- Statusberichten (zoals "Verificatiemail verstuurd") moeten via ARIA live regions aan hulptechnologie worden gecommuniceerd zonder dat de focus verplaatst wordt.
+- Statusberichten (zoals “Verificatiemail verstuurd”) moeten via ARIA live regions aan hulptechnologie worden gecommuniceerd zonder dat de focus verplaatst wordt.

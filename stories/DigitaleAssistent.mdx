@@ -30,7 +30,7 @@ Bij het eerste bezoek stelt de assistent zich voor middels drie tekstballonnen, 
 
 Bij subsidies, regelingen en buurtberichten staat in de actiegroep de link “Vraag aan de digitale assistent”. Die opent de assistent met `?vraag=` en verstuurt de vraag direct. De uitleg valt dan weg, ook bij een eerste bezoek: wie een vraag stelt, wil een antwoord en geen drie tekstballonnen ertussen die op dat moment niet relevant zijn. De uitleg wordt niet als gezien gemarkeerd, dus wie later zonder vraag binnenkomt krijgt hem alsnog.
 
-De vraag komt uit één bron, `assets/javascript/assistent-vraag.js`. Eleventy gebruikt die als filter voor de detailpagina's, de browser als script voor de kaarten op de homepage. Zo stelt dezelfde knop op twee plekken dezelfde vraag. Een vraag die de redactie in de data heeft gezet (`assistentVraag`) gaat altijd voor.
+De vraag komt uit één bron, `assets/javascript/assistent-vraag.js`. Eleventy gebruikt die als filter voor de detailpagina’s, de browser als script voor de kaarten op de homepage. Zo stelt dezelfde knop op twee plekken dezelfde vraag. Een vraag die de redactie in de data heeft gezet (`assistentVraag`) gaat altijd voor.
 
 ## Wachten
 
@@ -73,7 +73,7 @@ Hoe dat werkt:
 
 - De bronnen komen bij voorkeur als data mee in het antwoord (`bronnen`). Zet de backend ze als slotregel in de tekst (“Bron: RegelRecht (art. 5.15 …)”), dan haalt de chat die regel eruit en toont hem op dezelfde manier. Een opsomming midden in een antwoord blijft inhoud en wordt geen bron.
 - Noemt de assistent alleen de naam van een bron, dan komt de link uit de lijst met bekende bronnen in `digitale-assistent.js`. Een bron zonder publieke pagina (de Business Wallet is in dit prototype een nabootsing) blijft zonder link.
-- De tekst van een antwoord wordt beperkt opgemaakt: alinea's, opsommingen, vet, cursief en links. Een kop uit het antwoord wordt vetgedrukt en geen `<h2>`–`<h6>`: de ballon staat midden in de kopstructuur van de pagina.
+- De tekst van een antwoord wordt beperkt opgemaakt: alinea’s, opsommingen, vet, cursief en links. Een kop uit het antwoord wordt vetgedrukt en geen `<h2>`–`<h6>`: de ballon staat midden in de kopstructuur van de pagina.
 
 ### In beeld brengen
 
@@ -159,7 +159,7 @@ Achter een feature flag staat onder het gesprek welke bronnen de assistent gebru
 
 ## Identiteit
 
-De chat stuurt het KvK-nummer van de actieve persona mee in de header `X-Test-User`. De backend toetst dat aan een allowlist en zet het zelf bij elke bronaanroep; het model kan de identiteit niet kiezen. **Dit is geen authenticatie**: de header is in de browser aan te passen. Voor een gesloten testgroep met fictieve gegevens is dat aanvaardbaar.
+De chat stuurt het KVK-nummer van de actieve persona mee in de header `X-Test-User`. De backend toetst dat aan een allowlist en zet het zelf bij elke bronaanroep; het model kan de identiteit niet kiezen. **Dit is geen authenticatie**: de header is in de browser aan te passen. Voor een gesloten testgroep met fictieve gegevens is dat aanvaardbaar.
 
 ## Demo-modus
 

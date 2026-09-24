@@ -17,7 +17,7 @@ export const Standaard = {
 	},
 	args: {
 		primair: "Opslaan",
-		secundair: "Annuleren",
+		secundair: "Annuleer",
 	},
 	render: ({ primair, secundair }) => `
 <div class="action-group">

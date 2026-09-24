@@ -347,13 +347,13 @@ function buildTogglePanel() {
 		});
 	}
 
-	// API Key velden, plus het KvK-nummer dat de assistent als bedrijfsidentiteit
+	// API Key velden, plus het KVK-nummer dat de assistent als bedrijfsidentiteit
 	// meestuurt: ingevuld wint dat van het nummer van de actieve persona. Geen
 	// geheim (het staat al in personas.json), dus een gewoon tekstveld.
 	[
 		{ key: "vlam-api-key", label: "VLAM API Key", type: "password", placeholder: "sk-..." },
 		{ key: "claude-api-key", label: "Claude API Key", type: "password", placeholder: "sk-..." },
-		{ key: "test-user-kvk", label: "KvK-nummer assistent", type: "text", placeholder: "85234567" },
+		{ key: "test-user-kvk", label: "KVK-nummer assistent", type: "text", placeholder: "85234567" },
 	].forEach(({ key, label: labelText, type, placeholder }) => {
 		const field = document.createElement("div");
 		field.className = "settings-field";

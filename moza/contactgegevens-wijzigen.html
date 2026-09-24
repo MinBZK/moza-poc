@@ -8,7 +8,9 @@ subNavActive: "/moza/contactvoorkeuren/"
 <article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
 			<li>
 				<a href="{{ '/moza/contactvoorkeuren/' | url }}">Contactvoorkeuren</a>
 			</li>
@@ -18,36 +20,34 @@ subNavActive: "/moza/contactvoorkeuren/"
 
 	<h1>Contactvoorkeuren</h1>
 
-	<a href="{{ '/moza/contactvoorkeuren/' | url }}" class="back-link">Terug naar Contactvoorkeuren</a>
+	<a class="back-link" href="{{ '/moza/contactvoorkeuren/' | url }}">Terug naar Contactvoorkeuren</a>
 
 	<section class="card">
 		<h2>Contactgegevens</h2>
 
-		<div class="feedback feedback-info" id="info-contact">
+		<div id="info-contact" class="feedback feedback-info">
 			{% include "icon-feedback-info.njk" %}
 			<div>
 				<p>Contactgegevens die u hier aanpast, worden automatisch bijgewerkt bij alle organisaties waarmee u uw gegevens centraal deelt.</p>
 			</div>
-			<button class="btn-close link-button">
-				<i>Sluit notificatie</i>
-			</button>
+			<button class="btn-close link-button"><i>Sluit notificatie</i></button>
 		</div>
 
-		<div aria-live="polite" id="form-status" hidden></div>
+		<div id="form-status" aria-live="polite" hidden></div>
 		<form id="contact-form" action="{{ '/moza/contactvoorkeuren/' | url }}" novalidate>
 			<div>
 				<label for="contact-change-email">E-mailadres</label>
-				<input type="email" id="contact-change-email" value="info@bloombv.nl" autocomplete="email" spellcheck="false" aria-required="true" aria-describedby="contact-change-email-feedback" />
+				<input id="contact-change-email" type="email" value="info@bloombv.nl" autocomplete="email" spellcheck="false" aria-required="true" aria-describedby="contact-change-email-feedback" />
 				<div id="contact-change-email-feedback" hidden></div>
 			</div>
 			<div>
 				<label for="contact-change-phonenumber">Telefoonnummer</label>
-				<input type="tel" id="contact-change-phonenumber" value="06 12 34 56 78" autocomplete="tel" aria-required="true" aria-describedby="contact-change-phonenumber-error" />
-				<p class="form-field-error" id="contact-change-phonenumber-error" hidden></p>
+				<input id="contact-change-phonenumber" type="tel" value="06 12 34 56 78" autocomplete="tel" aria-required="true" aria-describedby="contact-change-phonenumber-error" />
+				<p id="contact-change-phonenumber-error" class="form-field-error" hidden></p>
 			</div>
 			<div class="action-group">
 				<button type="submit">Opslaan</button>
-				<a class="btn secondary" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">Annuleren</a>
+				<a class="btn secondary" href="{{ '/moza/communicatievoorkeuren-wijzigen/' | url }}">Annuleer</a>
 			</div>
 		</form>
 	</section>
@@ -134,34 +134,34 @@ subNavActive: "/moza/contactvoorkeuren/"
 		const verifyBlock = document.createElement("div");
 		verifyBlock.id = "verify-row";
 		verifyBlock.innerHTML = `
-			<label for="verify-code-1">Verificatiecode</label>
-			<div class="verificationcode-input" role="group">
-				<input type="text" id="verify-code-1" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" aria-required="true" aria-describedby="verify-code-feedback" />
-				<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 2" />
-				<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 3" />
-				<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 4" />
-				<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 5" />
-				<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 6" />
+	<label for="verify-code-1">Verificatiecode</label>
+	<div class="verificationcode-input" role="group">
+		<input type="text" id="verify-code-1" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" aria-required="true" aria-describedby="verify-code-feedback" />
+		<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 2" />
+		<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 3" />
+		<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 4" />
+		<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 5" />
+		<input type="text" class="verificationcode-verify-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Cijfer 6" />
+	</div>
+	<div id="verify-code-feedback">
+		<div class="feedback feedback-info">
+			${icons.info}
+			<div>
+				<p>We sturen een verificatiecode naar <b>${newEmail}</b> om uw e-mailadres te bevestigen.</p>
+				<p class="text-muted" id="verify-resend-status">Geen e-mail ontvangen? U kunt over <b id="verify-resend-countdown">10</b> seconden een nieuwe code aanvragen.</p>
+				<p class="text-muted" id="verify-spam-hint" hidden>Geen e-mail ontvangen? Controleer uw spam-folder, of <button type="button" class="link-button" id="verify-resend" hidden>vraag een nieuwe code aan</button>.</p>
+				<p class="text-muted" id="verify-typo-hint">Klopt het adres niet? <button type="button" class="link-button" id="verify-change-email">Annuleer en wijzig het e-mailadres</button>.</p>
 			</div>
-			<div id="verify-code-feedback">
-				<div class="feedback feedback-info">
-					${icons.info}
-					<div>
-						<p>We sturen een verificatiecode naar <b>${newEmail}</b> om uw e-mailadres te bevestigen.</p>
-						<p class="text-muted" id="verify-resend-status">Geen e-mail ontvangen? U kunt over <b id="verify-resend-countdown">10</b> seconden een nieuwe code aanvragen.</p>
-						<p class="text-muted" id="verify-spam-hint" hidden>Geen e-mail ontvangen? Controleer uw spam-folder, of <button type="button" class="link-button" id="verify-resend" hidden>vraag een nieuwe code aan</button>.</p>
-						<p class="text-muted" id="verify-typo-hint">Klopt het adres niet? <button type="button" class="link-button" id="verify-change-email">Annuleer en wijzig het e-mailadres</button>.</p>
-					</div>
-				</div>
-			</div>
-		`;
+		</div>
+	</div>
+`;
 		emailGroup.after(verifyBlock);
 
 		// Actieknoppen wisselen
 		actions.innerHTML = `
-			<button type="submit">Verifiëren</button>
-			<button type="button" class="secondary" id="verify-cancel">Annuleren</button>
-		`;
+	<button type="submit">Verifiëren</button>
+	<button type="button" class="secondary" id="verify-cancel">Annuleer</button>
+`;
 
 		const digits = verifyBlock.querySelectorAll(".verificationcode-verify-digit");
 		const verifyFeedback = document.getElementById("verify-code-feedback");
@@ -213,7 +213,7 @@ subNavActive: "/moza/contactvoorkeuren/"
 					type: "succes",
 					message: `Uw e-mailadres is gewijzigd naar <strong>${newEmail}</strong>. Alle toekomstige berichten worden naar dit adres gestuurd.`,
 					email: newEmail,
-				}),
+				})
 			);
 			window.location.href = form.action;
 		});
@@ -225,9 +225,9 @@ subNavActive: "/moza/contactvoorkeuren/"
 			formStatus.innerHTML = "";
 			formStatus.hidden = true;
 			actions.innerHTML = `
-				<button type="submit">Opslaan</button>
-				<a class="btn secondary" href="${form.action}">Annuleren</a>
-			`;
+		<button type="submit">Opslaan</button>
+		<a class="btn secondary" href="${form.action}">Annuleer</a>
+	`;
 			form.removeEventListener("submit", arguments.callee);
 			form.addEventListener("submit", handleSubmit);
 		});

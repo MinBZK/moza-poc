@@ -17,33 +17,39 @@ MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy e
 
 ## Ontwerp-principes (kernregels)
 
-1. **Semantische HTML eerst**; gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
-2. **Toegankelijkheid altijd**; toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
-3. **CSS logical properties**; gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
-4. **Design tokens**; gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
-5. **Eenvoudigst mogelijke oplossing in de interface-laag**; HTML en CSS waar het kan, JavaScript waar het moet, platform boven framework. Dit geldt voor wat de gebruiker in de browser voor zich krijgt, niet voor de laag eromheen zoals build-scripts, datatransformaties, backend-koppelingen en testopstellingen.
-6. **Spacing**; gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
-7. **Feature flags**; gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
+1. **Semantische HTML eerst**: gebruik de juiste elementen (`<button>`, `<nav>`, `<fieldset>`, `<h1>`–`<h6>`). ARIA alleen waar HTML niet volstaat. Gebruik `<dl>`/`<dt>`/`<dd>` voor sleutel-waardeparen (gegevensoverzichten), niet `<table>`.
+2. **Toegankelijkheid altijd**: toetsenbordnavigatie, `:focus-visible`, `aria-current`, `aria-disabled` (niet `disabled`). Labels boven invoervelden, niet ernaast (WCAG 1.4.10 Reflow). Test met diverse invoer- (toetsenbord, spraak) en uitvoermethoden (screenreader, braille).
+3. **CSS logical properties**: gebruik `inline-size`, `block-size`, `margin-block-start`, `padding-inline` etc. Nooit `width`, `height`, `margin-top`, `padding-left`.
+4. **Design tokens**: gebruik altijd `--toepassing-*` variabelen, nooit `--rijkshuisstijl-*` of hardcoded waarden.
+5. **Eenvoudigst mogelijke oplossing in de interface-laag**: HTML en CSS waar het kan, JavaScript waar het moet, platform boven framework. Dit geldt voor wat de gebruiker in de browser voor zich krijgt, niet voor de laag eromheen zoals build-scripts, datatransformaties, backend-koppelingen en testopstellingen.
+6. **Spacing**: gebruik `> * + *` met margin voor content flow, `gap` met flex/grid voor component-layouts. Nooit beide tegelijk op dezelfde container.
+7. **Feature flags**: gebruik `data-feature="Naam"` en `data-feature-type="pagina|functionaliteit"` om elementen togglebaar te maken. Features die standaard uit staan krijgen `data-feature-default="off"`.
 
 ## Schrijfwijzer (kernregels)
 
 ### Aanspreking en toon
 
-- Spreek de gebruiker aan met **"u"** en **"uw"**, nooit "je" of "jij"
-- Genderneutraal: gebruik "die" of "diegene" als verwijswoord, niet "hij", "zij" of "hij/zij"
-- Formeel maar toegankelijk, B1-taalniveau
-- Actief boven passief: "Bekijk uw gegevens" niet "Uw gegevens kunnen bekeken worden"
+- Spreek de gebruiker aan met **"u"** en **"uw"**, nooit "je" of "jij"; bij een persoonlijke begroeting mag de voornaam ("Welkom Robin Vogel")
+- Genderneutraal: "de ondernemer" of "u" in plaats van "hij", "zij" of "hij/zij"; "die" of "diegene" als verwijswoord
+- Formeel maar toegankelijk, B1-taalniveau, geen jargon zonder uitleg
+- Actief boven passief, noem wie iets doet: "De RVO heeft uw aanvraag ontvangen" niet "Uw aanvraag is ontvangen"
+- Direct en praktisch: zeg wat de gebruiker kan doen, niet wat het systeem doet
+- Stimulerend, niet alarmerend: bij lege staten en fouten zeggen wat de gebruiker kan doen, niet alleen wat er misgaat
+- Zinnen van 8 tot 16 woorden, hoogstens één bijzin; splits lange zinnen
+- Veronderstel geen beperking: "Dit is niet zichtbaar" niet "U kunt dit niet zien"
 
 ### Terminologie
 
-- Bewaar (niet Opslaan, Favoriet)
-- Niet relevant (niet Verbergen, Verwijderen)
-- Deel (niet Verstuur, Doorsturen)
-- Berichten / Berichtenbox (niet Post, E-mail, Inbox)
-- Bedrijfsgegevens (niet Gegevens, Profiel)
-- Lopende zaken (niet Taken, Dossiers)
+- Bewaar (niet Opslaan, Favoriet, Bladwijzer): een item in de eigen verzameling zetten om later terug te zien (subsidie, regeling, gesprek met de assistent)
+- Niet relevant voor mij (knop; niet Verbergen, Verwijderen, Niet tonen)
+- Deel (niet Doorsturen, Verzend)
+- Berichten / Berichtenbox (niet Post, E-mail, Inbox; uitzondering: de tab “Inbox” in de Berichtenbox blijft zo heten)
+- Bedrijfsgegevens (niet Gegevens, Registratie, Profiel)
+- Lopende zaken (niet Taken, Aanvragen, Dossiers)
 - Actualiteiten (niet Nieuws, Updates, Feed)
-- Opslaan (formulieren), Annuleren (formulieren afbreken)
+- Opslaan (gewijzigde gegevens vastleggen, zoals contactvoorkeuren; niet Bewaar, Verstuur, Bevestig)
+- Verstuur (formulier naar een organisatie sturen, zoals een aanvraag of melding; niet Bewaar, Opslaan, Bevestig, Deel)
+- Annuleer (formulier afbreken; niet Terug, Sluiten, Stoppen)
 
 ### Notatie
 
@@ -52,13 +58,16 @@ MijnOverheid Zakelijk (MOZa) is een HTML/CSS/JS prototype gebouwd met Eleventy e
 - Scheiding in lopende tekst: standaard de komma. Bevat de zin al komma’s waardoor die onoverzichtelijk wordt, gebruik dan een puntkomma (voor volledige, nauw samenhangende zinnen of komma-rijke opsommingen). De gedachtestreep (—) alleen als uiterste middel, voor extra nadruk op een ingevoegd of slot-zinsdeel
 - Typografische aanhalingstekens in lopende tekst: “dubbel” en ‘enkel’, ook in samentrekkingen (mkb’er, zzp’er, komma’s)
 - Rechte quotes alleen in code en HTML-attributen
-- Kopteksten als zelfstandige naamwoorden, geen punt aan het einde
+- Nummers: telefoon met spaties (06 12 34 56 78), KVK-nummer zonder punten of spaties, btw-nummer aaneen met landcode (NL00012345678), bedragen met euroteken en punt als duizendtalscheider (€385.000)
+- Afkortingen: bij de eerste vermelding de volledige term met de afkorting tussen haakjes; mkb’er, zzp’er met kleine letters en typografische apostrof; KVK en KVK-nummer in hoofdletters, btw en btw-nummer in kleine letters (zoals de KVK en de Belastingdienst het zelf schrijven)
+- Kopteksten als zelfstandige naamwoorden, geen punt aan het einde. Uitzonderingen: een H1 mag een begroeting zijn, FAQ-koppen zijn een vraag
 
 ### Microcopy
 
-- Knopteksten kort en werkwoord-gericht: "Opslaan", "Annuleren", "Inloggen"
+- Knopteksten kort en werkwoord-gericht: "Opslaan", "Verstuur", "Annuleer", "Inloggen"
 - Lege staten: benoem wat er nog niet is én geef een suggestie wat te doen
 - Foutmeldingen: constructief en handelingsgericht, benoem wat nodig is
+- Linkteksten beschrijvend: zeg waar de link heen gaat of wat die doet, nooit "klik hier", "meer info", "lees meer" of een kale URL (niet iedereen klikt; schermlezers lezen links los voor). Dezelfde tekst gaat naar dezelfde plek. De zichtbare tekst staat vooraan in de toegankelijke naam, zodat spraakbediening werkt (WCAG 2.4.4, 2.5.3)
 
 ## Technische conventies
 

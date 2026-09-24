@@ -21,7 +21,7 @@
 (function () {
 	"use strict";
 
-	// Dezelfde KvK-nummers als de allowlist van de backend (TEST_KVK_NUMMERS).
+	// Dezelfde KVK-nummers als de allowlist van de backend (TEST_KVK_NUMMERS).
 	// Een persona daarbuiten hoort ook in de demo "log eerst in" te krijgen —
 	// als gewoon antwoord, niet als foutmelding.
 	var KVK_TOEGESTAAN = ["85234567", "62345681", "56789012"];
@@ -84,7 +84,7 @@
 	// verwijzen. Zonder `url` toont de chat de naam zonder link.
 	var BRONNEN_WALLET = [{ label: "Business Wallet", titel: "Energieverbruik-attestatie, afgegeven door uw netbeheerder" }];
 
-	var BRONNEN_KVK = [{ label: "KvK Handelsregister", titel: "Uittreksel onderneming: rechtsvorm, SBI-code en vestiging", url: "https://www.kvk.nl/handelsregister/" }];
+	var BRONNEN_KVK = [{ label: "KVK Handelsregister", titel: "Uittreksel onderneming: rechtsvorm, SBI-code en vestiging", url: "https://www.kvk.nl/handelsregister/" }];
 
 	function stap(wacht, event, data) {
 		return { wacht: wacht, event: event, data: data };
@@ -238,10 +238,10 @@
 		bedrijf = bedrijf || {};
 		var sbi = (bedrijf.sbi && bedrijf.sbi[0]) || null;
 		// Alleen regels tonen die de persona ook echt heeft: een uittreksel met
-		// lege velden zou de indruk wekken dat er gegevens ontbreken bij de KvK.
+		// lege velden zou de indruk wekken dat er gegevens ontbreken bij de KVK.
 		var regels = [
 			["Naam", bedrijf.handelsnaam],
-			["KvK-nummer", bedrijf.kvkNummer],
+			["KVK-nummer", bedrijf.kvkNummer],
 			["Rechtsvorm", bedrijf.rechtsvorm],
 			["SBI-code", sbi ? sbi.code + " – " + sbi.omschrijving : ""],
 			["Vestiging", bedrijf.vestigingsadresVolledig || bedrijf.vestigingsadres],
@@ -257,14 +257,14 @@
 
 		return [
 			[
-				antwoord(900, "Uw bedrijfsgegevens staan in het Handelsregister van de KvK. Ik kan ze voor u ophalen, maar doe dat pas nadat u toestemming geeft.", {
+				antwoord(900, "Uw bedrijfsgegevens staan in het Handelsregister van de KVK. Ik kan ze voor u ophalen, maar doe dat pas nadat u toestemming geeft.", {
 					toestemming_nodig: {
-						bron: "het KvK Handelsregister",
+						bron: "het KVK Handelsregister",
 						omschrijving: "De assistent wil uw naam, rechtsvorm, SBI-code en vestigingsadres ophalen uit het Handelsregister. Er wordt niets opgehaald voordat u akkoord geeft.",
 					},
 				}),
 			],
-			[stap(700, "status", { message: "kvk__zoek_onderneming" }), antwoord(1100, "Dit staat er over uw onderneming in het Handelsregister:\n\n" + regels + "\n\nKloppen deze gegevens niet, dan wijzigt u ze bij de KvK.", { bronnen: BRONNEN_KVK })],
+			[stap(700, "status", { message: "kvk__zoek_onderneming" }), antwoord(1100, "Dit staat er over uw onderneming in het Handelsregister:\n\n" + regels + "\n\nKloppen deze gegevens niet, dan wijzigt u ze bij de KVK.", { bronnen: BRONNEN_KVK })],
 			[antwoord(900, "Wilt u dat ik nog iets anders opzoek over uw onderneming?")],
 		];
 	}
