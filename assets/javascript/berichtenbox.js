@@ -889,7 +889,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Voorgoed verwijderen kan niet teruggedraaid worden, dus het gaat niet op één klik. Zelfde
 	// inline-paneel als bij verplaatsen: het hoort bij de knop waarop geklikt is, en niet bij de
-	// pagina als geheel. Sluit met Escape, met Annuleren, of door buiten het paneel te klikken.
+	// pagina als geheel. Sluit met Escape, met Annuleer, of door buiten het paneel te klikken.
 	let actiefVoorgoedPaneel = null;
 	let actieveVoorgoedKnop = null;
 
@@ -900,7 +900,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (knop) knop.setAttribute("aria-expanded", "false");
 		actiefVoorgoedPaneel = null;
 		actieveVoorgoedKnop = null;
-		// Na Escape of Annuleren hoort de focus terug bij de knop; anders valt hij terug naar het
+		// Na Escape of Annuleer hoort de focus terug bij de knop; anders valt hij terug naar het
 		// begin van de pagina en is de bezoeker zijn plek kwijt.
 		if (focusTerug && knop) knop.focus();
 	}
@@ -946,7 +946,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const annuleer = document.createElement("button");
 		annuleer.type = "button";
 		annuleer.className = "secondary";
-		annuleer.textContent = "Annuleren";
+		annuleer.textContent = "Annuleer";
 
 		bevestig.addEventListener("click", () => {
 			const voorVoorgoed = state.voorgoedVerwijderd[berichtId];
@@ -1504,8 +1504,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Hier inline, want dit icoon komt pas in beeld nadat JavaScript weet waar het bericht staat,
 		// en de icoon-shortcode van Eleventy draait alleen bij de build. `aria-hidden` omdat de knop
 		// zijn naam uit zijn tekst haalt.
-		const ICOON_BERICHTENBOX =
-			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" /><path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" /></svg>';
+		const ICOON_BERICHTENBOX = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 4v2.1l9.4 5.7c1 .6 2.2.6 3.1 0L23 6.1V4H1z" /><path fill="currentColor" d="M10.4 14 1 8.3V19h22V8.3L13.6 14c-1 .6-2.2.6-3.2 0z" /></svg>';
 
 		// Alleen het icoon vervangen, de tekst en de visually-hidden span laten staan.
 		function zetKnopIcoon(btn, svg) {

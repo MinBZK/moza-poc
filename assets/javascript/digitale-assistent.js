@@ -9,7 +9,7 @@
  * De backend leeft in een eigen repo: github.com/MinBZK/moza-poc-digitale-assistent
  * Bewaart per LLM/transport/persona-combinatie een sessie-id en gespreksgeschiedenis
  * zodat wisselen niet leidt tot verlies.
- * De bedrijfsidentiteit gaat als KvK-nummer van de actieve persona mee in de
+ * De bedrijfsidentiteit gaat als KVK-nummer van de actieve persona mee in de
  * X-Test-User-header; de backend toetst dat aan zijn allowlist (TEST_KVK_NUMMERS)
  * en injecteert het server-side bij elke bronaanroep. Staat het nummer daar niet
  * in, dan antwoordt de assistent "log eerst in".
@@ -252,7 +252,7 @@
 	};
 
 	var DATA_SOURCE_LABELS = {
-		kvk: "KvK Handelsregister",
+		kvk: "KVK Handelsregister",
 		koop: "KOOP Regelingenbank",
 		netbeheerder: "Business Wallet",
 	};
@@ -273,12 +273,12 @@
 		// De Business Wallet is in dit prototype een mock: er is geen pagina om naar
 		// te verwijzen, dus die bron blijft zonder link.
 		{ key: "netbeheerder", label: "Business Wallet", url: "", uitleg: "Levert uw energieverbruik, afgegeven door uw netbeheerder." },
-		{ key: "kvk", label: "KvK Handelsregister", url: "https://www.kvk.nl/handelsregister/", uitleg: "Levert de gegevens van uw onderneming." },
+		{ key: "kvk", label: "KVK Handelsregister", url: "https://www.kvk.nl/handelsregister/", uitleg: "Levert de gegevens van uw onderneming." },
 		{ key: "koop", label: "KOOP Regelingenbank", url: "https://wetten.overheid.nl/", uitleg: "Levert de officiële wetteksten." },
 	];
 
 	// Naam van een bron uit een antwoord terugbrengen tot de URL uit STATUS_ITEMS.
-	// De assistent schrijft niet altijd de volledige naam ("KvK" of "KvK
+	// De assistent schrijft niet altijd de volledige naam ("KVK" of "KVK
 	// Handelsregister"), dus we vergelijken beide kanten op.
 	function bronURL(label) {
 		var naam = String(label == null ? "" : label)
@@ -334,7 +334,7 @@
 		});
 	}
 
-	// KvK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
+	// KVK-nummer van de actieve persona; de backend toetst dit aan zijn allowlist
 	// (env TEST_KVK_NUMMERS daar) en injecteert het bij elke bronaanroep. Het
 	// Flags-paneel kan een nummer forceren, handig om een nummer buiten de
 	// allowlist te testen. Geen persona of geen nummer = lege header; de backend
@@ -509,7 +509,7 @@
 	// Eén bronvermelding uit tekst omzetten naar { label, titel, url }. Accepteert
 	// wat de assistent in de praktijk schrijft:
 	//   RegelRecht (art. 5.15 Besluit activiteiten leefomgeving)
-	//   KvK Handelsregister: uittreksel onderneming
+	//   KVK Handelsregister: uittreksel onderneming
 	//   [RVO: informatieplicht](https://www.rvo.nl/...)
 	function maakBron(waarde) {
 		var tekst = String(waarde == null ? "" : waarde)
@@ -1322,7 +1322,7 @@
 	}
 
 	window.addEventListener("setting-changed", function (e) {
-		// Een ander KvK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
+		// Een ander KVK-nummer is een andere identiteit. Dat zit niet in de combo-sleutel
 		// (die zou dan bij elke toetsaanslag in het veld wisselen), dus vergeten we hier
 		// het session_id: het volgende bericht start een schoon gesprek.
 		if (e.detail && e.detail.key === "test-user-kvk") {
@@ -1853,7 +1853,7 @@
 	var TEST_ANTWOORD = "Ja, die geldt voor uw bedrijf. U gebruikt per jaar meer dan 50.000 kWh elektriciteit of 25.000 m³ aardgas, en dan bent u verplicht energie te besparen én te rapporteren welke maatregelen u heeft genomen.\n\n" + "Voor uw branche staan 5 erkende maatregelen op de lijst. U rapporteert uiterlijk 1 december 2026 bij de RVO.\n\n" + "Controleer dit bij twijfel bij uw omgevingsdienst: die houdt toezicht op deze plicht.";
 	var TEST_BRONNEN = [
 		{
-			label: "KvK Handelsregister",
+			label: "KVK Handelsregister",
 			titel: "Bedrijfsgegevens: SBI-code, rechtsvorm en vestiging",
 			url: "https://www.kvk.nl/handelsregister/",
 		},
