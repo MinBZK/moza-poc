@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { ketenBron } from "../../assets/javascript/berichtenbox/keten-bron.js";
+import { ketenBron, mappenVan } from "../../assets/javascript/berichtenbox/keten-bron.js";
 import { maakRegister } from "../../assets/javascript/berichtenbox/bron.js";
 
 /** Een dubbel voor berichtenbox-keten.js: dezelfde vorm, zonder netwerk. */
@@ -454,5 +454,73 @@ describe("ketenBron — dezelfde melding niet twee keer", () => {
 		keten._meld({ melding, uitkomst: null });
 
 		expect(meldStoring).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("ketenBron — mappen horen bij het bericht", () => {
+	const IN_MAPPEN = {
+		berichten: [
+			{ id: "a", magazijnId: "kvk", map: "Subsidies" },
+			{ id: "b", magazijnId: "kvk", map: "Boekhouding 2026" },
+			{ id: "c", magazijnId: "kvk", map: "Boekhouding 2026" },
+			{ id: "d", magazijnId: "kvk", map: null },
+		],
+		magazijnen: UITKOMST.magazijnen,
+	};
+
+	it("leidt het overzicht af uit de berichten, met de naam als sleutel", () => {
+		expect(mappenVan(IN_MAPPEN.berichten)).toEqual([
+			{ slug: "Boekhouding 2026", naam: "Boekhouding 2026", aantalBerichten: 2 },
+			{ slug: "Subsidies", naam: "Subsidies", aantalBerichten: 1 },
+		]);
+	});
+
+	it("houdt namen die alleen in hoofdletters verschillen uit elkaar", () => {
+		expect(mappenVan([{ id: "a", map: "Belasting" }, { id: "b", map: "belasting" }]).map((m) => m.naam).sort()).toEqual(["Belasting", "belasting"]);
+	});
+
+	it("levert bij het laden de mappen uit de lijst", async () => {
+		const bron = ketenBron(nepKeten({ bezig: true, uitkomst: IN_MAPPEN }));
+		await bron.geldtVoor();
+
+		expect((await bron.laad()).mappen.map((m) => m.naam)).toEqual(["Boekhouding 2026", "Subsidies"]);
+	});
+
+	it("meldt een bericht dat uit zijn map gehaald is als een andere lijst, niet als niets", async () => {
+		const keten = nepKeten({ bezig: true, uitkomst: IN_MAPPEN });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		const zonder = { ...IN_MAPPEN, berichten: IN_MAPPEN.berichten.map((b) => (b.id === "a" ? { ...b, map: null } : b)) };
+		keten._meld({ melding: null, uitkomst: zonder });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+		expect(meld.mock.calls[0][0].mappen.map((m) => m.naam)).toEqual(["Boekhouding 2026"]);
+	});
+
+	it("meldt een binnenkomer in een map als een hele lijst, zodat het overzicht meegaat", async () => {
+		const keten = nepKeten({ bezig: true, uitkomst: IN_MAPPEN });
+		const bron = ketenBron(keten, { magDruppelen: () => true });
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		keten._meld({ melding: null, uitkomst: { ...IN_MAPPEN, berichten: [{ id: "e", magazijnId: "kvk", map: "Nieuw" }, ...IN_MAPPEN.berichten] } });
+
+		expect(meld.mock.calls[0][0].nieuwBericht).toBeUndefined();
+		expect(meld.mock.calls[0][0].mappen.map((m) => m.naam)).toContain("Nieuw");
+	});
+
+	it("geeft de mappen uit de voortgang door in de vorm van de lijst", () => {
+		const keten = nepKeten({ bezig: true });
+		const bron = ketenBron(keten);
+		const gezien = [];
+		bron.volgVoortgang((v) => gezien.push(v));
+
+		keten._meld({ voortgang: { bevraagd: 2, klaar: 1, gevonden: 3, mappen: [{ naam: "Subsidies", aantalBerichten: 3 }] } });
+
+		expect(gezien[0].mappen).toEqual([{ slug: "Subsidies", naam: "Subsidies", aantalBerichten: 3 }]);
 	});
 });

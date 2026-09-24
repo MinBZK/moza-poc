@@ -1663,6 +1663,61 @@
 		"homepageRegelgeving": ["milieubeheer"]
 	},
 	{
+		"id": "proeftuin-vier",
+		"stelsel": true,
+		"actief": false,
+		"archief": false,
+		"label": "Aangesloten onderneming 4",
+		"persoon": {
+			"voornaam": "Sam",
+			"achternaam": "de Wit"
+		},
+		"bedrijf": {
+			"handelsnaam": "Demo-onderneming 4",
+			"functies": "Eigenaar",
+			"website": "",
+			"kvkNummer": "90000015",
+			"rsinNummer": "90000015",
+			"btwNummer": "NL00090000015",
+			"omzetbelastingnummer": "090000015B01",
+			"startdatum": "1 maart 2024",
+			"rechtsvorm": "Besloten vennootschap",
+			"branche": "Groothandel",
+			"vestigingsadres": "Blaak 16, Rotterdam",
+			"gemeente": "Rotterdam",
+			"rol": "Eigenaar",
+			"vestigingsnummer": "000090000015",
+			"iban": "",
+			"loonheffingennummer": "",
+			"werkzamePersonenFulltime": 1,
+			"werkzamePersonenParttime": 0,
+			"sbi": [
+				{
+					"code": "46900",
+					"omschrijving": "Niet-gespecialiseerde groothandel"
+				}
+			],
+			"vestigingsadresVolledig": "Blaak 16, 3011 TA Rotterdam",
+			"postadres": "Blaak 16, 3011 TA Rotterdam",
+			"vestigingen": [
+				{
+					"nummer": "000090000015",
+					"type": "Hoofdvestiging",
+					"adres": "Blaak 16, 3011 TA Rotterdam"
+				}
+			],
+			"ubo": [],
+			"jaarrekeningen": []
+		},
+		"andereBedrijven": [],
+		"belangen": [],
+		"subsidies": ["mkb-digitaliseringssubsidie", "duurzaam-advies-voucher", "kia"],
+		"regelgeving": ["handelsregisterwet", "loonbelasting", "dienstenwet", "milieubeheer"],
+		"buurt": "rotterdam",
+		"homepageSubsidies": ["duurzaam-advies-voucher"],
+		"homepageRegelgeving": ["milieubeheer"]
+	},
+	{
 		"id": "proeftuin-veel",
 		"stelsel": true,
 		"actief": false,
