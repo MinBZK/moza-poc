@@ -77,6 +77,10 @@
 
 		paneel.querySelector("[data-toelichting-sluit]").addEventListener("click", sluit);
 
+		// De links onder het venster komen pas binnen na /api/nl-wallet/config; bouw ze dan opnieuw.
+		var bronLinks = document.querySelector("[data-nl-wallet-bevoegdheid-links]");
+		if (bronLinks) new MutationObserver(bouwBevoegdheidLinks).observe(bronLinks, { childList: true });
+
 		// Capture op window: vóór wallet_web, dat zelf ook naar Esc luistert.
 		window.addEventListener(
 			"keydown",
