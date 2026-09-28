@@ -2857,13 +2857,21 @@ button {
 		color: inherit;
 		text-decoration: underline;
 		&:hover,
-		&:focus-visible {
+		&:focus-visible,
+		&:active {
+			color: inherit;
+			text-decoration-color: currentColor;
 			text-decoration-thickness: var(--toepassing-border-width-md);
 		}
 		&:focus-visible {
+			box-shadow: none;
 			outline: var(--toepassing-border-width-md) solid currentColor;
 			outline-offset: var(--toepassing-space-3xs);
 		}
+	}
+	dt,
+	dd {
+		color: inherit;
 	}
 	p,
 	li,
