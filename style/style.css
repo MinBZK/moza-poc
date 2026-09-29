@@ -2915,8 +2915,7 @@ button {
 }
 
 .toelichting-paneel__punten,
-.toelichting-paneel__stappen,
-.toelichting-paneel__links {
+.toelichting-paneel__stappen {
 	display: flex;
 	flex-direction: column;
 	gap: var(--toepassing-space-xs);
