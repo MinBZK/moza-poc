@@ -12,6 +12,7 @@
 			<li>MijnOverheid Zakelijk vraagt twee attestaties: de naam uit de persoonsgegevens (PID) en de bevoegdheid voor de onderneming.</li>
 			<li>De ondernemer scant de QR-code en ziet in de app precies welke gegevens gevraagd worden. Delen gebeurt met de pincode.</li>
 			<li>Met de gedeelde bevoegdheid opent MijnOverheid Zakelijk direct de juiste onderneming.</li>
+			<li>MijnOverheid Zakelijk krijgt alleen de naam en de bevoegdheid, geen BSN.</li>
 			<li>Dit is een proof of concept met een eigen testomgeving en fictieve gegevens. De officiële NL Wallet werkt hier (nog) niet.</li>
 		</ul>
 
@@ -28,7 +29,7 @@
 				<b>Persoonsgegevens toevoegen.</b>
 				Kies in de app
 				<i>Inloggen met DigiD</i>
-				en kies op de testpagina Claudia van Dam. Zij krijgt de attestatie met persoonsgegevens (PID).
+				en kies op de testpagina Claudia van Dam (fictief). Zij krijgt de attestatie met persoonsgegevens (PID).
 			</li>
 			<li>
 				<b>Bevoegdheid toevoegen.</b>
@@ -47,15 +48,15 @@
 		<dl class="toelichting-paneel__attestaties">
 			<div>
 				<dt>Persoonsgegevens (PID)</dt>
-				<dd>Claudia van Dam, uitgegeven door de PID-uitgever van de testomgeving na DigiD (test).</dd>
+				<dd>Claudia van Dam (fictief), met onder meer naam, geboortedatum en BSN. U haalt deze gegevens één keer op met DigiD, net als in de echte NL Wallet. Daar komen ze van de overheid. Hier komen ze uit de testomgeving, en kiest u Claudia op een testpagina in plaats van DigiD.</dd>
 			</div>
 			<div>
 				<dt>Bevoegdheid Koffiezaak Noon</dt>
-				<dd>KVK 85234567, eenmanszaak, eigenaar. Uitgever: KVK Demo (fictief).</dd>
+				<dd>KVK 85234567, eenmanszaak, eigenaar. Bij het toevoegen deelt de wallet het BSN met KVK Demo (fictief). Die zoekt daarmee de bevoegdheid op.</dd>
 			</div>
 			<div>
 				<dt>Bevoegdheid Koffiebranderij Blend</dt>
-				<dd>KVK 91827364, besloten vennootschap, eigenaar. Uitgever: KVK Demo (fictief).</dd>
+				<dd>KVK 91827364, besloten vennootschap, eigenaar. Bij het toevoegen deelt de wallet het BSN met KVK Demo (fictief). Die zoekt daarmee de bevoegdheid op.</dd>
 			</div>
 		</dl>
 	</div>
