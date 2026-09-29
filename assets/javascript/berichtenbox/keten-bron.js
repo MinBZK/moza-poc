@@ -19,6 +19,36 @@
  * render-laag niet te weten of een bericht verzonnen is of echt.
  */
 
+/**
+ * Het mappenoverzicht, afgeleid uit de berichten.
+ *
+ * In het stelsel is een map geen ding op zich maar een eigenschap van een bericht, opgeslagen bij de
+ * organisatie die het stuurde. Er is dus geen lijst met mappen om op te vragen: wat hier staat is wat
+ * de berichten zeggen. Een map zonder berichten bestaat daarmee niet, en een map aanmaken vóór er
+ * een bericht in zit kan ook niet.
+ *
+ * De naam is ook de sleutel (`slug`), woordelijk: "Belasting" en "belasting" zijn twee mappen, zoals
+ * ze bij de organisatie staan. Een slug afleiden zou ze samenvoegen.
+ *
+ * `aantalBerichten` telt alles wat de bron in die map levert. Wat de bezoeker in deze browser
+ * archiveerde of weggooide telt mee: dat is een weergave hier, het bericht staat bij de organisatie
+ * nog in die map.
+ */
+export function mappenVan(berichten) {
+	const aantallen = new Map();
+	for (const bericht of berichten || []) {
+		const naam = bericht && bericht.map;
+		if (typeof naam !== "string" || naam.trim() === "") continue;
+		aantallen.set(naam, (aantallen.get(naam) || 0) + 1);
+	}
+	return mappenInVorm(Array.from(aantallen, ([naam, aantal]) => ({ naam: naam, aantalBerichten: aantal })));
+}
+
+/** Mappen in de vorm van de render-laag, gesorteerd op naam. */
+function mappenInVorm(mappen) {
+	return mappen.map((map) => ({ slug: map.naam, naam: map.naam, aantalBerichten: map.aantalBerichten })).sort((a, b) => a.naam.localeCompare(b.naam, "nl"));
+}
+
 /** Twee lijsten magazijnen zijn hetzelfde als ze dezelfde ids bevatten. */
 function gelijkeMagazijnen(vorige, nieuwe) {
 	const oud = (vorige || []).map((magazijn) => magazijn.id).sort();
@@ -33,22 +63,31 @@ function gelijkeMagazijnen(vorige, nieuwe) {
  * aangenomen heeft: `getoond`. Die twee lopen uiteen zodra het tonen van een bericht mislukt, en dan
  * hoort dat bericht opnieuw aangeboden te worden — niet als bekend te gelden.
  *
- * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, of er zijn andere organisaties
- * in beeld. Dan is het een andere lijst en die hoort in één keer op het scherm, niet als een reeks
- * binnenkomers. Een organisatie die erbij komt telt mee: haar naam bereikt de render-laag alleen via
- * een hele lijst, want bij een binnenkomer gaan er geen magazijnen mee.
+ * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, er zijn andere organisaties in
+ * beeld, of een bericht staat in een andere map. Dan is het een andere lijst en die hoort in één keer
+ * op het scherm, niet als een reeks binnenkomers. Een organisatie die erbij komt telt mee: haar naam
+ * bereikt de render-laag alleen via een hele lijst, want bij een binnenkomer gaan er geen magazijnen
+ * mee. Om dezelfde reden telt een binnenkomer in een map als een andere lijst: het mappenoverzicht
+ * gaat alleen met een hele lijst mee.
  *
  * Een lege uitkomst betekent: precies wat er staat, er valt niets te melden.
  */
 function aanwasVan(getoond, nieuwe) {
 	if (!gelijkeMagazijnen(getoond.magazijnen, nieuwe.magazijnen)) return null;
 
-	const nu = new Set((nieuwe.berichten || []).map((bericht) => bericht.id));
-	for (const id of getoond.ids) {
-		if (!nu.has(id)) return null;
+	const nu = new Map((nieuwe.berichten || []).map((bericht) => [bericht.id, bericht.map || null]));
+	for (const [id, map] of getoond.ids) {
+		if (!nu.has(id) || nu.get(id) !== map) return null;
 	}
 
-	return (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
+	const aanwas = (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
+	if (aanwas.some((bericht) => bericht.map)) return null;
+	return aanwas;
+}
+
+/** Wat er op het scherm staat, per bericht met zijn map. */
+function getoondeIds(berichten) {
+	return new Map((berichten || []).map((bericht) => [bericht.id, bericht.map || null]));
 }
 
 /** Zoveel keer bieden we dezelfde onbruikbare aanwas opnieuw aan; daarna zeggen we het en houden op. */
@@ -138,10 +177,18 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				}
 			}
 
+			// De mappen die de organisaties tijdens de ronde melden gaan mee in de vorm die de
+			// render-laag van `laad()` kent. Zo groeit het mappenoverzicht terwijl er geleverd wordt,
+			// en hoeft de render-laag niet te weten waar een map vandaan komt.
+			function inVorm(voortgang) {
+				if (!voortgang || !Array.isArray(voortgang.mappen)) return voortgang;
+				return Object.assign({}, voortgang, { mappen: mappenInVorm(voortgang.mappen) });
+			}
+
 			// De eerste melding kan al geweest zijn voordat deze module bestond; het script draait
 			// vóór de module en begint dan meteen op te halen.
-			if (keten.voortgang) meld(keten.voortgang);
-			keten.opWijziging((toestand) => meld(toestand.voortgang));
+			if (keten.voortgang) meld(inVorm(keten.voortgang));
+			keten.opWijziging((toestand) => meld(inVorm(toestand.voortgang)));
 		},
 
 		async laad() {
@@ -158,12 +205,26 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				}
 				throw new Error("het ophalen bij het Federatief Berichtenstelsel is mislukt");
 			}
-			// De keten kent geen mappen; die zijn van de bezoeker en staan in de bewaarde staat.
+			// Geen mappenlijst van het stelsel: een map is een eigenschap van een bericht.
 			return {
 				berichten: uitkomst.berichten,
 				magazijnen: uitkomst.magazijnen,
-				mappen: [],
+				mappen: mappenVan(uitkomst.berichten),
 			};
+		},
+
+		/**
+		 * Haalt een bericht uit zijn map, bij de organisatie die het stuurde. Werpt niet: geeft `{}`
+		 * of `{ fout }`, zoals `inhoudVan`. Lukt het, dan meldt de keten de gewijzigde lijst langs
+		 * dezelfde weg als elke andere wijziging, en verdwijnt een map zonder berichten vanzelf uit het
+		 * overzicht.
+		 */
+		async haalUitMap(berichtId) {
+			if (!keten || typeof keten.haalUitMap !== "function") {
+				console.error("[Berichtenbox] Het keten-script kent geen haalUitMap; het bericht blijft in zijn map.");
+				return { fout: "Wij konden dit bericht niet uit de map halen. Ververs de pagina om het opnieuw te proberen." };
+			}
+			return keten.haalUitMap(berichtId);
 		},
 
 		/**
@@ -200,7 +261,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			// Wat er op het scherm staat, en niet wat het transport laatst leverde. Bij het begin is
 			// dat de lijst waarmee de render-laag zojuist geladen heeft.
 			const getoond = {
-				ids: new Set(((uitkomst && uitkomst.berichten) || []).map((bericht) => bericht.id)),
+				ids: getoondeIds(uitkomst && uitkomst.berichten),
 				magazijnen: (uitkomst && uitkomst.magazijnen) || [],
 			};
 
@@ -271,13 +332,13 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				const mislukt = meld({
 					berichten: nieuwe.berichten,
 					magazijnen: nieuwe.magazijnen,
-					mappen: [],
+					mappen: mappenVan(nieuwe.berichten),
 				});
 
 				// Alleen bijhouden wat er ook echt staat: bij een mislukte lijst heeft de render-laag
 				// teruggedraaid naar de vorige weergave.
 				if (!mislukt || !mislukt.length) {
-					getoond.ids = new Set((nieuwe.berichten || []).map((bericht) => bericht.id));
+					getoond.ids = getoondeIds(nieuwe.berichten);
 					getoond.magazijnen = nieuwe.magazijnen || [];
 				}
 				return mislukt;
@@ -297,7 +358,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 					// Doorgaan zou een lijst opleveren waar er middenin één ontbreekt, en dat is van een
 					// volledige lijst niet te onderscheiden. De rest wacht op de volgende wijziging.
 					if (fouten && fouten.length) return fouten;
-					getoond.ids.add(bericht.id);
+					getoond.ids.set(bericht.id, bericht.map || null);
 				}
 				return [];
 			}

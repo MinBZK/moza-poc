@@ -74,6 +74,11 @@ title: "MijnOverheid Zakelijk: Bericht"
 				<!-- <button class="icon-button" data-actie="verplaatsen">
 					{% icon "/assets/icons/icon-gegevens.svg" %}Verplaatsen naar map
 				</button> -->
+				<!-- Alleen voor een bericht in een map, en alleen als de bron het kan: een map hoort bij
+				     het bericht en staat bij de organisatie die het stuurde. berichtenbox.js zet hem aan. -->
+				<button class="icon-button" data-actie="uit-map" hidden>
+					{% icon "/assets/icons/icon-gegevens.svg" %}Haal uit map
+				</button>
 				<button class="icon-button" data-actie="doorsturen">
 					{% icon "/assets/icons/icon-doorsturen.svg" %}Delen
 				</button>

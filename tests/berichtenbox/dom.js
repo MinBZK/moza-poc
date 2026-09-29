@@ -64,7 +64,18 @@ const STORING = `
 		<div><p data-berichtenbox-storing-tekst></p></div>
 	</div>`;
 
-function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
+// De mappen in de tabbalk, zoals `berichtenbox-tabs.njk` ze neerzet: die van de dataset, verborgen
+// tot de render-laag weet welke mappen de bron heeft.
+const MAPPENBALK = `
+	<nav aria-label="Berichtenbox">
+		<ul class="tablist">
+			<li><a href="/moza/berichtenbox/berichtenbox-archief/">Archief</a></li>
+			<li class="list-separation" hidden><span class="visually-hidden">Mappen:</span></li>
+			<li data-map-slug="belastingen-2025" class="berichtenbox-folder-user" hidden><a href="/moza/berichtenbox/?map=belastingen-2025#hoofd-inhoud">Belastingen 2025</a></li>
+		</ul>
+	</nav>`;
+
+function paginaHtml(berichten, view, { orgSchakelaar = false, mappenbalk = false } = {}) {
 	const inbox = view === "inbox";
 	// Leeg en verborgen, net als in de templates: bij het bouwen is niet te weten welke persona er
 	// kijkt, dus staat er geen getal in de HTML. De render-laag vult ze en maakt de regel zichtbaar.
@@ -87,6 +98,7 @@ function paginaHtml(berichten, view, { orgSchakelaar = false } = {}) {
 	{/* Het bolletje uit het menu, dat op élke pagina staat. Zonder dit hier bleef ongetoetst of
 	   het een onthouden getal toont op een pagina die het echte zo berekent. */}
 	<nav class="side-nav"><a href="#">Berichtenbox<span class="badge" data-berichtenbox-count="ongelezen"></span></a></nav>
+${mappenbalk ? MAPPENBALK : ""}
 ${inbox ? MELDINGEN_INBOX : ""}
 ${STORING}
 
@@ -244,9 +256,9 @@ export function dataset(berichten) {
  * voortgangsanimatie van het eerste bezoek de lijst niet vier seconden verborgen houdt; een test
  * die juist dát gedrag wil, zet hem expliciet op false.
  */
-export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", view = "inbox", state = {}, orgSchakelaar = false } = {}) {
+export function bouwPagina(berichten, { pad = "/moza/berichtenbox/", view = "inbox", state = {}, orgSchakelaar = false, mappenbalk = false } = {}) {
 	ruimDocumentListenersOp();
-	document.body.innerHTML = paginaHtml(berichten, view, { orgSchakelaar });
+	document.body.innerHTML = paginaHtml(berichten, view, { orgSchakelaar, mappenbalk });
 	window.history.replaceState(null, "", pad);
 	window.berichtenboxData = dataset(berichten);
 	window.localStorage.clear();
@@ -324,6 +336,10 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 				<p class="berichtenbox-attachments-loading" data-berichtenbox-attachments-loading></p>
 				<ul class="list-indent" data-berichtenbox-attachments-list hidden></ul>
 			</section>
+			<div class="action-group action-options">
+				<button class="icon-button" data-actie="markeren" aria-pressed="false"><span data-markeer-label>Markeren</span></button>
+				<button class="icon-button" data-actie="uit-map" hidden>Haal uit map</button>
+			</div>
 		</section>
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
 			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
