@@ -357,7 +357,6 @@
 		});
 
 		toevoegen = params.get("onderneming") === "toevoegen";
-		if (toevoegen) vul("[data-nl-wallet-titel-inloggen]", "Andere onderneming toevoegen aan MijnOverheid Zakelijk");
 
 		var gevraagd = veiligPad(params.get("vervolg"));
 		opslag(function (s) {
