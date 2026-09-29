@@ -12,7 +12,7 @@
  *
  * Het venster van NL Wallet (position: fixed in de shadow DOM) blijft zo rechts van het paneel: de CSS
  * maakt [data-nl-wallet-knoppen] dan het referentievlak. De links voor een bevoegdheid in het paneel
- * klikken de links onder het venster aan (nl-wallet-inloggen.js bouwt die uit /api/nl-wallet/config).
+ * klikken de onzichtbare links van nl-wallet-inloggen.js aan (die bouwt ze uit /api/nl-wallet/config).
  */
 
 (function () {
@@ -26,7 +26,7 @@
 		return !paneel.hidden;
 	}
 
-	// Per onderneming een link die de bestaande link onder het NL Wallet-venster aanklikt.
+	// Per onderneming een link die de onzichtbare link van nl-wallet-inloggen.js aanklikt.
 	function bouwBevoegdheidLinks() {
 		var plek = paneel.querySelector("[data-toelichting-bevoegdheden]");
 		var bron = document.querySelectorAll("[data-nl-wallet-bevoegdheid-toevoegen]");
@@ -77,7 +77,7 @@
 
 		paneel.querySelector("[data-toelichting-sluit]").addEventListener("click", sluit);
 
-		// De links onder het venster komen pas binnen na /api/nl-wallet/config; bouw ze dan opnieuw.
+		// Die links komen pas binnen na /api/nl-wallet/config; bouw ze dan opnieuw.
 		var bronLinks = document.querySelector("[data-nl-wallet-bevoegdheid-links]");
 		if (bronLinks) new MutationObserver(bouwBevoegdheidLinks).observe(bronLinks, { childList: true });
 

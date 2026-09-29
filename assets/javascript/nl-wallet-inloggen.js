@@ -7,11 +7,11 @@
  * Een klik op [data-nl-wallet-inloggen] (de kaart "Inloggen met een wallet") opent direct het
  * venster van NL Wallet met de QR-code. De knoppen van NL Wallet zelf
  * (assets/javascript/vendor/nl-wallet-web.iife.js) staan onzichtbaar op de pagina; dit script
- * klikt ze aan. Boven elk venster staat in de grijze overlay een titel, want beide vensters zien er
- * hetzelfde uit. Onderaan staat een link om eerst de bevoegdheid voor de
- * onderneming in de wallet te zetten (demo-attestatie van KVK Demo), per onderneming een eigen link
- * uit /api/nl-wallet/config, en een link naar de installatie van NL Wallet MOZa met de testpersoon
- * Claudia van Dam. Het venster voor een bevoegdheid werkt met vaste
+ * klikt ze aan. Boven het venster voor een bevoegdheid staat in de grijze overlay een titel, want beide
+ * vensters zien er hetzelfde uit. Per onderneming bouwt dit script uit /api/nl-wallet/config een
+ * onzichtbare link om de bevoegdheid (demo-attestatie van KVK Demo) in de wallet te zetten; de
+ * toelichting (Shift+P, nl-wallet-toelichting.js) toont ze, samen met de installatie van NL Wallet MOZa
+ * met de testpersoon Claudia van Dam. Het venster voor een bevoegdheid werkt met vaste
  * links en kan niet zien wanneer de uitgifte klaar is (wallet_web meldt daar alleen "close"); onder
  * dat venster staat daarom een link terug naar inloggen, en sluiten opent het inlogvenster ook weer.
  *
@@ -298,12 +298,11 @@
 		open(bevoegdheidKnop);
 	}
 
-	// Per onderneming een link in de overlay, zodat duidelijk is welke bevoegdheid er in de wallet komt.
+	// Per onderneming een (onzichtbare) link; de toelichting klikt die aan.
 	function bouwBevoegdheidLinks(config) {
 		ondernemingen = (config && config.bevoegdheden) || [];
 		var plekLinks = document.querySelector("[data-nl-wallet-bevoegdheid-links]");
-		var regel = document.querySelector("[data-nl-wallet-bevoegdheden]");
-		if (!plekLinks || !regel) return;
+		if (!plekLinks) return;
 		plekLinks.textContent = "";
 		ondernemingen.forEach(function (onderneming, i) {
 			if (i > 0) plekLinks.appendChild(document.createTextNode(i === ondernemingen.length - 1 ? " of " : ", "));
@@ -330,7 +329,6 @@
 			});
 			plekLinks.appendChild(link);
 		});
-		regel.hidden = ondernemingen.length === 0;
 	}
 
 	document.addEventListener("DOMContentLoaded", function () {
