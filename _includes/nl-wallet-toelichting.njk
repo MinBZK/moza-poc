@@ -1,0 +1,70 @@
+{#
+	Toelichting bij "Inloggen met een wallet" voor presentaties: een blauw paneel links naast de pagina,
+	naar het voorbeeld van de presentatiemodus van bg.rijks.app. Shift+P toont of verbergt het paneel,
+	Esc sluit het; ?toelichting=1 opent het direct. Zie assets/javascript/nl-wallet-toelichting.js.
+#}
+<aside id="nl-wallet-toelichting" class="toelichting-paneel" aria-label="Toelichting inloggen met een wallet" tabindex="-1" hidden data-toelichting>
+	<div class="toelichting-paneel__inhoud">
+		<p class="toelichting-paneel__label">Toelichting</p>
+		<h2 class="toelichting-paneel__titel">Inloggen met een wallet</h2>
+		<p class="toelichting-paneel__lead">Een ondernemer logt in bij MijnOverheid Zakelijk door gegevens te delen uit de NL Wallet op de telefoon. Geen gebruikersnaam of wachtwoord, en de bevoegdheid voor de onderneming komt mee.</p>
+		<ul class="toelichting-paneel__punten">
+			<li>MijnOverheid Zakelijk vraagt twee attestaties: de naam uit de persoonsgegevens (PID) en de bevoegdheid voor de onderneming.</li>
+			<li>De ondernemer scant de QR-code en ziet in de app precies welke gegevens gevraagd worden. Delen gebeurt met de pincode.</li>
+			<li>Met de gedeelde bevoegdheid opent MijnOverheid Zakelijk direct de juiste onderneming.</li>
+			<li>MijnOverheid Zakelijk krijgt alleen de naam en de bevoegdheid, geen BSN.</li>
+			<li>Dit is een proof of concept met een eigen testomgeving en fictieve gegevens. De officiële NL Wallet werkt hier (nog) niet.</li>
+		</ul>
+
+		<h3 class="toelichting-paneel__kop">Zelf proberen</h3>
+		<ol class="toelichting-paneel__stappen">
+			<li>
+				<b>App installeren.</b>
+				Installeer NL Wallet MOZa op een Android-telefoon.
+				<a href="{{ '/inloggen/nl-wallet/app/' | url }}" target="_blank" rel="noopener">Installatie-instructies</a>
+				·
+				<a href="{{ '/downloads/nl-wallet-moza.apk' | url }}" download>Download de app (APK)</a>
+			</li>
+			<li>
+				<b>Persoonsgegevens toevoegen.</b>
+				Kies in de app
+				<i>Inloggen met DigiD</i>
+				en kies op de testpagina Claudia van Dam (fictief). Zij krijgt de attestatie met persoonsgegevens (PID).
+			</li>
+			<li>
+				<b>Bevoegdheid toevoegen.</b>
+				Scan de QR-code voor de attestatie van KVK Demo:
+				<span data-toelichting-bevoegdheden>de links per onderneming verschijnen hier zodra de testomgeving bereikbaar is.</span>
+			</li>
+			<li>
+				<b>Inloggen.</b>
+				Kies
+				<i>Inloggen met een wallet</i>
+				en scan de QR-code. Deel daarna naam en bevoegdheid.
+			</li>
+		</ol>
+
+		<h3 class="toelichting-paneel__kop">Attestaties in de wallet</h3>
+		<dl class="toelichting-paneel__attestaties">
+			<div>
+				<dt>Persoonsgegevens (PID)</dt>
+				<dd>Claudia van Dam (fictief), met onder meer naam, geboortedatum en BSN. Bij de registratie haalt Claudia deze gegevens eenmalig op met DigiD (bron: Basisregistratie Personen) en zet ze daarmee in de wallet.</dd>
+			</div>
+			<div>
+				<dt>Bevoegdheid Koffiezaak Noon</dt>
+				<dd>KVK 85234567, eenmanszaak, eigenaar. Bij het toevoegen deelt de wallet het BSN met KVK Demo (fictief). Die zoekt daarmee de bevoegdheid op.</dd>
+			</div>
+			<div>
+				<dt>Bevoegdheid Koffiebranderij Blend</dt>
+				<dd>KVK 91827364, besloten vennootschap, eigenaar. Bij het toevoegen deelt de wallet het BSN met KVK Demo (fictief). Die zoekt daarmee de bevoegdheid op.</dd>
+			</div>
+		</dl>
+	</div>
+	<div class="toelichting-paneel__voet">
+		<button class="toelichting-paneel__sluit" type="button" data-toelichting-sluit aria-label="Toelichting sluiten">&times;</button>
+		<span class="toelichting-paneel__hint">Shift+P toont of verbergt</span>
+		<span class="toelichting-paneel__hint">Esc sluit</span>
+	</div>
+</aside>
+
+<script src="{{ '/assets/javascript/nl-wallet-toelichting.js' | url }}" defer></script>

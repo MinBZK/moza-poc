@@ -5,8 +5,8 @@ import { readFileSync } from "node:fs";
 /**
  * Inloggen met NL Wallet vanaf de inlogkeuze. De kaart "Inloggen met een wallet" opent direct het
  * venster van NL Wallet; daarvoor zet het script een onzichtbare knop van NL Wallet op de pagina.
- * Onderaan in de overlay staat een link om eerst de bevoegdheid in de wallet te zetten. Dat venster
- * kan niet zien wanneer de uitgifte klaar is, dus daaronder staat een link terug naar inloggen.
+ * Per onderneming zet het script een onzichtbare link om eerst de bevoegdheid in de wallet te zetten;
+ * de toelichting (Shift+P) klikt die aan. Het venster voor een bevoegdheid kan niet zien wanneer de uitgifte klaar is, dus daaronder staat een link terug naar inloggen.
  *
  * Na het inloggen bewaart het script de naam uit de wallet en stuurt door naar MijnOverheid
  * Zakelijk. De persona volgt uit de bevoegdheid: heeft precies één persona dat KVK-nummer, dan gaat
@@ -64,8 +64,7 @@ function pagina(fetchOpties) {
 			<div data-nl-wallet-status="mislukt" hidden></div>
 			<div data-nl-wallet-status="andere-persoon" hidden></div>
 			<div data-nl-wallet-bevoegdheid-status="niet-ingericht" hidden></div>
-			<p class="nl-wallet-overlay-titel" data-nl-wallet-overlay="inloggen" hidden><span data-nl-wallet-titel-inloggen>Inloggen bij MijnOverheid Zakelijk</span></p>
-			<div data-nl-wallet-overlay="inloggen" hidden><p data-nl-wallet-bevoegdheden hidden>Voeg toe voor <span data-nl-wallet-bevoegdheid-links></span></p></div>
+			<p hidden><span data-nl-wallet-bevoegdheid-links></span></p>
 			<p class="nl-wallet-overlay-titel" data-nl-wallet-overlay="bevoegdheid" hidden>Bevoegdheid voor <span data-nl-wallet-titel-onderneming>uw onderneming</span> toevoegen aan uw NL Wallet</p>
 			<p data-nl-wallet-overlay="bevoegdheid" hidden><a href="#" data-nl-wallet-naar-inloggen>Ga verder met inloggen</a></p>
 			<div data-nl-wallet-knoppen></div>
@@ -176,12 +175,11 @@ describe("na het inloggen", () => {
 	});
 });
 
-describe("titels in de overlay, want beide vensters zien er hetzelfde uit", () => {
-	it("heeft in de include voor elk venster een eigen titel die zegt waar de QR-code voor is", () => {
+describe("titel in de overlay, want beide vensters zien er hetzelfde uit", () => {
+	it("heeft in de include een titel boven het venster voor een bevoegdheid, niet boven het inlogvenster", () => {
 		const include = readFileSync(process.cwd() + "/_includes/nl-wallet-inloggen.njk", "utf8");
 		const titels = Object.fromEntries([...include.matchAll(/<p class="nl-wallet-overlay-titel"[^>]*data-nl-wallet-overlay="([a-z]+)"[^>]*>([\s\S]*?)<\/p>/g)].map(([, venster, inhoud]) => [venster, inhoud.replace(/<[^>]+>/g, "")]));
-		expect(Object.keys(titels).sort()).toEqual(["bevoegdheid", "inloggen"]);
-		expect(titels.inloggen).toContain("Inloggen");
+		expect(Object.keys(titels)).toEqual(["bevoegdheid"]);
 		expect(titels.bevoegdheid).toContain("Bevoegdheid");
 	});
 });
@@ -196,11 +194,10 @@ describe("ondernemingen in deze sessie", () => {
 		expect(opgeslagen()).toEqual([{ kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar" }]);
 	});
 
-	it("opent bij onderneming=toevoegen direct het venster, met een eigen titel", () => {
+	it("opent bij onderneming=toevoegen direct het venster", () => {
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?onderneming=toevoegen&vervolg=/moza/");
 		pagina();
 		expect(loginKnop()).not.toBeNull();
-		expect(document.querySelector("[data-nl-wallet-titel-inloggen]").textContent).toContain("Andere onderneming toevoegen");
 	});
 
 	it("voegt bij toevoegen de onderneming toe aan de bestaande en stuurt naar die persona", async () => {
@@ -260,7 +257,7 @@ describe("sessie volgen, zodat na Gelukt het venster niet gesloten hoeft te word
 	});
 });
 
-describe("bevoegdheid toevoegen vanuit de overlay", () => {
+describe("bevoegdheid toevoegen met de links per onderneming", () => {
 	async function klikLink(id) {
 		await vi.waitFor(() => expect(document.querySelector(`[data-nl-wallet-bevoegdheid-toevoegen="${id}"]`)).not.toBeNull());
 		document.querySelector(`[data-nl-wallet-bevoegdheid-toevoegen="${id}"]`).dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
@@ -268,7 +265,7 @@ describe("bevoegdheid toevoegen vanuit de overlay", () => {
 
 	it("toont per onderneming een eigen link", async () => {
 		pagina();
-		await vi.waitFor(() => expect(document.querySelector("[data-nl-wallet-bevoegdheden]").hidden).toBe(false));
+		await vi.waitFor(() => expect(document.querySelectorAll("[data-nl-wallet-bevoegdheid-links] a")).toHaveLength(2));
 		const links = [...document.querySelectorAll("[data-nl-wallet-bevoegdheid-links] a")].map((a) => a.textContent);
 		expect(links).toEqual(["Koffiezaak Noon", "Koffiebranderij Blend"]);
 		expect(document.querySelector("[data-nl-wallet-bevoegdheid-links]").textContent).toBe("Koffiezaak Noon of Koffiebranderij Blend");
@@ -317,10 +314,9 @@ describe("bevoegdheid toevoegen vanuit de overlay", () => {
 		expect(bevoegdheidKnop().getAttribute("cross-device-ul")).toBe("walletdebuginteraction://noon/nieuw-certificaat");
 	});
 
-	it("laat de regel weg als de omgeving geen bevoegdheden kent", async () => {
+	it("maakt geen links als de omgeving geen bevoegdheden kent", async () => {
 		pagina({ config: null });
 		await new Promise((klaar) => setTimeout(klaar, 20));
-		expect(document.querySelector("[data-nl-wallet-bevoegdheden]").hidden).toBe(true);
 		expect(document.querySelectorAll("[data-nl-wallet-bevoegdheid-links] a")).toHaveLength(0);
 	});
 });

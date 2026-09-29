@@ -2825,6 +2825,200 @@ button {
 	display: none;
 }
 
+/* Toelichting bij inloggen met een wallet, voor presentaties (Shift+P, zie nl-wallet-toelichting.js).
+   Blauw paneel links, naar het voorbeeld van de presentatiemodus van bg.rijks.app; de pagina schuift op.
+   [data-nl-wallet-knoppen] wordt het referentievlak voor het (fixed) venster van NL Wallet, zodat dat
+   rechts van het paneel blijft; pointer-events alleen op het venster zelf. */
+.toelichting-paneel {
+	--toelichting-breedte: max(40vw, 22rem);
+
+	background: var(--toepassing-color-background-inverse);
+	box-shadow: var(--toepassing-box-shadow-default);
+	box-sizing: border-box;
+	color: var(--toepassing-color-text-inverse);
+	display: flex;
+	flex-direction: column;
+	font-family: var(--toepassing-text-font-family-body);
+	inline-size: var(--toelichting-breedte);
+	inset-block: 0;
+	inset-inline-start: 0;
+	max-inline-size: none;
+	padding: var(--toepassing-space-2xl) var(--toepassing-space-2xl) var(--toepassing-space-md);
+	position: fixed;
+	z-index: 1050;
+
+	&[hidden] {
+		display: none;
+	}
+	&:focus {
+		outline: none;
+	}
+	a {
+		color: inherit;
+		text-decoration: underline;
+		&:hover,
+		&:focus-visible,
+		&:active {
+			color: inherit;
+			text-decoration-color: currentColor;
+			text-decoration-thickness: var(--toepassing-border-width-md);
+		}
+		&:focus-visible {
+			box-shadow: none;
+			outline: var(--toepassing-border-width-md) solid currentColor;
+			outline-offset: var(--toepassing-space-3xs);
+		}
+	}
+	dt,
+	dd {
+		color: inherit;
+	}
+	p,
+	li,
+	dd {
+		max-inline-size: none;
+	}
+}
+
+.toelichting-paneel__inhoud {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: var(--toepassing-space-md);
+	min-block-size: 0;
+	overflow: auto;
+}
+
+.toelichting-paneel__label {
+	font-size: var(--toepassing-text-size-body-sm);
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.toelichting-paneel__titel {
+	color: inherit;
+	font-size: var(--toepassing-text-size-title-3xl);
+	font-weight: var(--toepassing-text-font-weight-bold);
+		margin: 0;
+}
+
+.toelichting-paneel__lead {
+	font-size: var(--toepassing-text-size-title-md);
+	margin: 0;
+}
+
+.toelichting-paneel__kop {
+	color: inherit;
+	font-size: var(--toepassing-text-size-title-md);
+	font-weight: var(--toepassing-text-font-weight-bold);
+	margin: var(--toepassing-space-xs) 0 0;
+}
+
+.toelichting-paneel__punten,
+.toelichting-paneel__stappen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-xs);
+	margin: 0;
+	padding-inline-start: var(--toepassing-space-lg);
+	li::marker {
+		color: var(--toepassing-color-icon-inverse);
+	}
+}
+
+.toelichting-paneel__punten {
+	font-size: var(--toepassing-text-size-body-lg);
+}
+
+.toelichting-paneel__attestaties {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-xs);
+	margin: 0;
+	div {
+		border-inline-start: var(--toepassing-border-width-lg) solid var(--toepassing-color-border-inverse);
+		padding-inline-start: var(--toepassing-space-sm);
+	}
+	dt {
+		font-weight: var(--toepassing-text-font-weight-bold);
+	}
+	dd {
+		font-size: var(--toepassing-text-size-body-sm);
+		margin: 0;
+	}
+}
+
+.toelichting-paneel__voet {
+	align-items: center;
+	border-block-start: var(--toepassing-border-width-xs) solid var(--toepassing-color-border-inverse);
+	display: flex;
+	flex: 0 0 auto;
+	gap: var(--toepassing-space-md);
+	margin-block-start: var(--toepassing-space-md);
+	padding-block-start: var(--toepassing-space-sm);
+}
+
+.toelichting-paneel__sluit {
+	align-items: center;
+	background: none;
+	block-size: var(--toepassing-space-2xl);
+	border: var(--toepassing-border-width-md) solid var(--toepassing-color-border-inverse);
+	border-radius: var(--toepassing-border-radius-round);
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font-size: var(--toepassing-text-size-title-md);
+	inline-size: var(--toepassing-space-2xl);
+	justify-content: center;
+	line-height: 1;
+	padding: 0;
+	&:hover {
+		background: var(--toepassing-color-text-inverse);
+		color: var(--toepassing-color-background-inverse);
+	}
+	&:focus-visible {
+		outline: var(--toepassing-border-width-md) solid currentColor;
+		outline-offset: var(--toepassing-space-3xs);
+	}
+}
+
+.toelichting-paneel__hint {
+	font-size: var(--toepassing-text-size-body-xs);
+}
+
+html.toelichting-open {
+	body {
+		padding-inline-start: max(40vw, 22rem);
+	}
+	[data-nl-wallet-knoppen] {
+		inset-block: 0;
+		inset-inline: max(40vw, 22rem) 0;
+		pointer-events: none;
+		position: fixed;
+		transform: translate(0);
+		z-index: 1045;
+	}
+	nl-wallet-button {
+		pointer-events: auto;
+	}
+	.nl-wallet-overlay-titel,
+	.nl-wallet-overlay-hint {
+		inset-inline-start: max(40vw, 22rem);
+		max-inline-size: calc(100% - max(40vw, 22rem) - 2 * var(--toepassing-space-padding-md));
+	}
+}
+
+/* Smal scherm: het paneel ligt over de pagina heen. */
+@media (width <= 64rem) {
+	.toelichting-paneel {
+		--toelichting-breedte: 100vw;
+		padding: var(--toepassing-space-lg) var(--toepassing-space-md) var(--toepassing-space-sm);
+	}
+	html.toelichting-open body {
+		padding-inline-start: 0;
+	}
+}
+
 .page-login {
 	article:first-of-type {
 		container-type: initial;
