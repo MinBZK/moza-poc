@@ -1454,8 +1454,20 @@ small.disclaimer {
 [data-bericht-onbeschikbaar] {
 	margin-block: var(--toepassing-space-margin-md);
 }
+.berichtenbox-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-layout-sm);
+}
 .berichtenbox-search {
+	flex: 2 1 20rem;
 	input {
+		inline-size: 100%;
+	}
+}
+.berichtenbox-afzender {
+	flex: 1 1 12rem;
+	select {
 		inline-size: 100%;
 	}
 }

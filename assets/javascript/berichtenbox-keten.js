@@ -204,10 +204,52 @@
 		meld("storing", FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar);
 	}
 
-	// Organisaties die tijdens de ronde niet antwoordden. Een mededeling en geen storing: er staat
-	// wél een lijst, hij is alleen niet volledig.
-	function toonUitval(namen) {
-		meld("mededeling", namen.length > 1 ? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk." : namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+	function rondeOnvolledig(uitvraag) {
+		return uitvraag.stil.length > 0 || (uitvraag.nietOpgehaald || []).length > 0 || (uitvraag.afgekapt || []).length > 0;
+	}
+
+	/**
+	 * Wat er in de ronde ontbrak. Een mededeling en geen storing: er staat wél een lijst, hij is
+	 * alleen niet volledig. Per oorzaak een eigen zin, samen in één mededeling want er is één
+	 * meldingsblok. Apart benoemd, want "niet bereikbaar", "niet aan toegekomen" en "niet alles
+	 * opgehaald" zijn drie verschillende verhalen.
+	 *
+	 * Geen "ververs de pagina": zolang de sessie leeft, draait verversen geen nieuwe ronde.
+	 */
+	function toonOnvolledigeRonde(uitvraag) {
+		const zinnen = [];
+		const stil = uitvraag.stil;
+		const nietOpgehaald = uitvraag.nietOpgehaald || [];
+		const afgekapt = uitvraag.afgekapt || [];
+
+		if (stil.length > 1) {
+			zinnen.push("Deze organisaties waren tijdens het ophalen niet bereikbaar: " + stil.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk.");
+		} else if (stil.length === 1) {
+			zinnen.push(stil[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+		}
+
+		if (nietOpgehaald.length > 1) {
+			zinnen.push("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: " + nietOpgehaald.join(", ") + ". Er is daar niets mis, maar hun berichten ontbreken hier.");
+		} else if (nietOpgehaald.length === 1) {
+			zinnen.push("Bij " + nietOpgehaald[0] + " zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was. Er is daar niets mis, maar de berichten van deze organisatie ontbreken hier.");
+		}
+
+		if (afgekapt.length > 1) {
+			zinnen.push("Van deze organisaties zijn niet al uw berichten opgehaald: " + afgekapt.map(afgekaptNaam).join(", ") + ". Een deel van hun berichten staat hier niet.");
+		} else if (afgekapt.length === 1) {
+			const een = afgekapt[0];
+			zinnen.push(heeftAantallen(een) ? "Van " + een.naam + " zijn " + een.opgehaald + " van uw " + een.totaal + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.");
+		}
+
+		meld("mededeling", zinnen.join(" "));
+	}
+
+	function heeftAantallen(afgekapt) {
+		return typeof afgekapt.opgehaald === "number" && typeof afgekapt.totaal === "number" && afgekapt.totaal > afgekapt.opgehaald;
+	}
+
+	function afgekaptNaam(afgekapt) {
+		return heeftAantallen(afgekapt) ? afgekapt.naam + " (" + afgekapt.opgehaald + " van " + afgekapt.totaal + ")" : afgekapt.naam;
 	}
 
 	// De ronde telde meer berichten dan de lijst teruggaf: onderweg iets kwijtgeraakt. Stil
@@ -383,6 +425,8 @@
 	async function haalOp(ontvanger) {
 		const organisaties = {};
 		const stil = [];
+		const nietOpgehaald = [];
+		const afgekapt = [];
 		let klaar = 0;
 		let gevonden = 0;
 		let gereed = false;
@@ -436,7 +480,7 @@
 			if (gebeurtenis.event === "magazijn-bevraging-voltooid") {
 				klaar++;
 				gevonden += gebeurtenis.aantalBerichten || 0;
-				if (gebeurtenis.status !== "OK") stil.push(gebeurtenis.naam || gebeurtenis.magazijnId);
+				deelIn(gebeurtenis, { stil: stil, nietOpgehaald: nietOpgehaald, afgekapt: afgekapt });
 			}
 			if (gebeurtenis.event === "ophalen-fout") {
 				const fout = ketenFout("onbereikbaar", "het stelsel meldde een fout tijdens het ophalen");
@@ -490,7 +534,31 @@
 			throw ketenFout("afgebroken", "de ophaalronde brak af na " + klaar + " van " + Object.keys(organisaties).length + " organisaties");
 		}
 
-		return { organisaties: organisaties, stil: stil, gevonden: gevonden };
+		return { organisaties: organisaties, stil: stil, nietOpgehaald: nietOpgehaald, afgekapt: afgekapt, gevonden: gevonden };
+	}
+
+	/**
+	 * Waarom een organisatie niet (alles) leverde, in drie groepen die elk een eigen uitleg krijgen.
+	 *
+	 * `FOUT` en `TIMEOUT` zijn een storing bij die organisatie. `NIET_OPGEHAALD` is dat niet: het
+	 * stelsel had het te druk en heeft haar niet bevraagd; haar "niet bereikbaar" noemen legt de
+	 * schuld bij de verkeerde. Een status die we niet kennen telt als niet geleverd, nooit als
+	 * geslaagd, maar ook niet als storing: dat weten we niet.
+	 *
+	 * `afgekapt` hoort bij `OK`: de organisatie leverde, alleen niet alles.
+	 */
+	function deelIn(gebeurtenis, groepen) {
+		const naam = gebeurtenis.naam || gebeurtenis.magazijnId;
+
+		if (gebeurtenis.status === "OK") {
+			if (gebeurtenis.afgekapt === true) {
+				groepen.afgekapt.push({ naam: naam, opgehaald: gebeurtenis.aantalBerichten, totaal: gebeurtenis.totaalBeschikbaar });
+			}
+		} else if (gebeurtenis.status === "FOUT" || gebeurtenis.status === "TIMEOUT") {
+			groepen.stil.push(naam);
+		} else {
+			groepen.nietOpgehaald.push(naam);
+		}
 	}
 
 	/**
@@ -681,6 +749,8 @@
 			onderwerp: bericht.onderwerp || "Bericht zonder onderwerp",
 			inhoud: bericht.inhoud || "",
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
+			// Het volledige tijdstip, zodat sorteren op datum ook berichten van dezelfde dag ordent.
+			tijdstip: bericht.publicatietijdstip || "",
 			isOngelezen: bericht.status !== "gelezen",
 			map: bericht.map || null,
 			heeftBijlage: (bericht.aantalBijlagen || 0) > 0,
@@ -933,8 +1003,8 @@
 				// onwaar: die vergelijking mag niet stilzwijgend voor "alles is er" doorgaan.
 			} else if (typeof uitvraag.gevonden === "number" && berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
-			} else if (uitvraag.stil.length > 0) {
-				toonUitval(uitvraag.stil);
+			} else if (rondeOnvolledig(uitvraag)) {
+				toonOnvolledigeRonde(uitvraag);
 			}
 
 			return { berichten: berichten, magazijnen: magazijnen };

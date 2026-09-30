@@ -19,7 +19,7 @@
 import { datumNL } from "./berichtenbox/datum.js";
 import { maakState, NIEUWE_BERICHTEN_LIMIET, LS_KEY as STATE_SLEUTEL } from "./berichtenbox/state.js";
 import { maakRegister } from "./berichtenbox/bron.js";
-import { filterBerichten, sorteerBerichten, paginaVan } from "./berichtenbox/lijst.js";
+import { filterBerichten, pasSorteringToe, paginaVan } from "./berichtenbox/lijst.js";
 import { datasetBron } from "./berichtenbox/dataset-bron.js";
 import { ketenBron } from "./berichtenbox/keten-bron.js";
 
@@ -595,6 +595,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	// De rij die bij de laatste bronwijziging binnenkwam, zodat createRij die kan laten invaden.
 	let zojuistBinnengekomenId = null;
 
+	// De volgorde die de bezoeker via een kolomkop koos, of null voor de volgorde van de bron. Een
+	// instelling van de weergave en niet van de berichten: zo blijft ze staan als de bron een nieuwe
+	// lijst levert of er een bericht bij komt, en landt dat bericht op zijn plek in die volgorde.
+	let sortering = null;
+
 	// Er staat een storingsmelding op het scherm; de gesimuleerde unhappy flow mag die niet wegpoetsen.
 	let laadfoutGetoond = false;
 	// De lading zelf is mislukt. Blijft staan tot een herlaad: niets op deze pagina kan de berichten
@@ -1139,7 +1144,66 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		return td;
 	}
 
-	// De criteria waarop de huidige weergave filtert. Het zoekveld en de afzendervinkjes staan in
+	// Het afzenderfilter boven de inbox. De namen komen uit de magazijnen van de bron. Alleen wie
+	// berichten heeft staat erin: een keuze die altijd een lege lijst oplevert helpt niemand. Een
+	// organisatie die het organisatiefilter van dit portaal niet doorlaat, staat er ook niet tussen.
+	function afzenderFilter() {
+		return document.querySelector("[data-berichtenbox-afzender-filter]");
+	}
+
+	function gekozenAfzenders() {
+		const keuze = afzenderFilter();
+		const blok = keuze && keuze.closest("[data-berichtenbox-afzender]");
+
+		// Een verborgen filter mag niet stilletjes blijven filteren.
+		if (!keuze || !keuze.value || (blok && blok.hidden)) return new Set();
+
+		return new Set([keuze.value]);
+	}
+
+	let afzenderOptiesSleutel = null;
+
+	function werkAfzenderFilterBij() {
+		const keuze = afzenderFilter();
+		if (!keuze || huidigeView() !== "inbox") return;
+
+		const metBerichten = new Set(data.berichten.map((bericht) => bericht && bericht.magazijnId));
+		const afzenders = (data.magazijnen || [])
+			.filter((magazijn) => magazijn && metBerichten.has(magazijn.id) && magazijnToegestaan(magazijn.id))
+			.map((magazijn) => ({ id: magazijn.id, naam: magazijn.naam || magazijn.id }))
+			.sort((a, b) => a.naam.localeCompare(b.naam, "nl", { sensitivity: "base" }));
+
+		// De gekozen afzender blijft een keuze, ook als die even niet in de lijst van de bron staat.
+		// Anders valt het filter weg zonder dat de bezoeker iets deed, en staat er ineens alles.
+		const gekozen = keuze.value;
+		if (gekozen && !afzenders.some((afzender) => afzender.id === gekozen)) {
+			const oud = [...keuze.options].find((optie) => optie.value === gekozen);
+			afzenders.push({ id: gekozen, naam: oud ? oud.textContent : gekozen });
+		}
+
+		// Alleen opnieuw opbouwen als de keuzes veranderden: dit draait bij elke render, en een
+		// select die onder de bezoeker wordt vervangen klapt dicht.
+		const sleutel = JSON.stringify(afzenders);
+		if (sleutel === afzenderOptiesSleutel) return;
+		afzenderOptiesSleutel = sleutel;
+
+		const alle = keuze.querySelector('option[value=""]');
+		keuze.replaceChildren(...(alle ? [alle] : []));
+		for (const afzender of afzenders) {
+			const optie = document.createElement("option");
+			optie.value = afzender.id;
+			optie.textContent = afzender.naam;
+			keuze.appendChild(optie);
+		}
+		keuze.value = gekozen;
+
+		// Met één afzender valt er niets te kiezen. Een gekozen afzender houdt het filter wél in beeld,
+		// anders kan de bezoeker het niet meer terugzetten.
+		const blok = keuze.closest("[data-berichtenbox-afzender]");
+		if (blok) blok.hidden = afzenders.length < 2 && !gekozen;
+	}
+
+	// De criteria waarop de huidige weergave filtert. Het zoekveld en de afzenderkeuze staan in
 	// de DOM omdat de bezoeker ze daar invult; de rest komt uit de state en de URL.
 	function huidigeCriteria() {
 		const zoekInput = document.querySelector("[data-berichtenbox-search-input]");
@@ -1152,8 +1216,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		return {
 			view,
 			zoek: zoekInput ? zoekInput.value : "",
-			// Geen afzenderfilter in de templates; lijst.js kan het, er is alleen geen bediening voor.
-			afzenders: new Set(),
+			afzenders: inbox ? gekozenAfzenders() : new Set(),
 			map: inbox ? new URLSearchParams(location.search).get("map") : null,
 			magazijnToegestaan: inbox ? magazijnToegestaan : () => true,
 			persoonRelevant: inbox ? persoonRelevant : () => true,
@@ -1168,8 +1231,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst) return;
 
+		werkAfzenderFilterBij();
+
 		const criteria = huidigeCriteria();
-		const gevonden = filterBerichten(data.berichten, criteria);
+		const gevonden = pasSorteringToe(filterBerichten(data.berichten, criteria), sortering);
 		const venster = paginaVan(gevonden, huidigePagina, PAGINA_GROOTTE);
 		huidigePagina = venster.pagina;
 
@@ -1210,10 +1275,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		bouwPaginaNav(venster.totaalPaginas, document.querySelector("[data-berichtenbox-pagination]"));
 	}
 
-	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: sorteert de
-	// databron (zodat herbouwde views mee-sorteren) en herordent de DOM-rijen op
-	// berichtId. Daarna herpagineert de actieve view (inbox behoudt DOM-volgorde,
-	// archief/prullenbak herbouwen uit de gesorteerde data).
+	// Sorteerbare kolomkoppen. Eén gedelegeerde handler op de <thead>: onthoudt de gekozen volgorde
+	// en laat toonBerichten die toepassen, na het filteren.
 	function bindSortering() {
 		const lijst = document.querySelector("[data-berichtenbox-list]");
 		if (!lijst || !lijst.tHead) return;
@@ -1225,10 +1288,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			lijst.tHead.querySelectorAll("th[aria-sort]").forEach((t) => t.setAttribute("aria-sort", "none"));
 			th.setAttribute("aria-sort", oplopend ? "ascending" : "descending");
 
-			// Sorteer de berichten; de rijen volgen bij het renderen. Voorheen werd de DOM apart
-			// herordend op berichtId, wat alleen klopte zolang de rijen en de berichten in de pas
-			// liepen.
-			data.berichten = sorteerBerichten(data.berichten, btn.dataset.sort, oplopend);
+			// De berichten zelf blijven in de volgorde van de bron. Ze hier omsorteren hield alleen
+			// stand tot de volgende lijst van de bron: daarna stond aria-sort nog op "oplopend" boven
+			// een lijst in bronvolgorde, en een nieuw bericht landde bovenaan in plaats van op zijn plek.
+			sortering = { sleutel: btn.dataset.sort, oplopend };
 			huidigePagina = 1;
 			toonBerichten();
 		});
@@ -1380,6 +1443,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			pasFilterToe();
 		}
 		if (zoekInput) zoekInput.addEventListener("input", filterVanafEerstePagina);
+
+		const afzenderKeuze = afzenderFilter();
+		if (afzenderKeuze) afzenderKeuze.addEventListener("change", filterVanafEerstePagina);
 
 		// A/B-test: schakelaar om ook berichten van andere organisaties te tonen.
 		const orgToggle = document.querySelector("[data-berichtenbox-org-toggle]");
@@ -2864,11 +2930,20 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		if (inhoud.nieuwBericht) {
 			const live = document.querySelector("[data-berichtenbox-live]");
-			if (live) {
-				live.textContent = "Nieuw bericht van " + inhoud.nieuwBericht.afzender + ": " + inhoud.nieuwBericht.onderwerp;
-			}
+			if (live) live.textContent = binnenkomerTekst(inhoud.nieuwBericht);
 		}
 	});
+
+	// Een binnenkomer landt waar filter, zoekterm en sortering hem zetten, en dat is niet altijd in
+	// beeld. De melding zegt dan waar hij bleef, in plaats van een rij aan te kondigen die er niet staat.
+	function binnenkomerTekst(nieuw) {
+		const tekst = "Nieuw bericht van " + nieuw.afzender + ": " + nieuw.onderwerp;
+		const rij = [...document.querySelectorAll(".berichtenbox-row")].some((tr) => tr.dataset.berichtId === nieuw.id);
+		if (rij) return tekst;
+
+		const gevonden = filterBerichten([nieuw], huidigeCriteria()).length > 0;
+		return tekst + (gevonden ? ". Het staat op een andere pagina van de lijst." : ". Het valt buiten uw filter of zoekterm.");
+	}
 
 	// Staat er een echte storingsmelding? Dan mag de gesimuleerde unhappy flow die niet wegpoetsen:
 	// die gaat over een nagebootste bron, en de bezoeker zou de gegenereerde dataset voor zijn post
