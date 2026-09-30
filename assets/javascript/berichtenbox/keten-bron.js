@@ -13,10 +13,10 @@
  * De voortgang komt hier ook vandaan: het stelsel meldt per organisatie hoeveel er bevraagd, klaar
  * en gevonden zijn. Dat zijn echte getallen, waar de dataset-bron een nabootsing tegenover zet.
  *
- * En de berichten die binnenkomen terwijl de bezoeker kijkt: het transport haalt de lijst
- * periodiek opnieuw op, deze module ziet wat erbij gekomen is en meldt dat als losse binnenkomers —
- * dezelfde weg die de dataset-bron voor zijn nagebootste federatie gebruikt. Zo hoeft de
- * render-laag niet te weten of een bericht verzonnen is of echt.
+ * En de berichten die binnenkomen terwijl de bezoeker kijkt: het transport hoort ze van het stelsel,
+ * of vraagt de lijst periodiek na als dat niet lukt. Deze module ziet wat erbij gekomen is en meldt
+ * dat als losse binnenkomers — dezelfde weg die de dataset-bron voor zijn nagebootste federatie
+ * gebruikt. Zo hoeft de render-laag niet te weten of een bericht verzonnen is of echt.
  */
 
 /** Twee lijsten magazijnen zijn hetzelfde als ze dezelfde ids bevatten. */
@@ -218,7 +218,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			});
 
 			// Tussen `geldtVoor()` en dit punt rendert de render-laag, en in dat venster kan er al een
-			// polltik geland zijn. Die wijziging heeft geen luisteraar gehad en is bij het transport al
+			// polltik of een bericht uit de stroom geland zijn. Die wijziging heeft geen luisteraar gehad en is bij het transport al
 			// als gemeld afgeboekt, dus alleen hier valt hij nog in te halen.
 			if (keten.huidigeUitkomst) verwerkWijziging(keten.huidigeUitkomst);
 
@@ -231,7 +231,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 				uitkomst = nieuwe;
 
 				// Een herhaalde ophaalronde levert een nieuw object met — meestal — dezelfde berichten;
-				// het pollen filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
+				// het transport filtert dat zelf al weg. Alleen wat er bij komt is nieuws; de rest zou de
 				// lijst laten knipperen om niets.
 				const aanwas = aanwasVan(getoond, nieuwe);
 				if (aanwas && !aanwas.length) return;

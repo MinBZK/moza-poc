@@ -124,8 +124,11 @@ export async function startKeten(perAdres, pad = "/moza/berichtenbox/", kvkNumme
 	vi.stubGlobal("fetch", async (pad, opties) => {
 		aanroepen.push({ pad, headers: (opties && opties.headers) || {} });
 		for (const [patroon, geef] of perAdres) {
-			if (pad.indexOf(patroon) !== -1) return typeof geef === "function" ? geef(pad) : geef;
+			if (pad.indexOf(patroon) !== -1) return typeof geef === "function" ? geef(pad, opties) : geef;
 		}
+		// Een keten zonder `_volgen`, zoals een stelsel van vóór dat endpoint: de client valt dan stil
+		// terug op het periodiek navragen. Een test over de stroom geeft zelf een antwoord voor dit adres.
+		if (pad.indexOf("_volgen") !== -1) return antwoord(404, {});
 		throw new Error("onverwacht adres in de test: " + pad);
 	});
 
