@@ -1,11 +1,13 @@
 # 1) Bouw de statische Eleventy-site (inclusief Storybook)
-FROM node:20-alpine AS site_builder
+FROM node:22-alpine AS site_builder
 
 WORKDIR /app
 COPY package.json package-lock.json ./
+# Geen --omit=optional: de native bindings van Vite (rolldown) zijn optionele dependencies, en
+# zonder die bindings faalt de Storybook-build hieronder. De lockfile bevat de binding voor
+# alpine (linux-x64-musl), dus npm ci haalt precies die op.
 RUN npm ci
 COPY . .
-RUN cd style-dictionary && npm ci && npm run build
 
 # Backend-URL voor de chat-frontend (instelbaar per omgeving):
 #   leeg ("")  = relatief / zelfde origin (reverse proxy)  -- default
@@ -14,7 +16,6 @@ ARG MOZA_CHAT_API=""
 ENV MOZA_CHAT_API=$MOZA_CHAT_API
 RUN npx @11ty/eleventy && ls -d _site
 RUN npx storybook build -o _site/storybook
-
 
 # 2) Serveer de statische site via nginx + same-origin reverse proxy
 #    (frontend-only, non-root, poort 8080)
@@ -26,14 +27,61 @@ FROM nginxinc/nginx-unprivileged:alpine
 # interne cluster-adres van de backend.
 #  - NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 laat 15-local-resolvers.envsh de DNS-resolver
 #    uit /etc/resolv.conf afleiden (→ NGINX_LOCAL_RESOLVERS) voor runtime-resolutie.
-#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot deze twee vars, zodat nginx-eigen
-#    variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven.
+#  - NGINX_ENVSUBST_FILTER beperkt envsubst tot alle BACKEND_*-vars en de resolver, zodat
+#    nginx-eigen variabelen ($host, $uri, $backend_origin, ...) ongemoeid blijven — die zijn
+#    kleine letters en vallen dus buiten het patroon. Het patroon is bewust generiek: staat een
+#    backend-var er niet in, dan blijft zijn ${...} letterlijk in de config staan. Elke var
+#    hieronder heeft een lege default. Nodig is dat niet — nginx leest een niet-gesubstitueerde
+#    ${...} als een eigen, ongeïnitialiseerde variabele en dus als leeg, dus de terugval in de
+#    template vuurt dan ook (gemeten). Het staat er zodat de bedoelde waarde "leeg" expliciet is
+#    en niet per ongeluk uit dat gedrag volgt.
+#
+# BACKEND_ORIGIN is het adres van die chat-backend en verder niets. BACKEND_API is de
+# standaard-upstream voor alles onder /api/. Leeg gelaten valt BACKEND_API terug op
+# BACKEND_ORIGIN, dus alles onder /api/ gaat dan waar het vroeger ook heen ging. Wie hem wel zet,
+# haalt de chat-backend uit het routeringspad van API's die er niets mee te maken hebben — nuttig
+# in een omgeving waar die backend helemaal niet draait. BACKEND_ORIGIN leegmaken legt dan alleen
+# /chat, /health en /tools stil, elk met een 502 die de variabele noemt in plaats van een kale 500
+# (zie container/geen-backend-origin.conf). BACKEND_KETEN en BACKEND_DEMO staan hier los van: die
+# vallen nergens op terug en bewaken zichzelf.
+#
+# BACKEND_KETEN en BACKEND_PERSONAS wijzen standaard naar de publieke omgevingen van het Federatief
+# Berichtenstelsel. Zonder die defaults toont elke PR-preview van deze repo een configuratie-502
+# voor de aangesloten persona's: de deploy-action kan geen runtime-env zetten, dus zou iemand ze per
+# preview met de hand in de ZAD-UI moeten zetten. De HOST-varianten horen erbij: de ingress daar
+# routeert op de Host-header, en de browser-host doorgeven levert de verkeerde vhost.
+#
+# Het adres is hun `test`, en dat hoort een blijvende omgeving te zijn. Een PR-omgeving van FBS
+# hoort hier niet: die wordt opgeruimd zodra hun PR sluit, en een dood adres leest in de
+# berichtenbox als een storing en niet als een configuratiefout — de variabele ís immers gezet.
+#
+# Een deployment die zijn eigen keten heeft, overschrijft ze gewoon in de ZAD-UI. Lokaal doet
+# tests-integratie/proeftuin-lokaal.yaml dat al: die wijst naar 127.0.0.1, zodat een lokale test de
+# lokale stack toetst en niet die van iemand anders.
 # De config wordt bij container-start gegenereerd uit /etc/nginx/templates/.
 ENV BACKEND_ORIGIN=http://dabackend:8000 \
+    BACKEND_API= \
+    BACKEND_PROFIEL= \
+    BACKEND_API_2= \
+    BACKEND_KETEN=https://uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_DEMO= \
+    BACKEND_PERSONAS=https://demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_KETEN_HOST=uitvraag-test-mpfb-8wh.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_DEMO_HOST= \
+    BACKEND_PERSONAS_HOST=demopersonas-test-mpfm-w3h.rig.prd1.gn2.quattro.rijksapps.nl \
+    BACKEND_NL_WALLET= \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
-    NGINX_ENVSUBST_FILTER='^(BACKEND_ORIGIN|NGINX_LOCAL_RESOLVERS)$'
+    NGINX_ENVSUBST_FILTER='^(BACKEND_[A-Z0-9_]+|NGINX_LOCAL_RESOLVERS)$'
 
 COPY container/default.conf.template /etc/nginx/templates/default.conf.template
+# Leidt BACKEND_NL_WALLET af uit DEPLOYMENT_NAME (ZAD zet die in elke pod): het component nlw-api
+# in dezelfde deployment heet <deployment>-nlw-api. Een .envsh wordt door de entrypoint ge-sourcet,
+# mits uitvoerbaar, en draait vóór 20-envsubst-on-templates.sh.
+COPY --chmod=755 container/16-nl-wallet-backend.envsh /docker-entrypoint.d/16-nl-wallet-backend.envsh
+
+# Guards die vanuit meerdere locations ingesloten worden. Geen template: er staat geen ${...} in,
+# dus envsubst hoeft er niet langs.
+COPY container/geen-backend-origin.conf container/geen-backend-keten.conf /etc/nginx/
 COPY --from=site_builder /app/_site /usr/share/nginx/html
 
 EXPOSE 8080

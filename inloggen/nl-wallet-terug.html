@@ -1,0 +1,40 @@
+---
+title: "Inloggen met NL Wallet"
+permalink: "/inloggen/nl-wallet/terug/"
+footerType: "none"
+bodyClass: "page-login"
+layout: "base.njk"
+eleventyExcludeFromCollections: true
+---
+
+<article id="hoofd-inhoud" data-nl-wallet-terug>
+	<h1>
+		Inloggen met
+		<b>NL Wallet</b>
+	</h1>
+
+	<div class="feedback feedback-info" data-nl-wallet-status="bezig" role="status">
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Uw gegevens worden opgehaald.</p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-success" hidden data-nl-wallet-status="ingelogd" role="status">
+		{% include "icon-feedback-success.njk" %}
+		<div>
+			<p>U bent ingelogd als <b data-nl-wallet-naam></b> voor <b data-nl-wallet-onderneming></b>.</p>
+			<p><a href="{{ '/moza/' | url }}" data-nl-wallet-vervolg>Verder naar MijnOverheid Zakelijk</a></p>
+		</div>
+	</div>
+
+	<div class="feedback feedback-error" hidden data-nl-wallet-status="mislukt" role="alert">
+		{% include "icon-feedback-error.njk" %}
+		<div>
+			<p>Inloggen met NL Wallet is niet gelukt. Probeer het opnieuw of kies een ander inlogmiddel.</p>
+			<p><a href="{{ '/inloggen/nl-wallet/' | url }}">Opnieuw proberen</a></p>
+		</div>
+	</div>
+
+	<script src="{{ '/assets/javascript/nl-wallet-inloggen.js' | url }}" defer></script>
+</article>

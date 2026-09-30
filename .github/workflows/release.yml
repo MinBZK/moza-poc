@@ -26,12 +26,21 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             RAW_TAG="${{ github.event.inputs.tag }}"
+            # De tag bepaalt wat er gebouwd wordt, niet de branch waarop je de
+            # workflow start. Een onderzoeksrelease hoort het prototype te tonen
+            # zoals het is voorgelegd; bouwen vanaf de branch zet de laatste
+            # versie op een URL waar iemand het onderzoek van maanden terug
+            # verwacht.
             echo "ref=refs/tags/$RAW_TAG" >> "$GITHUB_OUTPUT"
           else
             RAW_TAG="${GITHUB_REF#refs/tags/}"
             echo "ref=$GITHUB_REF" >> "$GITHUB_OUTPUT"
           fi
-          SAFE_NAME=$(echo "$RAW_TAG" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/^-//;s/-$//')
+          # Het voorloopnummer in de tag (1-onderzoek-…, 2-onderzoek-…) is er alleen
+          # om de releaselijst op GitHub op volgorde te houden. Het hoort niet in de
+          # hostname, anders verandert de URL van een onderzoek zodra de nummering
+          # schuift. Strip het dus bij het bepalen van de deployment-naam.
+          SAFE_NAME=$(echo "$RAW_TAG" | tr '[:upper:]' '[:lower:]' | sed 's/^[0-9][0-9]*-//' | sed 's/[^a-z0-9-]/-/g' | sed 's/^-//;s/-$//')
           echo "name=$SAFE_NAME" >> "$GITHUB_OUTPUT"
 
   # Bouw per architectuur op een runner van diezelfde architectuur (geen QEMU:
@@ -116,7 +125,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-    needs: build
+    needs:
+      - tag
+      - build
     outputs:
       image: ${{ steps.image.outputs.ref }}
     steps:
@@ -148,6 +159,11 @@ jobs:
           tags: |
             type=ref,event=tag
             type=sha,format=short
+            # Bij workflow_dispatch levert `type=ref,event=tag` niets op en wijst
+            # `type=sha` naar de branch waarop je de workflow start, niet naar de
+            # uitgerolde tag. Twee tags achter elkaar handmatig uitrollen schreef
+            # dan hetzelfde image over. Deze tag volgt de release zelf.
+            type=raw,value=release-${{ needs.tag.outputs.name }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
@@ -156,13 +172,15 @@ jobs:
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf "${REGISTRY}/${IMAGE_NAME}@sha256:%s " *)
 
+      # Rol de `release-…`-tag uit: die volgt de release zelf, bij een tag-push én
+      # bij workflow_dispatch (zie de metadata hierboven).
       - name: Inspect image
         id: image
         run: |
           echo "ref=${REGISTRY}/${IMAGE_NAME}:${VERSION}" >> "$GITHUB_OUTPUT"
           docker buildx imagetools inspect "${REGISTRY}/${IMAGE_NAME}:${VERSION}"
         env:
-          VERSION: ${{ steps.meta.outputs.version }}
+          VERSION: release-${{ needs.tag.outputs.name }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -185,3 +203,8 @@ jobs:
           component: proef
           image: ${{ needs.merge.outputs.image }}
           wait-for-ready: true
+          # Oudere releases draaien niet op nginx maar op een Python-image met de
+          # host-service erin. Dat image is een orde van grootte groter, waardoor
+          # het uitrollen niet binnen de standaard 300s klaar is.
+          task-timeout: 900
+          wait-timeout: 600

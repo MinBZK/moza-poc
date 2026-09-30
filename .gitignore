@@ -3,10 +3,10 @@ _site/
 _test_build/
 .astro/
 storybook-static/
-style-dictionary/node_modules/
+style-dictionary/node_modules
 
 # Node
-node_modules/
+node_modules
 
 # Secrets
 .env
@@ -33,3 +33,11 @@ style-dictionary/node_modules/*
 .vscode/*
 # Uitzondering: gedeelde workspace-instellingen (Prettier + stylelint fix-on-save)
 !.vscode/settings.json
+# JetBrains IDE
+.idea/
+node_modules
+
+# React
+react-islands/dist
+# Lokale NL Wallet-links, gegenereerd door server/nl-wallet/lokaal-inrichten.sh
+server/nl-wallet/lokaal.json

@@ -10,7 +10,13 @@
 					{% if item.badgeId %}<span class="badge" data-badge-id="{{ item.badgeId }}"></span>{% endif %}
 					{% if item.unreadBadge %}<span class="badge" data-unread-badge>{{ item.badge }}</span>{% endif %}
 					{% if item.badge and item.unreadBadge != false and not item.badgeId %}<span class="badge{% if item.badgeClass %} {{ item.badgeClass }}{% endif %}">{{ item.badge }}</span>{% endif %}
-					{% if item.label == "Berichtenbox" and item.unreadBadge != false and not item.disabled %}<span class="badge" data-berichtenbox-count="ongelezen">{% if berichtenboxData.aantalOngelezen %}{{ berichtenboxData.aantalOngelezen }}{% endif %}</span>{% endif %}
+					{# Leeg: hoeveel berichten ongelezen zijn hangt af van de persona, en die kiest de bezoeker
+					   pas in de browser. Een getal uit de dataset telt ze allemaal — ook de berichten die bij een
+					   ándere persona horen — en is dus voor niemand juist; bij een persona die zijn berichten uit
+					   het stelsel haalt slaat het helemaal nergens op. Het bolletje sprong daardoor bij elke lading
+					   van het verkeerde getal naar het goede. berichtenbox.js vult het, uit de bewaarde staat en na
+					   het laden uit de bron; `.badge:empty` is onzichtbaar, dus tot die tijd staat er niets. #}
+					{% if item.label == "Berichtenbox" and item.unreadBadge != false and not item.disabled %}<span class="badge" data-berichtenbox-count="ongelezen"></span>{% endif %}
 				</a>
 			</li>
 			{% endfor %}

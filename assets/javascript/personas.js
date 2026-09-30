@@ -10,6 +10,10 @@
  *   data-profiel="achternaam"        → persoon.achternaam
  *   data-profiel="naam"              → persoon.voornaam + " " + persoon.achternaam
  *   data-profiel="voornaam-bedrijf"  → persoon.voornaam + " " + persoon.achternaam + " van " + bedrijf.handelsnaam
+ *
+ * Na inloggen met NL Wallet (nl-wallet-inloggen.js) komen voornaam en achternaam
+ * uit sessionStorage "inlog:persoon" in plaats van uit de persona: de persona is het
+ * bedrijf, de wallet zegt wie er inlogt. Die naam verdwijnt met het tabblad.
  *   data-profiel="handelsnaam"       → bedrijf.handelsnaam
  *   data-profiel="functies"          → bedrijf.functies
  *   data-profiel="website"           → bedrijf.website (als klikbare link)
@@ -72,15 +76,21 @@
 	function slaActiefOp(id) {
 		try {
 			localStorage.setItem(LS_KEY, id);
-		} catch (e) { /* localStorage niet toegankelijk */ }
+		} catch (e) {
+			/* localStorage niet toegankelijk */
+		}
 	}
 
 	function vindPersona(id) {
-		return personas.find(function (p) { return p.id === id; });
+		return personas.find(function (p) {
+			return p.id === id;
+		});
 	}
 
 	function vindPersonaOpLabel(label) {
-		return personas.find(function (p) { return p.label === label; });
+		return personas.find(function (p) {
+			return p.label === label;
+		});
 	}
 
 	function urlLabel(persona) {
@@ -107,38 +117,201 @@
 			if (persona) return persona;
 		}
 		// 3. Fallback: de persona die als actief is gemarkeerd in de data.
-		return personas.find(function (p) { return p.actief; }) || personas[0];
+		return (
+			personas.find(function (p) {
+				return p.actief;
+			}) || personas[0]
+		);
+	}
+
+	// --- Persoonsgebonden opslag ---------------------------------------------------------------
+
+	// Tussen persona's bestaat geen verband: het zijn andere mensen bij andere bedrijven, met andere
+	// post en andere keuzes. Wat de een bewaarde, gearchiveerd of weggeklikt heeft, hoort de ander
+	// niet te zien. Vandaar dat de opslag bij een wisseling leeggaat.
+	//
+	// Alleen wat bij een persona hóórt. Vlaggen (`feature:`) en instellingen (`setting:`) zijn
+	// gereedschap van wie het prototype bekijkt, geen gegevens van een bedrijf, en blijven staan.
+	// `berichtenbox-keten` staat erbij als opruimwerk: die sleutel wordt niet meer geschreven, maar
+	// staat nog in browsers van vóór die wijziging.
+	var VAN_DE_PERSONA = [/^berichtenbox$/, /^berichtenbox-keten$/, /^hidden:/, /^read:/, /^favorite:/, /^dismissed:/, /^unread:count$/];
+	var HERKOMST_KEY = "persona:gegevens-van";
+
+	function hoortBijEenPersona(sleutel) {
+		return VAN_DE_PERSONA.some(function (patroon) {
+			return patroon.test(sleutel);
+		});
+	}
+
+	/**
+	 * Wist de opgeslagen gegevens als ze bij een andere persona horen. Draait bij elke paginalading,
+	 * dus het werkt ook bij `?persona=` — die schrijft niets op en zou anders langs een hook op de
+	 * wisselaar heen glippen.
+	 */
+	function ruimOpBijWisseling(actiefId) {
+		var vorige;
+		try {
+			vorige = localStorage.getItem(HERKOMST_KEY);
+		} catch (e) {
+			// Zonder opslag valt niet vast te stellen óf er gewisseld is. De opgeslagen gegevens
+			// zijn er dan ook niet, maar het cookie kan er wél staan — en dat is het enige dat
+			// andermans document oplevert. Dus dat gaat weg, en verder valt er niets op te ruimen.
+		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+		// `/api/v1/berichten` is waar `zetOntvangerCookie` in berichtenbox-keten.js hem zet, `/` is
+		// waar zittingen van vóór die versmalling hem hebben staan. De eerste regel doet niets als
+		// deze zitting nog geen ronde draaide; de tweede doet niets zodra die ronde wél liep, want
+		// dan heeft zetOntvangerCookie de `/`-variant zelf al opgeruimd.
+		try {
+			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+		} catch (e) {
+			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
+			// vorige, en dat hoort zichtbaar te zijn.
+			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
+		}
+			return;
+		}
+
+		// Zelfde persona als de vorige lading: niets gewisseld, en het cookie is van wie er nu zit.
+		// Hier niet wissen — dit is het gewone geval bij elke paginalading, en een tweede tabblad
+		// van dezelfde persona zou zijn bijlagen kwijtraken.
+		if (vorige === actiefId) return;
+
+		// Er is gewisseld, of we weten niet van wie de gegevens zijn. Het cookie gaat als eerste
+		// weg, vóór de return hieronder en vóór de sweep: bij een wissel naar een persona zonder
+		// stelsel draait er geen ophaalronde meer die het overschrijft, dus is dit de enige plek.
+		// En het mag niet vervallen doordat het opruimen van localStorage eerder struikelt.
+		// Twee keer, want een cookie is alleen te wissen op het pad waarop het gezet is:
+		// `/api/v1/berichten` is waar `zetOntvangerCookie` in berichtenbox-keten.js hem zet, `/` is
+		// waar zittingen van vóór die versmalling hem hebben staan. De eerste regel doet niets als
+		// deze zitting nog geen ronde draaide; de tweede doet niets zodra die ronde wél liep, want
+		// dan heeft zetOntvangerCookie de `/`-variant zelf al opgeruimd.
+		try {
+			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
+			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+		} catch (e) {
+			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
+			// vorige, en dat hoort zichtbaar te zijn.
+			console.error("[Personas] De ontvanger van de vorige persona is niet uit het cookie te wissen.", e);
+		}
+
+		// Nog geen merk, en niemand koos een persona: dan is er geen vórige geweest die deze
+		// gegevens achterliet — ze zijn van wie er nu actief is, want dat is de standaard. Wissen
+		// zou hier het archief en de gelezen-markeringen van een bestaande bezoeker weggooien op
+		// het moment dat hij zijn pagina ververst, zonder een woord erover: de melding hieronder
+		// gaat immers alleen af als er een vorige wás.
+		//
+		// Wél gekozen — via ?persona= of het Flags-paneel — dan is dat een wissel als elke andere
+		// en gaan de gegevens van wie er hiervoor zat gewoon weg. Anders draagt het archief van de
+		// een na één gedeelde link ineens de naam van de ander.
+		if (vorige === null && !personaUitUrl() && !leesActiefId()) {
+			try {
+				localStorage.setItem(HERKOMST_KEY, actiefId);
+				return;
+			} catch (e) {
+				// Komt het merk er niet, dan valt élke volgende wissel weer in deze tak en wordt er
+				// nooit meer opgeruimd. Dan liever alsnog wissen: de guard hoort de veilige kant op
+				// te falen.
+				console.error("[Personas] Kon niet vastleggen van wie de opgeslagen gegevens zijn; toch maar opruimen.", e);
+			}
+		}
+
+		try {
+			var teWissen = [];
+			for (var i = 0; i < localStorage.length; i++) {
+				var sleutel = localStorage.key(i);
+				if (sleutel && hoortBijEenPersona(sleutel)) teWissen.push(sleutel);
+			}
+			teWissen.forEach(function (sleutel) {
+				localStorage.removeItem(sleutel);
+			});
+
+			// De gesimuleerde bronuitval hoort bij deze zitting én bij deze persona.
+			try {
+				sessionStorage.removeItem("berichtenbox-bron-uitval");
+			} catch (e) {
+				/* geen sessionStorage */
+			}
+
+			localStorage.setItem(HERKOMST_KEY, actiefId);
+
+			if (vorige) {
+				console.info("[Personas] Gewisseld van '" + vorige + "' naar '" + actiefId + "'; " + teWissen.length + " opgeslagen gegeven(s) gewist.");
+			}
+		} catch (e) {
+			// Blijft er iets staan, dan ziet de volgende persona gegevens die niet van hem zijn.
+			console.error("[Personas] Opgeslagen gegevens van de vorige persona niet te wissen.", e);
+		}
+	}
+
+	// Voornaam en achternaam uit een NL Wallet-inlog, of null. Alleen twee strings;
+	// wat er verder in sessionStorage staat vertrouwen we niet.
+	function ingelogdePersoon() {
+		try {
+			var inlog = JSON.parse(sessionStorage.getItem("inlog:persoon"));
+			if (inlog && typeof inlog.voornaam === "string" && typeof inlog.achternaam === "string") {
+				return { voornaam: inlog.voornaam, achternaam: inlog.achternaam };
+			}
+		} catch (e) {
+			/* geen sessionStorage of onleesbare waarde */
+		}
+		return null;
 	}
 
 	function waarde(persona, sleutel) {
-		var p = persona.persoon;
+		var p = ingelogdePersoon() || persona.persoon;
 		var b = persona.bedrijf;
 		switch (sleutel) {
-			case "voornaam": return p.voornaam;
-			case "achternaam": return p.achternaam;
-			case "naam": return p.voornaam + " " + p.achternaam;
-			case "voornaam-bedrijf": return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
-			case "handelsnaam": return b.handelsnaam;
-			case "functies": return b.functies;
-			case "website": return b.website;
-			case "kvkNummer": return b.kvkNummer;
-			case "vestigingsnummer": return b.vestigingsnummer;
-			case "rsinNummer": return b.rsinNummer;
-			case "btwNummer": return b.btwNummer;
-			case "omzetbelastingnummer": return b.omzetbelastingnummer;
-			case "loonheffingennummer": return b.loonheffingennummer;
-			case "startdatum": return b.startdatum;
-			case "rechtsvorm": return b.rechtsvorm;
-			case "iban": return b.iban;
-			case "werkzamePersonenFulltime": return b.werkzamePersonenFulltime;
-			case "werkzamePersonenParttime": return b.werkzamePersonenParttime;
-			case "vestigingsadres": return b.vestigingsadres;
-			case "vestigingsadresVolledig": return b.vestigingsadresVolledig;
-			case "postadres": return b.postadres;
-			case "gemeente": return b.gemeente;
-			case "branche": return b.branche;
-			case "rol": return b.rol;
-			default: return "";
+			case "voornaam":
+				return p.voornaam;
+			case "achternaam":
+				return p.achternaam;
+			case "naam":
+				return p.voornaam + " " + p.achternaam;
+			case "voornaam-bedrijf":
+				return p.voornaam + " " + p.achternaam + " van " + b.handelsnaam;
+			case "handelsnaam":
+				return b.handelsnaam;
+			case "functies":
+				return b.functies;
+			case "website":
+				return b.website;
+			case "kvkNummer":
+				return b.kvkNummer;
+			case "vestigingsnummer":
+				return b.vestigingsnummer;
+			case "rsinNummer":
+				return b.rsinNummer;
+			case "btwNummer":
+				return b.btwNummer;
+			case "omzetbelastingnummer":
+				return b.omzetbelastingnummer;
+			case "loonheffingennummer":
+				return b.loonheffingennummer;
+			case "startdatum":
+				return b.startdatum;
+			case "rechtsvorm":
+				return b.rechtsvorm;
+			case "iban":
+				return b.iban;
+			case "werkzamePersonenFulltime":
+				return b.werkzamePersonenFulltime;
+			case "werkzamePersonenParttime":
+				return b.werkzamePersonenParttime;
+			case "vestigingsadres":
+				return b.vestigingsadres;
+			case "vestigingsadresVolledig":
+				return b.vestigingsadresVolledig;
+			case "postadres":
+				return b.postadres;
+			case "gemeente":
+				return b.gemeente;
+			case "branche":
+				return b.branche;
+			case "rol":
+				return b.rol;
+			default:
+				return "";
 		}
 	}
 
@@ -296,18 +469,22 @@
 					break;
 				case "vestigingen":
 					items.forEach(function (item) {
-						container.appendChild(maakLijstItemMetDl(item.type, [
-							["Vestigingsnummer", item.nummer],
-							["Adres", item.adres]
-						]));
+						container.appendChild(
+							maakLijstItemMetDl(item.type, [
+								["Vestigingsnummer", item.nummer],
+								["Adres", item.adres],
+							])
+						);
 					});
 					break;
 				case "ubo":
 					items.forEach(function (item) {
-						container.appendChild(maakLijstItemMetDl(item.naam, [
-							["Aard van belang", item.aardVanBelang],
-							["Grootte van belang", item.groottevanBelang]
-						]));
+						container.appendChild(
+							maakLijstItemMetDl(item.naam, [
+								["Aard van belang", item.aardVanBelang],
+								["Grootte van belang", item.groottevanBelang],
+							])
+						);
 					});
 					break;
 			}
@@ -343,6 +520,31 @@
 	}
 
 	// Bouw één keuze-item (radio) voor een persona.
+	/**
+	 * Waar de bezoeker na een persona-wissel terechtkomt.
+	 *
+	 * Meestal: dezelfde pagina, met de nieuwe persona erin. Maar niet binnen de berichtenbox — daar
+	 * hoort elke persona zijn eigen inbox te krijgen. Een bericht is van één persona: blijf je op de
+	 * detailpagina staan, dan zoekt de nieuwe persona een bericht dat niet van hem is, en bij een
+	 * persona die zijn berichten uit het stelsel haalt bestaat die pagina niet eens. Ook het archief
+	 * en de prullenbak tonen dan andermans wegzetsel, en een ?pagina= wijst naar een lijst met een
+	 * andere lengte.
+	 *
+	 * De inbox van dit portaal, dus: alles ná /berichtenbox/ valt weg. Dat werkt ook voor
+	 * /mijn-belastingdienst/ en voor de belang- en mobu-varianten, die elk hun eigen basis hebben.
+	 */
+	function naWisselNaar(persona) {
+		var params = new URLSearchParams(location.search);
+		params.set("persona", urlLabel(persona));
+
+		var merk = "/berichtenbox/";
+		var plek = location.pathname.indexOf(merk);
+		if (plek === -1) return location.pathname + "?" + params.toString();
+
+		// Alleen de persona meenemen: ?pagina= en filters gaan over de lijst die we net verlaten.
+		return location.pathname.slice(0, plek + merk.length) + "?persona=" + encodeURIComponent(urlLabel(persona));
+	}
+
 	function maakPersonaItem(persona, i, actief) {
 		var li = document.createElement("li");
 		var label = document.createElement("label");
@@ -353,12 +555,10 @@
 		radio.checked = persona.id === actief.id;
 		radio.addEventListener("change", function () {
 			slaActiefOp(persona.id);
-			var params = new URLSearchParams(location.search);
-			params.set("persona", urlLabel(persona));
-			location.search = params.toString();
+			location.href = naWisselNaar(persona);
 		});
 		label.appendChild(radio);
-		var kiezerLabel = persona.label || ("Persona " + i);
+		var kiezerLabel = persona.label || "Persona " + i;
 		label.appendChild(document.createTextNode(" " + kiezerLabel + ": " + persona.bedrijf.handelsnaam));
 		li.appendChild(label);
 		return li;
@@ -414,6 +614,12 @@
 
 	// Initialisatie.
 	var persona = actievePersona();
+
+	// Eerst opruimen, dan toepassen: alles wat hierna leest — de berichtenbox, de bewaarde
+	// actualiteiten, de ongelezen-teller — hoort de gegevens van déze persona te zien en niet die
+	// van de vorige.
+	ruimOpBijWisseling(persona.id);
+
 	pasToe(persona);
 	bouwKiezer();
 
@@ -433,14 +639,14 @@
 
 	// Publieke API voor debugging.
 	window.Personas = {
-		actief: function () { return actievePersona(); },
+		actief: function () {
+			return actievePersona();
+		},
 		wissel: function (id) {
 			var p = vindPersona(id) || vindPersonaOpLabel(id);
 			if (!p) return;
 			slaActiefOp(p.id);
-			var params = new URLSearchParams(location.search);
-			params.set("persona", urlLabel(p));
-			location.search = params.toString();
+			location.href = naWisselNaar(p);
 		},
 		personas: personas,
 	};

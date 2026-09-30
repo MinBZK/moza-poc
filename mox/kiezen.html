@@ -1,0 +1,218 @@
+---
+permalink: /mox/kiezen.html
+---
+
+<!doctype html>
+<html class="no-js" lang="nl">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+		<meta name="format-detection" content="telephone=no" />
+
+		<title>Kies een organisatie | MijnOverheid Zakelijk</title>
+
+		<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+		<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png" />
+		<link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
+
+		<link rel="preload" as="font" type="font/woff" href="fonts/ROsanswebtextregular.woff2" crossorigin />
+		<link rel="preload" as="font" type="font/woff" href="fonts/ROsanswebtextitalic.woff2" crossorigin />
+		<link rel="preload" as="font" type="font/woff" href="fonts/ROsanswebtextbold.woff2" crossorigin />
+
+		<link rel="stylesheet" href="css/mijnoverheid.css" />
+
+		<script src="js/activate-js.js"></script>
+		<script src="js/prototype-links.js" defer></script>
+		<script src="js/kvk-gegevens.js" defer></script>
+	</head>
+	<body class="moza">
+	<!-- <div id="mo-preload" class="mo-preload">
+			<div class="mo-preload__block">
+				<div class="spinner"></div>
+			</div>
+		</div> -->
+
+	<body class="moza">
+	<body class="moza">
+		<div id="mijnoverheid" class="mo-container">
+			<a class="lo-link lo-link--skip" href="#skip-content">Naar hoofdinhoud</a>
+
+			<header class="mo-header">
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<a class="position-absolute top-0 right-0 mt-2 font-size-16 color-mine-shaft lo-link mo-language-link mr-3" href="{{ '/mox/about/' | url }}" title="" aria-label="English">English</a>
+
+							<a class="mo-header__logo" href="{{ '/mox/kiezen.html' | url }}" title="Ga terug naar de homepagina van MijnOverheid Zakelijk">
+								<div class="ro-banner">
+									<div class="ro-banner__crest" aria-label="Logo Rijksoverheid op blauwe achtergrond" role="img" data-pin-nopin="true"></div>
+								</div>
+								<span class="mo-header__text">MijnOverheid Zakelijk</span>
+							</a>
+							<div class="mo-header__title d-none d-md-block">MijnOverheid Zakelijk</div>
+
+							<nav id="gebruikers-menu" class="mo-user-menu d-none d-sm-block mr-md-3" aria-labelledby="gebruikers-menu-title">
+								<span id="gebruikers-menu-title" class="sr-only">Gebruikersmenu</span>
+
+								<div class="mo-menu__item mo-user-menu__username d-inline-block mr-0 mr-md-6">
+									<span class="lo-button__icon"><i class="lo-icon lo-icon--user lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+									<span class="sr-only">Uw gebruikersnaam:</span>
+									R. Bakker
+								</div>
+
+								<div class="mo-menu__item mo-user-menu__logout d-none d-md-inline-block">
+									<a class="lo-button lo-button--align-right lo-button--with-icon-left" href="{{ '/mox/index.html' | url }}" title="Uitloggen"><span class="lo-button__icon lo-button__icon--left"><i class="lo-icon lo-icon--logout-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span> <span class="lo-button__label">Uitloggen</span></a>
+								</div>
+							</nav>
+						</div>
+					</div>
+				</div>
+			</header>
+
+			<main class="main">
+				<div class="container">
+					<div class="row">
+						<div id="skip-content" class="col px-md-4 col-sm-12 col-md-10 offset-md-1 offset-xl-2 col-xl-8">
+							<h1 class="page__title">Voor welke organisatie wilt u inloggen?</h1>
+
+							<section>
+								<div class="lo-card mb-0">
+									<div class="lo-card__content">
+										<p>U bent bevoegd om te handelen namens meer dan één organisatie. Kies de organisatie waarvoor u zaken wilt doen. U kunt later in de balk bovenaan wisselen.</p>
+
+										<ul class="mox-keuzelijst my-4">
+											{%- for o in moxOrganisaties.organisaties %}
+												<li class="mb-3">
+													<a class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right w-100" href="{{ ('/mox/kvk-gegevens-' + o.slug + '.html') | url }}" title="{{ o.naam }}"><span class="lo-button__label">{{ o.naam }} <span>KVK-nummer {{ o.kvkNummer }} &middot; {{ o.rechtsvorm }}</span></span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--chevron-right-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
+												</li>
+											{%- endfor %}
+										</ul>
+									</div>
+								</div>
+							</section>
+						</div>
+					</div>
+				</div>
+			</main>
+
+			<footer class="mo-footer footer">
+				<div class="container">
+					<div class="row">
+						<div class="col-sm-12 col-lg-12 offset-lg-0 col-xl-10 offset-xl-1">
+							<div class="row">
+								<div class="col-xs col-sm-6 col-md-6 col-lg">
+									<nav aria-labelledby="over-deze-site">
+										<h3 id="over-deze-site" class="footer__list-heading">Over deze site</h3>
+										<ul class="footer__list">
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="{{ '/mox/ik-ben-nieuw.html' | url }}">Wat is MijnOverheid Zakelijk</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Toegankelijkheid</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Sitemap</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="{{ '/mox/about/' | url }}">English</a>
+											</li>
+										</ul>
+									</nav>
+								</div>
+								<div class="col-xs col-sm-6 col-md-6 col-lg">
+									<nav aria-labelledby="gegevensverwerking">
+										<h3 id="gegevensverwerking" class="footer__list-heading">Gegevensverwerking</h3>
+										<ul class="footer__list">
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Veiligheid</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Privacyverklaring</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Wet- en regelgeving</a>
+											</li>
+										</ul>
+									</nav>
+								</div>
+								<div class="col-xs col-sm-6 col-md-6 col-lg">
+									<nav aria-labelledby="service">
+										<h3 id="service" class="footer__list-heading">Service</h3>
+										<ul class="footer__list">
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Mededelingen</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Herken oplichting</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+
+												<a class="lo-link" href="#">Veelgestelde vragen</a>
+											</li>
+
+										</ul>
+									</nav>
+								</div>
+								<div class="col-xs col-sm-6 col-md-6 col-lg">
+									<nav aria-labelledby="partners">
+										<h3 id="partners" class="footer__list-heading">Partners</h3>
+										<ul class="footer__list">
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.overheid.nl/" title="(opent in nieuw venster)">Overheid.nl</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.rijksoverheid.nl" title="(opent in nieuw venster)">Rijksoverheid.nl</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.kvk.nl" title="(opent in nieuw venster)">KVK.nl</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.rvig.nl/mfo-burgers" title="(opent in nieuw venster)">Meldpunt Fouten in Overheidsregistraties</a>
+											</li>
+										</ul>
+									</nav>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</footer>
+		</div>
+
+		<div class="d-none" data-showdown-abbreviations='{"ANW":"Algemene nabestaandenwet","AOW":"Algemene Ouderdomswet","APK":"Algemene Periodieke Keuring","BKR":"Basis Kenteken Register","BRP":"Basisregistratie Personen","DUO":"Dienst Uitvoering Onderwijs","LBIO":"Landelijk Bureau Inning Onderhoudsbijdragen","PGB":"Persoonsgebonden budget","RDW":"Dienst Wegverkeer","SVB":"Sociale Verzekeringsbank","WOZ":"Waardering onroerende zaken","BAG":"Basisregistraties Adressen en Gebouwen"}' data-showdown-asset-urls='{"$mo_style":"https:\/\/static.mijn.overheid.nl\/v1776853121480\/"}' data-showdown-domains='["localhost","mijnoverheid","mijn.overheid"]'></div>
+	</body>
+</html>

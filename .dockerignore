@@ -1,5 +1,5 @@
-node_modules/
-style-dictionary/node_modules/
+node_modules
+style-dictionary/node_modules
 _site/
 storybook-static/
 .git/

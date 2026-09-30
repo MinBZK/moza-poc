@@ -11,7 +11,7 @@
 		<li>
 			<a href="{{ tabsBasis | url }}#hoofd-inhoud"{% if isInbox %} aria-current="page"{% endif %}>
 				Inbox
-				<span class="badge" data-berichtenbox-count="inbox">{{ box.berichten | selectattr("isOngelezen") | length }}</span>
+				<span class="badge" data-berichtenbox-count="inbox"></span>
 			</a>
 		</li>
 		<li>

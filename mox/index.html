@@ -39,49 +39,13 @@ permalink: /mox/index.html
 				<div class="container">
 					<div class="row">
 						<div class="col px-md-4 col-sm-12 col-md-10 offset-md-1 offset-xl-2 col-xl-8">
-							<div id="mo-language-link-001-vroot" data-vue-el='{"is":"mo-language-link","data":{"props":{"url":"\/about-mijnoverheid\/","label":"English\n","ariaLabel":"English\n","isLandingPage":true},"attrs":{"id":"mo-language-link-001"}}}'></div>
+							<a class="position-absolute top-0 right-0 mt-2 font-size-16 color-mine-shaft lo-link mo-language-link mo-language-link--is-landing-page font-bold mr-4" href="{{ '/mox/about/' | url }}" title="" aria-label="English">English</a>
 
 							<a class="mo-header__logo" href="/" title="Ga terug naar de homepagina van MijnOverheid">
 								<div class="ro-banner">
 									<div class="ro-banner__crest" aria-label="Logo Rijksoverheid op blauwe achtergrond" role="img" data-pin-nopin="true"></div>
 								</div>
 							</a>
-							<ul class="mobu-moza-tabs">
-								<li>
-									<a href="/mox/index.html">Privé</a>
-								</li>
-								<li>
-									<span aria-current="page">Zakelijk</span>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-
-				<div class="container mo-carousel">
-					<div class="row">
-						<div class="col-12 offset-0 col-sm-10 offset-sm-1 col-lg-6 offset-lg-3" aria-live="assertive">
-							<div id="mo-mededelingen-carousel" class="my-3 my-sm-5" data-vue-el='{"is":"mo-carousel","data":{"attrs":{"id":"mo-mededelingen-carousel"},"props":{"externalData":[{"id":"019ea4d0-d424-11f0-ab1d-0050560141da","level":"info","title":"Laat weten hoe u post van de Belastingdienst graag ontvangt","date":"08-12-2025","message":"Vanaf nu kunt u ons laten weten of u post van de Belastingdienst digitaal wilt ontvangen. Dit doet u via uw Instellingen - Organisaties Berichtenbox.\r\n\r\n**Kiest u voor digitaal?**  \r\nDe Belastingdienst werkt aan de overstap om post alleen digitaal te kunnen versturen. Die overstap kost tijd. Dat betekent dat u sommige post al digitaal krijgt en andere post ook nog op papier. Lees meer op: [belastingdienst.nl\/digitalepost](https:\/\/belastingdienst.nl\/digitalepost)","readmore_url":"\/mededelingen?category=nieuws"}],"translations":{"readMore":"Lees meer\n","previousLabel":"Vorige melding\n","nextLabel":"Volgende melding\n","selectSlide":"Selecteer melding\n","alertInfo":"Nieuw\n","alertWarning":"Onderhoud\n","alertError":"Storing\n","alertClose":"Sluit deze melding\n"}}},"children":[]}'>
-								<div class="row">
-									<div class="col">
-										<div id="lo-alert-001-vroot">
-											<div id="lo-alert-001" class="lo-alert lo-alert--info shadow">
-												<div class="lo-alert__prefix">
-													<i class="lo-icon lo-icon--info lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only">Ter informatie</span></i>
-												</div>
-												<div class="lo-alert__main">
-													<div class="lo-alert__content">
-														<h5>12-02-2026 &nbsp;|&nbsp; Belastingdienst gebruikt een nieuw rekeningnummer</h5>
-														<p>De Belastingdienst wijzigt het rekeningnummer voor betalingen. Controleer het nieuwe rekeningnummer voordat u een betaling doet, zodat uw geld niet op een verkeerde rekening terechtkomt.</p>
-														…
-														<a class="lo-link" href="#">Lees meer</a>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -90,7 +54,7 @@ permalink: /mox/index.html
 					<h1 class="jumbotron__title">MijnOverheid Zakelijk</h1>
 
 					<div class="jumbotron__intro">
-						Zakelijke post van de overheid digitaal ontvangen
+						Makkelijk zakendoen met de overheid
 						<br />
 						Uw zakelijke gegevens op één plek
 					</div>
@@ -104,8 +68,10 @@ permalink: /mox/index.html
 							</div>
 						</div>
 
+						<a class="lo-button-digid" href="{{ '/inloggen/digid/zakelijk/' | url }}?vervolg={{ '/mox/kiezen.html' | url }}" title="Inloggen met DigiD"><span class="lo-button-digid__icon"><i class="lo-icon lo-icon--digid-logo lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span> <span class="lo-digid-button__label">Inloggen met DigiD</span></a>
+
 						<div class="mt-5 mb-6">
-							<a id="button-003" class="lo-button lo-button--ghost shadow" href="/inloggen/zakelijk/" title="Inloggen bij MijnOverheid Zakelijk"><span class="lo-button__label">Inloggen bij MijnOverheid Zakelijk</span></a>
+							<a id="button-003" class="lo-button lo-button--ghost shadow" href="{{ '/mox/ik-ben-nieuw.html' | url }}" title="Ik ben nieuw"><span class="lo-button__label">Ik ben nieuw</span></a>
 						</div>
 					</nav>
 				</div>
@@ -120,71 +86,55 @@ permalink: /mox/index.html
 									<div class="lo-card__content">
 										<h1>Wat kunt u met MijnOverheid Zakelijk?</h1>
 
-										<div class="row">
-											<div class="col-12 col-sm-6 pr-3">
-												<div class="d-flex align-items-start flex-column min-h-100">
-													<hr class="mt-4 w-100" />
+										<hr class="mt-4 w-100" />
 
-													<h2 class="mb-3">Berichtenbox</h2>
+										<h2 class="mb-3">Bekijk uw KVK gegevens</h2>
 
-													<p class="intro w-100">De Berichtenbox is de digitale brievenbus van uw organisatie voor post van de overheid. Bijvoorbeeld post over:</p>
+										<p>MijnOverheid Zakelijk toont de KVK gegevens van uw organisatie. Denk aan uw KVK-nummer, de rechtsvorm, het vestigingsadres en wie er bevoegd zijn om namens de organisatie te handelen.</p>
 
-													<div class="my-3">
-														<ul>
-															<li>Btw-aangifte</li>
-															<li>Loonheffingen</li>
-															<li>Vergunningen</li>
-														</ul>
-													</div>
+										<hr class="mt-4 mb-2 w-100" />
+									</div>
+								</div>
 
-													<a id="button-008" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right mt-auto" href="#" title="Lees meer over de Berichtenbox"><span class="lo-button__label">Lees meer over de Berichtenbox</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--chevron-right-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
+								<div class="lo-card">
+									<div class="lo-card__content">
+										<h2>Over MijnOverheid Zakelijk</h2>
 
-													<hr class="mt-4 w-100 mb-2 d-none d-sm-block" />
-												</div>
-											</div>
+										<p>Bij MijnOverheid Zakelijk staan ondernemers centraal. Elk uur minder aan gedoe, is een uur meer ondernemen. We zorgen voor overzicht en makkelijk zakendoen. Met elkaar bouwen we zo aan nieuwe digitale snelwegen.</p>
 
-											<div class="col-12 col-sm-6 pr-3">
-												<div class="d-flex align-items-start flex-column min-h-100">
-													<hr class="mt-4 w-100" />
-
-													<h2 class="mb-3">Bedrijfsgegevens</h2>
-
-													<p class="intro w-100">De gegevens van uw organisatie vindt u op één plek. Bijvoorbeeld:</p>
-
-													<div class="my-3">
-														<ul>
-															<li>Inschrijving bij de KVK</li>
-															<li>Vergunningen</li>
-															<li>Lopende subsidies</li>
-														</ul>
-													</div>
-
-													<a id="button-009" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right mt-auto" href="#" title="Lees meer over uw bedrijfsgegevens"><span class="lo-button__label">Lees meer over uw bedrijfsgegevens</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--chevron-right-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
-
-													<hr class="mt-4 mb-2 w-100" />
-												</div>
-											</div>
-										</div>
+										<a id="button-009" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right" href="https://mijnoverheidzakelijk.nl/" target="_blank" rel="noopener noreferrer" title="(opent in nieuw venster)"><span class="lo-button__label">Lees meer op mijnoverheidzakelijk.nl</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--external-link-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
 									</div>
 								</div>
 
 								<div class="lo-card mb-0">
-									<div class="lo-card__content">
-										<h2>Neem contact met ons op</h2>
-
-										<div class="my-3 lo-table">
-											<div class="media border-bottom">
-												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/phone-zakelijk.svg" alt="" />
-												<div class="media-body pl-3 py-2 lo-table__cell">
-													<h3 class="intro color-lochmara mt-1">Telefoon</h3>
-													<p class="mt-0">+31 88 123 6500</p>
+									<div class="lo-card__pre-content">
+										<div class="row no-gutters">
+											<div class="col-12 col-sm-6">
+												<div class="lo-card mb-0 shadow-none">
+													<div class="lo-card__pre-content">
+														<div class="image--center-crop">
+															<img src="images/kvk-inloggen.svg" alt="" />
+														</div>
+													</div>
 												</div>
 											</div>
-											<div class="media border-bottom">
-												<img class="media-figure pl-0 py-2" src="images/icons/dashboard/form-zakelijk.svg" alt="" />
-												<div class="media-body pl-3 py-2 lo-table__cell">
-													<h3 class="intro color-lochmara mt-1">Contactformulier</h3>
-													<p class="mt-0">Heeft u een vraag, klacht of suggestie? Gebruik het <a href="#">contactformulier</a></p>
+
+											<div class="col-12 col-sm-6">
+												<div class="lo-card mb-0 shadow-none ml-1">
+													<div class="lo-card__pre-content">
+														<div class="py-4 px-3 py-sm-3 px-sm-4 py-lg-7 px-lg-6">
+															<h2 class="mb-4">Inloggen bij Mijn KVK</h2>
+
+															<ul>
+																<li>bekijk of wijzig gegevens van uw organisatie</li>
+																<li>bestel producten zoals uittreksels, jaarrekeningen en andere producten uit het Handelsregister</li>
+																<li>deponeer jaarrekening</li>
+																<li>schrijf een nieuwe eenmanszaak, vennootschap onder firma, commanditaire vennootschap of maatschap in</li>
+															</ul>
+
+															<a id="button-010" class="lo-button lo-button--align-left lo-button--secondary lo-button--with-icon-right mt-4" href="https://www.kvk.nl/inloggen/" target="_blank" rel="noopener noreferrer" title="(opent in nieuw venster)"><span class="lo-button__label">Inloggen bij Mijn KVK</span> <span class="lo-button__icon lo-button__icon--right"><i class="lo-icon lo-icon--external-link-blue lo-icon--bg- lo-icon--scale- lo-icon--size-"><span class="sr-only"></span></i></span></a>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -208,7 +158,7 @@ permalink: /mox/index.html
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">
 												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
 
-												<a class="lo-link" href="#">Wat is MijnOverheid</a>
+												<a class="lo-link" href="{{ '/mox/ik-ben-nieuw.html' | url }}">Wat is MijnOverheid Zakelijk</a>
 											</li>
 
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">
@@ -226,7 +176,7 @@ permalink: /mox/index.html
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">
 												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
 
-												<a class="lo-link" href="#">English</a>
+												<a class="lo-link" href="{{ '/mox/about/' | url }}">English</a>
 											</li>
 										</ul>
 									</nav>
@@ -277,17 +227,6 @@ permalink: /mox/index.html
 												<a class="lo-link" href="#">Veelgestelde vragen</a>
 											</li>
 
-											<li class="footer__list-item d-flex mb-1 align-items-baseline">
-												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
-
-												<a class="lo-link" href="#">Contact</a>
-											</li>
-
-											<li class="footer__list-item d-flex mb-1 align-items-baseline">
-												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
-
-												<a class="lo-link" href="#">Klachtafhandeling</a>
-											</li>
 										</ul>
 									</nav>
 								</div>
@@ -296,12 +235,6 @@ permalink: /mox/index.html
 										<h3 id="partners" class="footer__list-heading">Partners</h3>
 										<ul class="footer__list">
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">
-												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--chevron-right-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
-
-												<a class="lo-link" href="#">Aangesloten organisaties</a>
-											</li>
-
-											<li class="footer__list-item d-flex mb-1 align-items-baseline">
 												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
 												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.overheid.nl/" title="(opent in nieuw venster)">Overheid.nl</a>
 											</li>
@@ -309,6 +242,11 @@ permalink: /mox/index.html
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">
 												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
 												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.rijksoverheid.nl" title="(opent in nieuw venster)">Rijksoverheid.nl</a>
+											</li>
+
+											<li class="footer__list-item d-flex mb-1 align-items-baseline">
+												<span class="footer__icon flex-shrink-0 mr-1"><i class="lo-icon lo-icon--external-link-white lo-icon--bg- lo-icon--scale- lo-icon--size-" aria-hidden="true"></i></span>
+												<a class="lo-link mo-link--external" target="_blank" rel="noopener noreferrer" href="https://www.kvk.nl" title="(opent in nieuw venster)">KVK.nl</a>
 											</li>
 
 											<li class="footer__list-item d-flex mb-1 align-items-baseline">

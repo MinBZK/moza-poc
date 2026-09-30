@@ -86,11 +86,12 @@ header {
 		display: flex;
 		gap: var(--toepassing-space-layout-md);
 	}
-	/* Toon fallback-naam als accountwisselaar verborgen is, anders verbergen */
+	/* Toon fallback-naam als accountwisselaar verborgen is, anders verbergen. Een fallback die zelf
+	   hidden is (na inloggen met NL Wallet, zie nl-wallet-portaal.js) blijft verborgen. */
 	.account-switcher-fallback {
 		display: none;
 	}
-	.account-switcher[hidden] ~ .account-switcher-fallback {
+	.account-switcher[hidden] ~ .account-switcher-fallback:not([hidden]) {
 		display: inline-flex;
 	}
 }
@@ -1284,6 +1285,7 @@ caption {
 	background: var(--toepassing-color-background-subtle-2);
 	border: var(--toepassing-border-subtle);
 	border-radius: var(--toepassing-border-radius-md);
+	flex-wrap: wrap;
 	padding: var(--toepassing-space-padding-xs) var(--toepassing-space-padding-sm);
 	.icon-button {
 		border-radius: var(--toepassing-border-radius-md);
@@ -1292,6 +1294,9 @@ caption {
 		&:hover,
 		&:focus-visible {
 			background: var(--toepassing-color-interactive-alternate-hover-background) !important;
+		}
+		svg {
+			flex: none;
 		}
 	}
 }
@@ -1371,21 +1376,24 @@ caption {
 .feedback-info {
 	background: var(--toepassing-color-feedback-info-subtle);
 	border-color: var(--toepassing-color-feedback-info-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-info-icon);
 	}
 }
 .feedback-success {
 	background: var(--toepassing-color-feedback-success-subtle);
 	border-color: var(--toepassing-color-feedback-success-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-success-icon);
 	}
 }
 .feedback-warning {
 	background: var(--toepassing-color-feedback-warning-subtle);
 	border-color: var(--toepassing-color-feedback-warning-border);
-	svg path:not(.icon-color-inverse) {
+	svg path:not(.icon-color-inverse),
+	svg circle:not(.icon-color-inverse) {
 		fill: var(--toepassing-color-feedback-warning-icon);
 	}
 }
@@ -1596,6 +1604,13 @@ button.is-marked {
 }
 
 /* Berichtenbox animatie bij nieuw bericht */
+/* Plaatsvervanger voor een bericht dat niet te renderen is. Geen alarmkleur: het gaat om één
+   ontbrekend bericht, niet om een storing van de hele berichtenbox. */
+.berichtenbox-row.is-unreadable td {
+	color: var(--toepassing-color-text-subtle-2);
+	font-style: italic;
+}
+
 @media (prefers-reduced-motion: no-preference) {
 	.berichtenbox-row.is-new {
 		animation: var(--toepassing-animation-fade-fade-in);
@@ -1666,6 +1681,12 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	gap: var(--toepassing-space-md);
 	margin-block: var(--toepassing-space-md);
 }
+/* Bijlagen dragen hun eigen icoon; een opsommingsteken ernaast is dubbelop. Attribuutselector
+   omdat deze lijst geen eigen klasse heeft — zie [data-berichtenbox-toolbar] hierboven. */
+[data-berichtenbox-attachments-list] {
+	list-style: none;
+	padding-inline-start: 0;
+}
 .berichtenbox-attachments-loading {
 	color: var(--toepassing-color-text-subtle-1);
 	font-style: italic;
@@ -1679,7 +1700,9 @@ th[aria-sort="descending"] .berichtenbox-sort::after {
 	inline-size: 100%;
 	margin-block-start: var(--toepassing-space-margin-sm);
 }
-[data-actie="verwijderen"] svg {
+/* Rood hoort bij weggooien. Staat het bericht al in de prullenbak, dan zet deze knop het juist
+   terug (`data-terugzetten` komt van berichtenbox.js) en is een waarschuwingskleur misleidend. */
+[data-actie="verwijderen"]:not([data-terugzetten]) svg {
 	color: var(--toepassing-color-feedback-error-emphasis);
 }
 
@@ -2745,6 +2768,257 @@ button {
 
 /* Inlog-pagina’s */
 
+/* -- NL WALLET -- */
+
+/* De knoppen van wallet_web staan onzichtbaar op de pagina: nl-wallet-inloggen.js klikt ze aan vanuit
+   de gewone inlogkaart. Alleen het venster met de QR-code is te zien; dat blijft van NL Wallet zelf,
+   zodat het bij elke relying party hetzelfde is. */
+.nl-wallet-onzichtbaar::part(button) {
+	display: none;
+}
+
+/* Titel boven en link onder het venster, in de grijze overlay. Beide vensters van NL Wallet (inloggen en
+   bevoegdheid toevoegen) zien er hetzelfde uit; de titel zegt waar deze QR-code voor is. Kleine donkere
+   labels, zodat de witte tekst leesbaar blijft boven wat er achter de overlay ligt. Het venster heeft
+   z-index 1045 (wallet_web, position: fixed in de shadow DOM); de labels liggen er net boven. */
+.nl-wallet-overlay-titel,
+.nl-wallet-overlay-hint {
+	background: var(--toepassing-color-background-inverse);
+	border-radius: var(--toepassing-border-radius-md);
+	color: var(--toepassing-color-text-inverse);
+	inline-size: fit-content;
+	inset-inline: 0;
+	margin-block: 0;
+	margin-inline: auto;
+	max-inline-size: calc(100% - 2 * var(--toepassing-space-padding-md));
+	padding-block: var(--toepassing-space-padding-xs);
+	padding-inline: var(--toepassing-space-padding-sm);
+	position: fixed;
+	text-align: center;
+	z-index: 1046;
+}
+
+.nl-wallet-overlay-titel {
+	font: var(--toepassing-text-heading-h5);
+	inset-block-start: var(--toepassing-space-padding-xs);
+}
+
+.nl-wallet-overlay-hint {
+	font-size: var(--toepassing-text-size-body-sm);
+	inset-block-end: var(--toepassing-space-padding-xs);
+	p {
+		margin: 0;
+		max-inline-size: none;
+	}
+	a {
+		color: inherit;
+		text-decoration: underline;
+		&:hover,
+		&:focus-visible {
+			color: inherit;
+			text-decoration-thickness: 2px;
+		}
+	}
+}
+
+.nl-wallet-meldingen:not(:has(> :not([hidden]))) {
+	display: none;
+}
+
+/* Toelichting bij inloggen met een wallet, voor presentaties (Shift+P, zie nl-wallet-toelichting.js).
+   Blauw paneel links, naar het voorbeeld van de presentatiemodus van bg.rijks.app; de pagina schuift op.
+   [data-nl-wallet-knoppen] wordt het referentievlak voor het (fixed) venster van NL Wallet, zodat dat
+   rechts van het paneel blijft; pointer-events alleen op het venster zelf. */
+.toelichting-paneel {
+	--toelichting-breedte: max(40vw, 22rem);
+
+	background: var(--toepassing-color-background-inverse);
+	box-shadow: var(--toepassing-box-shadow-default);
+	box-sizing: border-box;
+	color: var(--toepassing-color-text-inverse);
+	display: flex;
+	flex-direction: column;
+	font-family: var(--toepassing-text-font-family-body);
+	inline-size: var(--toelichting-breedte);
+	inset-block: 0;
+	inset-inline-start: 0;
+	max-inline-size: none;
+	padding: var(--toepassing-space-2xl) var(--toepassing-space-2xl) var(--toepassing-space-md);
+	position: fixed;
+	z-index: 1050;
+
+	&[hidden] {
+		display: none;
+	}
+	&:focus {
+		outline: none;
+	}
+	a {
+		color: inherit;
+		text-decoration: underline;
+		&:hover,
+		&:focus-visible,
+		&:active {
+			color: inherit;
+			text-decoration-color: currentColor;
+			text-decoration-thickness: var(--toepassing-border-width-md);
+		}
+		&:focus-visible {
+			box-shadow: none;
+			outline: var(--toepassing-border-width-md) solid currentColor;
+			outline-offset: var(--toepassing-space-3xs);
+		}
+	}
+	dt,
+	dd {
+		color: inherit;
+	}
+	p,
+	li,
+	dd {
+		max-inline-size: none;
+	}
+}
+
+.toelichting-paneel__inhoud {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: var(--toepassing-space-md);
+	min-block-size: 0;
+	overflow: auto;
+}
+
+.toelichting-paneel__label {
+	font-size: var(--toepassing-text-size-body-sm);
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.toelichting-paneel__titel {
+	color: inherit;
+	font-size: var(--toepassing-text-size-title-3xl);
+	font-weight: var(--toepassing-text-font-weight-bold);
+		margin: 0;
+}
+
+.toelichting-paneel__lead {
+	font-size: var(--toepassing-text-size-title-md);
+	margin: 0;
+}
+
+.toelichting-paneel__kop {
+	color: inherit;
+	font-size: var(--toepassing-text-size-title-md);
+	font-weight: var(--toepassing-text-font-weight-bold);
+	margin: var(--toepassing-space-xs) 0 0;
+}
+
+.toelichting-paneel__punten,
+.toelichting-paneel__stappen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-xs);
+	margin: 0;
+	padding-inline-start: var(--toepassing-space-lg);
+	li::marker {
+		color: var(--toepassing-color-icon-inverse);
+	}
+}
+
+.toelichting-paneel__punten {
+	font-size: var(--toepassing-text-size-body-lg);
+}
+
+.toelichting-paneel__attestaties {
+	display: flex;
+	flex-direction: column;
+	gap: var(--toepassing-space-xs);
+	margin: 0;
+	div {
+		border-inline-start: var(--toepassing-border-width-lg) solid var(--toepassing-color-border-inverse);
+		padding-inline-start: var(--toepassing-space-sm);
+	}
+	dt {
+		font-weight: var(--toepassing-text-font-weight-bold);
+	}
+	dd {
+		font-size: var(--toepassing-text-size-body-sm);
+		margin: 0;
+	}
+}
+
+.toelichting-paneel__voet {
+	align-items: center;
+	border-block-start: var(--toepassing-border-width-xs) solid var(--toepassing-color-border-inverse);
+	display: flex;
+	flex: 0 0 auto;
+	gap: var(--toepassing-space-md);
+	margin-block-start: var(--toepassing-space-md);
+	padding-block-start: var(--toepassing-space-sm);
+}
+
+.toelichting-paneel__sluit {
+	align-items: center;
+	background: none;
+	block-size: var(--toepassing-space-2xl);
+	border: var(--toepassing-border-width-md) solid var(--toepassing-color-border-inverse);
+	border-radius: var(--toepassing-border-radius-round);
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font-size: var(--toepassing-text-size-title-md);
+	inline-size: var(--toepassing-space-2xl);
+	justify-content: center;
+	line-height: 1;
+	padding: 0;
+	&:hover {
+		background: var(--toepassing-color-text-inverse);
+		color: var(--toepassing-color-background-inverse);
+	}
+	&:focus-visible {
+		outline: var(--toepassing-border-width-md) solid currentColor;
+		outline-offset: var(--toepassing-space-3xs);
+	}
+}
+
+.toelichting-paneel__hint {
+	font-size: var(--toepassing-text-size-body-xs);
+}
+
+html.toelichting-open {
+	body {
+		padding-inline-start: max(40vw, 22rem);
+	}
+	[data-nl-wallet-knoppen] {
+		inset-block: 0;
+		inset-inline: max(40vw, 22rem) 0;
+		pointer-events: none;
+		position: fixed;
+		transform: translate(0);
+		z-index: 1045;
+	}
+	nl-wallet-button {
+		pointer-events: auto;
+	}
+	.nl-wallet-overlay-titel,
+	.nl-wallet-overlay-hint {
+		inset-inline-start: max(40vw, 22rem);
+		max-inline-size: calc(100% - max(40vw, 22rem) - 2 * var(--toepassing-space-padding-md));
+	}
+}
+
+/* Smal scherm: het paneel ligt over de pagina heen. */
+@media (width <= 64rem) {
+	.toelichting-paneel {
+		--toelichting-breedte: 100vw;
+		padding: var(--toepassing-space-lg) var(--toepassing-space-md) var(--toepassing-space-sm);
+	}
+	html.toelichting-open body {
+		padding-inline-start: 0;
+	}
+}
+
 .page-login {
 	article:first-of-type {
 		container-type: initial;
@@ -2768,6 +3042,11 @@ button {
 			color: var(--rijkshuisstijl-color-hemelblauw-600);
 			text-decoration: underline;
 			text-underline-offset: 2px;
+		}
+		/* Een knop in de vorm van een link houdt de knopstijl, anders staat er blauwe tekst op een blauwe knop. */
+		a.btn-cta {
+			color: var(--toepassing-color-text-inverse);
+			text-decoration: none;
 		}
 	}
 	.login-selection {
@@ -3007,4 +3286,10 @@ body.authorized {
 			border-color: var(--rijkshuisstijl-color-oranje-600);
 		}
 	}
+}
+
+.notificatie {
+	display: grid;
+	gap: 0.5rem;
+	grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
 }

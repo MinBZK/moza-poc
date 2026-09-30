@@ -4,6 +4,9 @@ const { execSync } = require("child_process");
 // Dezelfde module die de browser laadt voor de kaarten van homepage-profiel.js,
 // zodat de detailpagina's en de overzichten dezelfde vraag stellen.
 const assistentVraag = require("./assets/javascript/assistent-vraag.js");
+// Alleen voor de dev-server: zet `/api/v1/` en `/api/demo/` door naar het stelsel, zoals nginx dat
+// in de container doet.
+const { ketenProxy } = require("./server/keten-proxy.js");
 
 module.exports = function (eleventyConfig) {
 	// De openingsvraag voor de digitale assistent bij een subsidie, regeling of
@@ -113,10 +116,17 @@ module.exports = function (eleventyConfig) {
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({
+		// 8080, net als op de andere branches. De lokale proxy voor de
+		// react-islands staat daarnaast op 8081 (zie helpers/pocFetch.ts).
 		port: 8080,
 		headers: {
 			"Cache-Control": "no-store",
 		},
+		// Wat in een container door nginx gaat, gaat hier door deze middleware: `/api/v1/` en
+		// `/api/demo/` naar het Federatief Berichtenstelsel. Zonder dit komt een testaccount van
+		// het stelsel lokaal op een lege berichtenbox uit, omdat die adressen bij de statische
+		// site belanden. Zie server/keten-proxy.js voor de variabelen die het gedrag bepalen.
+		middleware: ketenProxy(),
 	});
 
 	return {

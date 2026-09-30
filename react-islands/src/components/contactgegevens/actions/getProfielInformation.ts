@@ -2,8 +2,8 @@ import { API_URL_PROFIEL_SERVICE } from "../../../config/config";
 import { GetProfielInformationParams, GetProfielInformationResponse } from "./types";
 
 export async function getProfielInformation<T = unknown>(params: GetProfielInformationParams, signal?: AbortSignal): Promise<GetProfielInformationResponse<T>> {
-	// Prefer the local proxy when running in the browser on localhost (port 4040)
-	const proxyPort = 4040;
+	// Prefer the local proxy when running in the browser on localhost (port 8080)
+	const proxyPort = 8080;
 	const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 	const proxyOrigin = isLocalhost ? `${window.location.protocol}//${window.location.hostname}:${proxyPort}` : undefined;
 

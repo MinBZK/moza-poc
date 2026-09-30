@@ -17,6 +17,7 @@ eleventyComputed:
 		<ol>
 			<li><a href="{{ '/moza/' | url }}">Home</a></li>
 			<li><a href="{{ '/moza/berichtenbox/' | url }}">Berichtenbox</a></li>
+			<li data-berichtenbox-map-kruimel>{# Waar dit bericht staat. De status komt uit de bewaarde staat, dus JavaScript zet de naam en de link; hier staat de inbox, want daar staat een bericht zolang niemand het verplaatst heeft. #}<a href="{{ '/moza/berichtenbox/' | url }}">Inbox</a></li>
 			<li aria-current="page">{{ bericht.onderwerp }}</li>
 		</ol>
 	</nav>
@@ -25,6 +26,15 @@ eleventyComputed:
 
 		<section class="berichtenbox-content" data-bericht-id="{{ bericht.id }}" data-afzender-id="{{ bericht.magazijnId }}" data-afzender-naam="{{ bericht.afzender }}"{% if bericht.heeftBijlage %} data-heeft-bijlage="true"{% endif %}>
 			<h1 class="h3">{{ bericht.onderwerp }}</h1>
+
+			<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
+				{% include "icon-feedback-error.njk" %}
+				{% include "icon-feedback-info.njk" %}
+				<div>
+					<p data-berichtenbox-storing-tekst></p>
+				</div>
+			</div>
+
 
 			<p class="berichtenbox-detail-meta">
 				{{ bericht.afzender }} · {{ bericht.datum | datumNL }}
@@ -106,6 +116,9 @@ eleventyComputed:
 				</button>
 				<button class="icon-button" data-actie="verwijderen">
 					{% icon "/assets/icons/icon-weggooien.svg" %}Verwijderen
+				</button>
+				<button class="icon-button" data-actie="voorgoed-verwijderen" hidden aria-expanded="false">
+					{% icon "/assets/icons/icon-weggooien.svg" %}Voorgoed verwijderen
 				</button>
 			</div>
 

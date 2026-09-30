@@ -18,6 +18,12 @@
 	.sbdocs [type="radio"]::before {
 		content: none;
 	}
+	/* Vet in Docs-context: style.css geeft strong het halfvette gewicht van het prototype (500). In het
+	   lettertype van Storybook is dat nauwelijks te onderscheiden van gewone tekst. */
+	.sbdocs strong,
+	.sbdocs b {
+		font-weight: 700;
+	}
 	/* Code: consistente styling in Docs-context */
 	.sbdocs code {
 		background: var(--toepassing-color-background-subtle, #f5f5f5);
@@ -31,6 +37,21 @@
 		background: none;
 		font-size: inherit !important;
 		padding: 0;
+	}
+	/* Takenlijst uit Markdown (- [ ], via remark-gfm): het vakje vervangt het opsommingsteken */
+	/* en een afgebroken regel loopt door onder de tekst, niet onder het vakje. */
+	.sbdocs .contains-task-list {
+		list-style: none;
+		padding-inline-start: 0;
+	}
+	.sbdocs .task-list-item {
+		padding-inline-start: 2.5em;
+		position: relative;
+	}
+	.sbdocs .task-list-item > input {
+		inset-inline-start: 0;
+		margin: 0;
+		position: absolute;
 	}
 	/* Storybook story-containers: hoogte aanpassen aan content */
 	#storybook-root,

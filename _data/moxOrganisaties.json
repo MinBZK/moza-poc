@@ -1,0 +1,28 @@
+{
+	"organisaties": [
+		{
+			"slug": "stichting",
+			"naam": "Stichting De juiste naam",
+			"kvkNummer": "50000004",
+			"handelsnaam": "Stichting De juiste naam",
+			"rechtsvorm": "Eenmanszaak",
+			"functies": "Eigenaar",
+			"sbiCode": "0010 activiteiten code",
+			"telefoonnummer": "0031-0123456789",
+			"email": "mijn@overheid.nl",
+			"website": "https://www.test.org"
+		},
+		{
+			"slug": "vof",
+			"naam": "Bakker en De Wit VOF",
+			"kvkNummer": "50000005",
+			"handelsnaam": "Bakker en De Wit VOF",
+			"rechtsvorm": "Vennootschap onder firma",
+			"functies": "Vennoot",
+			"sbiCode": "6201 activiteiten code",
+			"telefoonnummer": "0031-0123456790",
+			"email": "info@overheid.nl",
+			"website": "https://www.test.nl"
+		}
+	]
+}

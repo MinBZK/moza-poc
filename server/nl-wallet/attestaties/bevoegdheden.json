@@ -1,0 +1,22 @@
+{
+	"ondernemingen": [
+		{
+			"id": "noon",
+			"houders": ["999992004"],
+			"kvk_nummer": "85234567",
+			"handelsnaam": "Koffiezaak Noon",
+			"rechtsvorm": "Eenmanszaak",
+			"functie": "Eigenaar",
+			"bevoegdheid": "Volledig bevoegd"
+		},
+		{
+			"id": "blend",
+			"houders": ["999992004"],
+			"kvk_nummer": "91827364",
+			"handelsnaam": "Koffiebranderij Blend",
+			"rechtsvorm": "Besloten vennootschap",
+			"functie": "Eigenaar",
+			"bevoegdheid": "Volledig bevoegd"
+		}
+	]
+}

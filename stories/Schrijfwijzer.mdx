@@ -4,44 +4,64 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # Schrijfwijzer
 
-Deze schrijfwijzer beschrijft de taal- en stijlafspraken voor alle teksten in het prototype van MijnOverheid Zakelijk.
+Deze schrijfwijzer bevat de afspraken over taal en stijl voor de teksten die we zelf schrijven in het prototype van MijnOverheid Zakelijk, de teksten van de interface, zoals:
+
+- **Knoppen en links**: _“Bewaar”_, _“Vraag stellen”_, _“Vraag aan de digitale assistent”_
+- **Navigatie, paginatitels en koppen**: _“Berichtenbox”_, _“Lopende zaken”_, _“Bedrijfsgegevens”_
+- **Formulieren**: labels, hulpteksten en plaatshouders, zoals _“Waarmee kan ik u helpen?”_
+- **Foutmeldingen**: _“De assistent reageerde te lang niet. Probeer het opnieuw.”_
+- **Bevestigingen en statusmeldingen**: _“Het gesprek staat nu bij uw bewaarde items.”_
+- **Lege staten**: _“Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat.”_
+
+De inhoud die uit andere bronnen komt, valt hier niet onder. Die schrijven we niet zelf en kunnen we niet aanpassen. Denk aan berichten van organisaties in de Berichtenbox, teksten over subsidies en regelgeving, en de antwoorden die de digitale assistent met AI maakt.
 
 ## Aanspreking
 
-- Spreek de gebruiker aan met **“u”** en **“uw”**, nooit met “je” of “jij”.
-- Bij een persoonlijke begroeting mag de voornaam gebruikt worden: _“Welkom Robin Vogel”_.
-- Vermijd het benoemen van geslacht. Gebruik “de ondernemer” of “u” in plaats van “hij”, “zij” of “hij/zij”. Waar een verwijswoord nodig is, gebruik “die” of “diegene”.
+- We spreken de gebruiker aan met **“u”** en **“uw”**, nooit met “je” of “jij”.
+- Bij een persoonlijke begroeting mogen we de **voornaam** gebruiken: _“Welkom Robin Vogel”_.
+- We vermijden het benoemen van geslacht. We gebruiken **“de ondernemer”** of **“u”** in plaats van “hij”, “zij” of “hij/zij”.
+- Waar een verwijswoord nodig is, gebruiken we **“die”** of **“diegene”**.
 
-## Toon en register
+## Schrijfstijl
 
-- **Formeel maar toegankelijk**; professioneel taalgebruik op B1-niveau, geen jargon zonder uitleg.
-- **Actief boven passief**; schrijf “Bekijk uw gegevens” in plaats van “Uw gegevens kunnen bekeken worden”.
-- **Direct en praktisch**; zeg wat de gebruiker kan doen, niet wat het systeem doet. _“Bekijk welke regelingen bij uw bedrijf passen”_ in plaats van _“Het systeem filtert relevante regelingen”_.
-- **Stimulerend, niet alarmerend**; bij lege staten of foutmeldingen: geef aan wat de gebruiker kan doen, niet alleen wat er misgaat.
+- **Formeel maar toegankelijk**: professioneel taalgebruik op B1-niveau, geen jargon zonder uitleg.
+- **Actief boven passief**: we noemen wie iets doet. Een passieve zin verbergt dat, en dan weet de gebruiker niet van wie die iets kan verwachten:
+  - 🚫 Niet: _“Uw aanvraag is ontvangen en wordt binnen 8 weken beoordeeld.”_
+  - ✅ Wel: _“De RVO heeft uw aanvraag ontvangen. U hoort binnen 8 weken of u de subsidie krijgt.”_
+  - 🚫 Niet: _“Wijzigingen moeten door u bij de KVK worden doorgegeven.”_
+  - ✅ Wel: _“Geef wijzigingen door aan de KVK.”_
+- **Direct en praktisch**: we zeggen wat de gebruiker kan doen, niet wat het systeem doet:
+  - 🚫 Niet: _“Het systeem filtert relevante regelingen.”_
+  - ✅ Wel: _“Bekijk welke regelingen bij uw bedrijf passen.”_
+- **Stimulerend, niet alarmerend**: bij lege staten en foutmeldingen geven we aan wat de gebruiker kan doen, niet alleen wat er misgaat:
+  - 🚫 Niet: _“Fout: time-out. Het verzoek is mislukt.”_
+  - ✅ Wel: _“De assistent reageerde te lang niet. Probeer het opnieuw.”_
+  - 🚫 Niet: _“Geen berichten gevonden.”_
+  - ✅ Wel: _“Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat.”_
 
 ## Zinslengte
 
-- Streef naar **8 tot 16 woorden** per zin.
-- Gebruik korte hoofdzinnen. Beperk bijzinnen tot maximaal één per zin.
-- Splits lange zinnen op in twee kortere:
-  - Niet: _“De overheid staat borg voor een deel van uw lening, hierdoor kunt u als mkb’er makkelijker geld lenen bij de bank.”_
-  - Wel: _“De overheid staat borg voor een deel van uw lening. Hierdoor kunt u als mkb’er makkelijker geld lenen bij de bank.”_
+- We streven naar **8 tot 16 woorden** per zin.
+- We gebruiken **korte hoofdzinnen** en beperken bijzinnen tot maximaal één per zin.
+- We splitsen lange zinnen op in **twee kortere**:
+  - 🚫 Niet: _“De overheid staat borg voor een deel van uw lening, hierdoor kunt u als mkb’er makkelijker geld lenen bij de bank.”_
+  - ✅ Wel: _“De overheid staat borg voor een deel van uw lening. Hierdoor kunt u als mkb’er makkelijker geld lenen bij de bank.”_
 
 ## Terminologie
 
-Gebruik overal dezelfde termen voor dezelfde concepten:
+We gebruiken overal dezelfde termen voor dezelfde concepten:
 
 <table>
 	<thead>
 		<tr>
 			<th>Concept</th>
-			<th>Gebruik</th>
-			<th>Niet</th>
+			<th>✅ Gebruik</th>
+			<th>🚫 Niet</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
-			<td>Item opslaan voor later</td>
+			<td>Item bewaren om later terug te zien</td>
 			<td>Bewaar</td>
 			<td>Opslaan, Favoriet, Bladwijzer</td>
 		</tr>
@@ -53,12 +73,12 @@ Gebruik overal dezelfde termen voor dezelfde concepten:
 		<tr>
 			<td>Item doorsturen</td>
 			<td>Deel</td>
-			<td>Verstuur, Doorsturen, Verzend</td>
+			<td>Doorsturen, Verzend</td>
 		</tr>
 		<tr>
 			<td>Digitale post</td>
 			<td>Berichten</td>
-			<td>Post, E-mail, Inbox</td>
+			<td>Post, E-mail, Inbox (behalve als naam van de tab in de Berichtenbox)</td>
 		</tr>
 		<tr>
 			<td>Registratiegegevens</td>
@@ -76,105 +96,140 @@ Gebruik overal dezelfde termen voor dezelfde concepten:
 			<td>Nieuws, Updates, Feed</td>
 		</tr>
 		<tr>
-			<td>Formulier opslaan</td>
+			<td>Gewijzigde gegevens vastleggen</td>
 			<td>Opslaan</td>
 			<td>Bewaar, Verstuur, Bevestig</td>
 		</tr>
 		<tr>
+			<td>Formulier naar een organisatie sturen</td>
+			<td>Verstuur</td>
+			<td>Bewaar, Opslaan, Bevestig, Deel</td>
+		</tr>
+		<tr>
 			<td>Formulier afbreken</td>
-			<td>Annuleren</td>
+			<td>Annuleer</td>
 			<td>Terug, Sluiten, Stoppen</td>
 		</tr>
 	</tbody>
 </table>
 
-**Afkortingen:** schrijf bij eerste vermelding de volledige term met de afkorting tussen haakjes. Daarna mag de afkorting alleen gebruikt worden.
+**Bewaar, Opslaan of Verstuur?** Het zijn drie verschillende handelingen, en de knop zegt welke:
+
+- **Bewaar**: de gebruiker zet een item in de eigen verzameling om het later terug te zien. Het komt terecht bij Bewaarde items. Voorbeelden: een subsidie, een regeling, een gesprek met de digitale assistent.
+- **Opslaan**: de gebruiker legt gewijzigde gegevens vast. Er gaat niets naar een organisatie. Voorbeelden: contactvoorkeuren, berichtgevingen.
+- **Verstuur**: de gebruiker stuurt iets naar een organisatie, die er iets mee gaat doen. Voorbeelden: een aanvraag, een melding, een rapportage.
+
+Veel apps gebruiken “Opslaan” ook voor bewaren, en in het Engels is het allebei “Save”. Het onderscheid is dus een afspraak van ons, geen algemene conventie. Het helpt de gebruiker alleen als dit consistent gebruikt wordt.
+
+**Afkortingen:** bij de eerste vermelding schrijven we de volledige term met de afkorting tussen haakjes. Daarna volstaat de afkorting.
 
 - _“Kleinschaligheidsinvesteringsaftrek (KIA)”_
 - _“Privacywetgeving (AVG)”_
 
-**Persoonsvormen van afkortingen** (mkb, zzp) schrijft u met kleine letters en een typografische apostrof: _mkb’er_, _zzp’er_, _mkb’ers_, _zzp’ers_. Datzelfde geldt voor samenstellingen: _mkb-ondernemer_, _het mkb_. Eigennamen van regelingen behouden hun officiële schrijfwijze (bijvoorbeeld _Borgstelling MKB-kredieten (BMKB)_).
+**Persoonsvormen van afkortingen** (mkb, zzp) schrijven we met kleine letters en een typografische apostrof: _mkb’er_, _zzp’er_, _mkb’ers_, _zzp’ers_. Datzelfde geldt voor samenstellingen: _mkb-ondernemer_, _het mkb_. Eigennamen van regelingen behouden hun officiële schrijfwijze (bijvoorbeeld _Borgstelling MKB-kredieten (BMKB)_).
+
+**KVK en btw** schrijven we zoals de organisaties dat zelf doen: _KVK_ en _KVK-nummer_ in hoofdletters, _btw_ en _btw-nummer_ in kleine letters (met een hoofdletter aan het begin van een zin of label: _Btw-nummer_).
 
 ## Datums en tijden
 
-- Schrijf datums als **dag maandnaam jaar**: _12 februari 2018_.
-- Gebruik de volledige maandnaam, niet afgekort: _februari_, niet _feb_.
-- Bij een datum gevolgd door een beschrijving, gebruik een dubbele punt: _“19 februari 2026: De Stationsweg is afgesloten.”_
+- We schrijven datums als **dag maandnaam jaar**: _12 februari 2018_.
+- We gebruiken de **volledige maandnaam**, niet afgekort: _februari_, niet “feb”.
+- Volgt er een beschrijving op een datum, dan zetten we er een **dubbele punt** tussen: _“19 februari 2026: De Stationsweg is afgesloten.”_
 
 ## Nummers en bedragen
 
 - **Telefoonnummers:** groepeer met spaties: _06 12 34 56 78_.
 - **KVK-nummers:** zonder punten of spaties: _12345678_.
-- **BTW-nummers:** aaneengeschreven met landcode: _NL00012345678_.
+- **Btw-nummers:** aaneengeschreven met landcode: _NL00012345678_.
 - **Bedragen:** euroteken, spatie, getal met punt als duizendtalscheider: _€385.000_.
 
 ## Kopteksten
+
+Als vuistregel heeft elk kopniveau een eigen rol:
 
 - **H1:** het hoofdonderwerp van de pagina, als zelfstandig naamwoord of begroeting. _“Bedrijfsgegevens”_, _“Welkom Robin Vogel”_.
 - **H2:** sectietitel, als zelfstandig naamwoord of -groep. _“Actualiteiten”_, _“Subsidies en financiering”_.
 - **H3:** onderwerpstitel binnen een lijst of sectie. _“WBSO: belastingvoordeel voor innovatie”_.
 - **FAQ-koppen:** als vraag in de eerste persoon of met “u”. _“Hoe vraag ik een subsidie aan via MijnOverheid Zakelijk?”_
 
-Kopteksten bevatten geen punt aan het einde.
+Kopteksten bevatten **geen punt** aan het einde.
 
 ## Microcopy
 
 ### Knopteksten
 
-- Kort en werkwoord-gericht: _“Opslaan”_, _“Annuleren”_, _“Inloggen”_.
-- Actielabels bij content: _“Bewaar”_, _“Deel”_, _“Niet relevant”_.
-- Navigatie: _“Volgende”_, _“Vorige”_, _“Meer Subsidies en financiering”_.
+- **Kort en werkwoord-gericht:** _“Opslaan”_, _“Verstuur”_, _“Annuleer”_, _“Inloggen”_.
+- **Actielabels bij content:** _“Bewaar”_, _“Deel”_, _“Niet relevant voor mij”_.
+- **Navigatie:** _“Volgende”_, _“Vorige”_, _“Meer Subsidies en financiering”_.
 
 ### Lege staten
 
-- Benoem wat er nog niet is en geef een suggestie:
-  - _“U hebt nog geen items bewaard. Gebruik de ‘Bewaar’-optie bij actualiteiten om items hier te verzamelen.”_
+- **We benoemen wat er nog niet is en geven een suggestie:**
+  - _“U hebt nog geen items bewaard. Gebruik de ‘Bewaar’-optie bij Subsidies en financiering, Wetten en regelgeving, en Berichten over uw buurt om items hier te verzamelen.”_
 
 ### Foutmeldingen
 
-- Constructief en handelingsgericht. Benoem wat nodig is om een fout te herstellen, niet wat fout ging:
-  - _“U dient minimaal één optie voor berichtgeving over taken te selecteren.”_
+- **Constructief en handelingsgericht.** We benoemen wat nodig is om een fout te herstellen, niet wat fout ging:
+  - _“Kies minimaal één manier waarop u berichten over taken wilt krijgen.”_
 
 ### Feedback en informatieberichten
 
-- Informatief, niet alarmerend:
+- **Informatief, niet alarmerend:**
   - _“Contactgegevens die u hier aanpast, worden automatisch bijgewerkt bij alle organisaties waarmee u uw gegevens centraal deelt.”_
 
 ## Context en uitleg
 
-- **Leg uit waarom iets relevant is** voor de gebruiker:
+- **We leggen uit waarom iets relevant is** voor de gebruiker:
   - _“Subsidies en financiering waar u mogelijk voor in aanmerking komt op basis van uw branche en rechtsvorm.”_
-- **Geef aan waar actie nodig is** en bij welke organisatie:
+- **We geven aan waar actie nodig is** en bij welke organisatie:
   - _“Neem contact op met de KVK via kvk.nl om uw handelsregistergegevens aan te passen.”_
-- **Maak bronnen en selectiecriteria expliciet:**
+- **We maken bronnen en selectiecriteria expliciet:**
   - _“Deze actualiteiten zijn geselecteerd op basis van uw vestigingsadres, branche en rechtsvorm.”_
 
 ## Links en verwijzingen
 
-- Gebruik **beschrijvende linktekst**, nooit “klik hier” of een kale URL.
-  - Wel: _“Ga naar Contactvoorkeuren om dit in te stellen.”_
-  - Niet: _“Klik hier om uw contactvoorkeuren te wijzigen.”_
-- Externe links zijn herkenbaar via `rel="external"` en worden waar nodig van context voorzien.
+- We gebruiken **beschrijvende linktekst**: de tekst van de link zegt waar die naartoe gaat of wat die doet. Nooit “klik hier”, “meer info”, “lees meer” of een kale URL.
+  - 🚫 Niet: _“Klik hier om uw contactvoorkeuren te wijzigen.”_
+  - ✅ Wel: _“Ga naar Contactvoorkeuren om dit in te stellen.”_
+  - 🚫 Niet: _“Meer info”_ onder een subsidie
+  - ✅ Wel: _“Meer over de WBSO”_
+- **Waarom dit belangrijk is:**
+  - **Niet iedereen klikt.** Wie het toetsenbord gebruikt, een touchscreen of spraakbediening, klikt niet. “Klik hier” klopt voor die mensen niet.
+  - **Schermlezers lezen links los voor.** Veel schermlezergebruikers springen van link naar link, of vragen een lijst op van alle links op de pagina. Dan horen ze alleen de linktekst, zonder de zin eromheen. Een lijst met vijf keer “meer info” zegt niets.
+  - **Spraakbediening gebruikt de zichtbare tekst.** Wie zegt “klik Contactvoorkeuren”, heeft een link nodig die zo heet. Bij drie links met dezelfde tekst weet de software niet welke bedoeld is.
+  - **Iedereen scant.** Ook wie wel een muis gebruikt, leest eerst de links. Een beschrijvende linktekst laat in één oogopslag zien wat er te doen is.
+- **Dezelfde tekst, hetzelfde doel.** Twee links met dezelfde tekst gaan naar dezelfde plek. Gaan ze ergens anders heen, dan krijgen ze een andere tekst.
+- De linktekst staat **in beeld**, niet alleen in een verborgen tekst voor schermlezers. Een verborgen toevoeging mag een link aanvullen, maar begint met de zichtbare tekst. Zo werkt spraakbediening ook.
+
+Dit volgt WCAG 2.2: succescriterium 2.4.4 (het doel van een link is duidelijk) en 2.5.3 (de naam van een link begint met de zichtbare tekst).
+
+- Externe links zijn herkenbaar via `rel="external"`; waar nodig geven we er context bij.
 
 ## Interpunctie
 
 - **Dubbele punt (:):** voor een introductie van een lijst of toelichting en voor scheiding tussen datum en beschrijving.
-- **Komma (,):** het standaardteken om zinsdelen binnen één zin te scheiden. Dit is de kleinste scheiding en het eerste middel waar u naar grijpt.
+- **Komma (,):** het standaardteken om zinsdelen binnen één zin te scheiden. Dit is de kleinste scheiding en het eerste middel waar we naar grijpen.
   - _“De Stationsweg is afgesloten, omdat er aan het riool wordt gewerkt.”_
-- **Puntkomma (;):** gebruik deze wanneer een zin al komma’s bevat en daardoor onoverzichtelijk wordt, of om twee volledige, nauw samenhangende zinnen te verbinden. Een puntkomma scheidt hele zinnen, geen losse zinsdelen — behalve in lange of komma-rijke opsommingen.
-  - _“U vraagt de subsidie aan bij RVO; de aanvraagperiode loopt tot 30 september 2026.”_
-- **Gedachtestreep (—):** alleen als uiterste middel, om een ingevoegd zinsdeel of een slotwoord extra nadruk te geven. Niet als standaard-scheidingsteken; kies eerst komma of puntkomma.
+- **Puntkomma (;):** die gebruiken we wanneer een zin al komma’s bevat en daardoor onoverzichtelijk wordt, of om twee volledige, nauw samenhangende zinnen te verbinden. Een puntkomma scheidt hele zinnen, geen losse zinsdelen, behalve in lange of komma-rijke opsommingen.
+  - Zin met veel komma’s:
+    - 🚫 Niet: _“De regeling geldt voor bakkerijen, slagerijen en viswinkels, voor andere winkels geldt een aparte regeling.”_
+    - ✅ Wel: _“De regeling geldt voor bakkerijen, slagerijen en viswinkels; voor andere winkels geldt een aparte regeling.”_
+  - Opsomming met komma’s: _“Houd bij de hand: uw KVK-nummer; de jaarcijfers over 2023, 2024 en 2025; en de offerte van uw leverancier.”_
+  - Twee nauw samenhangende zinnen: _“Uw aanvraag is compleet; u hoeft niets meer te doen.”_
+- **Gedachtestreep (—):** alleen als uiterste middel, om een ingevoegd zinsdeel of een slotwoord extra nadruk te geven. We gebruiken dit niet als standaard-scheidingsteken; we kiezen eerst een komma of puntkomma.
   - _“De subsidie — bedoeld voor kleine ondernemingen — is verlengd tot eind 2026.”_
 - **Geen punt** na opsommingsitems in lijsten, tenzij het volledige zinnen zijn.
 - **Geen spatie** voor komma’s, dubbele punten of puntkomma’s.
-- **Aanhalingstekens:** gebruik typografische (smart) quotes, niet rechte quotes.
-  - Dubbel: **“** en **”** (niet **"**)
-  - Enkel: **‘** en **’** (niet **'**), ook in samentrekkingen zoals _mkb’er_ en _komma’s_
+- **Aanhalingstekens:** we gebruiken typografische (smart) quotes, niet rechte quotes.
+  - Dubbel: **“** en **”** (niet `"`)
+  - Enkel: **‘** en **’** (niet `'`), ook in samentrekkingen zoals _mkb’er_ en _komma’s_
   - Rechte quotes alleen in code en HTML-attributen
 
 ## Inclusief taalgebruik
 
-- Gebruik **genderneutrale taal**: “u”, “de gebruiker”, “de ondernemer”, “die”, “diegene”.
-- Vermijd het gebruik van uitsluitend mannelijke of vrouwelijke voornaamwoorden.
-- Gebruik geen taalgebruik dat beperkingen veronderstelt (“u kunt niet zien” → “dit is niet zichtbaar”).
+- We gebruiken **genderneutrale taal**: “u”, “de gebruiker”, “de ondernemer”, “die”, “diegene”.
+- We vermijden uitsluitend mannelijke of vrouwelijke voornaamwoorden.
+- We schrijven niets wat een **beperking** veronderstelt:
+  - 🚫 Niet: _“U kunt dit niet zien.”_
+  - ✅ Wel: _“Dit is niet zichtbaar.”_
 - Voorbeeldnamen in het prototype (zoals “Robin Vogel”) zijn bewust genderneutraal gekozen.
