@@ -48,9 +48,17 @@ extraStyles: '<link rel="stylesheet" href="/mijn-belastingdienst/assets/mijn-bel
 						</button>
 					</div>
 
-					<div class="berichtenbox-search">
-						<label for="search-berichtenbox">Filter berichten</label>
-						<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op onderwerp" />
+					<div class="berichtenbox-filters">
+						<div class="berichtenbox-search">
+							<label for="search-berichtenbox">Filter berichten</label>
+							<input type="search" id="search-berichtenbox" data-berichtenbox-search-input placeholder="Filter op onderwerp" />
+						</div>
+						<div class="berichtenbox-afzender" data-berichtenbox-afzender hidden>
+							<label for="afzender-berichtenbox">Afzender</label>
+							<select id="afzender-berichtenbox" data-berichtenbox-afzender-filter>
+								<option value="">Alle afzenders</option>
+							</select>
+						</div>
 					</div>
 				</div>
 

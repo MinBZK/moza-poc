@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterBerichten, sorteerBerichten, paginaVan } from "../../assets/javascript/berichtenbox/lijst.js";
+import { filterBerichten, sorteerBerichten, pasSorteringToe, paginaVan } from "../../assets/javascript/berichtenbox/lijst.js";
 
 const ALLES = () => true;
 
@@ -128,6 +128,70 @@ describe("sorteerBerichten", () => {
 	it("zet een ontbrekend veld vooraan bij oplopend sorteren", () => {
 		const berichten = [bericht({ id: "a", map: "Subsidies" }), bericht({ id: "b", map: null })];
 		expect(sorteerBerichten(berichten, "map", true).map((b) => b.id)).toEqual(["b", "a"]);
+	});
+});
+
+describe("sorteerBerichten — op datum", () => {
+	it("ordent berichten van dezelfde dag op tijdstip, in beide richtingen", () => {
+		const berichten = [bericht({ id: "middag", datum: "2026-09-30", tijdstip: "2026-09-30T14:00:00Z" }), bericht({ id: "ochtend", datum: "2026-09-30", tijdstip: "2026-09-30T08:00:00Z" }), bericht({ id: "gisteren", datum: "2026-09-29", tijdstip: "2026-09-29T23:59:00Z" })];
+
+		expect(sorteerBerichten(berichten, "datum", true).map((b) => b.id)).toEqual(["gisteren", "ochtend", "middag"]);
+		expect(sorteerBerichten(berichten, "datum", false).map((b) => b.id)).toEqual(["middag", "ochtend", "gisteren"]);
+	});
+
+	it("vergelijkt tijdstippen met een verschillende tijdzone op het moment, niet op de tekst", () => {
+		// Als tekst komt "10:00+02:00" na "09:30Z", terwijl het een half uur eerder is.
+		const berichten = [bericht({ id: "later", tijdstip: "2026-09-30T09:30:00Z" }), bericht({ id: "eerder", tijdstip: "2026-09-30T10:00:00+02:00" })];
+
+		expect(sorteerBerichten(berichten, "datum", true).map((b) => b.id)).toEqual(["eerder", "later"]);
+	});
+
+	it("valt terug op de datum als er geen tijdstip is", () => {
+		const berichten = [bericht({ id: "a", datum: "2026-01-01" }), bericht({ id: "b", datum: "2026-03-01" })];
+
+		expect(sorteerBerichten(berichten, "datum", true).map((b) => b.id)).toEqual(["a", "b"]);
+	});
+
+	it("houdt berichten met dezelfde datum in hun volgorde", () => {
+		const berichten = [bericht({ id: "a" }), bericht({ id: "b" }), bericht({ id: "c" })];
+
+		expect(sorteerBerichten(berichten, "datum", true).map((b) => b.id)).toEqual(["a", "b", "c"]);
+		expect(sorteerBerichten(berichten, "datum", false).map((b) => b.id)).toEqual(["a", "b", "c"]);
+	});
+});
+
+describe("pasSorteringToe", () => {
+	const berichten = [bericht({ id: "b", onderwerp: "Beschikking" }), bericht({ id: "a", onderwerp: "aanslag" })];
+
+	it("laat de bronvolgorde staan zolang er niets gekozen is", () => {
+		expect(pasSorteringToe(berichten, null).map((b) => b.id)).toEqual(["b", "a"]);
+	});
+
+	it("sorteert alfabetisch zonder op hoofdletters te letten", () => {
+		expect(pasSorteringToe(berichten, { sleutel: "onderwerp", oplopend: true }).map((b) => b.id)).toEqual(["a", "b"]);
+	});
+});
+
+/**
+ * Filteren, zoeken en sorteren samen, zoals de inbox ze na elkaar toepast. Per aantal berichten,
+ * want met één bericht is "filtert per afzender" niet te onderscheiden van "geeft het enige terug".
+ */
+describe("filteren, zoeken en sorteren samen", () => {
+	const MEERDERE = [bericht({ id: "bd-oud", magazijnId: "bd", afzender: "Belastingdienst", onderwerp: "Aanslag 2024", tijdstip: "2025-03-01T09:00:00Z", map: "Belasting" }), bericht({ id: "bd-nieuw", magazijnId: "bd", afzender: "Belastingdienst", onderwerp: "Aanslag 2025", tijdstip: "2026-03-01T09:00:00Z", map: "Belasting" }), bericht({ id: "bd-andere-map", magazijnId: "bd", afzender: "Belastingdienst", onderwerp: "Aanslag 2023", tijdstip: "2024-03-01T09:00:00Z", map: null }), bericht({ id: "bd-ander-onderwerp", magazijnId: "bd", afzender: "Belastingdienst", onderwerp: "Toeslag", tijdstip: "2026-04-01T09:00:00Z", map: "Belasting" }), bericht({ id: "rvo-aanslag", magazijnId: "rvo", afzender: "RVO", onderwerp: "Aanslag subsidie", tijdstip: "2026-05-01T09:00:00Z", map: "Belasting" })];
+
+	function doe(berichten, oplopend) {
+		const gevonden = filterBerichten(berichten, criteria({ zoek: "aanslag", afzenders: new Set(["bd"]), map: "Belasting" }));
+		return pasSorteringToe(gevonden, { sleutel: "datum", oplopend }).map((b) => b.id);
+	}
+
+	it.each([
+		["geen berichten", [], [], []],
+		["één bericht dat past", [MEERDERE[0]], ["bd-oud"], ["bd-oud"]],
+		["één bericht dat niet past", [MEERDERE[4]], [], []],
+		["meerdere", MEERDERE, ["bd-oud", "bd-nieuw"], ["bd-nieuw", "bd-oud"]],
+	])("%s", (_naam, berichten, oplopend, aflopend) => {
+		expect(doe(berichten, true)).toEqual(oplopend);
+		expect(doe(berichten, false)).toEqual(aflopend);
 	});
 });
 

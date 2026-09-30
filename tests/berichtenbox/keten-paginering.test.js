@@ -266,3 +266,22 @@ describe("berichtenbox-keten.js — de vergelijking met wat de ronde telde", () 
 		});
 	});
 });
+
+describe("berichtenbox-keten.js — alle pagina's samen, per aantal", () => {
+	// Leeg, één pagina en meerdere: met alleen het geval "twee pagina's" is "volgt `next`" niet te
+	// onderscheiden van "haalt er altijd twee op".
+	it.each([
+		["geen berichten", [[]], 0, 1],
+		["één pagina", [berichtenVan(0, 3)], 3, 1],
+		["drie pagina's", [berichtenVan(0, 100), berichtenVan(1, 100), berichtenVan(2, 7)], 207, 3],
+	])("%s: levert alles en bladert tot `next` ontbreekt", async (_naam, paginas, verwacht, verzoeken) => {
+		const { aanroepen } = await startKeten(ronde(lijstVan(paginas)));
+
+		const uitkomst = await window.BerichtenboxKeten.berichten();
+
+		expect(uitkomst.berichten).toHaveLength(verwacht);
+		expect(new Set(uitkomst.berichten.map((b) => b.id)).size).toBe(verwacht);
+		expect(bladeraanroepen(aanroepen)).toHaveLength(verzoeken);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+	});
+});

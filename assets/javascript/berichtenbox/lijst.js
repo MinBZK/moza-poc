@@ -45,11 +45,50 @@ export function filterBerichten(berichten, criteria) {
 /**
  * Sorteert op één veld. Geeft een nieuwe array terug; de invoer blijft ongemoeid, zodat de
  * bronvolgorde herstelbaar blijft.
+ *
+ * Op datum telt het tijdstip als de bron het meelevert: berichten van dezelfde dag staan anders in
+ * de volgorde waarin ze binnenkwamen, ook als de bezoeker "oudste eerst" koos. Gelijke waarden
+ * houden hun onderlinge volgorde (`sort` is stabiel), zodat een lijst niet verspringt wanneer er
+ * een bericht bij komt.
  */
 export function sorteerBerichten(berichten, sleutel, oplopend) {
 	const richting = oplopend ? 1 : -1;
+	const vergelijk = sleutel === "datum" ? vergelijkDatum : (a, b) => vergelijkTekst(a, b, sleutel);
 
-	return berichten.slice().sort((a, b) => richting * String((a && a[sleutel]) || "").localeCompare(String((b && b[sleutel]) || ""), "nl", { numeric: true }));
+	return berichten.slice().sort((a, b) => richting * vergelijk(a, b));
+}
+
+function vergelijkTekst(a, b, sleutel) {
+	return String((a && a[sleutel]) || "").localeCompare(String((b && b[sleutel]) || ""), "nl", { numeric: true, sensitivity: "base" });
+}
+
+function vergelijkDatum(a, b) {
+	const x = momentVan(a);
+	const y = momentVan(b);
+
+	// Een bericht zonder leesbare datum hoort in geen van beide richtingen bovenaan te staan.
+	if (Number.isNaN(x) || Number.isNaN(y)) return vergelijkTekst(a, b, "datum");
+
+	return x - y;
+}
+
+function momentVan(bericht) {
+	return Date.parse((bericht && (bericht.tijdstip || bericht.datum)) || "");
+}
+
+/**
+ * De gekozen sortering toepassen, of de bronvolgorde laten staan als er niets gekozen is.
+ *
+ * Aparte stap na het filteren, zodat een bericht dat later binnenkomt op zijn plek in de gekozen
+ * volgorde landt in plaats van bovenaan: de sortering is een instelling van de weergave, geen
+ * eigenschap van de berichten.
+ *
+ * @param sortering  { sleutel, oplopend } of null.
+ */
+export function pasSorteringToe(berichten, sortering) {
+	if (!sortering || !sortering.sleutel) return berichten;
+
+	return sorteerBerichten(berichten, sortering.sleutel, sortering.oplopend);
 }
 
 /**
