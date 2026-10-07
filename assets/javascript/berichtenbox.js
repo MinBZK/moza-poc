@@ -889,7 +889,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 	// Voorgoed verwijderen kan niet teruggedraaid worden, dus het gaat niet op één klik. Zelfde
 	// inline-paneel als bij verplaatsen: het hoort bij de knop waarop geklikt is, en niet bij de
-	// pagina als geheel. Sluit met Escape, met Annuleren, of door buiten het paneel te klikken.
+	// pagina als geheel. Sluit met Escape, met Annuleer, of door buiten het paneel te klikken.
 	let actiefVoorgoedPaneel = null;
 	let actieveVoorgoedKnop = null;
 
@@ -900,7 +900,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (knop) knop.setAttribute("aria-expanded", "false");
 		actiefVoorgoedPaneel = null;
 		actieveVoorgoedKnop = null;
-		// Na Escape of Annuleren hoort de focus terug bij de knop; anders valt hij terug naar het
+		// Na Escape of Annuleer hoort de focus terug bij de knop; anders valt hij terug naar het
 		// begin van de pagina en is de bezoeker zijn plek kwijt.
 		if (focusTerug && knop) knop.focus();
 	}
@@ -946,7 +946,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const annuleer = document.createElement("button");
 		annuleer.type = "button";
 		annuleer.className = "secondary";
-		annuleer.textContent = "Annuleren";
+		annuleer.textContent = "Annuleer";
 
 		bevestig.addEventListener("click", () => {
 			const voorVoorgoed = state.voorgoedVerwijderd[berichtId];

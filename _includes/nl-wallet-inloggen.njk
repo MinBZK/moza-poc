@@ -40,13 +40,11 @@
 	</div>
 </div>
 
-{# Titel boven en link onder het venster van NL Wallet, per venster. Het venster zelf is voor inloggen
-en voor de bevoegdheid gelijk (“Scan de QR-code met je NL Wallet app”); de titel maakt het verschil. #}
-<p class="nl-wallet-overlay-titel" hidden data-nl-wallet-overlay="inloggen"><span data-nl-wallet-titel-inloggen>Inloggen bij MijnOverheid Zakelijk</span></p>
-<div class="nl-wallet-overlay-hint" hidden data-nl-wallet-overlay="inloggen">
-	<p>Nog geen NL Wallet met Claudia van Dam? <a href="{{ '/inloggen/nl-wallet/app/' | url }}" target="_blank" rel="noopener">Installeer de app</a></p>
-	<p data-nl-wallet-bevoegdheden hidden>Nog geen bevoegdheid in uw NL Wallet? Voeg toe voor <span data-nl-wallet-bevoegdheid-links></span></p>
-</div>
+{# Titel boven en link onder het venster voor een bevoegdheid. Het venster zelf is voor inloggen en voor de
+bevoegdheid gelijk (“Scan de QR-code met je NL Wallet app”); de titel maakt het verschil. Uitleg bij het
+inlogvenster staat in de toelichting (Shift+P, nl-wallet-toelichting.njk); die gebruikt de onzichtbare
+links per onderneming hieronder. #}
+<p hidden><span data-nl-wallet-bevoegdheid-links></span></p>
 <p class="nl-wallet-overlay-titel" hidden data-nl-wallet-overlay="bevoegdheid">Bevoegdheid voor <span data-nl-wallet-titel-onderneming>uw onderneming</span> toevoegen aan uw NL Wallet</p>
 <p class="nl-wallet-overlay-hint" hidden data-nl-wallet-overlay="bevoegdheid">Staat uw bevoegdheid in uw NL Wallet? <a href="#" data-nl-wallet-naar-inloggen>Ga verder met inloggen</a></p>
 

@@ -30,13 +30,13 @@ const preview = {
 			storySort: {
 				order: [
 					"Introductie",
-					["Over dit prototype", "Ontwerpprincipes", "Ontwerpprincipes: Wat: Visie en principes", "Ontwerpprincipes: Hoe: Werkwijze en techniek", "Schrijfwijzer"],
+					["Over dit prototype", "Ontwerpprincipes", "Ontwerpprincipes: Wat: Visie en principes", "Ontwerpprincipes: Hoe: Werkwijze en techniek", "Schrijfwijzer", "UX-opleveringen en Definition of Done"],
 					"Typografie",
 					["Koppen", "Paragraaf", "Block-level tekst", "Inline tekst"],
 					"Design tokens",
 					["Kleurenpalet", "Ruimtelijk systeem", "Transities"],
 					"Ontwerppatronen",
-					["Interactie op inhoud", "Context wisselen", "E-mailverificatie"],
+					["Interactie op inhoud", "Context wisselen", "E-mailverificatie", "Digitale assistent", "AI-statusindicator"],
 					"Componenten",
 					[
 						"Navigatie",

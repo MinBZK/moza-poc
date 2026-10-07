@@ -353,7 +353,7 @@ describe("detailpagina — voorgoed verwijderen", () => {
 		await toonBericht(b, { verwijderd: { [b.id]: true } });
 
 		voorgoedKnop().click();
-		[...paneel().querySelectorAll("button")].find((k) => k.textContent === "Annuleren").click();
+		[...paneel().querySelectorAll("button")].find((k) => k.textContent === "Annuleer").click();
 
 		expect(paneel()).toBe(null);
 		expect(window.Berichtenbox.statusVan(b.id)).toBe("prullenbak");

@@ -4,22 +4,29 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 # Berichtenbox
 
-De Berichtenbox is de centrale plek waar ondernemers berichten ontvangen van overheidsinstanties en gemeentes. Het ontwerp simuleert het ophalen van berichten via het Federatief Berichtenstelsel (FBS): een stelsel waarin berichten bij de bron blijven en on-demand worden opgehaald.
+De Berichtenbox is de centrale plek waar ondernemers berichten ontvangen van overheidsinstanties en gemeentes. De berichten komen uit het Federatief Berichtenstelsel (FBS): een stelsel waarin berichten bij de organisatie blijven en pas worden opgehaald als de ondernemer kijkt.
 
 ## Ontwerpdoel
 
 Het doel is om te onderzoeken hoe een berichtenbox eruitziet en werkt wanneer berichten niet centraal worden opgeslagen, maar worden opgehaald uit honderden bronnen (magazijnen). Dit heeft consequenties voor de gebruikerservaring: berichten moeten worden opgehaald, wat tijd kost en zichtbaar moet zijn voor de gebruiker.
 
-## Ophaalanimatie
+## Twee bronnen
 
-Bij het eerste bezoek wordt een voortgangsanimatie getoond die het ophalen van berichten uit meerdere bronnen simuleert. De animatie:
+De Berichtenbox haalt berichten uit een van twee bronnen. Welke het is, hangt af van de persona:
 
-- Toont het aantal doorzochte bronnen en gevonden berichten
-- Gebruikt een zware-staart-verdeling zodat de meeste bronnen snel antwoorden maar enkele bronnen laat binnendruppelen
-- Duurt vier seconden
-- Verbergt de counter, het zoekveld en de berichtentabel totdat het laden is voltooid
+- **Het Federatief Berichtenstelsel**: voor de testpersona’s `proeftuin-een`, `proeftuin-twee`, `proeftuin-drie`, `proeftuin-veel`, `proeftuin-concern` en `proeftuin-garage`. Hun berichten komen echt uit de testomgeving van het stelsel. De lijst bevat alleen afzender, onderwerp en datum; de inhoud en de bijlagen worden pas opgehaald als de ondernemer het bericht opent.
+- **De gegenereerde dataset**: voor alle andere persona’s. Eleventy maakt deze berichten tijdens de build. Het ophalen, het binnenkomen van nieuwe berichten en het wegvallen van een bron worden hier nagebootst.
 
-De toolbar (counter en zoekveld) is gewrapt in een `[data-berichtenbox-toolbar]` element dat als geheel verborgen en getoond wordt.
+Beide bronnen tonen hun berichten op dezelfde manier: de pagina weet niet welke bron levert. Lukt het ophalen uit het stelsel niet, dan valt de Berichtenbox niet stil terug op de dataset. Verzonnen berichten tussen echte berichten zouden niet van elkaar te onderscheiden zijn.
+
+## Ophalen
+
+De inbox begint leeg en vult zich pas als de berichten er zijn. Een volledige lijst vooraf tonen zou beweren dat alle organisaties tegelijk antwoorden, en dat doen ze in een federatief stelsel niet.
+
+- **Dataset**: bij het eerste bezoek per persona toont een voortgangsbalk het aantal doorzochte bronnen en gevonden berichten. De meeste bronnen antwoorden snel, een paar komen later. Dat duurt ongeveer vier seconden. Tot het ophalen klaar is, zijn de teller, het zoekveld en de lijst verborgen.
+- **Stelsel**: de voortgangsbalk toont de echte ophaalronde. Die verschijnt alleen als het ophalen langer duurt dan 300 milliseconden; een ronde die meteen klaar is, zou anders even oplichten als een storing.
+
+Zonder JavaScript is er geen lijst. Een `<noscript>`-blok legt dan uit waarom.
 
 ## Inbox, archief en prullenbak
 
@@ -29,115 +36,76 @@ De inbox-badge toont het aantal **ongelezen** berichten, niet het totaal.
 
 ## Mappen
 
-Berichten kunnen worden verplaatst naar mappen via een verplaats-paneel. Er zijn twee voorgevulde mappen ("Belastingen 2025" en "Subsidies") en de gebruiker kan eigen mappen aanmaken. Bij het bekijken van een map:
+Berichten kunnen worden verplaatst naar mappen via een verplaats-paneel. Er zijn twee voorgevulde mappen (“Belastingen 2025” en “Subsidies”) en de gebruiker kan eigen mappen aanmaken. Bij het bekijken van een map:
 
 - Wordt de juiste tab gemarkeerd met `aria-current` en `aria-selected`
-- Wordt de koptekst niet aangepast (blijft "Berichtenbox")
+- Wordt de koptekst niet aangepast (blijft “Berichtenbox”)
 - Wordt de counter-tekst vervangen door informatie over de map
 
-## Demo-berichten (polling)
+## Nieuwe berichten
 
-Op de inbox-pagina worden periodiek nieuwe berichten gegenereerd om real-time berichtverkeer te simuleren:
+Terwijl de ondernemer kijkt, kunnen er nieuwe berichten binnenkomen. Die verschijnen bovenaan de eerste pagina van de inbox. De lijst toont 10 berichten per pagina, dus het onderste bericht schuift door naar de volgende pagina.
 
-- **Interval**: standaard 60 seconden, configureerbaar via `?poll=5` in de URL (minimum 5 seconden)
-- **Limiet**: maximaal 5 demo-berichten
-- **Paginering**: bij elk nieuw bericht wordt het onderste bericht van de pagina verwijderd om de paginagrootte (25) te bewaren
-- **Detailpagina**: demo-berichten linken naar `/moza/berichtenbox/bericht-demo/` waar de inhoud uit localStorage wordt gelezen
+- **Dataset**: elke 60 seconden komt er een nieuw bericht binnen, met een maximum van vijf.
+- **Stelsel**: de pagina vraagt elke 15 seconden de lijst opnieuw op, en elke 60 seconden als het tabblad op de achtergrond staat. Dat haalt niets nieuws op bij de organisaties; het leest wat het stelsel al heeft.
+- **Instellen**: met `?poll=` in de URL, in seconden, met een minimum van 5. Bij het stelsel zet `?poll=0` het opvragen uit.
 
 ## Detailpagina
 
-Er zijn twee soorten detailpagina's:
+Er zijn twee soorten detailpagina’s:
 
-1. **Statische pagina's** (`bericht.njk`); gegenereerd door Eleventy voor elk bericht in de dataset. Permalink: `/moza/berichtenbox/bericht/msg-0001/`
-2. **Generieke demo-pagina** (`bericht-demo.html`); leest het bericht-ID uit de URL-parameter en rendert de inhoud uit de JavaScript-state. Wordt gebruikt voor dynamisch via polling toegevoegde berichten.
+1. **Statische pagina’s** (`bericht.njk`): gegenereerd door Eleventy voor elk bericht in de dataset. Permalink: `/moza/berichtenbox/bericht/msg-0001/`
+2. **Algemene detailpagina** (`bericht-demo.html`): leest het bericht-ID uit de URL en haalt de inhoud op. Deze pagina toont nieuwe berichten uit de dataset en alle berichten uit het stelsel; die hebben geen eigen, gegenereerde pagina. Zonder JavaScript blijft deze pagina leeg.
 
-Beide pagina's bieden dezelfde acties: archiveren, verplaatsen naar map, markeer als ongelezen en verwijderen.
+Beide pagina’s bieden dezelfde acties: archiveren, verplaatsen naar map, markeer als ongelezen en verwijderen.
 
-## Filtering
+## Zoeken
 
-Het zoekveld filtert berichten op afzender en onderwerp. De filtering werkt client-side op de zichtbare tabelrijen via tekstvergelijking.
+Het zoekveld zoekt in de afzender en het onderwerp. Het zoekt in alle berichten, niet alleen in de rijen die op de pagina staan.
 
 ## Bijlagen
 
-Op detailpagina's wordt het laden van bijlagen gesimuleerd met een vertraging van 1,5 seconde, waarna willekeurige PDF-bestandsnamen worden getoond. In de berichtenlijst wordt een bijlage-icoon getoond voor berichten met bijlagen.
+In de berichtenlijst staat een paperclip bij berichten met bijlagen.
+
+- **Stelsel**: een bijlage is een gewone link naar het document bij het stelsel. De detailpagina toont de echte bijlagen.
+- **Dataset**: de detailpagina bootst het laden na. Na 1,5 seconde verschijnen verzonnen PDF-namen.
+
+## Storingen
+
+Alle meldingen aan de ondernemer staan op één plek per pagina (`[data-berichtenbox-storing]`), op elke Berichtenbox-pagina.
+
+Met de feature flag **Berichtenbox unhappy flow** bootst de dataset storingen na: één bron valt uit, geen enkele bron antwoordt, of een bron valt weg nadat alles geladen is. De ondernemer ziet dan welke bron ontbreekt en kan opnieuw proberen. Een nagebootste storing werkt precies als een echte: de bron levert die berichten gewoon niet.
 
 ## Technische opbouw
 
-<table>
-	<thead>
-		<tr>
-			<th>Bestand</th>
-			<th>Rol</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>
-				<code>_data/berichtenboxData.js</code>
-			</td>
-			<td>Genereert de dataset: magazijnen, berichten, mappen</td>
-		</tr>
-		<tr>
-			<td>
-				<code>_includes/berichtenbox-data.njk</code>
-			</td>
-			<td>
-				Include met <code>window.berichtenboxData</code> voor alle berichtenbox-pagina's
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<code>_includes/berichtenbox-row.njk</code>
-			</td>
-			<td>Tabelrij-template voor statisch gerenderde berichten</td>
-		</tr>
-		<tr>
-			<td>
-				<code>_includes/berichtenbox-tabs.njk</code>
-			</td>
-			<td>Tab-navigatie (inbox, archief, prullenbak, mappen)</td>
-		</tr>
-		<tr>
-			<td>
-				<code>assets/javascript/berichtenbox.js</code>
-			</td>
-			<td>Client-side logica: state, polling, filtering, acties</td>
-		</tr>
-		<tr>
-			<td>
-				<code>moza/berichtenbox.html</code>
-			</td>
-			<td>Inbox-pagina (gepagineerd, 25 per pagina)</td>
-		</tr>
-		<tr>
-			<td>
-				<code>moza/berichtenbox/bericht.njk</code>
-			</td>
-			<td>Detailpagina (1 per statisch bericht via Eleventy-paginering)</td>
-		</tr>
-		<tr>
-			<td>
-				<code>moza/berichtenbox/bericht-demo.html</code>
-			</td>
-			<td>Generieke detailpagina voor demo-berichten</td>
-		</tr>
-		<tr>
-			<td>
-				<code>moza/berichtenbox/berichtenbox-archief.html</code>
-			</td>
-			<td>Archief-pagina</td>
-		</tr>
-		<tr>
-			<td>
-				<code>moza/berichtenbox/berichtenbox-prullenbak.html</code>
-			</td>
-			<td>Prullenbak-pagina</td>
-		</tr>
-	</tbody>
-</table>
+De Berichtenbox bestaat uit drie lagen: de bronnen, een datalaag zonder kennis van de pagina, en de render-laag die de pagina opbouwt. De render-laag leest alleen uit de datalaag en past de bron nooit aan.
 
-## State en localStorage
+**Pagina’s en templates**
 
-Alle berichtenbox staten worden opgeslagen onder de localStorage-sleutel `berichtenbox` als JSON-object. Deze bevat: gelezen berichten, gearchiveerde en verwijderde berichten, map-toewijzingen, eigen mappen, demo-berichten en het actuele aantal ongelezen berichten (zodat de side-nav badge ook op andere pagina's correct is).
+- `moza/berichtenbox.html`: de inbox, 10 berichten per pagina.
+- `moza/berichtenbox/berichtenbox-archief.html` en `berichtenbox-prullenbak.html`: archief en prullenbak.
+- `moza/berichtenbox/bericht.njk`: een detailpagina per bericht uit de dataset, gemaakt door Eleventy.
+- `moza/berichtenbox/bericht-demo.html`: de algemene detailpagina voor nieuwe berichten uit de dataset en voor berichten uit het stelsel.
+- `_includes/berichtenbox-tabs.njk`: de tabs Inbox, Archief, Prullenbak en de mappen.
+- `_includes/berichtenbox-row.njk`: een berichtrij, nog in gebruik voor de vijf berichten op de homepage.
+- `_data/berichtenboxData.js`: maakt de dataset: bronnen (magazijnen), berichten en mappen.
 
-Resetten kan via de **localStorage wissen** functionaliteit onder **Flags** (rechts-onder) op de pagina of handmatig via `localStorage.removeItem("berichtenbox")` in DevTools van de browser.
+**JavaScript**
+
+- `assets/javascript/berichtenbox.js`: de render-laag.
+- `assets/javascript/berichtenbox-keten.js`: praat met het Federatief Berichtenstelsel: de ophaalronde, de lijst en het periodiek opvragen.
+- `assets/javascript/berichtenbox/`, zes modules zonder kennis van de pagina:
+  - `bron.js`: het register van bronnen. De volgorde is de voorrang; de dataset staat achteraan als vangnet.
+  - `keten-bron.js`: het stelsel als bron.
+  - `dataset-bron.js`: de dataset als bron, met het nagebootste ophalen, de nieuwe berichten en de storingen.
+  - `state.js`: de opgeslagen staat in localStorage.
+  - `lijst.js`: filteren, sorteren en pagineren.
+  - `datum.js`: de notatie van datums.
+
+## Opgeslagen staat
+
+De Berichtenbox bewaart de staat onder de localStorage-sleutel `berichtenbox`: gelezen, gearchiveerde en verwijderde berichten, de indeling in mappen, eigen mappen, nieuwe berichten uit de dataset, en of het eerste bezoek al geweest is. Het aantal ongelezen berichten staat apart onder `unread:count`, zodat de teller in de zijnavigatie ook op andere pagina’s klopt.
+
+De staat hoort bij één persona. Na een wissel van persona begint die leeg: andere bedrijven hebben andere post. Berichten uit het stelsel komen niet in localStorage; die bewaart het stelsel 12 uur in een sessie op de server.
+
+Resetten kan met **localStorage wissen** in het Flags-paneel rechtsonder, met de resetlink op de Berichtenbox-pagina, of in de console van de browser met `localStorage.removeItem("berichtenbox")`.

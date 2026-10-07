@@ -352,7 +352,12 @@ server {
     # --- Statische Eleventy-site ---
     # Eleventy genereert mappen met een index.html. Val voor extensieloze URLs
     # terug op <pad>.html en geef anders een nette 404.
+    # no-cache en niet no-store: de browser controleert elke keer bij de server (304 als er niets
+    # veranderd is), maar de pagina mag de bfcache in. De berichtenbox rekent op pagehide/pageshow
+    # om het pollen te parkeren; met no-store laadt de terugknop alles opnieuw, inclusief de ronde.
+    # Hier en niet op server-niveau: een location met een eigen add_header erft er geen enkele.
     location / {
+        add_header Cache-Control "no-cache" always;
         try_files $uri $uri/ $uri.html =404;
     }
 }
