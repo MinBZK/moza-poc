@@ -173,6 +173,20 @@ describe("na het inloggen", () => {
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?vervolg=/moza/berichtenbox/");
 		expect(await sluitVensterNaSucces(CLAUDIA)).toBe("/moza/berichtenbox/?persona=Horecaondernemer");
 	});
+
+	// Een vervolgpad komt uit de URL, dus iemand anders kan het in een link zetten. Elk van deze
+	// leest een browser als een andere site: "\" telt als "/", en tabs en regeleinden vallen weg.
+	it.each([
+		["een absolute URL", "https://evil.example/"],
+		["een protocol-relatief pad", "//evil.example/"],
+		["een backslash na de schuine streep", "/\\evil.example/"],
+		["een backslash verderop", "/moza/\\..\\evil"],
+		["een tab tussen twee schuine strepen", "/\t/evil.example/"],
+		["een regeleinde tussen twee schuine strepen", "/\n/evil.example/"],
+	])("negeert een vervolgpad met %s", async (_, pad) => {
+		window.history.replaceState({}, "", "/inloggen/zakelijk/?vervolg=" + encodeURIComponent(pad));
+		expect(await sluitVensterNaSucces(CLAUDIA)).toBe("/moza/?persona=Horecaondernemer");
+	});
 });
 
 describe("titel in de overlay, want beide vensters zien er hetzelfde uit", () => {
