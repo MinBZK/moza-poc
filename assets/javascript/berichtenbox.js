@@ -1056,6 +1056,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const actief = huidigeView() === "inbox" ? new URLSearchParams(location.search).get("map") : null;
 		const gezien = new Set();
 
+		// Eerst weg wat de bron niet meer noemt, zodat wat blijft al op volgorde staat en niet
+		// verplaatst hoeft te worden.
+		const genoemd = new Set(mappen.filter((map) => map && typeof map.slug === "string").map((map) => map.slug));
+		bestaand.forEach((li, slug) => {
+			if (!genoemd.has(slug)) li.remove();
+		});
+
+		let vorige = scheiding;
 		mappen.forEach((map) => {
 			if (!map || typeof map.slug !== "string" || gezien.has(map.slug)) return;
 			gezien.add(map.slug);
@@ -1086,11 +1094,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (a && actief === map.slug) a.setAttribute("aria-current", "page");
 
 			li.hidden = false;
-			lijst.appendChild(li);
-		});
-
-		bestaand.forEach((li, slug) => {
-			if (!gezien.has(slug)) li.remove();
+			// Alleen verplaatsen als het item niet al op zijn plek staat: een element dat uit het
+			// document gaat verliest de focus, ook als het er meteen weer in komt.
+			if (vorige.nextElementSibling !== li) vorige.after(li);
+			vorige = li;
 		});
 
 		scheiding.hidden = gezien.size === 0;
@@ -1129,7 +1136,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * nadat het laatste zichtbare bericht eruit is.
 	 *
 	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Zet de bezoeker het bericht
-	 * terug in de inbox, dan komt de map weer in beeld. Behalve de map die de bezoeker nu open heeft:
+	 * terug in de inbox, dan komt de map weer in beeld; een voorgoed verwijderd bericht komt niet
+	 * terug, en zijn map dus ook niet. Behalve de map die de bezoeker nu open heeft:
 	 * die blijft staan met "(0)", want het tabblad is het enige op de pagina dat zegt welke map dit is.
 	 *
 	 * Pas nadat de bron voor het eerst geleverd heeft (`mappenVanBron`): tot dan komen de aantallen
@@ -1153,7 +1161,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// Hetzelfde filter als de mapweergave zelf, zodat het aantal en de rijen niet uiteenlopen.
 			const n = filterBerichten(data.berichten, { view: "inbox", map: li.dataset.mapSlug, magazijnToegestaan, persoonRelevant, state: stateModule }).length;
 			schrijfMapAantal(li, n);
-			li.hidden = n === 0 && li.dataset.mapSlug !== open;
+			const weg = n === 0 && li.dataset.mapSlug !== open;
+			const hadFocus = weg && li.contains(document.activeElement);
+			li.hidden = weg;
+			// Tijdens de ronde stond deze map er nog, met het aantal van de organisatie. Wie er met
+			// het toetsenbord op stond, raakt anders zijn plek in de tabbalk kwijt.
+			if (hadFocus) {
+				const eerste = lijst.querySelector("li:not([hidden]) a");
+				if (eerste) eerste.focus();
+			}
 		});
 
 		scheiding.hidden = !lijst.querySelector(".berichtenbox-folder-user:not([hidden])");
@@ -3054,6 +3070,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			if (!inhoud.nieuwBericht) {
 				werkMappenBij(data.mappen);
 				mappenVanBron = true;
+				// Meteen natellen, niet pas in render(): die slaat over zolang er een laadfout staat,
+				// en dan blijven de aantallen van de bron staan naast mappen die leeg openen.
+				werkMapAantallenBij();
 			}
 			werkMappenZichtbaarheidBij();
 			toonBerichten();
@@ -3069,6 +3088,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// het scherm iets tonen wat nergens meer bestaat.
 			try {
 				werkMappenBij(data.mappen);
+				werkMapAantallenBij();
 				toonBerichten();
 				render(huidigeView());
 			} catch (herstelFout) {

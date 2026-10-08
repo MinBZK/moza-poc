@@ -194,6 +194,28 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)"]);
 	});
 
+	// Tijdens de ronde staat een map er met het aantal van de organisatie. Blijkt daarna dat de
+	// bezoeker dat ene bericht al archiveerde, dan verdwijnt de map onder het toetsenbord vandaan.
+	it("zet de focus op een tabblad dat blijft als de map met de focus verdwijnt", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
+		const keten = zetKeten({});
+		await laadBerichtenbox();
+		await laatLaden();
+
+		keten.meld({ voortgang: { bevraagd: 2, klaar: 2, gevonden: 5, mappen: [{ naam: "Te bespreken met adviseur", aantalBerichten: 1 }] } });
+		const map = document.querySelector('.tablist [data-map-slug="Te bespreken met adviseur"]');
+		map.querySelector("a").focus();
+		expect(map.contains(document.activeElement)).toBe(true);
+
+		keten.klaar(UITKOMST);
+		await laatLaden();
+
+		expect(map.hidden).toBe(true);
+		const metFocus = document.activeElement.closest(".tablist li");
+		expect(metFocus).not.toBeNull();
+		expect(metFocus.hidden).toBe(false);
+	});
+
 	// De mappen van de dataset staan in de stijl verborgen; alleen dit kenmerk maakt een map uit het
 	// stelsel zichtbaar. jsdom kent die stijl niet, dus zonder deze toets valt het wegvallen niet op.
 	it("merkt een map uit het stelsel als zichtbaar", async () => {
