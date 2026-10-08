@@ -1038,7 +1038,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * meer noemt, verdwijnt; dat is ook hoe een map zonder berichten verdwijnt.
 	 *
 	 * Draagt een map een aantal (`aantalBerichten`), dan staat dat erbij. Tijdens een ophaalronde
-	 * groeit het overzicht zo mee met wat de organisaties melden.
+	 * groeit het overzicht zo mee met wat de organisaties melden. Is de lijst er eenmaal, dan telt
+	 * `werkMapAantallenBij` na wat de map toont, en verbergt die een map waar niets van in de inbox
+	 * staat.
 	 *
 	 * Bestaande items blijven staan en schuiven alleen op hun plek: een item vervangen zou de focus
 	 * weghalen bij wie er met het toetsenbord op staat.
@@ -1099,7 +1101,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	// Het aantal achter de naam van een map. Geen bolletje: dat staat bij de inbox voor "ongelezen",
-	// en dit is het aantal berichten in de map.
+	// en dit is een aantal berichten: tijdens de ronde wat de organisaties melden, daarna wat de map
+	// toont.
 	function schrijfMapAantal(li, n) {
 		const a = li.querySelector("a");
 		let aantal = li.querySelector("[data-berichtenbox-map-aantal]");
@@ -1126,13 +1129,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * nadat het laatste zichtbare bericht eruit is.
 	 *
 	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Zet de bezoeker het bericht
-	 * terug in de inbox, dan komt de map weer in beeld.
+	 * terug in de inbox, dan komt de map weer in beeld. Behalve de map die de bezoeker nu open heeft:
+	 * die blijft staan met "(0)", want het tabblad is het enige op de pagina dat zegt welke map dit is.
 	 *
-	 * Pas als de bron de lijst geleverd heeft: tijdens een ophaalronde komen de aantallen van de
-	 * organisaties en zijn er nog geen berichten om na te tellen.
+	 * Pas nadat de bron voor het eerst geleverd heeft (`mappenVanBron`): tot dan komen de aantallen
+	 * van de organisaties, en staan in `data.berichten` nog niet de berichten van deze bron. Natellen
+	 * zou dan elke map op nul zetten en verbergen.
 	 */
 	function werkMapAantallenBij() {
-		// Binnen het Belastingdienst-portaal bepaalt werkMappenZichtbaarheidBij wat er staat.
+		// Binnen het Belastingdienst-portaal bepaalt werkMappenZichtbaarheidBij wat er staat, en
+		// dragen de mappen geen aantal: het stelsel wordt daar niet bevraagd.
 		if (!mappenVanBron || orgFilterActief()) return;
 		const scheiding = document.querySelector(".tablist .list-separation");
 		if (!scheiding) return;
@@ -1141,10 +1147,13 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const uitBerichten = lijst.querySelectorAll(".berichtenbox-folder-user[data-map-uit-berichten]");
 		if (!uitBerichten.length) return;
 
+		const open = huidigeView() === "inbox" ? new URLSearchParams(location.search).get("map") : null;
+
 		uitBerichten.forEach((li) => {
-			const n = data.berichten.filter((b) => b && b.map === li.dataset.mapSlug && statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
+			// Hetzelfde filter als de mapweergave zelf, zodat het aantal en de rijen niet uiteenlopen.
+			const n = filterBerichten(data.berichten, { view: "inbox", map: li.dataset.mapSlug, magazijnToegestaan, persoonRelevant, state: stateModule }).length;
 			schrijfMapAantal(li, n);
-			li.hidden = n === 0;
+			li.hidden = n === 0 && li.dataset.mapSlug !== open;
 		});
 
 		scheiding.hidden = !lijst.querySelector(".berichtenbox-folder-user:not([hidden])");
@@ -2369,7 +2378,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	/**
 	 * De knop "Haal uit map" op de detailpagina.
 	 *
-	 * Alleen als het bericht in een map staat en de bron het kan. Bij het stelsel is een map een
+	 * Alleen als het bericht in een map en in de inbox staat, en de bron het kan. Bij het stelsel is een map een
 	 * eigenschap van het bericht, opgeslagen bij de organisatie die het stuurde; de bron stuurt de
 	 * wijziging daarheen. Er is geen map om leeg achter te laten: was dit het laatste bericht erin,
 	 * dan is de map daarna weg uit het overzicht.
@@ -2389,12 +2398,27 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const bericht = data.berichten.find((b) => b.id === berichtId);
 		if (!bericht || !bericht.map) return;
 		// Alleen voor een bericht in de inbox. In het archief of de prullenbak komt het er niet mee
-		// terug in de inbox, terwijl de melding hieronder dat wel zegt; daar is de eigen knop voor.
+		// terug in de inbox, terwijl de melding "U vindt het in uw inbox" dat wel zegt; daar is de
+		// eigen knop voor.
 		if (statusVan(berichtId) !== "inbox") return;
+
+		const verbergKnop = () => {
+			// De knop gaat weg, dus de focus moet ergens heen waar de bezoeker verder kan.
+			knop.hidden = true;
+			const volgende = detail.querySelector(".action-group [data-actie]:not([hidden])");
+			if (volgende) volgende.focus();
+		};
 
 		knop.hidden = false;
 		knop.addEventListener("click", async () => {
 			if (knop.getAttribute("aria-disabled") === "true") return;
+			// De status kan veranderd zijn sinds de knop verscheen: wie archiveert en met de
+			// terugknop terugkomt, krijgt deze pagina zoals ze was.
+			if (statusVan(berichtId) !== "inbox") {
+				verbergKnop();
+				toonPaginaMelding("Dit bericht staat niet meer in uw inbox. Zet het eerst terug in uw inbox om het uit de map te halen.", "info", "uit-map");
+				return;
+			}
 			knop.setAttribute("aria-disabled", "true");
 
 			const mapNaam = bericht.map;
@@ -2412,10 +2436,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			schrijfDemoMeta(detail, nu, null);
 			werkMapKruimelBij();
 
-			// De knop gaat weg, dus de focus moet ergens heen waar de bezoeker verder kan.
-			knop.hidden = true;
-			const volgende = detail.querySelector(".action-group [data-actie]:not([hidden])");
-			if (volgende) volgende.focus();
+			verbergKnop();
 
 			const status = detail.querySelector("[data-demo-inhoud-status]");
 			if (status) status.textContent = "Dit bericht staat niet meer in de map " + mapNaam + ". U vindt het in uw inbox.";

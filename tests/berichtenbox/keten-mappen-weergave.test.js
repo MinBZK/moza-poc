@@ -149,6 +149,62 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		await laatLaden();
 
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (1 bericht)", "Subsidies (1 bericht)"]);
+		expect(scheiding().hidden).toBe(false);
+	});
+
+	it("werkt het overzicht bij zodra de bezoeker een bericht archiveert of weggooit", async () => {
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const rij = (id) => rijen().find((r) => r.dataset.berichtId === id);
+		rij("b2").querySelector('[data-row-actie="archiveren"]').click();
+		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)"]);
+
+		rij("r2").querySelector('[data-row-actie="verwijderen"]').click();
+		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (1 bericht)", "Subsidies (1 bericht)"]);
+		expect(scheiding().hidden).toBe(false);
+	});
+
+	// Het tabblad is het enige op de pagina dat zegt welke map er openstaat. Verdwijnt het met het
+	// laatste bericht, dan staat de bezoeker voor een lege lijst zonder te weten waarom.
+	it("laat de map die openstaat staan als het laatste bericht eruit gearchiveerd wordt", async () => {
+		bouwPagina([], { mappenbalk: true, pad: "/moza/berichtenbox/?map=" + encodeURIComponent("Te bespreken met adviseur") });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		rijen()[0].querySelector('[data-row-actie="archiveren"]').click();
+
+		expect(rijen()).toEqual([]);
+		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)", "Te bespreken met adviseur (0 berichten)"]);
+		const actief = document.querySelector('.tablist [aria-current="page"]');
+		expect(actief && actief.textContent).toContain("Te bespreken met adviseur");
+	});
+
+	it("houdt een map zonder zichtbare berichten weg als de lijst daarna verandert", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
+		const keten = zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: UITKOMST.berichten.map((b) => (b.id === "r1" ? { ...b, map: null } : b)) } });
+
+		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)"]);
+	});
+
+	// De mappen van de dataset staan in de stijl verborgen; alleen dit kenmerk maakt een map uit het
+	// stelsel zichtbaar. jsdom kent die stijl niet, dus zonder deze toets valt het wegvallen niet op.
+	it("merkt een map uit het stelsel als zichtbaar", async () => {
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const mappen = [...document.querySelectorAll(".tablist .berichtenbox-folder-user")];
+		expect(mappen).toHaveLength(3);
+		mappen.forEach((li) => expect(li.hasAttribute("data-map-uit-berichten")).toBe(true));
 	});
 
 	it("verbergt het kopje Mappen als alle berichten in mappen gearchiveerd zijn", async () => {
@@ -240,8 +296,8 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 		expect(knop().hidden).toBe(true);
 	});
 
-	// In het archief of de prullenbak zegt "Haal uit map" iets wat niet klopt: het bericht komt er
-	// niet mee in de inbox, en daar staat al een knop voor die dat wel doet.
+	// In het archief of de prullenbak belooft de melding na "Haal uit map" iets wat niet klopt: het
+	// bericht komt er niet mee in de inbox, en daar staat al een knop voor die dat wel doet.
 	it.each([
 		["het archief", { gearchiveerd: { b2: true } }],
 		["de prullenbak", { verwijderd: { b2: true } }],
@@ -254,6 +310,27 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 		await laatLaden();
 
 		expect(knop().hidden).toBe(true);
+	});
+
+	// Archiveren stuurt de bezoeker naar de lijst; met de terugknop komt deze pagina terug zoals ze
+	// was, met de knop er nog op.
+	it("haalt niets uit de map als het bericht intussen gearchiveerd is", async () => {
+		bouwDemoDetailPagina(ketenBericht("b2", "Te bespreken met adviseur"));
+		knop().insertAdjacentHTML("afterend", '<button class="icon-button" data-actie="archiveren">Archiveren</button>');
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur")] } });
+
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(knop().hidden).toBe(false);
+
+		document.querySelector('[data-actie="archiveren"]').click();
+		knop().click();
+		await laatLaden();
+
+		expect(keten.keten.haalUitMap).not.toHaveBeenCalled();
+		expect(knop().hidden).toBe(true);
+		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet meer in uw inbox");
+		expect(document.querySelector("[data-demo-inhoud-status]").textContent).not.toContain("U vindt het in uw inbox");
 	});
 
 	it("haalt het bericht uit zijn map en laat zien dat het weer in de inbox staat", async () => {

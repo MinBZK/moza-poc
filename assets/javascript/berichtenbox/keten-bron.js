@@ -30,10 +30,10 @@
  * De naam is ook de sleutel (`slug`), woordelijk: "Belasting" en "belasting" zijn twee mappen, zoals
  * ze bij de organisatie staan. Een slug afleiden zou ze samenvoegen.
  *
- * `aantalBerichten` telt alles wat de bron in die map levert. Wat de bezoeker in deze browser
- * archiveerde of weggooide telt hier mee: dat is een weergave daar, het bericht staat bij de
- * organisatie nog in die map, en de bron kent die weergave niet. De render-laag telt voor het scherm
- * zelf na wat de mapweergave toont (`werkMapAantallenBij` in berichtenbox.js).
+ * `aantalBerichten` telt alles wat de bron in die map levert. Wat de bezoeker in zijn browser
+ * archiveerde of weggooide telt mee: dat is een weergave in de render-laag die de bron niet kent, en
+ * bij de organisatie staat het bericht nog in die map. De render-laag telt voor het scherm zelf na
+ * wat de mapweergave toont.
  */
 export function mappenVan(berichten) {
 	const aantallen = new Map();
