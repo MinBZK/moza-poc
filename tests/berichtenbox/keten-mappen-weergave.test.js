@@ -139,6 +139,29 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)"]);
 	});
 
+	// Een mapweergave toont alleen wat in de inbox staat. Telt het overzicht ook mee wat de bezoeker
+	// archiveerde of weggooide, dan staat er "(1 bericht)" bij een map die leeg opent.
+	it("telt alleen de berichten die de map ook toont, en laat een map zonder zulke berichten weg", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true }, verwijderd: { r2: true } } });
+		zetKeten({ uitkomst: UITKOMST });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (1 bericht)", "Subsidies (1 bericht)"]);
+	});
+
+	it("verbergt het kopje Mappen als alle berichten in mappen gearchiveerd zijn", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur"), ketenBericht("b3", null)] } });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(mappenInBalk()).toEqual([]);
+		expect(scheiding().hidden).toBe(true);
+	});
+
 	it("verbergt het kopje Mappen als er geen enkele map is", async () => {
 		bouwPagina([], { mappenbalk: true });
 		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
@@ -210,6 +233,22 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 	it("biedt de knop alleen aan voor een bericht in een map", async () => {
 		bouwDemoDetailPagina(ketenBericht("b3", null));
 		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(knop().hidden).toBe(true);
+	});
+
+	// In het archief of de prullenbak zegt "Haal uit map" iets wat niet klopt: het bericht komt er
+	// niet mee in de inbox, en daar staat al een knop voor die dat wel doet.
+	it.each([
+		["het archief", { gearchiveerd: { b2: true } }],
+		["de prullenbak", { verwijderd: { b2: true } }],
+	])("biedt de knop niet aan voor een bericht in %s", async (_, state) => {
+		bouwDemoDetailPagina(ketenBericht("b2", "Te bespreken met adviseur"));
+		window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true, ...state }));
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur")] } });
 
 		await laadBerichtenbox();
 		await laatLaden();

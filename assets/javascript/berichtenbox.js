@@ -508,6 +508,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			}).length;
 			el.textContent = n;
 		});
+		werkMapAantallenBij();
 
 		werkMeervoudBij();
 	}
@@ -1070,25 +1071,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			}
 
 			const a = li.querySelector("a");
-			let aantal = li.querySelector("[data-berichtenbox-map-aantal]");
+			const aantal = li.querySelector("[data-berichtenbox-map-aantal]");
 			// Een map met een aantal komt uit de berichten zelf. Die zijn zichtbaar, ook nu de mappen
 			// van de dataset in de stijl tijdelijk verborgen staan.
 			li.toggleAttribute("data-map-uit-berichten", typeof map.aantalBerichten === "number");
 			if (typeof map.aantalBerichten === "number") {
-				// Geen bolletje: dat staat bij de inbox voor "ongelezen", en dit is het totaal in de map.
-				if (!aantal && a) {
-					aantal = document.createElement("span");
-					aantal.dataset.berichtenboxMapAantal = "";
-					a.appendChild(aantal);
-				}
-				if (aantal) {
-					aantal.textContent = "\u00a0(" + map.aantalBerichten;
-					const eenheid = document.createElement("span");
-					eenheid.className = "visually-hidden";
-					eenheid.textContent = map.aantalBerichten === 1 ? " bericht" : " berichten";
-					aantal.appendChild(eenheid);
-					aantal.appendChild(document.createTextNode(")"));
-				}
+				schrijfMapAantal(li, map.aantalBerichten);
 			} else if (aantal) {
 				aantal.remove();
 			}
@@ -1108,6 +1096,58 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Binnen het Belastingdienst-portaal horen de mappen bij de andere organisaties en staan ze
 		// alleen als die zichtbaar zijn. Dat geldt ook voor wat hier net in beeld kwam.
 		werkMappenZichtbaarheidBij();
+	}
+
+	// Het aantal achter de naam van een map. Geen bolletje: dat staat bij de inbox voor "ongelezen",
+	// en dit is het aantal berichten in de map.
+	function schrijfMapAantal(li, n) {
+		const a = li.querySelector("a");
+		let aantal = li.querySelector("[data-berichtenbox-map-aantal]");
+		if (!aantal && a) {
+			aantal = document.createElement("span");
+			aantal.dataset.berichtenboxMapAantal = "";
+			a.appendChild(aantal);
+		}
+		if (!aantal) return;
+		aantal.textContent = "\u00a0(" + n;
+		const eenheid = document.createElement("span");
+		eenheid.className = "visually-hidden";
+		eenheid.textContent = n === 1 ? " bericht" : " berichten";
+		aantal.appendChild(eenheid);
+		aantal.appendChild(document.createTextNode(")"));
+	}
+
+	/**
+	 * Zet de aantallen bij de mappen gelijk aan wat een map toont als de bezoeker hem opent.
+	 *
+	 * De bron telt elk bericht dat bij de organisatie in die map staat. De mapweergave toont alleen
+	 * wat in de inbox staat: wat de bezoeker in deze browser archiveerde of weggooide, staat daar
+	 * niet tussen. Zonder dit staat er "(1)" bij een map die leeg opent, en blijft een map staan
+	 * nadat het laatste zichtbare bericht eruit is.
+	 *
+	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Zet de bezoeker het bericht
+	 * terug in de inbox, dan komt de map weer in beeld.
+	 *
+	 * Pas als de bron de lijst geleverd heeft: tijdens een ophaalronde komen de aantallen van de
+	 * organisaties en zijn er nog geen berichten om na te tellen.
+	 */
+	function werkMapAantallenBij() {
+		// Binnen het Belastingdienst-portaal bepaalt werkMappenZichtbaarheidBij wat er staat.
+		if (!mappenVanBron || orgFilterActief()) return;
+		const scheiding = document.querySelector(".tablist .list-separation");
+		if (!scheiding) return;
+		const lijst = scheiding.parentNode;
+
+		const uitBerichten = lijst.querySelectorAll(".berichtenbox-folder-user[data-map-uit-berichten]");
+		if (!uitBerichten.length) return;
+
+		uitBerichten.forEach((li) => {
+			const n = data.berichten.filter((b) => b && b.map === li.dataset.mapSlug && statusVan(b.id) === "inbox" && magazijnToegestaan(b.magazijnId) && persoonRelevant(b)).length;
+			schrijfMapAantal(li, n);
+			li.hidden = n === 0;
+		});
+
+		scheiding.hidden = !lijst.querySelector(".berichtenbox-folder-user:not([hidden])");
 	}
 
 	// Vlag-knop voor de Gemarkeerd-kolom; spiegelt de markup uit berichtenbox-row.njk.
@@ -2348,6 +2388,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const berichtId = detail.dataset.berichtId;
 		const bericht = data.berichten.find((b) => b.id === berichtId);
 		if (!bericht || !bericht.map) return;
+		// Alleen voor een bericht in de inbox. In het archief of de prullenbak komt het er niet mee
+		// terug in de inbox, terwijl de melding hieronder dat wel zegt; daar is de eigen knop voor.
+		if (statusVan(berichtId) !== "inbox") return;
 
 		knop.hidden = false;
 		knop.addEventListener("click", async () => {
