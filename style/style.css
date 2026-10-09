@@ -1622,6 +1622,11 @@ button.is-marked {
 	color: var(--toepassing-color-text-subtle-2);
 	font-style: italic;
 }
+/* Er loopt een verzoek voor dit bericht (archiveren, weggooien). Het rijmenu is dan dicht, dus
+   zonder dit is tot het antwoord aan de rij niets te zien. */
+.berichtenbox-row[aria-busy="true"] {
+	opacity: var(--toepassing-opacity-interactive-disabled);
+}
 
 @media (prefers-reduced-motion: no-preference) {
 	.berichtenbox-row.is-new {
@@ -1630,7 +1635,12 @@ button.is-marked {
 }
 
 .berichtenbox-folder-user {
-	display: none; /* Tijdelijk verbergen */
+	display: none; /* Tijdelijk verbergen: de mappen van de gegenereerde dataset */
+	/* Mappen uit het Federatief Berichtenstelsel wel: die volgen uit de berichten zelf, en wat er
+	   ontbreekt of verdwijnt is daar precies wat er te zien moet zijn. */
+	&[data-map-uit-berichten] {
+		display: revert;
+	}
 	a {
 		color: var(--toepassing-color-text-subtle-2);
 	}

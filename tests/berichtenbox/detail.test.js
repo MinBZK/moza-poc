@@ -215,11 +215,12 @@ describe("detailpagina — verwijderen ongedaan maken", () => {
 		await laatLaden();
 	}
 
-	it("noemt de knop Terugzetten in inbox als het bericht in de prullenbak staat", async () => {
+	it("noemt de knop Terugzetten als het bericht in de prullenbak staat", async () => {
 		const b = bericht();
 		await toonBericht(b, { verwijderd: { [b.id]: true } });
 
-		expect(verwijderKnop().textContent).toContain("Terugzetten in inbox");
+		expect(verwijderKnop().textContent).toContain("Terugzetten");
+		expect(verwijderKnop().textContent).not.toContain("Verwijderen");
 	});
 
 	it("houdt Verwijderen als het bericht gewoon in de inbox staat", async () => {
@@ -230,7 +231,7 @@ describe("detailpagina — verwijderen ongedaan maken", () => {
 	});
 
 	it("ruilt de prullenbak in voor het berichtenbox-icoon", async () => {
-		// Een prullenbak naast "Terugzetten in inbox" zegt het tegenovergestelde van wat er gebeurt.
+		// Een prullenbak naast "Terugzetten" zegt het tegenovergestelde van wat er gebeurt.
 		const b = bericht();
 		await toonBericht(b, { verwijderd: { [b.id]: true } });
 

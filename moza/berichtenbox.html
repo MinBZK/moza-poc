@@ -83,6 +83,9 @@ permalink: "/moza/berichtenbox/"
 				<div class="visually-hidden" data-berichtenbox-live aria-live="polite"></div>
 
 				<div class="feedback" hidden data-berichtenbox-empty>Er zijn geen berichten om te tonen. Controleer of er nog een filter aanstaat. Anders verschijnt hier uw eerste bericht zodra een organisatie u schrijft.</div>
+				{# De lege staat van een open map. De algemene tekst hierboven klopt daar niet: er staat geen
+				   filter aan dat de bezoeker kan uitzetten, en de berichten zijn er wel, alleen elders. #}
+				<div class="feedback" hidden data-berichtenbox-empty-map>In deze map staan nu geen berichten. Een bericht dat u archiveerde of verwijderde, staat in het archief of in de prullenbak.</div>
 
 				<div class="feedback feedback-error" hidden data-berichtenbox-storing role="status">
 					{% include "icon-feedback-error.njk" %}

@@ -2,7 +2,9 @@
  * berichtenbox.js
  *
  * De render-laag van de Berichtenbox: dit bestand leest uit de datalaag en zet het op het scherm.
- * Het muteert de bron nooit.
+ * Het schrijft nooit in wat de bron leverde. Moet er bij de bron iets veranderen — een bericht uit
+ * zijn map, naar het archief, voorgoed weg — dan vraagt het dat aan de bron, en die levert daarna
+ * de gewijzigde lijst.
  *
  * De datalaag staat in `berichtenbox/` en kent geen DOM: `state.js` (de bewaarde staat in
  * localStorage onder de key "berichtenbox" en de vragen daarover), `lijst.js` (filteren, sorteren
@@ -499,7 +501,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		const alleMappen = [...data.mappen, ...state.eigenMappen];
 		alleMappen.forEach((m) => {
-			const el = document.querySelector(`[data-berichtenbox-count="map:${m.slug}"]`);
+			const el = document.querySelector(`[data-berichtenbox-count="map:${CSS.escape(m.slug)}"]`);
 			if (!el) return;
 			const n = data.berichten.filter((b) => {
 				if (statusVan(b.id) !== "inbox") return false;
@@ -508,6 +510,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			}).length;
 			el.textContent = n;
 		});
+		werkMapAantallenBij();
 
 		werkMeervoudBij();
 	}
@@ -898,8 +901,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	let actiefVoorgoedPaneel = null;
 	let actieveVoorgoedKnop = null;
 
+	// Het verzoek om voorgoed te verwijderen is de deur uit. Dan valt er niets meer te annuleren:
+	// het paneel blijft staan en zegt dat, tot het antwoord er is.
+	let voorgoedOnderweg = false;
+
 	function sluitVoorgoedPaneel({ focusTerug = false } = {}) {
-		if (!actiefVoorgoedPaneel) return;
+		if (!actiefVoorgoedPaneel || voorgoedOnderweg) return;
 		const knop = actieveVoorgoedKnop;
 		actiefVoorgoedPaneel.remove();
 		if (knop) knop.setAttribute("aria-expanded", "false");
@@ -939,6 +946,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		paneel.appendChild(vraag);
 		paneel.appendChild(uitleg);
 
+		// Wat er staat zolang het verzoek bij de bron loopt. `tabindex` zodat de focus erheen kan;
+		// `role="status"` zodat een schermlezer het ook zonder die focus voorleest.
+		// Zelfde blok met balk als bij het laden van de PDF: hoe lang het duurt is niet bekend.
+		const bezig = document.createElement("div");
+		bezig.className = "feedback-progress";
+		bezig.setAttribute("role", "status");
+		bezig.tabIndex = -1;
+		bezig.hidden = true;
+		bezig.dataset.voorgoedBezig = "";
+		const bezigTekst = document.createElement("p");
+		bezigTekst.textContent = "Wij verwijderen dit bericht. Dit kan even duren.";
+		const balk = document.createElement("div");
+		balk.className = "progress-bar";
+		const vulling = document.createElement("div");
+		vulling.className = "progress-bar-fill progress-bar-fill--indeterminate";
+		balk.appendChild(vulling);
+		bezig.appendChild(bezigTekst);
+		bezig.appendChild(balk);
+		paneel.appendChild(bezig);
+
 		const acties = document.createElement("div");
 		acties.className = "action-group";
 
@@ -953,7 +980,47 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		annuleer.className = "secondary";
 		annuleer.textContent = "Annuleer";
 
-		bevestig.addEventListener("click", () => {
+		bevestig.addEventListener("click", async () => {
+			// Bij het stelsel staat het bericht bij de organisatie, dus daar gaat het ook weg.
+			if (plekBijBron()) {
+				if (voorgoedOnderweg) return;
+				voorgoedOnderweg = true;
+				// Geen knoppen meer zolang het verzoek loopt: bevestigen is gebeurd en annuleren kan
+				// niet meer. In hun plaats staat wat er gebeurt, met de focus erop: die stond op de
+				// knop die nu weg is.
+				vraag.hidden = true;
+				uitleg.hidden = true;
+				// Uit het document en niet `hidden`: `.action-group` zet zijn eigen `display`, en dan
+				// blijven de knoppen gewoon staan.
+				acties.remove();
+				bezig.hidden = false;
+				bezig.focus();
+
+				let uitkomst;
+				try {
+					uitkomst = await register.actief().verwijderVoorgoed(berichtId);
+				} catch (fout) {
+					console.error("[Berichtenbox] Het voorgoed verwijderen van een bericht struikelde.", fout);
+					uitkomst = { fout: "Er ging iets mis. Ververs de pagina om te zien of het bericht er nog staat." };
+				}
+				voorgoedOnderweg = false;
+
+				if (uitkomst && uitkomst.fout) {
+					// Terug naar de vraag, zodat de bezoeker het opnieuw kan proberen of kan annuleren.
+					bezig.hidden = true;
+					vraag.hidden = false;
+					uitleg.hidden = false;
+					paneel.appendChild(acties);
+					bevestig.focus();
+					toonPaginaMelding(uitkomst.fout, "storing", "voorgoed");
+					return;
+				}
+				verbergPaginaMelding("voorgoed");
+				sluitVoorgoedPaneel();
+				navigeerNaar(url(berichtenboxBasis() + "berichtenbox-prullenbak/"));
+				return;
+			}
+
 			const voorVoorgoed = state.voorgoedVerwijderd[berichtId];
 			state.voorgoedVerwijderd[berichtId] = true;
 
@@ -1026,6 +1093,235 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		a.appendChild(teller);
 		li.appendChild(a);
 		lijst.appendChild(li);
+	}
+
+	// Heeft de bron al mappen geleverd? Tot dan komt het overzicht uit de voortgang van de ronde.
+	let mappenVanBron = false;
+
+	const MAP_ICOON = '<svg xmlns="http://www.w3.org/2000/svg" class="icon-sm" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M58 15H29v-2c0-1.1-.9-2-2-2H12c-1.1 0-2 .9-2 2v4.69c7.13.47 40.09 2.62 40.59 2.75.28.07.38.21.4.34 0 .04.02.23-.01.23H4.53c-1.29 0-2.24 1.2-1.95 2.46l7.06 30c.27 1.16 1.18 1.54 2.36 1.54h46a2 2 0 0 0 2-2V17c0-1.1-.9-2-2-2" /></svg>';
+
+	/**
+	 * Zet de mappen in de tabbalk gelijk aan wat de bron levert.
+	 *
+	 * Het sjabloon zet de mappen van de dataset neer, verborgen: bij het bouwen is niet te weten welke
+	 * persona er kijkt, en een persona die zijn berichten uit het stelsel haalt heeft andere mappen —
+	 * of geen. Pas als de bron zegt welke mappen er zijn, komen ze in beeld. Een map die de bron niet
+	 * meer noemt, verdwijnt; dat is ook hoe een map zonder berichten verdwijnt.
+	 *
+	 * Draagt een map een aantal (`aantalBerichten`), dan staat dat erbij. Tijdens een ophaalronde
+	 * groeit het overzicht zo mee met wat de organisaties melden. Is de lijst er eenmaal, dan telt
+	 * `werkMapAantallenBij` na wat de map toont, en verbergt die een map waar niets van in de inbox
+	 * staat.
+	 *
+	 * Bestaande items blijven staan en schuiven alleen op hun plek: een item vervangen zou de focus
+	 * weghalen bij wie er met het toetsenbord op staat.
+	 */
+	function werkMappenBij(mappen) {
+		const scheiding = document.querySelector(".tablist .list-separation");
+		if (!scheiding) return;
+		const lijst = scheiding.parentNode;
+
+		const bestaand = new Map();
+		lijst.querySelectorAll(".berichtenbox-folder-user").forEach((li) => bestaand.set(li.dataset.mapSlug, li));
+
+		const actief = huidigeView() === "inbox" ? new URLSearchParams(location.search).get("map") : null;
+		const gezien = new Set();
+
+		// Eerst weg wat de bron niet meer noemt, zodat wat blijft al op volgorde staat en niet
+		// verplaatst hoeft te worden.
+		const genoemd = new Set(mappen.filter((map) => map && typeof map.slug === "string").map((map) => map.slug));
+		let focusWeg = false;
+		bestaand.forEach((li, slug) => {
+			if (genoemd.has(slug)) return;
+			if (li.contains(document.activeElement)) focusWeg = true;
+			li.remove();
+		});
+		// Wie met het toetsenbord op een map stond die verdwijnt, raakt anders zijn plek in de
+		// tabbalk kwijt.
+		if (focusWeg) {
+			const eerste = lijst.querySelector("li:not([hidden]) a");
+			if (eerste) eerste.focus();
+		}
+
+		let vorige = scheiding;
+		mappen.forEach((map) => {
+			if (!map || typeof map.slug !== "string" || gezien.has(map.slug)) return;
+			gezien.add(map.slug);
+
+			let li = bestaand.get(map.slug);
+			if (!li) {
+				li = document.createElement("li");
+				li.className = "berichtenbox-folder-user";
+				li.dataset.mapSlug = map.slug;
+				const a = document.createElement("a");
+				a.href = url(berichtenboxBasis() + "?map=" + encodeURIComponent(map.slug) + "#hoofd-inhoud");
+				a.innerHTML = MAP_ICOON;
+				a.appendChild(document.createTextNode(" " + map.naam + " "));
+				li.appendChild(a);
+			}
+
+			const a = li.querySelector("a");
+			const aantal = li.querySelector("[data-berichtenbox-map-aantal]");
+			// Een map met een aantal komt uit de berichten zelf. Die zijn zichtbaar, ook nu de mappen
+			// van de dataset in de stijl tijdelijk verborgen staan.
+			li.toggleAttribute("data-map-uit-berichten", typeof map.aantalBerichten === "number");
+			if (typeof map.aantalBerichten === "number") {
+				schrijfMapAantal(li, map.aantalBerichten);
+			} else if (aantal) {
+				aantal.remove();
+			}
+
+			if (a && actief === map.slug) a.setAttribute("aria-current", "page");
+
+			li.hidden = false;
+			// Alleen verplaatsen als het item niet al op zijn plek staat: een element dat uit het
+			// document gaat verliest de focus, ook als het er meteen weer in komt.
+			if (vorige.nextElementSibling !== li) vorige.after(li);
+			vorige = li;
+		});
+
+		scheiding.hidden = gezien.size === 0;
+
+		// Binnen het Belastingdienst-portaal horen de mappen bij de andere organisaties en staan ze
+		// alleen als die zichtbaar zijn. Dat geldt ook voor wat hier net in beeld kwam.
+		werkMappenZichtbaarheidBij();
+	}
+
+	/**
+	 * Of de plek van een bericht — inbox, archief, prullenbak — bij de bron staat en niet in deze
+	 * browser. Bij het stelsel zijn het archief en de prullenbak mappen bij de organisatie, en
+	 * verplaatsen gaat dan via de bron.
+	 *
+	 * De bron beslist, niet het bericht: staat een bericht uit het stelsel even niet in de lijst —
+	 * de organisatie leverde niet, of het is elders verwijderd — dan hoort de knop dat te zeggen, en
+	 * niet een aantekening in de browser te maken die het stelsel nooit ziet.
+	 */
+	function plekBijBron() {
+		const bron = register.actief();
+		return !!bron && typeof bron.verplaats === "function";
+	}
+
+	// Berichten waarvoor een wijziging bij de bron onderweg is. Twee wijzigingen tegelijk op
+	// hetzelfde bericht eindigen in de volgorde van de antwoorden, niet in die van de klikken.
+	const wijzigingOnderweg = new Set();
+
+	/**
+	 * Verplaatst een bericht bij de bron. Geeft terug of het lukte. Zo niet, dan staat er een
+	 * melding — behalve als er voor dit bericht al een wijziging onderweg was; dan gebeurt er niets.
+	 *
+	 * `aria-disabled` en niet `disabled` zolang het verzoek loopt, zodat de knop voor een schermlezer
+	 * te vinden blijft. `rij` krijgt `aria-busy`: het menu is na de klik dicht, en zonder dat is
+	 * tot het antwoord aan de rij niets te zien.
+	 */
+	async function verplaatsBijBron(berichtId, plek, { knop = null, rij = null } = {}) {
+		if (wijzigingOnderweg.has(berichtId)) return false;
+		wijzigingOnderweg.add(berichtId);
+		if (knop) knop.setAttribute("aria-disabled", "true");
+		if (rij) rij.setAttribute("aria-busy", "true");
+
+		let uitkomst;
+		try {
+			uitkomst = await register.actief().verplaats(berichtId, plek);
+		} catch (fout) {
+			// De bron hoort niet te werpen. Doet hij het toch, dan mag de knop niet blijven hangen.
+			console.error("[Berichtenbox] Het verplaatsen van een bericht struikelde.", fout);
+			uitkomst = { fout: "Er ging iets mis. Ververs de pagina om te zien waar het bericht staat." };
+		} finally {
+			wijzigingOnderweg.delete(berichtId);
+			if (knop) knop.removeAttribute("aria-disabled");
+			if (rij) rij.removeAttribute("aria-busy");
+		}
+
+		if (uitkomst && uitkomst.fout) {
+			toonPaginaMelding(uitkomst.fout, "storing", "verplaatsen");
+			return false;
+		}
+		verbergPaginaMelding("verplaatsen");
+		return true;
+	}
+
+	/**
+	 * De mappen van de bron, aangevuld met de map die de bezoeker open heeft.
+	 *
+	 * Bij het stelsel bestaat een map alleen zolang er een bericht in zit. Archiveert de bezoeker het
+	 * laatste bericht uit de map die openstaat, dan noemt de bron die map niet meer en zou het
+	 * tabblad verdwijnen: het enige op de pagina dat zegt welke map dit is. Die ene map blijft
+	 * daarom staan, met nul berichten, tot de bezoeker ergens anders heen gaat.
+	 *
+	 * Alleen voor een bron waar mappen uit de berichten komen; de mappen van de dataset staan vast.
+	 */
+	function metOpenMap(mappen) {
+		const bron = register.actief();
+		if (!bron || typeof bron.verplaats !== "function" || huidigeView() !== "inbox") return mappen;
+		const open = new URLSearchParams(location.search).get("map");
+		if (!open || mappen.some((map) => map && map.slug === open)) return mappen;
+		return [...mappen, { slug: open, naam: open, aantalBerichten: 0 }].sort((a, b) => a.naam.localeCompare(b.naam, "nl"));
+	}
+
+	// Het aantal achter de naam van een map. Geen bolletje: dat staat bij de inbox voor "ongelezen",
+	// en dit is een aantal berichten: tijdens de ronde wat de organisaties melden, daarna wat de map
+	// toont.
+	function schrijfMapAantal(li, n) {
+		const a = li.querySelector("a");
+		let aantal = li.querySelector("[data-berichtenbox-map-aantal]");
+		if (!aantal && a) {
+			aantal = document.createElement("span");
+			aantal.dataset.berichtenboxMapAantal = "";
+			a.appendChild(aantal);
+		}
+		if (!aantal) return;
+		aantal.textContent = "\u00a0(" + n;
+		const eenheid = document.createElement("span");
+		eenheid.className = "visually-hidden";
+		eenheid.textContent = n === 1 ? " bericht" : " berichten";
+		aantal.appendChild(eenheid);
+		aantal.appendChild(document.createTextNode(")"));
+	}
+
+	/**
+	 * Zet de aantallen bij de mappen gelijk aan wat een map toont als de bezoeker hem opent.
+	 *
+	 * De bron telt elk bericht dat in die map staat. De mapweergave toont alleen wat in de inbox
+	 * staat en wat de bezoeker hier mag zien. Het archief en de prullenbak levert de bron al als
+	 * plek en niet als map, dus meestal komt dit op hetzelfde uit; het natellen houdt het aantal
+	 * gelijk aan de rijen, ook als een filter van de render-laag er een bericht tussenuit haalt.
+	 *
+	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Behalve de map die de
+	 * bezoeker nu open heeft: die blijft staan met "(0)", want het tabblad is het enige op de pagina
+	 * dat zegt welke map dit is.
+	 *
+	 * Pas nadat de bron voor het eerst geleverd heeft (`mappenVanBron`): tot dan komen de aantallen
+	 * van de organisaties, en staan in `data.berichten` nog niet de berichten van deze bron. Natellen
+	 * zou dan elke map op nul zetten en verbergen.
+	 */
+	function werkMapAantallenBij() {
+		// Binnen het Belastingdienst-portaal bepaalt werkMappenZichtbaarheidBij wat er staat, en
+		// dragen de mappen geen aantal: het stelsel wordt daar niet bevraagd.
+		if (!mappenVanBron || orgFilterActief()) return;
+		const scheiding = document.querySelector(".tablist .list-separation");
+		if (!scheiding) return;
+		const lijst = scheiding.parentNode;
+
+		const uitBerichten = lijst.querySelectorAll(".berichtenbox-folder-user[data-map-uit-berichten]");
+		if (!uitBerichten.length) return;
+
+		const open = huidigeView() === "inbox" ? new URLSearchParams(location.search).get("map") : null;
+
+		uitBerichten.forEach((li) => {
+			// Hetzelfde filter als de mapweergave zelf, zodat het aantal en de rijen niet uiteenlopen.
+			const n = filterBerichten(data.berichten, { view: "inbox", map: li.dataset.mapSlug, magazijnToegestaan, persoonRelevant, state: stateModule }).length;
+			schrijfMapAantal(li, n);
+			const weg = n === 0 && li.dataset.mapSlug !== open;
+			const hadFocus = weg && li.contains(document.activeElement);
+			li.hidden = weg;
+			// Wie met het toetsenbord op deze map stond, raakt anders zijn plek in de tabbalk kwijt.
+			if (hadFocus) {
+				const eerste = lijst.querySelector("li:not([hidden]) a");
+				if (eerste) eerste.focus();
+			}
+		});
+
+		scheiding.hidden = !lijst.querySelector(".berichtenbox-folder-user:not([hidden])");
 	}
 
 	// Vlag-knop voor de Gemarkeerd-kolom; spiegelt de markup uit berichtenbox-row.njk.
@@ -1268,7 +1564,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const eigenFilter = !!(criteria.zoek && criteria.zoek.trim());
 		const uitvalVerklaartHet = huidigeView() === "inbox" && !eigenFilter && !!huidigeUitval();
 		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = gevonden.length > 0 || uitvalVerklaartHet;
+		const leegMap = document.querySelector("[data-berichtenbox-empty-map]");
+		const toonLeeg = gevonden.length === 0 && !uitvalVerklaartHet;
+		// Een open map zonder berichten heeft een eigen tekst: de algemene wijst naar een filter dat
+		// de bezoeker niet aanzette en belooft een eerste bericht, terwijl de berichten er zijn maar
+		// elders staan. Met een zoekterm erbij is dát het filter, en klopt de algemene tekst weer.
+		const inMap = !!leegMap && !!criteria.map && !eigenFilter;
+		if (leeg) leeg.hidden = !toonLeeg || inMap;
+		if (leegMap) leegMap.hidden = !toonLeeg || !inMap;
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== "inbox") lijst.hidden = gevonden.length === 0;
 
@@ -1497,7 +1800,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		const mapFilter = mapUitUrl();
 		if (mapFilter) {
-			const mapTab = document.querySelector('[data-map-slug="' + mapFilter + '"] a');
+			// Een mapnaam uit het stelsel komt woordelijk mee, met spaties en al wat een organisatie erin
+			// zette. Ongeëscaped breekt een aanhalingsteken de selector en daarmee dit hele blok.
+			const mapTab = document.querySelector('[data-map-slug="' + CSS.escape(mapFilter) + '"] a');
 			if (mapTab) {
 				mapTab.setAttribute("aria-current", "page");
 				mapTab.setAttribute("aria-selected", "true");
@@ -1510,8 +1815,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					inboxLink.removeAttribute("aria-selected");
 				}
 			}
+			// Een map die uit de berichten is afgeleid — die draagt een aantal — heeft geen aanmaakdatum:
+			// hij bestaat zolang er een bericht in zit. Daar een datum noemen zou iets verzinnen.
+			const map = data.mappen.find((m) => m.slug === mapFilter);
 			const counterP = document.querySelector("[data-berichtenbox-toolbar] > p");
-			if (counterP) counterP.textContent = "Deze map heeft u aangemaakt op 7 april 2026.";
+			if (counterP && !(map && typeof map.aantalBerichten === "number")) counterP.textContent = "Deze map heeft u aangemaakt op 7 april 2026.";
 		}
 		pasFilterToe();
 	}
@@ -1585,9 +1893,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			zetKnopLabel(content.querySelector('[data-actie="archiveren"]'), "Terugplaatsen in inbox");
 		}
 
-		// Staat het in de prullenbak, dan is verwijderen al gebeurd. De knop biedt dan de weg terug:
-		// verwijderen wist ook de archief-markering, dus het bericht belandt in de inbox en niet in
-		// het archief waar het misschien vandaan kwam. Dat is wat de knop zegt.
+		// Staat het in de prullenbak, dan is verwijderen al gebeurd. De knop biedt dan de weg terug,
+		// naar de inbox en niet naar het archief waar het misschien vandaan kwam. Bij de dataset wist
+		// verwijderen de archief-markering; bij het stelsel heeft een bericht maar één map, en uit de
+		// prullenbak halen is die map leegmaken. Dat is wat de knop zegt.
 		if (statusVan(berichtId) === "prullenbak") {
 			const terugKnop = content.querySelector('[data-actie="verwijderen"]');
 			zetKnopLabel(terugKnop, "Terugzetten");
@@ -1602,6 +1911,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const voorgoedKnop = content.querySelector('[data-actie="voorgoed-verwijderen"]');
 			if (voorgoedKnop) voorgoedKnop.hidden = false;
 		}
+
+		// Waar het bericht stond toen de knoppen hun tekst kregen. Bij de bron kan dat intussen anders
+		// zijn — een ander tabblad, of deze pagina terug uit de geschiedenis — en dan hoort een knop
+		// te doen wat erop staat, niet het omgekeerde.
+		const plekBijBinden = statusVan(berichtId);
 
 		content.querySelectorAll("[data-actie]").forEach((btn) => {
 			btn.addEventListener("click", () => {
@@ -1625,6 +1939,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					zet(state.gelezen, berichtId, voorGelezen);
 					zet(state.ongelezenToegevoegd, berichtId, voorOngelezen);
 				};
+
+				if ((actie === "archiveren" || actie === "verwijderen") && plekBijBron(berichtId)) {
+					// Bij het stelsel staat de plek bij de organisatie. Dezelfde knop zet terug als het
+					// bericht er bij het binden al stond, want dat is wat erop staat. Staat het bericht
+					// intussen al waar de knop het heen stuurt, dan vraagt de bron niets en is het
+					// gelukt. Pas navigeren als het gelukt is: de melding is op de inbox niet te lezen.
+					const doel = actie === "archiveren" ? "archief" : "prullenbak";
+					verplaatsBijBron(berichtId, plekBijBinden === doel ? "inbox" : doel, { knop: btn }).then((gelukt) => {
+						if (gelukt) navigeerNaar(url(berichtenboxBasis()));
+					});
+					return;
+				}
 
 				if (actie === "archiveren") {
 					if (statusVan(berichtId) === "archief") {
@@ -2130,7 +2456,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 *
 	 * Het sjabloon zet er "Inbox" neer, want dat is waar een bericht staat zolang niemand het
 	 * verplaatst heeft, en zonder JavaScript blijft dat het beste antwoord. Waar het écht staat
-	 * weet alleen de bewaarde staat: archief, prullenbak of een eigen map van de bezoeker.
+	 * weet de bewaarde staat, of bij het stelsel de bron: archief, prullenbak of een map.
 	 *
 	 * De kruimel wijst naar die weergave, zodat "terug naar waar ik vandaan kwam" ook echt daar
 	 * uitkomt. Voor de tabs hierboven gebeurt hetzelfde in bindDetailPaginaActies; dat is dezelfde
@@ -2254,18 +2580,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		document.title = "MijnOverheid Zakelijk: " + bericht.onderwerp;
 
-		const effMap = mapVan(bericht.id, bericht.map);
-		const metaEl = detail.querySelector("[data-demo-meta]");
-		if (metaEl) {
-			metaEl.textContent = bericht.afzender + " \u00b7 " + datumNL(bericht.datum);
-			if (effMap) {
-				const span = document.createElement("span");
-				span.dataset.maplabel = "";
-				span.textContent = effMap;
-				metaEl.appendChild(document.createTextNode(" \u00b7 "));
-				metaEl.appendChild(span);
-			}
-		}
+		schrijfDemoMeta(detail, bericht, mapVan(bericht.id, bericht.map));
 
 		const bodyEl = detail.querySelector("[data-demo-body]");
 		if (bodyEl) {
@@ -2296,6 +2611,91 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				if (laden) laden.textContent = "Bijlagen ophalen bij " + bericht.afzender + "\u2026";
 			}
 		}
+	}
+
+	function schrijfDemoMeta(detail, bericht, map) {
+		const metaEl = detail.querySelector("[data-demo-meta]");
+		if (!metaEl) return;
+		metaEl.textContent = bericht.afzender + " \u00b7 " + datumNL(bericht.datum);
+		if (map) {
+			const span = document.createElement("span");
+			span.dataset.maplabel = "";
+			span.textContent = map;
+			metaEl.appendChild(document.createTextNode(" \u00b7 "));
+			metaEl.appendChild(span);
+		}
+	}
+
+	/**
+	 * De knop "Haal uit map" op de detailpagina.
+	 *
+	 * Alleen als het bericht in een map en in de inbox staat, en de bron het kan. Bij het stelsel is een map een
+	 * eigenschap van het bericht, opgeslagen bij de organisatie die het stuurde; de bron stuurt de
+	 * wijziging daarheen. Er is geen map om leeg achter te laten: was dit het laatste bericht erin,
+	 * dan is de map daarna weg uit het overzicht.
+	 *
+	 * `aria-disabled` en niet `disabled` zolang het verzoek loopt, zodat de knop voor een
+	 * schermlezer te vinden blijft.
+	 */
+	function bindUitMap() {
+		const knop = document.querySelector('[data-actie="uit-map"]');
+		const detail = document.querySelector("[data-demo-detail]");
+		if (!knop || !detail) return;
+
+		const bron = register.actief();
+		if (!bron || typeof bron.haalUitMap !== "function") return;
+
+		const berichtId = detail.dataset.berichtId;
+		const bericht = data.berichten.find((b) => b.id === berichtId);
+		if (!bericht || !bericht.map) return;
+		// Alleen voor een bericht in de inbox; in het archief en de prullenbak staat er een eigen knop
+		// om het terug te zetten. Bij het stelsel heeft zo'n bericht al geen map meer en keert de
+		// regel hierboven om; deze dekt een bron waar een gearchiveerd bericht zijn map wel houdt.
+		if (statusVan(berichtId) !== "inbox") return;
+
+		const verbergKnop = () => {
+			// De knop gaat weg, dus de focus moet ergens heen waar de bezoeker verder kan.
+			knop.hidden = true;
+			const volgende = detail.querySelector(".action-group [data-actie]:not([hidden])");
+			if (volgende) volgende.focus();
+		};
+
+		knop.hidden = false;
+		knop.addEventListener("click", async () => {
+			if (knop.getAttribute("aria-disabled") === "true") return;
+			// Loopt er voor dit bericht al een wijziging — archiveren, weggooien — dan wacht deze.
+			if (wijzigingOnderweg.has(berichtId)) return;
+			// De status kan veranderd zijn sinds de knop verscheen: wie archiveert en met de
+			// terugknop terugkomt, krijgt deze pagina zoals ze was. Het bericht staat dan in het
+			// archief of de prullenbak, en bij het stelsel is dát zijn map: de map die hier nog
+			// genoemd staat is het al kwijt.
+			if (statusVan(berichtId) !== "inbox") {
+				verbergKnop();
+				toonPaginaMelding("Dit bericht staat niet meer in uw inbox, en daardoor ook niet meer in deze map.", "info", "uit-map");
+				return;
+			}
+			knop.setAttribute("aria-disabled", "true");
+
+			const mapNaam = bericht.map;
+			const uitkomst = await bron.haalUitMap(berichtId);
+			knop.removeAttribute("aria-disabled");
+
+			if (uitkomst && uitkomst.fout) {
+				toonPaginaMelding(uitkomst.fout, "storing", "uit-map");
+				return;
+			}
+			verbergPaginaMelding("uit-map");
+
+			// De bron heeft de lijst al bijgewerkt; wat hier staat volgt.
+			const nu = data.berichten.find((b) => b.id === berichtId) || bericht;
+			schrijfDemoMeta(detail, nu, null);
+			werkMapKruimelBij();
+
+			verbergKnop();
+
+			const status = detail.querySelector("[data-demo-inhoud-status]");
+			if (status) status.textContent = "Dit bericht staat niet meer in de map " + mapNaam + ". U vindt het in uw inbox.";
+		});
 	}
 
 	function toonMappenZijbalk() {
@@ -2427,6 +2827,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 			bron.volgVoortgang((voortgang) => {
 				laatste = voortgang;
+
+				// Het mappenoverzicht groeit mee met wat de organisaties tijdens de ronde melden, los van
+				// de drempel voor de balk: een map die er al is hoort er te staan, ook bij een korte ronde.
+				//
+				// Alleen tot de bron voor het eerst geleverd heeft. Daarna is de lijst de bron: een latere
+				// ronde — een herstel na een verlopen sessie — zou mappen die nog niet gemeld zijn even
+				// weghalen, met de focus en de actieve map erbij, en eindigen op de tellingen van de ronde.
+				if (voortgang && Array.isArray(voortgang.mappen) && !mappenVanBron) {
+					veilig({ log: "Het mappenoverzicht tijdens het ophalen", bezoeker: "De mappen zijn op dit moment niet volledig te zien." }, () => werkMappenBij(voortgang.mappen));
+				}
 
 				// Geen voortgang meer: de ronde is klaar of afgebroken. Wat er voor haar verborgen is,
 				// hoort dan weer op het scherm — ook als deze bron nooit aan tonen toekwam, want de
@@ -2565,6 +2975,23 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (!id) return; // demo-rijen zonder bericht-id: geen actie
 		const soort = actie.dataset.rowActie;
 		if (soort !== "archiveren" && soort !== "verwijderen") return;
+
+		// Bij het stelsel staat de plek van een bericht bij de organisatie; de bron meldt daarna de
+		// gewijzigde lijst en die tekent het scherm opnieuw.
+		if (plekBijBron()) {
+			const plek = soort === "archiveren" ? "archief" : "prullenbak";
+			verplaatsBijBron(id, plek, { rij }).then((gelukt) => {
+				if (!gelukt) return;
+				// De rij verdwijnt pas als het antwoord er is, en zonder dit hoort wie een schermlezer
+				// gebruikt daar niets van.
+				const live = document.querySelector("[data-berichtenbox-live]");
+				if (live) live.textContent = plek === "archief" ? "Het bericht is gearchiveerd." : "Het bericht staat in de prullenbak.";
+				// Zoals hieronder: de luisteraar heeft de tellers herberekend, en zonder deze opslag
+				// houden de badges op andere pagina's het aantal van vóór deze actie vast.
+				opslaanStil();
+			});
+			return;
+		}
 
 		// 'doorsturen' is een schets zonder functionaliteit in het prototype.
 		const voorGearchiveerd = state.gearchiveerd[id];
@@ -2776,6 +3203,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		// Eigen afscherming: gaat dit mis, dan staat er "Inbox" in het kruimelpad terwijl het bericht
 		// elders staat. Vervelend, maar geen reden om de knoppen hierboven mee te nemen.
 		veilig({ log: "De map in het kruimelpad", bezoeker: "Het kruimelpad laat niet zien waar dit bericht staat." }, werkMapKruimelBij);
+		veilig({ log: "De knop Haal uit map", bezoeker: "U kunt dit bericht nu niet uit zijn map halen." }, bindUitMap);
 
 		// Ná het register: dit hangt aan de bron. De wéérgave hoeft hier niet bijgewerkt te worden —
 		// de lading meldt zich als bronwijziging, en die luisteraar doet het.
@@ -2882,6 +3310,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		if (inhoud.nieuwBericht) zojuistBinnengekomenId = inhoud.nieuwBericht.id;
 
 		data.berichten = volgende;
+		// Vóór er iets getekend wordt: elke weergave en elke teller vraagt de state waar een bericht
+		// staat, en bij het stelsel zegt de bron dat.
+		stateModule.volgBron(data.berichten);
 		if ("uitval" in inhoud) {
 			laatsteUitval = inhoud.uitval;
 			// Een bron die onderweg wegvalt laat berichten uit de lijst verdwijnen. Zonder dit gebeurt
@@ -2895,11 +3326,19 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		}
 
 		try {
+			if (!inhoud.nieuwBericht) {
+				werkMappenBij(metOpenMap(data.mappen));
+				mappenVanBron = true;
+				// Meteen natellen, niet pas in render(): die slaat over zolang er een laadfout staat,
+				// en dan blijven de aantallen van de bron staan naast mappen die leeg openen.
+				werkMapAantallenBij();
+			}
 			werkMappenZichtbaarheidBij();
 			toonBerichten();
 			render(huidigeView());
 		} catch (fout) {
 			data.berichten = vorige.berichten;
+			stateModule.volgBron(data.berichten);
 			data.magazijnen = vorige.magazijnen;
 			data.mappen = vorige.mappen;
 			huidigePagina = vorige.pagina;
@@ -2908,6 +3347,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			// De rijen zijn mogelijk al vervangen voordat het misging. Alleen `data` terugzetten laat
 			// het scherm iets tonen wat nergens meer bestaat.
 			try {
+				werkMappenBij(metOpenMap(data.mappen));
+				werkMapAantallenBij();
 				toonBerichten();
 				render(huidigeView());
 			} catch (herstelFout) {
@@ -3120,8 +3561,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			lijst.hidden = true;
 		}
 
-		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = true;
+		document.querySelectorAll("[data-berichtenbox-empty], [data-berichtenbox-empty-map]").forEach((leeg) => {
+			leeg.hidden = true;
+		});
 
 		const pagnav = document.querySelector("[data-berichtenbox-pagination]");
 		if (pagnav) pagnav.hidden = true;
@@ -3139,7 +3581,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	if (stateModule.onleesbaar) {
-		toonPaginaMelding("Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.", "storing", "opslag");
+		toonPaginaMelding("Uw eerder bewaarde berichtenbox is niet te lezen. Wat u in deze browser had gearchiveerd, weggegooid of gemarkeerd is daardoor niet te zien. Nieuwe wijzigingen worden hier nu niet bewaard.", "storing", "opslag");
 	}
 
 	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
