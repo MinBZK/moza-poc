@@ -63,6 +63,11 @@ function proxy(doel, host, extra = {}) {
 			// anders heeft changeOrigin de Host al goed gezet.
 			if (host && host !== new URL(doel).host) proxyReq.setHeader("Host", host);
 
+			// Geen Origin naar het stelsel, zoals nginx met `proxy_set_header Origin ""`. De browser
+			// zet die op elke PATCH en DELETE, en het CORS-filter van het stelsel weigert dan met een
+			// kale 403 voordat het verzoek ergens gelogd wordt.
+			proxyReq.removeHeader("origin");
+
 			// Een bijlage staat in een <a href> en kan geen header meesturen; de browser zet de
 			// ontvanger daarom in een cookie. Alleen invullen als de browser zelf niets stuurde:
 			// een fetch met X-Ontvanger hoort voor te gaan.

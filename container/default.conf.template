@@ -276,6 +276,12 @@ server {
 
         proxy_pass $backend_keten$request_uri;
         proxy_set_header Host $backend_keten_host;
+        # Geen Origin naar het stelsel. Een browser zet die op elke PATCH en DELETE, ook binnen
+        # dezelfde site, en het CORS-filter van het stelsel weigert dan met een kale 403 vóórdat
+        # het verzoek ergens gelogd wordt: archiveren en verwijderen mislukten, de lijst (GET,
+        # zonder Origin) werkte wel. Vanaf hier is het server-tot-server; de browser heeft de
+        # same-origin-toets bij deze proxy al gedaan.
+        proxy_set_header Origin "";
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_http_version 1.1;
