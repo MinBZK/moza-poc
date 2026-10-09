@@ -1355,7 +1355,14 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const eigenFilter = !!(criteria.zoek && criteria.zoek.trim());
 		const uitvalVerklaartHet = huidigeView() === "inbox" && !eigenFilter && !!huidigeUitval();
 		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = gevonden.length > 0 || uitvalVerklaartHet;
+		const leegMap = document.querySelector("[data-berichtenbox-empty-map]");
+		const toonLeeg = gevonden.length === 0 && !uitvalVerklaartHet;
+		// Een open map zonder berichten heeft een eigen tekst: de algemene wijst naar een filter dat
+		// de bezoeker niet aanzette en belooft een eerste bericht, terwijl de berichten er zijn maar
+		// elders staan. Met een zoekterm erbij is dát het filter, en klopt de algemene tekst weer.
+		const inMap = !!leegMap && !!criteria.map && !eigenFilter;
+		if (leeg) leeg.hidden = !toonLeeg || inMap;
+		if (leegMap) leegMap.hidden = !toonLeeg || !inMap;
 		// Alleen archief en prullenbak verbergen de tabel zelf; de inbox houdt zijn koppen staan.
 		if (huidigeView() !== "inbox") lijst.hidden = gevonden.length === 0;
 
@@ -3292,8 +3299,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			lijst.hidden = true;
 		}
 
-		const leeg = document.querySelector("[data-berichtenbox-empty]");
-		if (leeg) leeg.hidden = true;
+		document.querySelectorAll("[data-berichtenbox-empty], [data-berichtenbox-empty-map]").forEach((leeg) => {
+			leeg.hidden = true;
+		});
 
 		const pagnav = document.querySelector("[data-berichtenbox-pagination]");
 		if (pagnav) pagnav.hidden = true;

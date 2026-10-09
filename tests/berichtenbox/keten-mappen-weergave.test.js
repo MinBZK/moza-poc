@@ -183,6 +183,41 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(actief && actief.textContent).toContain("Te bespreken met adviseur");
 	});
 
+	// De algemene lege staat wijst naar een filter en belooft een eerste bericht. In een lege map
+	// klopt geen van beide: de berichten zijn er, alleen in het archief of de prullenbak.
+	it("zegt in een lege map waar de berichten gebleven zijn, en bij een zoekterm weer het algemene", async () => {
+		const leeg = () => document.querySelector("[data-berichtenbox-empty]");
+		const leegMap = () => document.querySelector("[data-berichtenbox-empty-map]");
+		bouwPagina([], { mappenbalk: true, pad: "/moza/berichtenbox/?map=" + encodeURIComponent("Te bespreken met adviseur") });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(leeg().hidden).toBe(true);
+		expect(leegMap().hidden).toBe(true);
+
+		rijen()[0].querySelector('[data-row-actie="archiveren"]').click();
+		expect(leegMap().hidden).toBe(false);
+		expect(leeg().hidden).toBe(true);
+
+		const zoek = document.querySelector("[data-berichtenbox-search-input]");
+		zoek.value = "bestaat nergens";
+		zoek.dispatchEvent(new Event("input", { bubbles: true }));
+		await laatLaden();
+		expect(leegMap().hidden).toBe(true);
+		expect(leeg().hidden).toBe(false);
+	});
+
+	it("laat de algemene lege staat staan in een inbox zonder map", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b3: true } } });
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(document.querySelector("[data-berichtenbox-empty]").hidden).toBe(false);
+		expect(document.querySelector("[data-berichtenbox-empty-map]").hidden).toBe(true);
+	});
+
 	it("houdt een map zonder zichtbare berichten weg als de lijst daarna verandert", async () => {
 		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
 		const keten = zetKeten({ uitkomst: UITKOMST });

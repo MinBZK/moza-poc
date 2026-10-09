@@ -124,6 +124,7 @@ ${STORING}
 	<!-- Zoals de echte templates: op de inbox verborgen, op archief en prullenbak zichtbaar,
 	     want zonder JavaScript zijn die pagina's werkelijk leeg. -->
 	<div class="feedback"${inbox ? " hidden" : ""} data-berichtenbox-empty>Er zijn geen berichten om te tonen.</div>
+	${inbox ? '<div class="feedback" hidden data-berichtenbox-empty-map>In deze map staan nu geen berichten.</div>' : ""}
 
 	<table data-berichtenbox-list${lijstAttr}>
 		<thead>${inbox ? KOPPEN_INBOX : KOPPEN_OVERIG}
