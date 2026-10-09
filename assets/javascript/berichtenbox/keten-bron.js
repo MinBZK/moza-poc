@@ -65,7 +65,7 @@ function gelijkeMagazijnen(vorige, nieuwe) {
  * hoort dat bericht opnieuw aangeboden te worden — niet als bekend te gelden.
  *
  * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, er zijn andere organisaties in
- * beeld, of een bericht staat in een andere map. Dan is het een andere lijst en die hoort in één keer
+ * beeld, of een bericht staat in een andere map of op een andere plek (inbox, archief, prullenbak). Dan is het een andere lijst en die hoort in één keer
  * op het scherm, niet als een reeks binnenkomers. Een organisatie die erbij komt telt mee: haar naam
  * bereikt de render-laag alleen via een hele lijst, want bij een binnenkomer gaan er geen magazijnen
  * mee. Om dezelfde reden telt een binnenkomer in een map als een andere lijst: het mappenoverzicht
@@ -90,6 +90,10 @@ function aanwasVan(getoond, nieuwe) {
 /**
  * Plek en map van een bericht samen. Het archief en de prullenbak zijn bij het stelsel mappen; het
  * transport levert ze als `plek`, zodat ze niet tussen de mappen komen te staan.
+ *
+ * Dezelfde functie staat in berichtenbox-keten.js, dat een klassiek script is en niets kan
+ * importeren. Ze horen gelijk te blijven: anders meldt het transport een wijziging die de bron er
+ * geen vindt, of andersom.
  */
 function plaatsVan(bericht) {
 	return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
@@ -247,7 +251,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		async verplaats(berichtId, plek) {
 			if (!keten || typeof keten.verplaats !== "function") {
 				console.error("[Berichtenbox] Het keten-script kent geen verplaats; het bericht blijft waar het staat.");
-				return { fout: "Wij konden dit bericht niet verplaatsen. Ververs de pagina om het opnieuw te proberen." };
+				return { fout: "Het is nu niet mogelijk om dit bericht te verplaatsen. Ververs de pagina om het opnieuw te proberen." };
 			}
 			return keten.verplaats(berichtId, plek);
 		},
@@ -256,7 +260,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		async verwijderVoorgoed(berichtId) {
 			if (!keten || typeof keten.verwijder !== "function") {
 				console.error("[Berichtenbox] Het keten-script kent geen verwijder; het bericht blijft staan.");
-				return { fout: "Wij konden dit bericht niet verwijderen. Ververs de pagina om het opnieuw te proberen." };
+				return { fout: "Het is nu niet mogelijk om dit bericht voorgoed te verwijderen. Ververs de pagina om het opnieuw te proberen." };
 			}
 			return keten.verwijder(berichtId);
 		},

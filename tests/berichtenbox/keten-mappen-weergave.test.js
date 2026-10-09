@@ -210,6 +210,59 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(mappenInBalk()).toContain("Te bespreken met adviseur (1 bericht)");
 	});
 
+	// Een bericht zonder map heeft vóór en na `map: null`; alleen de plek verschilt.
+	it("haalt ook een bericht zonder map uit de inbox als het gearchiveerd is, en zegt dat", async () => {
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		rijen()
+			.find((r) => r.dataset.berichtId === "b3")
+			.querySelector('[data-row-actie="archiveren"]')
+			.click();
+		await laatLaden();
+
+		expect(rijen().map((r) => r.dataset.berichtId)).not.toContain("b3");
+		expect(document.querySelector("[data-berichtenbox-live]").textContent).toBe("Het bericht is gearchiveerd.");
+	});
+
+	// Wat een browser vóór deze wijziging over een bericht uit het stelsel bewaarde, telt niet meer:
+	// het stelsel zegt waar het staat.
+	it("toont een bericht dat volgens het stelsel in de inbox staat, ook als de browser het als gearchiveerd bewaarde", async () => {
+		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b3: true }, verwijderd: { b1: true }, voorgoedVerwijderd: { r1: true } } });
+		zetKeten({ uitkomst: UITKOMST });
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(
+			rijen()
+				.map((r) => r.dataset.berichtId)
+				.sort()
+		).toEqual(["b1", "b2", "b3", "r1", "r2"]);
+	});
+
+	it("laat zien dat er een verzoek loopt, en stuurt geen tweede voor hetzelfde bericht", async () => {
+		bouwPagina([], { mappenbalk: true });
+		const keten = zetKeten({ uitkomst: UITKOMST });
+		let rondAf;
+		keten.keten.verplaats = vi.fn(() => new Promise((klaar) => (rondAf = klaar)));
+		await laadBerichtenbox();
+		await laatLaden();
+
+		const rij = rijen().find((r) => r.dataset.berichtId === "b2");
+		rij.querySelector('[data-row-actie="archiveren"]').click();
+		rij.querySelector('[data-row-actie="verwijderen"]').click();
+		await laatLaden();
+
+		expect(keten.keten.verplaats).toHaveBeenCalledTimes(1);
+		expect(rij.getAttribute("aria-busy")).toBe("true");
+
+		rondAf({});
+		await laatLaden();
+		expect(rij.getAttribute("aria-busy")).toBeNull();
+	});
+
 	it("toont in het archief wat bij het stelsel in het archief staat", async () => {
 		bouwPagina([], { view: "archief" });
 		zetKeten({ uitkomst: opPlek(UITKOMST, { b2: "archief", r2: "prullenbak" }) });
@@ -405,9 +458,46 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 		await laatLaden();
 
 		expect(keten.verplaats).toHaveBeenCalledWith("b2", plek);
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/");
 		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
 		expect(bewaard.gearchiveerd || {}).toEqual({});
 		expect(bewaard.verwijderd || {}).toEqual({});
+	});
+
+	// De knop kreeg zijn tekst toen het bericht in de inbox stond. Staat het intussen in het archief
+	// — een ander tabblad — dan hoort "Archiveren" het niet terug te zetten.
+	it("doet wat er op de knop staat, ook als het bericht intussen elders verplaatst is", async () => {
+		const bericht = ketenBericht("b2", "Te bespreken met adviseur");
+		bouwDemoDetailPagina(bericht);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht] } });
+		await laadBerichtenbox();
+		await laatLaden();
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [{ ...bericht, plek: "archief", map: null }] } });
+
+		actie("archiveren").click();
+		await laatLaden();
+
+		expect(keten.keten.verplaats).toHaveBeenCalledWith("b2", "archief");
+	});
+
+	// Staat het bericht even niet in de lijst, dan mag de knop niet stilletjes een aantekening in
+	// de browser maken die het stelsel nooit ziet.
+	it("maakt geen aantekening in de browser als het bericht niet meer in de lijst staat", async () => {
+		const bericht = ketenBericht("b2", "Te bespreken met adviseur");
+		bouwDemoDetailPagina(bericht);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht] } });
+		keten.keten.verplaats = vi.fn(async () => ({ fout: "Het is nu niet mogelijk om dit bericht te archiveren. Ververs de pagina om het opnieuw te proberen." }));
+		await laadBerichtenbox();
+		await laatLaden();
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		actie("archiveren").click();
+		await laatLaden();
+
+		expect(keten.keten.verplaats).toHaveBeenCalledWith("b2", "archief");
+		expect(window.Berichtenbox.navigatieDoel()).toBeNull();
+		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
+		expect(bewaard.gearchiveerd || {}).toEqual({});
 	});
 
 	it.each([
@@ -426,12 +516,11 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 	it("blijft op de pagina en zegt wat er misging als het stelsel weigert", async () => {
 		const keten = await open(ketenBericht("b2", "Te bespreken met adviseur"));
 		keten.verplaats = vi.fn(async () => ({ fout: "Wij konden dit bericht niet verplaatsen. Het staat nog waar het stond. Probeer het opnieuw." }));
-		const pad = location.pathname;
 
 		actie("archiveren").click();
 		await laatLaden();
 
-		expect(location.pathname).toBe(pad);
+		expect(window.Berichtenbox.navigatieDoel()).toBeNull();
 		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verplaatsen");
 		expect(actie("archiveren").getAttribute("aria-disabled")).toBeNull();
 	});
@@ -446,8 +535,48 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 		await laatLaden();
 
 		expect(keten.verwijder).toHaveBeenCalledWith("b2");
+		expect(document.querySelector("[data-voorgoed-paneel]")).toBeNull();
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
 		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
 		expect(bewaard.voorgoedVerwijderd || {}).toEqual({});
+	});
+
+	// Is het verzoek de deur uit, dan valt er niets meer te annuleren. Het paneel zegt dat er
+	// verwijderd wordt en laat zich niet sluiten: anders denkt de bezoeker dat hij het tegenhield.
+	it("vervangt de knoppen door een bezig-melding zolang het verwijderen loopt, en laat zich dan niet sluiten", async () => {
+		const keten = await open(ketenBericht("b2", null, { plek: "prullenbak" }));
+		let rondAf;
+		keten.verwijder = vi.fn(() => new Promise((klaar) => (rondAf = klaar)));
+
+		actie("voorgoed-verwijderen").click();
+		const paneel = document.querySelector("[data-voorgoed-paneel]");
+		const bezig = paneel.querySelector("[data-voorgoed-bezig]");
+		const annuleer = [...paneel.querySelectorAll("button")].find((b) => b.textContent === "Annuleer");
+		expect(bezig.hidden).toBe(true);
+
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(bezig.hidden).toBe(false);
+		expect(bezig.textContent).toContain("Wij verwijderen dit bericht");
+		expect(document.activeElement).toBe(bezig);
+		expect(annuleer.closest("[hidden]")).not.toBeNull();
+
+		annuleer.click();
+		document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+		document.body.click();
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(document.querySelector("[data-voorgoed-paneel]")).toBe(paneel);
+		expect(keten.verwijder).toHaveBeenCalledTimes(1);
+		expect(window.Berichtenbox.navigatieDoel()).toBeNull();
+
+		rondAf({});
+		await laatLaden();
+
+		expect(document.querySelector("[data-voorgoed-paneel]")).toBeNull();
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
 	});
 
 	it("laat het paneel staan en zegt wat er misging als het stelsel het verwijderen weigert", async () => {
@@ -458,7 +587,12 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 		document.querySelector("[data-voorgoed-bevestig]").click();
 		await laatLaden();
 
-		expect(document.querySelector("[data-voorgoed-paneel]")).not.toBeNull();
+		const paneel = document.querySelector("[data-voorgoed-paneel]");
+		expect(paneel).not.toBeNull();
+		// Terug naar de vraag, zodat opnieuw proberen en annuleren weer kan.
+		expect(paneel.querySelector("[data-voorgoed-bezig]").hidden).toBe(true);
+		expect(document.querySelector("[data-voorgoed-bevestig]").closest("[hidden]")).toBeNull();
+		expect(window.Berichtenbox.navigatieDoel()).toBeNull();
 		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verwijderen");
 	});
 });
@@ -502,6 +636,7 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 		expect(knop().hidden).toBe(false);
 
 		document.querySelector('[data-actie="archiveren"]').click();
+		await laatLaden();
 		knop().click();
 		await laatLaden();
 

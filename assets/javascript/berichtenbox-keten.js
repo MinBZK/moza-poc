@@ -5,10 +5,11 @@
  * plaats van uit de gegenereerde dataset. Welke persona aangesloten is zegt de demo-omgeving
  * (/api/demo/personas); staat de actieve persona daar niet bij, dan blijft de dataset staan.
  *
- * Vrijwel alleen lezen: markeren, archiveren en verwijderen blijven op de bestaande
- * localStorage-state. De uitzondering is een bericht uit zijn map halen. Een map hoort bij het
- * bericht en staat bij de organisatie die het stuurde, dus die wijziging gaat naar het stelsel en
- * niet naar de browser.
+ * Vooral lezen. Wat er aan een bericht te wijzigen valt en bij het stelsel thuishoort, gaat ook
+ * daarheen en niet naar de browser: een bericht uit zijn map halen, archiveren, weggooien,
+ * terugzetten en voorgoed verwijderen. Een map hoort bij het bericht en staat bij de organisatie
+ * die het stuurde, en het archief en de prullenbak zijn daar ook mappen. Markeren en de leesstatus
+ * blijven op de bestaande localStorage-state.
  *
  * Dit is de transportlaag, en verder niets: hij haalt op, en meldt wat hij ziet. Wat daarvan op het
  * scherm komt en waar, bepaalt `berichtenbox/keten-bron.js` — die maakt hier een bron van, zoals de
@@ -169,10 +170,23 @@
 	// Het bericht blijft waar het was, dus opnieuw proberen kan: de knop staat er nog.
 	const UIT_MAP_TRAAG = "Het uit de map halen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
 	const UIT_MAP_FOUT = "Wij konden dit bericht niet uit de map halen. Het staat nog in de map. Probeer het opnieuw.";
-	const VERPLAATS_TRAAG = "Het verplaatsen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
-	const VERPLAATS_FOUT = "Wij konden dit bericht niet verplaatsen. Het staat nog waar het stond. Probeer het opnieuw.";
-	const VERWIJDER_TRAAG = "Het verwijderen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien of het bericht er nog staat.";
-	const VERWIJDER_FOUT = "Wij konden dit bericht niet verwijderen. Het staat nog in de prullenbak. Probeer het opnieuw.";
+
+	// Wat de bezoeker met zijn knop vroeg, in zijn woorden: de knoppen heten "Archiveren",
+	// "Verwijderen" en "Terugplaatsen in inbox", niet "verplaatsen".
+	const WAT_PER_PLEK = { archief: "te archiveren", prullenbak: "naar de prullenbak te verplaatsen", inbox: "terug te zetten in uw inbox" };
+	const WAT_VOORGOED = "voorgoed te verwijderen";
+
+	/**
+	 * De teksten bij een wijziging die niet lukte. Geen van alle zegt waar het bericht nu staat,
+	 * behalve als we dat weten: na een geweigerd verzoek kan de wijziging toch gedaan zijn.
+	 */
+	const wijzigFout = (wat) => "Het is niet gelukt om dit bericht " + wat + ". Probeer het opnieuw.";
+	// Een tijdslimiet, of een 502: volgens de uitvraag kan de organisatie de wijziging dan al
+	// gedaan hebben terwijl het antwoord ons niet bereikte.
+	const wijzigOnzeker = (wat, waar) => "Wij weten niet of het gelukt is om dit bericht " + wat + ". Ververs de pagina om te zien " + waar + ".";
+	// Geen ontvanger, geen organisatie of een plek die niet bestaat: opnieuw proberen helpt niet.
+	const wijzigKanNiet = (wat) => "Het is nu niet mogelijk om dit bericht " + wat + ". Ververs de pagina om het opnieuw te proberen.";
+	const BERICHT_WEG = "Dit bericht bestaat niet meer. Het staat daarom niet meer in de lijst.";
 
 	// Het archief en de prullenbak zijn in het stelsel gewone mappen: een eigenschap van het bericht,
 	// bij de organisatie die het stuurde. Er is nog geen stelselafspraak die hun naam vastlegt; tot
@@ -883,14 +897,64 @@
 			},
 			INHOUD_LIMIET_MS
 		);
-		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de map van een bericht wijzigen"), "map wijzigen mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "de map van een bericht wijzigen"), "map wijzigen mislukt (" + respons.status + ")");
+	}
+
+	/**
+	 * Waarom een wijziging aan een bericht mislukte, fijner dan `redenVanRespons`: wat de bezoeker
+	 * daarna leest hangt ervan af.
+	 *
+	 * 404 en 410 zijn "weg": het bericht bestaat niet (meer) of de bezoeker verwijderde het zelf.
+	 * Een 502 zonder proxy-kenmerk is "onzeker": de uitvraag noemt daaronder ook het geval dat de
+	 * organisatie de wijziging deed en alleen het bijwerken van de sessie mislukte.
+	 */
+	function redenVanWijziging(respons, wat) {
+		const reden = redenVanRespons(respons, wat);
+		if (reden === "configuratie") return reden;
+		if (respons.status === 404 || respons.status === 410) return "weg";
+		if (respons.status === 502) return "onzeker";
+		return reden;
+	}
+
+	/**
+	 * Zet een wijziging die het stelsel bevestigde meteen in de lijst en meldt haar, zonder op de
+	 * volgende tik te wachten. `mapVersie` laat een tik vervallen die de lijst van vóór de wijziging
+	 * ophaalde: anders zet die het bericht terug waar het stond.
+	 */
+	function werkLijstBij(maak) {
+		mapVersie += 1;
+		const berichten = maak(laatsteUitkomst.berichten);
+		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+		laatstGemeld = berichten;
+		laatWeten();
+	}
+
+	/**
+	 * Wat de bezoeker leest na een wijziging die niet lukte, en wat er met de lijst gebeurt.
+	 *
+	 * Bestaat het bericht niet meer, dan gaat het uit de lijst: anders blijft het staan en geeft elke
+	 * volgende poging hetzelfde antwoord. Weten we niet of het gelukt is, dan halen we over de stroom
+	 * de lijst opnieuw op; daar komt een verplaatsing niet vanzelf langs, en het navragen doet dat al.
+	 */
+	function naMislukteWijziging(fout, berichtId, wat, waar) {
+		const reden = redenVan(fout);
+		if (reden === "configuratie") return FOUT_TEKSTEN.configuratie;
+		if (reden === "weg") {
+			werkLijstBij((berichten) => berichten.filter((b) => b.id !== berichtId));
+			return BERICHT_WEG;
+		}
+		if (reden === "stil" || reden === "onzeker") {
+			if (volgtStroom()) planLijstTik();
+			return wijzigOnzeker(wat, waar);
+		}
+		return wijzigFout(wat);
 	}
 
 	/** Verwijdert een bericht bij de organisatie die het stuurde. Niet terug te draaien. */
 	async function verwijderBericht(ontvanger, berichtId, magazijnId) {
 		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
 		const respons = await metTijdslimiet(adres, { method: "DELETE", headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
-		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
 	}
 
 	// --- Vertaling ----------------------------------------------------------------------------
@@ -2175,9 +2239,10 @@
 		 */
 		verplaats: async function (berichtId, plek) {
 			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
-			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || (plek !== "inbox" && !PLEK_MAPPEN[plek])) {
+			const wat = WAT_PER_PLEK[plek] || "te verplaatsen";
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || !WAT_PER_PLEK[plek]) {
 				console.warn("[Berichtenbox] Dit bericht is niet te verplaatsen: geen ontvanger, geen organisatie of een onbekende plek.", berichtId, plek);
-				return { fout: VERPLAATS_FOUT };
+				return { fout: wijzigKanNiet(wat) };
 			}
 			if ((bericht.plek || "inbox") === plek && !(plek === "inbox" && bericht.map)) return {};
 
@@ -2185,42 +2250,36 @@
 				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verplaatsen mislukt", fout);
-				if (redenVan(fout) === "stil") return { fout: VERPLAATS_TRAAG };
-				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : VERPLAATS_FOUT };
+				return { fout: naMislukteWijziging(fout, berichtId, wat, "waar het bericht staat") };
 			}
 
-			mapVersie += 1;
-			const berichten = laatsteUitkomst.berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { plek: plek, map: null }) : b));
-			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
-			laatstGemeld = berichten;
-			laatWeten();
+			werkLijstBij((berichten) => berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { plek: plek, map: null }) : b)));
 			return {};
 		},
 
 		/**
 		 * Verwijdert een bericht voorgoed, bij de organisatie die het stuurde. Geeft `{}` of `{ fout }`
 		 * en werpt niet. Lukt het, dan is het bericht meteen uit de lijst.
+		 *
+		 * Alleen vanuit de prullenbak: dit is niet terug te draaien, en een pagina die nog de knop
+		 * toont van een bericht dat intussen teruggezet is, hoort het niet alsnog weg te gooien.
 		 */
 		verwijder: async function (berichtId) {
 			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
-			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId) {
-				console.warn("[Berichtenbox] Dit bericht is niet te verwijderen: geen ontvanger of geen organisatie bekend.", berichtId);
-				return { fout: VERWIJDER_FOUT };
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || bericht.plek !== "prullenbak") {
+				console.warn("[Berichtenbox] Dit bericht is niet te verwijderen: geen ontvanger, geen organisatie bekend, of het staat niet in de prullenbak.", berichtId);
+				return { fout: wijzigKanNiet(WAT_VOORGOED) };
 			}
 
 			try {
 				await verwijderBericht(ontvangerVanRonde, berichtId, bericht.magazijnId);
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verwijderen mislukt", fout);
-				if (redenVan(fout) === "stil") return { fout: VERWIJDER_TRAAG };
-				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : VERWIJDER_FOUT };
+				// Het bericht is er al niet meer: dan is bereikt wat de bezoeker vroeg.
+				if (redenVan(fout) !== "weg") return { fout: naMislukteWijziging(fout, berichtId, WAT_VOORGOED, "of het bericht er nog staat") };
 			}
 
-			mapVersie += 1;
-			const berichten = laatsteUitkomst.berichten.filter((b) => b.id !== berichtId);
-			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
-			laatstGemeld = berichten;
-			laatWeten();
+			werkLijstBij((berichten) => berichten.filter((b) => b.id !== berichtId));
 			return {};
 		},
 

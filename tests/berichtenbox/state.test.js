@@ -133,6 +133,74 @@ describe("maakState — vragen over een bericht", () => {
 	});
 });
 
+/**
+ * Bij het Federatief Berichtenstelsel zijn het archief en de prullenbak mappen bij de organisatie.
+ * Waar zo'n bericht staat zegt de bron; wat deze browser er eerder over bewaarde telt dan niet.
+ */
+describe("maakState — de plek die de bron noemt gaat voor", () => {
+	const BEWAARD = { gearchiveerd: { a: true, d: true }, verwijderd: { b: true }, voorgoedVerwijderd: { c: true } };
+
+	it("laat een bericht dat volgens de bron in de inbox staat daar, wat er ook bewaard is", () => {
+		const state = maakState(metState(BEWAARD));
+		state.volgBron([
+			{ id: "a", plek: "inbox" },
+			{ id: "b", plek: "inbox" },
+			{ id: "c", plek: "inbox" },
+		]);
+
+		expect(state.statusVan("a")).toBe("inbox");
+		expect(state.statusVan("b")).toBe("inbox");
+		// Ook een bericht dat hier ooit "voorgoed verwijderd" heette: het stelsel heeft het nog.
+		expect(state.statusVan("c")).toBe("inbox");
+	});
+
+	it("neemt het archief en de prullenbak van de bron over", () => {
+		const state = maakState(metState(BEWAARD));
+		state.volgBron([
+			{ id: "b", plek: "archief" },
+			{ id: "x", plek: "prullenbak" },
+		]);
+
+		expect(state.statusVan("b")).toBe("archief");
+		expect(state.statusVan("x")).toBe("prullenbak");
+	});
+
+	it("laat een bericht zonder plek zijn bewaarde plek houden", () => {
+		const state = maakState(metState(BEWAARD));
+		state.volgBron([{ id: "d" }, { id: "a", plek: "inbox" }]);
+
+		expect(state.statusVan("d")).toBe("archief");
+		expect(state.statusVan("b")).toBe("prullenbak");
+	});
+
+	it("vergeet de plek van een bericht dat de bron niet meer noemt", () => {
+		const state = maakState(metState(BEWAARD));
+		state.volgBron([{ id: "a", plek: "inbox" }]);
+		state.volgBron([]);
+
+		expect(state.statusVan("a")).toBe("archief");
+	});
+
+	it("struikelt niet over een lege lijst of een lege plek in de lijst", () => {
+		const state = maakState(nepOpslag());
+
+		expect(() => state.volgBron(null)).not.toThrow();
+		expect(() => state.volgBron([null, { id: "a", plek: "archief" }])).not.toThrow();
+		expect(state.statusVan("a")).toBe("archief");
+	});
+
+	// Elke weergave filtert op zijn eigen naam. Een plek die geen van de drie is, zou het bericht
+	// uit alle weergaven laten vallen zonder dat iets dat zegt.
+	it("zet een bericht met een onbekende plek in de inbox en meldt dat", () => {
+		const fout = vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = maakState(nepOpslag());
+		state.volgBron([{ id: "a", plek: "Archief" }]);
+
+		expect(state.statusVan("a")).toBe("inbox");
+		expect(fout).toHaveBeenCalled();
+	});
+});
+
 describe("maakState — binnengedruppelde berichten", () => {
 	it("houdt bij het inlezen nog alle magazijnen aan", () => {
 		// Bij het inlezen is nog niet bekend welke bron gekozen wordt. Hier al wegfilteren tegen de

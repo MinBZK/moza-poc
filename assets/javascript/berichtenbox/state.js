@@ -4,7 +4,9 @@
  * Gelezen, gearchiveerd, verwijderd, gemarkeerd, verplaatst naar een map, plus de eigen mappen en
  * de berichten die via polling binnenkwamen. De bron levert de berichten; deze module levert wat
  * de bezoeker eraan veranderd heeft. De twee worden pas in de render-laag samengevoegd — vandaar
- * dat elke vraag hier het oorspronkelijke veld uit het bericht meekrijgt als tweede argument.
+ * dat elke vraag hier het oorspronkelijke veld uit het bericht meekrijgt als tweede argument. De
+ * uitzondering is `statusVan`: zegt de bron zelf waar een bericht staat (`volgBron`), dan geeft
+ * deze module dat door en telt de bewaarde staat voor dat bericht niet.
  *
  * Kent de dataset niet en raakt de DOM niet aan. `opslag`, `persona` en `bekendeMagazijnIds` komen
  * van buiten, zodat dit zonder browser te testen is.
@@ -14,8 +16,9 @@
  * weggegooid — anders draagt een bezoeker het archief van een vorige persona met zich mee.
  *
  * Let op: dit is client-state. Het Federatief Berichtenstelsel is zelf eigenaar van leesstatus,
- * map en verwijdering (`PATCH`/`DELETE /berichten/{berichtId}`). Zolang die niet gebruikt worden,
- * blijft een markering op één browser staan. Zie het plan onder "Het contract van het stelsel".
+ * map en verwijdering (`PATCH`/`DELETE /berichten/{berichtId}`). Map en verwijdering lopen voor
+ * berichten uit het stelsel via de bron, ook het archief en de prullenbak, want dat zijn daar
+ * mappen. De leesstatus en het markeren nog niet: die blijven op één browser staan.
  */
 
 export const LS_KEY = "berichtenbox";
@@ -35,7 +38,8 @@ function defaults() {
 		gearchiveerd: {},
 		verwijderd: {},
 		// Uit de prullenbak gehaald door de bezoeker zelf. Blijft als markering staan: de berichten
-		// komen bij elke lading opnieuw uit de bron, dus zonder dit zouden ze weer verschijnen.
+		// van de dataset komen bij elke lading opnieuw uit de bron, dus zonder dit zouden ze weer
+		// verschijnen. Een bericht uit het stelsel wordt daar verwijderd en staat hier niet in.
 		voorgoedVerwijderd: {},
 		gemarkeerd: {},
 		mapOverride: {},
@@ -132,6 +136,7 @@ export function maakState(opslag, persona = null) {
 
 	// Waar de bron zegt dat een bericht staat. Niet bewaard: het komt bij elke lijst opnieuw mee.
 	let plekVanBron = new Map();
+	const PLEKKEN = ["inbox", "archief", "prullenbak"];
 
 	return {
 		ruw,
@@ -155,7 +160,15 @@ export function maakState(opslag, persona = null) {
 		volgBron(berichten) {
 			plekVanBron = new Map();
 			for (const bericht of berichten || []) {
-				if (bericht && typeof bericht.plek === "string") plekVanBron.set(bericht.id, bericht.plek);
+				if (!bericht || typeof bericht.plek !== "string") continue;
+				// Elke weergave filtert op zijn eigen naam. Een plek die geen van de drie is, zou het
+				// bericht uit álle weergaven laten vallen zonder dat iets dat zegt.
+				if (!PLEKKEN.includes(bericht.plek)) {
+					console.error("[Berichtenbox] Onbekende plek '" + bericht.plek + "' bij bericht " + bericht.id + "; het blijft in de inbox.");
+					plekVanBron.set(bericht.id, "inbox");
+					continue;
+				}
+				plekVanBron.set(bericht.id, bericht.plek);
 			}
 		},
 

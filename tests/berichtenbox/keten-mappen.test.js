@@ -422,15 +422,109 @@ describe("het archief en de prullenbak als mappen bij het stelsel", () => {
 
 		const uitkomst = await window.BerichtenboxKeten.verplaats("b2", "archief");
 
-		expect(uitkomst.fout).toMatch(/niet verplaatsen/);
+		// In de woorden van de knop, en zonder te beweren waar het bericht nu staat.
+		expect(uitkomst.fout).toBe("Het is niet gelukt om dit bericht te archiveren. Probeer het opnieuw.");
 		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.id === "b2")).toMatchObject({ plek: "inbox", map: "Te bespreken met adviseur" });
 	});
 
-	it("weigert een plek die het niet kent, zonder iets te vragen", async () => {
+	it("weigert een plek die het niet kent, zonder iets te vragen en zonder opnieuw proberen aan te raden", async () => {
 		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({})]]);
 
-		expect((await window.BerichtenboxKeten.verplaats("b2", "elders")).fout).toMatch(/niet verplaatsen/);
+		const uitkomst = await window.BerichtenboxKeten.verplaats("b2", "elders");
+
+		expect(uitkomst.fout).toMatch(/niet mogelijk/);
+		expect(uitkomst.fout).not.toMatch(/Probeer het opnieuw/);
 		expect(aanroepen.some((a) => a.methode === "PATCH")).toBe(false);
+	});
+
+	it("weigert een bericht dat het niet kent, zonder iets te vragen", async () => {
+		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({})]]);
+
+		expect((await window.BerichtenboxKeten.verplaats("bestaat-niet", "archief")).fout).toMatch(/niet mogelijk/);
+		expect((await window.BerichtenboxKeten.verwijder("bestaat-niet")).fout).toMatch(/niet mogelijk/);
+		expect(aanroepen.some((a) => a.methode === "PATCH" || a.methode === "DELETE")).toBe(false);
+	});
+
+	// 404 en 410: het bericht bestaat niet meer. Dan hoort het uit de lijst te gaan; anders blijft
+	// het staan en krijgt de bezoeker bij elke poging hetzelfde antwoord.
+	it.each([404, 410])("haalt het bericht uit de lijst als het stelsel met %i zegt dat het niet meer bestaat", async (status) => {
+		await start([
+			["/api/v1/berichten?", lijstMet({})],
+			["?magazijnId=", antwoord(status, { title: "Weg" }, "application/problem+json")],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verplaats("b2", "archief");
+
+		expect(uitkomst.fout).toMatch(/bestaat niet meer/);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "b2")).toBe(false);
+	});
+
+	// Een 502 kan volgens de uitvraag ook betekenen dat de organisatie de wijziging deed en alleen
+	// het bijwerken van de sessie mislukte. Net als bij een tijdslimiet weten we het dan niet.
+	it.each([
+		["een 502", () => antwoord(502, { title: "Bad Gateway" }, "application/problem+json")],
+		[
+			"een tijdslimiet",
+			() => {
+				throw new DOMException("te laat", "TimeoutError");
+			},
+		],
+	])("zegt na %s niet dat het verplaatsen mislukt is, maar dat het onbekend is", async (_, antwoordOpWijziging) => {
+		await start([
+			["/api/v1/berichten?", lijstMet({})],
+			["?magazijnId=", antwoordOpWijziging],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verplaats("b2", "prullenbak");
+
+		expect(uitkomst.fout).toMatch(/weten niet of het gelukt is om dit bericht naar de prullenbak te verplaatsen/);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "b2")).toBe(true);
+	});
+
+	it.each([
+		["verplaatst", (keten) => keten.verplaats("b3", "archief"), (b) => b.plek === "archief"],
+		["verwijderd", (keten) => keten.verwijder("p1"), (b) => b === undefined],
+	])("laat een tik die de lijst van vóór de wijziging ophaalde een %s bericht niet terugzetten", async (_, wijzig, klopt) => {
+		vi.useFakeTimers();
+		let losmaken;
+		let tik = 0;
+		await start([
+			[
+				"/api/v1/berichten?",
+				() => {
+					if (tik++ === 0) return lijstMet({}, MET_ARCHIEF);
+					// De tik vraagt de lijst op vóór de wijziging, en het antwoord komt erna binnen.
+					return new Promise((klaar) => {
+						losmaken = () => klaar(lijstMet({}, MET_ARCHIEF));
+					});
+				},
+			],
+			["?magazijnId=", antwoord(200, {})],
+		]);
+
+		await vi.advanceTimersByTimeAsync(15000);
+		expect(losmaken).toBeTypeOf("function");
+		expect(await wijzig(window.BerichtenboxKeten)).toEqual({});
+		losmaken();
+		await vi.advanceTimersByTimeAsync(0);
+
+		const id = _ === "verplaatst" ? "b3" : "p1";
+		expect(klopt(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.id === id))).toBe(true);
+	});
+
+	it("ziet bij de volgende tik een bericht zonder map dat elders gearchiveerd is", async () => {
+		// Vóór en na heeft het hier geen map; alleen de plek verschilt.
+		vi.useFakeTimers();
+		const gearchiveerd = BERICHTEN.map((b) => (b.berichtId === "b3" ? { ...b, map: "Archief" } : b));
+		let tik = 0;
+		await start([["/api/v1/berichten?", () => lijstMet({}, tik++ === 0 ? BERICHTEN : gearchiveerd)]]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => toestand.uitkomst && gemeld.push(toestand.uitkomst));
+
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(gemeld.length).toBeGreaterThan(0);
+		expect(gemeld[gemeld.length - 1].berichten.find((b) => b.id === "b3")).toMatchObject({ plek: "archief", map: null });
 	});
 
 	it("verwijdert een bericht voorgoed bij de organisatie, en haalt het uit de lijst", async () => {
@@ -455,7 +549,45 @@ describe("het archief en de prullenbak als mappen bij het stelsel", () => {
 
 		const uitkomst = await window.BerichtenboxKeten.verwijder("p1");
 
-		expect(uitkomst.fout).toMatch(/niet verwijderen/);
+		expect(uitkomst.fout).toBe("Het is niet gelukt om dit bericht voorgoed te verwijderen. Probeer het opnieuw.");
 		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "p1")).toBe(true);
+	});
+
+	// Het bericht is er al niet meer: dan is bereikt wat de bezoeker vroeg, en is "niet gelukt" onwaar.
+	it.each([404, 410])("telt een %i bij het voorgoed verwijderen als gelukt", async (status) => {
+		await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			["?magazijnId=", antwoord(status, { title: "Weg" }, "application/problem+json")],
+		]);
+
+		expect(await window.BerichtenboxKeten.verwijder("p1")).toEqual({});
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "p1")).toBe(false);
+	});
+
+	it("zegt na een tijdslimiet niet dat het bericht nog in de prullenbak staat", async () => {
+		await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			[
+				"?magazijnId=",
+				() => {
+					throw new DOMException("te laat", "TimeoutError");
+				},
+			],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verwijder("p1");
+
+		expect(uitkomst.fout).toMatch(/weten niet of het gelukt is om dit bericht voorgoed te verwijderen/);
+		expect(uitkomst.fout).not.toMatch(/staat nog/);
+	});
+
+	// Niet terug te draaien, dus alleen vanuit de prullenbak: een pagina die de knop nog toont van
+	// een bericht dat intussen teruggezet is, hoort het niet alsnog weg te gooien.
+	it("verwijdert niets voorgoed wat niet in de prullenbak staat", async () => {
+		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)]]);
+
+		expect((await window.BerichtenboxKeten.verwijder("b2")).fout).toMatch(/niet mogelijk/);
+		expect((await window.BerichtenboxKeten.verwijder("a1")).fout).toMatch(/niet mogelijk/);
+		expect(aanroepen.some((a) => a.methode === "DELETE")).toBe(false);
 	});
 });

@@ -513,6 +513,43 @@ describe("ketenBron — mappen horen bij het bericht", () => {
 		expect(meld.mock.calls[0][0].mappen.map((m) => m.naam)).toContain("Nieuw");
 	});
 
+	// Het archief en de prullenbak zijn bij het stelsel mappen, maar komen hier als `plek`. Een
+	// bericht zonder map dat gearchiveerd wordt heeft vóór en na `map: null`: alleen de plek verschilt.
+	it("meldt een bericht zonder map dat naar het archief ging als een andere lijst, niet als niets", async () => {
+		const keten = nepKeten({ bezig: true, uitkomst: IN_MAPPEN });
+		const bron = ketenBron(keten);
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		keten._meld({ melding: null, uitkomst: { ...IN_MAPPEN, berichten: IN_MAPPEN.berichten.map((b) => (b.id === "d" ? { ...b, plek: "archief" } : b)) } });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+		expect(meld.mock.calls[0][0].berichten.find((b) => b.id === "d").plek).toBe("archief");
+	});
+
+	it("druppelt een binnenkomer die al in het archief staat niet de inbox in", async () => {
+		const keten = nepKeten({ bezig: true, uitkomst: IN_MAPPEN });
+		const bron = ketenBron(keten, { magDruppelen: () => true });
+		await bron.geldtVoor();
+		const meld = vi.fn(() => []);
+		bron.start(meld);
+
+		keten._meld({ melding: null, uitkomst: { ...IN_MAPPEN, berichten: [{ id: "e", magazijnId: "kvk", map: null, plek: "archief" }, ...IN_MAPPEN.berichten] } });
+
+		expect(meld).toHaveBeenCalledTimes(1);
+		expect(meld.mock.calls[0][0].nieuwBericht).toBeUndefined();
+		expect(meld.mock.calls[0][0].berichten).toHaveLength(5);
+	});
+
+	it("zegt het als het keten-script niet kan verplaatsen of verwijderen, in plaats van te doen alsof", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const bron = ketenBron(nepKeten({ bezig: true, uitkomst: IN_MAPPEN }));
+
+		expect((await bron.verplaats("a", "archief")).fout).toMatch(/Ververs de pagina/);
+		expect((await bron.verwijderVoorgoed("a")).fout).toMatch(/Ververs de pagina/);
+	});
+
 	it("geeft de mappen uit de voortgang door in de vorm van de lijst", () => {
 		const keten = nepKeten({ bezig: true });
 		const bron = ketenBron(keten);

@@ -2,7 +2,9 @@
  * berichtenbox.js
  *
  * De render-laag van de Berichtenbox: dit bestand leest uit de datalaag en zet het op het scherm.
- * Het muteert de bron nooit.
+ * Het schrijft nooit in wat de bron leverde. Moet er bij de bron iets veranderen — een bericht uit
+ * zijn map, naar het archief, voorgoed weg — dan vraagt het dat aan de bron, en die levert daarna
+ * de gewijzigde lijst.
  *
  * De datalaag staat in `berichtenbox/` en kent geen DOM: `state.js` (de bewaarde staat in
  * localStorage onder de key "berichtenbox" en de vragen daarover), `lijst.js` (filteren, sorteren
@@ -894,8 +896,12 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	let actiefVoorgoedPaneel = null;
 	let actieveVoorgoedKnop = null;
 
+	// Het verzoek om voorgoed te verwijderen is de deur uit. Dan valt er niets meer te annuleren:
+	// het paneel blijft staan en zegt dat, tot het antwoord er is.
+	let voorgoedOnderweg = false;
+
 	function sluitVoorgoedPaneel({ focusTerug = false } = {}) {
-		if (!actiefVoorgoedPaneel) return;
+		if (!actiefVoorgoedPaneel || voorgoedOnderweg) return;
 		const knop = actieveVoorgoedKnop;
 		actiefVoorgoedPaneel.remove();
 		if (knop) knop.setAttribute("aria-expanded", "false");
@@ -935,6 +941,26 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		paneel.appendChild(vraag);
 		paneel.appendChild(uitleg);
 
+		// Wat er staat zolang het verzoek bij de bron loopt. `tabindex` zodat de focus erheen kan;
+		// `role="status"` zodat een schermlezer het ook zonder die focus voorleest.
+		// Zelfde blok met balk als bij het laden van de PDF: hoe lang het duurt is niet bekend.
+		const bezig = document.createElement("div");
+		bezig.className = "feedback-progress";
+		bezig.setAttribute("role", "status");
+		bezig.tabIndex = -1;
+		bezig.hidden = true;
+		bezig.dataset.voorgoedBezig = "";
+		const bezigTekst = document.createElement("p");
+		bezigTekst.textContent = "Wij verwijderen dit bericht. Dit kan even duren.";
+		const balk = document.createElement("div");
+		balk.className = "progress-bar";
+		const vulling = document.createElement("div");
+		vulling.className = "progress-bar-fill progress-bar-fill--indeterminate";
+		balk.appendChild(vulling);
+		bezig.appendChild(bezigTekst);
+		bezig.appendChild(balk);
+		paneel.appendChild(bezig);
+
 		const acties = document.createElement("div");
 		acties.className = "action-group";
 
@@ -951,15 +977,38 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		bevestig.addEventListener("click", async () => {
 			// Bij het stelsel staat het bericht bij de organisatie, dus daar gaat het ook weg.
-			if (plekBijBron(berichtId)) {
-				if (bevestig.getAttribute("aria-disabled") === "true") return;
-				bevestig.setAttribute("aria-disabled", "true");
-				const uitkomst = await register.actief().verwijderVoorgoed(berichtId);
-				bevestig.removeAttribute("aria-disabled");
+			if (plekBijBron()) {
+				if (voorgoedOnderweg) return;
+				voorgoedOnderweg = true;
+				// Geen knoppen meer zolang het verzoek loopt: bevestigen is gebeurd en annuleren kan
+				// niet meer. In hun plaats staat wat er gebeurt, met de focus erop: die stond op de
+				// knop die nu weg is.
+				vraag.hidden = true;
+				uitleg.hidden = true;
+				acties.hidden = true;
+				bezig.hidden = false;
+				bezig.focus();
+
+				let uitkomst;
+				try {
+					uitkomst = await register.actief().verwijderVoorgoed(berichtId);
+				} catch (fout) {
+					console.error("[Berichtenbox] Het voorgoed verwijderen van een bericht struikelde.", fout);
+					uitkomst = { fout: "Er ging iets mis. Ververs de pagina om te zien of het bericht er nog staat." };
+				}
+				voorgoedOnderweg = false;
+
 				if (uitkomst && uitkomst.fout) {
-					toonPaginaMelding(uitkomst.fout, "storing", "verplaatsen");
+					// Terug naar de vraag, zodat de bezoeker het opnieuw kan proberen of kan annuleren.
+					bezig.hidden = true;
+					vraag.hidden = false;
+					uitleg.hidden = false;
+					acties.hidden = false;
+					bevestig.focus();
+					toonPaginaMelding(uitkomst.fout, "storing", "voorgoed");
 					return;
 				}
+				verbergPaginaMelding("voorgoed");
 				sluitVoorgoedPaneel();
 				navigeerNaar(url(berichtenboxBasis() + "berichtenbox-prullenbak/"));
 				return;
@@ -1132,28 +1181,49 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	/**
-	 * Of de plek van dit bericht — inbox, archief, prullenbak — bij de bron staat en niet in deze
-	 * browser. Bij het stelsel zijn het archief en de prullenbak mappen bij de organisatie; zo'n
-	 * bericht draagt een `plek`, en verplaatsen gaat dan via de bron.
+	 * Of de plek van een bericht — inbox, archief, prullenbak — bij de bron staat en niet in deze
+	 * browser. Bij het stelsel zijn het archief en de prullenbak mappen bij de organisatie, en
+	 * verplaatsen gaat dan via de bron.
+	 *
+	 * De bron beslist, niet het bericht: staat een bericht uit het stelsel even niet in de lijst —
+	 * de organisatie leverde niet, of het is elders verwijderd — dan hoort de knop dat te zeggen, en
+	 * niet een aantekening in de browser te maken die het stelsel nooit ziet.
 	 */
-	function plekBijBron(berichtId) {
+	function plekBijBron() {
 		const bron = register.actief();
-		if (!bron || typeof bron.verplaats !== "function") return false;
-		const bericht = data.berichten.find((b) => b && b.id === berichtId);
-		return !!bericht && typeof bericht.plek === "string";
+		return !!bron && typeof bron.verplaats === "function";
 	}
 
+	// Berichten waarvoor een wijziging bij de bron onderweg is. Twee wijzigingen tegelijk op
+	// hetzelfde bericht eindigen in de volgorde van de antwoorden, niet in die van de klikken.
+	const wijzigingOnderweg = new Set();
+
 	/**
-	 * Verplaatst een bericht bij de bron. Geeft terug of het lukte; zo niet, dan staat er een melding.
+	 * Verplaatst een bericht bij de bron. Geeft terug of het lukte. Zo niet, dan staat er een
+	 * melding — behalve als er voor dit bericht al een wijziging onderweg was; dan gebeurt er niets.
 	 *
 	 * `aria-disabled` en niet `disabled` zolang het verzoek loopt, zodat de knop voor een schermlezer
-	 * te vinden blijft.
+	 * te vinden blijft. `rij` krijgt `aria-busy`: het menu is na de klik dicht, en zonder dat is
+	 * tot het antwoord aan de rij niets te zien.
 	 */
-	async function verplaatsBijBron(berichtId, plek, knop) {
-		if (knop && knop.getAttribute("aria-disabled") === "true") return false;
+	async function verplaatsBijBron(berichtId, plek, { knop = null, rij = null } = {}) {
+		if (wijzigingOnderweg.has(berichtId)) return false;
+		wijzigingOnderweg.add(berichtId);
 		if (knop) knop.setAttribute("aria-disabled", "true");
-		const uitkomst = await register.actief().verplaats(berichtId, plek);
-		if (knop) knop.removeAttribute("aria-disabled");
+		if (rij) rij.setAttribute("aria-busy", "true");
+
+		let uitkomst;
+		try {
+			uitkomst = await register.actief().verplaats(berichtId, plek);
+		} catch (fout) {
+			// De bron hoort niet te werpen. Doet hij het toch, dan mag de knop niet blijven hangen.
+			console.error("[Berichtenbox] Het verplaatsen van een bericht struikelde.", fout);
+			uitkomst = { fout: "Er ging iets mis. Ververs de pagina om te zien waar het bericht staat." };
+		} finally {
+			wijzigingOnderweg.delete(berichtId);
+			if (knop) knop.removeAttribute("aria-disabled");
+			if (rij) rij.removeAttribute("aria-busy");
+		}
 
 		if (uitkomst && uitkomst.fout) {
 			toonPaginaMelding(uitkomst.fout, "storing", "verplaatsen");
@@ -1209,10 +1279,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * plek en niet als map, dus meestal komt dit op hetzelfde uit; het natellen houdt het aantal
 	 * gelijk aan de rijen, ook als een filter van de render-laag er een bericht tussenuit haalt.
 	 *
-	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Zet de bezoeker het bericht
-	 * terug in de inbox, dan komt de map weer in beeld; een voorgoed verwijderd bericht komt niet
-	 * terug, en zijn map dus ook niet. Behalve de map die de bezoeker nu open heeft:
-	 * die blijft staan met "(0)", want het tabblad is het enige op de pagina dat zegt welke map dit is.
+	 * Een map waar zo niets van te zien is, verdwijnt uit het overzicht. Behalve de map die de
+	 * bezoeker nu open heeft: die blijft staan met "(0)", want het tabblad is het enige op de pagina
+	 * dat zegt welke map dit is.
 	 *
 	 * Pas nadat de bron voor het eerst geleverd heeft (`mappenVanBron`): tot dan komen de aantallen
 	 * van de organisaties, en staan in `data.berichten` nog niet de berichten van deze bron. Natellen
@@ -1238,8 +1307,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const weg = n === 0 && li.dataset.mapSlug !== open;
 			const hadFocus = weg && li.contains(document.activeElement);
 			li.hidden = weg;
-			// Tijdens de ronde stond deze map er nog, met het aantal van de organisatie. Wie er met
-			// het toetsenbord op stond, raakt anders zijn plek in de tabbalk kwijt.
+			// Wie met het toetsenbord op deze map stond, raakt anders zijn plek in de tabbalk kwijt.
 			if (hadFocus) {
 				const eerste = lijst.querySelector("li:not([hidden]) a");
 				if (eerste) eerste.focus();
@@ -1757,9 +1825,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			zetKnopLabel(content.querySelector('[data-actie="archiveren"]'), "Terugplaatsen in inbox");
 		}
 
-		// Staat het in de prullenbak, dan is verwijderen al gebeurd. De knop biedt dan de weg terug:
-		// verwijderen wist ook de archief-markering, dus het bericht belandt in de inbox en niet in
-		// het archief waar het misschien vandaan kwam. Dat is wat de knop zegt.
+		// Staat het in de prullenbak, dan is verwijderen al gebeurd. De knop biedt dan de weg terug,
+		// naar de inbox en niet naar het archief waar het misschien vandaan kwam. Bij de dataset wist
+		// verwijderen de archief-markering; bij het stelsel heeft een bericht maar één map, en uit de
+		// prullenbak halen is die map leegmaken. Dat is wat de knop zegt.
 		if (statusVan(berichtId) === "prullenbak") {
 			const terugKnop = content.querySelector('[data-actie="verwijderen"]');
 			zetKnopLabel(terugKnop, "Terugzetten");
@@ -1774,6 +1843,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 			const voorgoedKnop = content.querySelector('[data-actie="voorgoed-verwijderen"]');
 			if (voorgoedKnop) voorgoedKnop.hidden = false;
 		}
+
+		// Waar het bericht stond toen de knoppen hun tekst kregen. Bij de bron kan dat intussen anders
+		// zijn — een ander tabblad, of deze pagina terug uit de geschiedenis — en dan hoort een knop
+		// te doen wat erop staat, niet het omgekeerde.
+		const plekBijBinden = statusVan(berichtId);
 
 		content.querySelectorAll("[data-actie]").forEach((btn) => {
 			btn.addEventListener("click", () => {
@@ -1800,10 +1874,11 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 				if ((actie === "archiveren" || actie === "verwijderen") && plekBijBron(berichtId)) {
 					// Bij het stelsel staat de plek bij de organisatie. Dezelfde knop zet terug als het
-					// bericht er al staat, net als hieronder. Pas navigeren als het gelukt is: de melding
-					// is op de inbox niet meer te lezen.
+					// bericht er bij het binden al stond, want dat is wat erop staat. Staat het bericht
+					// intussen al waar de knop het heen stuurt, dan vraagt de bron niets en is het
+					// gelukt. Pas navigeren als het gelukt is: de melding is op de inbox niet te lezen.
 					const doel = actie === "archiveren" ? "archief" : "prullenbak";
-					verplaatsBijBron(berichtId, statusVan(berichtId) === doel ? "inbox" : doel, btn).then((gelukt) => {
+					verplaatsBijBron(berichtId, plekBijBinden === doel ? "inbox" : doel, { knop: btn }).then((gelukt) => {
 						if (gelukt) navigeerNaar(url(berichtenboxBasis()));
 					});
 					return;
@@ -2313,7 +2388,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 *
 	 * Het sjabloon zet er "Inbox" neer, want dat is waar een bericht staat zolang niemand het
 	 * verplaatst heeft, en zonder JavaScript blijft dat het beste antwoord. Waar het écht staat
-	 * weet alleen de bewaarde staat: archief, prullenbak of een eigen map van de bezoeker.
+	 * weet de bewaarde staat, of bij het stelsel de bron: archief, prullenbak of een map.
 	 *
 	 * De kruimel wijst naar die weergave, zodat "terug naar waar ik vandaan kwam" ook echt daar
 	 * uitkomt. Voor de tabs hierboven gebeurt hetzelfde in bindDetailPaginaActies; dat is dezelfde
@@ -2505,9 +2580,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		const berichtId = detail.dataset.berichtId;
 		const bericht = data.berichten.find((b) => b.id === berichtId);
 		if (!bericht || !bericht.map) return;
-		// Alleen voor een bericht in de inbox. In het archief of de prullenbak komt het er niet mee
-		// terug in de inbox, terwijl de melding "U vindt het in uw inbox" dat wel zegt; daar is de
-		// eigen knop voor.
+		// Alleen voor een bericht in de inbox; in het archief en de prullenbak staat er een eigen knop
+		// om het terug te zetten. Bij het stelsel heeft zo'n bericht al geen map meer en keert de
+		// regel hierboven om; deze dekt een bron waar een gearchiveerd bericht zijn map wel houdt.
 		if (statusVan(berichtId) !== "inbox") return;
 
 		const verbergKnop = () => {
@@ -2520,11 +2595,15 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		knop.hidden = false;
 		knop.addEventListener("click", async () => {
 			if (knop.getAttribute("aria-disabled") === "true") return;
+			// Loopt er voor dit bericht al een wijziging — archiveren, weggooien — dan wacht deze.
+			if (wijzigingOnderweg.has(berichtId)) return;
 			// De status kan veranderd zijn sinds de knop verscheen: wie archiveert en met de
-			// terugknop terugkomt, krijgt deze pagina zoals ze was.
+			// terugknop terugkomt, krijgt deze pagina zoals ze was. Het bericht staat dan in het
+			// archief of de prullenbak, en bij het stelsel is dát zijn map: de map die hier nog
+			// genoemd staat is het al kwijt.
 			if (statusVan(berichtId) !== "inbox") {
 				verbergKnop();
-				toonPaginaMelding("Dit bericht staat niet meer in uw inbox. Zet het eerst terug in uw inbox om het uit de map te halen.", "info", "uit-map");
+				toonPaginaMelding("Dit bericht staat niet meer in uw inbox, en daardoor ook niet meer in deze map.", "info", "uit-map");
 				return;
 			}
 			knop.setAttribute("aria-disabled", "true");
@@ -2831,8 +2910,18 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 
 		// Bij het stelsel staat de plek van een bericht bij de organisatie; de bron meldt daarna de
 		// gewijzigde lijst en die tekent het scherm opnieuw.
-		if (plekBijBron(id)) {
-			verplaatsBijBron(id, soort === "archiveren" ? "archief" : "prullenbak", actie);
+		if (plekBijBron()) {
+			const plek = soort === "archiveren" ? "archief" : "prullenbak";
+			verplaatsBijBron(id, plek, { rij }).then((gelukt) => {
+				if (!gelukt) return;
+				// De rij verdwijnt pas als het antwoord er is, en zonder dit hoort wie een schermlezer
+				// gebruikt daar niets van.
+				const live = document.querySelector("[data-berichtenbox-live]");
+				if (live) live.textContent = plek === "archief" ? "Het bericht is gearchiveerd." : "Het bericht staat in de prullenbak.";
+				// Zoals hieronder: de luisteraar heeft de tellers herberekend, en zonder deze opslag
+				// houden de badges op andere pagina's het aantal van vóór deze actie vast.
+				opslaanStil();
+			});
 			return;
 		}
 
@@ -3415,7 +3504,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	if (stateModule.onleesbaar) {
-		toonPaginaMelding("Uw eerder bewaarde berichtenbox is niet te lezen. Berichten die u had gearchiveerd of weggegooid staan er daarom weer bij, en wijzigingen worden nu niet bewaard.", "storing", "opslag");
+		toonPaginaMelding("Uw eerder bewaarde berichtenbox is niet te lezen. Wat u in deze browser had gearchiveerd, weggegooid of gemarkeerd is daardoor niet te zien. Nieuwe wijzigingen worden hier nu niet bewaard.", "storing", "opslag");
 	}
 
 	// Buiten elke catch: een fout hier zou de hele opstart overslaan en de server-gerenderde rijen
