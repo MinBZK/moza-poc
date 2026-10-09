@@ -560,12 +560,13 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 		expect(bezig.hidden).toBe(false);
 		expect(bezig.textContent).toContain("Wij verwijderen dit bericht");
 		expect(document.activeElement).toBe(bezig);
-		expect(annuleer.closest("[hidden]")).not.toBeNull();
+		// Uit het document, niet alleen `hidden`: de stijl van de knoppengroep wint het daarvan, en
+		// dan stonden de knoppen er in de browser gewoon nog.
+		expect(paneel.querySelectorAll("button")).toHaveLength(0);
 
 		annuleer.click();
 		document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		document.body.click();
-		document.querySelector("[data-voorgoed-bevestig]").click();
 		await laatLaden();
 
 		expect(document.querySelector("[data-voorgoed-paneel]")).toBe(paneel);
@@ -591,7 +592,8 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 		expect(paneel).not.toBeNull();
 		// Terug naar de vraag, zodat opnieuw proberen en annuleren weer kan.
 		expect(paneel.querySelector("[data-voorgoed-bezig]").hidden).toBe(true);
-		expect(document.querySelector("[data-voorgoed-bevestig]").closest("[hidden]")).toBeNull();
+		expect(paneel.querySelectorAll("button")).toHaveLength(2);
+		expect(document.activeElement).toBe(document.querySelector("[data-voorgoed-bevestig]"));
 		expect(window.Berichtenbox.navigatieDoel()).toBeNull();
 		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verwijderen");
 	});

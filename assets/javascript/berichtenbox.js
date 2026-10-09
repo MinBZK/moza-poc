@@ -985,7 +985,9 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 				// knop die nu weg is.
 				vraag.hidden = true;
 				uitleg.hidden = true;
-				acties.hidden = true;
+				// Uit het document en niet `hidden`: `.action-group` zet zijn eigen `display`, en dan
+				// blijven de knoppen gewoon staan.
+				acties.remove();
 				bezig.hidden = false;
 				bezig.focus();
 
@@ -1003,7 +1005,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 					bezig.hidden = true;
 					vraag.hidden = false;
 					uitleg.hidden = false;
-					acties.hidden = false;
+					paneel.appendChild(acties);
 					bevestig.focus();
 					toonPaginaMelding(uitkomst.fout, "storing", "voorgoed");
 					return;
