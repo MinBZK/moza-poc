@@ -14,7 +14,16 @@
  *       herhaalOphalen: (klaar) => {},               // optioneel: nog een keer, op verzoek
  *       herstelBronnen: () => {},                    // optioneel: de bezoeker vraagt om herstel
  *       vergeetUitval: () => {},                     // optioneel: begin opnieuw met een schone lei
+ *       haalUitMap:    async (berichtId) => ({}) | ({ fout }),          // optioneel: uit zijn map, terug naar de inbox
+ *       verplaats:     async (berichtId, plek) => ({}) | ({ fout }),    // optioneel: naar inbox, archief of prullenbak
+ *       verwijderVoorgoed: async (berichtId) => ({}) | ({ fout }),      // optioneel: niet terug te draaien
  *     }
+ *
+ * De laatste drie zijn er voor een bron waar de plek van een bericht bij de bron zelf staat, zoals
+ * het Federatief Berichtenstelsel: daar zijn het archief en de prullenbak mappen bij de organisatie.
+ * Zo'n bron levert zijn berichten met een `plek` (`inbox`, `archief`, `prullenbak`). Heeft een bron
+ * `verplaats`, dan gaat archiveren en weggooien via de bron en niet via de bewaarde staat. Ze werpen
+ * niet: de aanroeper is een knop, en die hoort te zeggen wat er misging.
  *
  * `volgVoortgang` meldt `{ bevraagd, klaar, gevonden }` zolang er opgehaald wordt, en `null` zodra
  * er niets meer te melden valt. Of die getallen gemeten zijn of nagebootst, hoort de render-laag

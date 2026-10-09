@@ -5,7 +5,11 @@
  * plaats van uit de gegenereerde dataset. Welke persona aangesloten is zegt de demo-omgeving
  * (/api/demo/personas); staat de actieve persona daar niet bij, dan blijft de dataset staan.
  *
- * Alleen lezen: markeren, verplaatsen en verwijderen blijven op de bestaande localStorage-state.
+ * Vooral lezen. Wat er aan een bericht te wijzigen valt en bij het stelsel thuishoort, gaat ook
+ * daarheen en niet naar de browser: een bericht uit zijn map halen, archiveren, weggooien,
+ * terugzetten en voorgoed verwijderen. Een map hoort bij het bericht en staat bij de organisatie
+ * die het stuurde, en het archief en de prullenbak zijn daar ook mappen. Markeren en de leesstatus
+ * blijven op de bestaande localStorage-state.
  *
  * Dit is de transportlaag, en verder niets: hij haalt op, en meldt wat hij ziet. Wat daarvan op het
  * scherm komt en waar, bepaalt `berichtenbox/keten-bron.js` — die maakt hier een bron van, zoals de
@@ -163,6 +167,44 @@
 		traag: "Het ophalen van dit bericht duurde te lang. Ververs de pagina om het opnieuw te proberen.",
 	};
 
+	// Het bericht blijft waar het was, dus opnieuw proberen kan: de knop staat er nog.
+	const UIT_MAP_TRAAG = "Het uit de map halen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
+	const UIT_MAP_FOUT = "Wij konden dit bericht niet uit de map halen. Het staat nog in de map. Probeer het opnieuw.";
+
+	// Wat de bezoeker met zijn knop vroeg, in zijn woorden: de knoppen heten "Archiveren",
+	// "Verwijderen" en "Terugplaatsen in inbox", niet "verplaatsen".
+	const WAT_PER_PLEK = { archief: "te archiveren", prullenbak: "naar de prullenbak te verplaatsen", inbox: "terug te zetten in uw inbox" };
+	const WAT_VOORGOED = "voorgoed te verwijderen";
+
+	/**
+	 * De teksten bij een wijziging die niet lukte. Geen van alle zegt waar het bericht nu staat,
+	 * behalve als we dat weten: na een geweigerd verzoek kan de wijziging toch gedaan zijn.
+	 */
+	const wijzigFout = (wat) => "Het is niet gelukt om dit bericht " + wat + ". Probeer het opnieuw.";
+	// Een tijdslimiet, of een 502: volgens de uitvraag kan de organisatie de wijziging dan al
+	// gedaan hebben terwijl het antwoord ons niet bereikte.
+	const wijzigOnzeker = (wat, waar) => "Wij weten niet of het gelukt is om dit bericht " + wat + ". Ververs de pagina om te zien " + waar + ".";
+	// Geen ontvanger, geen organisatie of een plek die niet bestaat: opnieuw proberen helpt niet.
+	const wijzigKanNiet = (wat) => "Het is nu niet mogelijk om dit bericht " + wat + ". Ververs de pagina om het opnieuw te proberen.";
+	const BERICHT_WEG = "Dit bericht bestaat niet meer. Het staat daarom niet meer in de lijst.";
+
+	// Het archief en de prullenbak zijn in het stelsel gewone mappen: een eigenschap van het bericht,
+	// bij de organisatie die het stuurde. Er is nog geen stelselafspraak die hun naam vastlegt; tot
+	// die er is, zijn dit de namen. Alleen hier: alles voorbij deze laag kent ze als `plek`.
+	const PLEK_MAPPEN = { archief: "Archief", prullenbak: "Prullenbak" };
+
+	/** Waar een bericht staat volgens zijn map bij het stelsel: inbox, archief of prullenbak. */
+	function plekVanMap(map) {
+		if (map === PLEK_MAPPEN.archief) return "archief";
+		if (map === PLEK_MAPPEN.prullenbak) return "prullenbak";
+		return "inbox";
+	}
+
+	/** Plek en map samen: wat er aan een bericht kan veranderen zonder dat het erbij komt of weggaat. */
+	function plaatsVan(bericht) {
+		return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
+	}
+
 	// Het pollen geeft het op. Geen storing maar een mededeling: de lijst die er staat klopt nog, en
 	// wat er misgaat is dat zij zich niet meer bijwerkt. Zeggen wat er aan de hand is en wat de
 	// bezoeker eraan kan doen — verversen begint met een nieuwe ophaalronde en zet alles terug.
@@ -193,6 +235,10 @@
 	// zelf — maar voor wie er niets te leveren had: zonder hen valt een organisatie uit het filter
 	// zodra het pollen of de stroom de lijst vervangt, terwijl ze er bij het laden wél in stond.
 	let organisatiesVanRonde = {};
+	// Wie er volgens de laatst gelezen lijst niet leverde, of null als het stelsel dat niet zegt. Het
+	// pollen vergelijkt ermee: verandert het, dan hoort de melding mee te veranderen, ook als de
+	// berichten zelf hetzelfde bleven.
+	let laatstNietGeleverd = null;
 
 	// --- Wat de buitenwereld te horen krijgt ---------------------------------------------------
 
@@ -202,7 +248,10 @@
 	// bronuitval, en is voor de bezoeker niet meer te zien wat echt is en wat nagebootst.
 
 	let melding = null; // { soort: "storing" | "mededeling", tekst }
-	let voortgang = null; // { bevraagd, klaar, gevonden }
+	let voortgang = null; // { bevraagd, klaar, gevonden, mappen? }
+	// Staat de melding van hierboven er omdat niet elke organisatie leverde? Dan mag een lijst die
+	// weer volledig is hem intrekken; een andere melding laat die lijst staan.
+	let meldingOverNietGeleverd = false;
 	let laatsteUitkomst = null;
 	// De laatste berichtenlijst die als wijziging naar de bron ging. Apart van `laatsteUitkomst`, want
 	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
@@ -228,6 +277,7 @@
 
 	function meld(soort, tekst) {
 		melding = tekst ? { soort: soort, tekst: tekst } : null;
+		meldingOverNietGeleverd = false;
 		laatWeten();
 	}
 
@@ -260,10 +310,42 @@
 		meld(null, null);
 	}
 
+	/**
+	 * Organisaties die in de laatste ronde niet leverden, zoals de berichtenlijst dat vastlegt.
+	 *
+	 * Anders dan `toonUitval` hierboven komt dit niet uit de ronde maar uit de lijst, en die draagt
+	 * het op elke pagina en ook na verversen. Daarom mag deze melding pas weg als het aantal nul is,
+	 * en niet als er alleen geen namen meer bij staan: een sessie die over een uitrol heen loopt kent
+	 * het aantal wél en de namen niet. Dan noemen we er geen, maar zeggen we nog steeds dat er iets
+	 * kan ontbreken.
+	 *
+	 * Mappen staan erbij omdat die bij het bericht horen, bij de organisatie die het stuurde. Levert
+	 * zij niet, dan ontbreken haar mappen ook — of tellen ze minder dan ze zouden moeten.
+	 */
+	function toonNietGeleverd(nietGeleverd) {
+		const namen = nietGeleverd.namen;
+		const rest = nietGeleverd.aantal - namen.length;
+		let wie;
+		if (!namen.length) {
+			wie = nietGeleverd.aantal === 1 ? "Eén organisatie heeft" : nietGeleverd.aantal + " organisaties hebben";
+		} else if (rest > 0) {
+			wie = namen.join(", ") + " en nog " + (rest === 1 ? "één organisatie" : rest + " organisaties") + " hebben";
+		} else {
+			wie = namen.length > 1 ? namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1] + " hebben" : namen[0] + " heeft";
+		}
+		const van = nietGeleverd.aantal === 1 ? "van die organisatie" : "van die organisaties";
+		meld("mededeling", wie + " uw berichten niet geleverd. Berichten en mappen " + van + " kunnen daardoor ontbreken.");
+		meldingOverNietGeleverd = true;
+	}
+
 	// Hoeveel organisaties bevraagd zijn, hoeveel er antwoordden en hoeveel berichten dat opleverde.
 	// Dit is échte voortgang: het komt uit de stroom van het stelsel zelf, niet uit een nabootsing.
-	function toonVoortgang(bevraagd, klaar, gevonden) {
+	//
+	// `mappen` alleen als het stelsel ze meestuurt: een keten van vóór dat veld zegt niets over
+	// mappen, en een lege lijst zou dan beweren dat er geen zijn.
+	function toonVoortgang(bevraagd, klaar, gevonden, mappen) {
 		voortgang = { bevraagd: bevraagd, klaar: klaar, gevonden: gevonden };
+		if (mappen) voortgang.mappen = mappen;
 		laatWeten();
 	}
 
@@ -410,6 +492,31 @@
 	}
 
 	/**
+	 * Het mappenoverzicht tot nu toe, uit wat de organisaties tijdens de ronde meldden.
+	 *
+	 * Een map is geen ding bij het stelsel maar een eigenschap van een bericht, en die ligt bij de
+	 * organisatie die het stuurde. Dezelfde naam kan dus bij twee organisaties voorkomen; voor de
+	 * bezoeker is dat één map, en de aantallen tellen op. Namen gaan woordelijk: "Belasting" en
+	 * "belasting" zijn twee mappen, want zo staan ze bij de organisatie.
+	 *
+	 * Tijdens de ronde is de berichtenlijst niet op te vragen — het stelsel antwoordt dan met 409 —
+	 * dus dit is het enige wat er over mappen te zeggen valt tot de ronde klaar is. Daarna is de lijst
+	 * zelf de bron.
+	 */
+	function telMappenOp(mappenPerOrganisatie) {
+		const aantallen = new Map();
+		for (const mappen of Object.values(mappenPerOrganisatie)) {
+			for (const map of mappen) {
+				if (!map || typeof map.naam !== "string" || map.naam.trim() === "") continue;
+				// Het archief en de prullenbak hebben hun eigen tabblad en horen niet tussen de mappen.
+				if (plekVanMap(map.naam) !== "inbox") continue;
+				aantallen.set(map.naam, (aantallen.get(map.naam) || 0) + (Number(map.aantalBerichten) || 0));
+			}
+		}
+		return Array.from(aantallen, ([naam, aantal]) => ({ naam: naam, aantalBerichten: aantal })).sort((a, b) => a.naam.localeCompare(b.naam, "nl"));
+	}
+
+	/**
 	 * Leest een Server-Sent-Events-stroom uit, gebeurtenis voor gebeurtenis.
 	 *
 	 * EventSource kan geen eigen header meesturen, en het stelsel eist `X-Ontvanger`; daarom lezen we
@@ -469,6 +576,11 @@
 	async function haalOp(ontvanger) {
 		const organisaties = {};
 		const stil = [];
+		// Per organisatie de mappen die zij meldde. Per organisatie en niet meteen opgeteld: een
+		// organisatie kan zich — bij een herhaalde gebeurtenis — twee keer melden, en dan hoort haar
+		// telling vervangen te worden, niet verdubbeld.
+		const mappenPerOrganisatie = {};
+		let mappenGemeld = false;
 		let klaar = 0;
 		let gevonden = 0;
 		let gereed = false;
@@ -519,6 +631,13 @@
 				klaar++;
 				gevonden += gebeurtenis.aantalBerichten || 0;
 				if (gebeurtenis.status !== "OK") stil.push(gebeurtenis.naam || gebeurtenis.magazijnId);
+				// Alleen bij "OK" draagt de gebeurtenis mappen. Wie niet leverde, heeft er ook geen
+				// gemeld; die mappen ontbreken tot een volgende ronde, en de melding over wie niet
+				// leverde zegt dat.
+				if (gebeurtenis.status === "OK" && Array.isArray(gebeurtenis.mappen)) {
+					mappenPerOrganisatie[gebeurtenis.magazijnId || gebeurtenis.naam || "zonder-id-" + klaar] = gebeurtenis.mappen;
+					mappenGemeld = true;
+				}
 			}
 			if (gebeurtenis.event === "ophalen-fout") {
 				const fout = ketenFout("onbereikbaar", "het stelsel meldde een fout tijdens het ophalen");
@@ -526,7 +645,7 @@
 				throw fout;
 			}
 
-			toonVoortgang(Object.keys(organisaties).length, klaar, gevonden);
+			toonVoortgang(Object.keys(organisaties).length, klaar, gevonden, mappenGemeld ? telMappenOp(mappenPerOrganisatie) : null);
 			if (gebeurtenis.event === "ophalen-gereed") gereed = true;
 			// Na "ophalen-gereed" stoppen: de stroom afsluiten, anders loopt de backend elke
 			// resterende organisatie nog af.
@@ -582,15 +701,18 @@
 	 * demonstratie hoort de hele berichtenbox te tonen en niet de eerste honderd, dus blijven we
 	 * bladeren zolang het stelsel een volgende pagina noemt.
 	 *
-	 * Geeft `{ berichten, afgekapt }`. `afgekapt` staat aan als we bij de bovengrens stopten terwijl
-	 * er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan zijn. Elke
-	 * andere reden om te stoppen is een fout en werpt: een halve lijst die zich voordoet als een hele
-	 * is het ergste wat hier kan gebeuren, want daar is aan het scherm niets van te zien.
+	 * Geeft `{ berichten, afgekapt, nietGeleverd }`. `afgekapt` staat aan als we bij de bovengrens
+	 * stopten terwijl er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan
+	 * zijn. `nietGeleverd` zegt welke organisaties in de laatste ronde niet leverden; zie
+	 * `nietGeleverdVan`. Elke andere reden om te stoppen is een fout en werpt: een halve lijst die zich
+	 * voordoet als een hele is het ergste wat hier kan gebeuren, want daar is aan het scherm niets van
+	 * te zien.
 	 */
 	async function haalLijst(ontvanger) {
 		const berichten = [];
 		const gezien = new Set();
 		const einde = Date.now() + LIJST_TOTAAL_LIMIET_MS;
+		let nietGeleverd = null;
 
 		for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
 			const resterend = einde - Date.now();
@@ -626,11 +748,48 @@
 				console.warn("[Berichtenbox] " + dubbel + " bericht(en) kwamen op twee pagina's voor; de lijst groeide tijdens het ophalen.");
 			}
 
+			// Elke pagina draagt het; de laatste telt, want de ronde kan intussen opnieuw gedraaid zijn.
+			nietGeleverd = nietGeleverdVan(deel) || nietGeleverd;
+
 			// Een lege pagina is het einde, ook als er nog een `next` naast staat: nog een ronde langs
 			// hetzelfde antwoord levert niets nieuws op.
-			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false };
+			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false, nietGeleverd: nietGeleverd };
 		}
-		return { berichten: berichten, afgekapt: true };
+		return { berichten: berichten, afgekapt: true, nietGeleverd: nietGeleverd };
+	}
+
+	/**
+	 * Welke organisaties in de laatste ronde niet leverden, uit één pagina van de berichtenlijst.
+	 *
+	 * Volledig is `aantalNietGeleverd` nul — niet een lege `nietGeleverd`. Een sessie die over een
+	 * uitrol van het stelsel heen loopt, kent het aantal wél en de namen niet; die lijst is dan korter
+	 * dan het aantal, en de melding zegt "mogelijk onvolledig" zonder namen in plaats van niets.
+	 *
+	 * De `status` (`FOUT`, `TIMEOUT`, `NIET_OPGEHAALD`) lezen we niet: elke organisatie in deze lijst
+	 * leverde niet, wat de reden ook is. Een status die we niet kennen verandert daar niets aan — hem
+	 * als geslaagd lezen zou een onvolledige lijst als volledig tonen.
+	 *
+	 * Geeft null als het veld ontbreekt: een stelsel van vóór dit veld zegt er niets over, en dan
+	 * blijft de melding uit de ronde (`toonUitval`) het enige wat we weten.
+	 */
+	function nietGeleverdVan(deel) {
+		const aantal = deel && deel.aantalNietGeleverd;
+		if (typeof aantal !== "number" || !Number.isFinite(aantal)) return null;
+
+		const lijst = Array.isArray(deel.nietGeleverd) ? deel.nietGeleverd : [];
+		const namen = [];
+		for (const organisatie of lijst) {
+			const naam = organisatie && (organisatie.naam || organisatie.magazijnId);
+			if (typeof naam === "string" && naam !== "" && namen.indexOf(naam) === -1) namen.push(naam);
+		}
+		// Meer namen dan het aantal is een tegenstrijdig antwoord. Het aantal is de afspraak, maar een
+		// organisatie die met naam genoemd wordt, leverde aantoonbaar niet — dus die telt mee.
+		return { aantal: Math.max(aantal, namen.length), namen: namen };
+	}
+
+	function zelfdeNietGeleverd(vorige, nieuwe) {
+		if (!vorige || !nieuwe) return vorige === nieuwe;
+		return vorige.aantal === nieuwe.aantal && vorige.namen.join("|") === nieuwe.namen.join("|");
 	}
 
 	/**
@@ -717,6 +876,87 @@
 		};
 	}
 
+	/**
+	 * Zet een bericht in een map, of haalt het eruit met de lege naam: terug naar de inbox.
+	 *
+	 * De map is een eigenschap van het bericht en staat bij de organisatie die het stuurde; daar
+	 * gaat deze wijziging dus ook heen, via de uitvraag. Uit de map is `{"map": ""}` en niet `null`:
+	 * in een merge-patch betekent `null` "niet wijzigen", en dan gebeurt er niets terwijl het stelsel
+	 * met een 200 antwoordt.
+	 *
+	 * Werpt bij alles behalve een 2xx.
+	 */
+	async function patchMap(ontvanger, berichtId, magazijnId, map) {
+		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
+		const respons = await metTijdslimiet(
+			adres,
+			{
+				method: "PATCH",
+				headers: { "X-Ontvanger": ontvanger, "Content-Type": "application/merge-patch+json" },
+				body: JSON.stringify({ map: map }),
+			},
+			INHOUD_LIMIET_MS
+		);
+		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "de map van een bericht wijzigen"), "map wijzigen mislukt (" + respons.status + ")");
+	}
+
+	/**
+	 * Waarom een wijziging aan een bericht mislukte, fijner dan `redenVanRespons`: wat de bezoeker
+	 * daarna leest hangt ervan af.
+	 *
+	 * 404 en 410 zijn "weg": het bericht bestaat niet (meer) of de bezoeker verwijderde het zelf.
+	 * Een 502 zonder proxy-kenmerk is "onzeker": de uitvraag noemt daaronder ook het geval dat de
+	 * organisatie de wijziging deed en alleen het bijwerken van de sessie mislukte.
+	 */
+	function redenVanWijziging(respons, wat) {
+		const reden = redenVanRespons(respons, wat);
+		if (reden === "configuratie") return reden;
+		if (respons.status === 404 || respons.status === 410) return "weg";
+		if (respons.status === 502) return "onzeker";
+		return reden;
+	}
+
+	/**
+	 * Zet een wijziging die het stelsel bevestigde meteen in de lijst en meldt haar, zonder op de
+	 * volgende tik te wachten. `mapVersie` laat een tik vervallen die de lijst van vóór de wijziging
+	 * ophaalde: anders zet die het bericht terug waar het stond.
+	 */
+	function werkLijstBij(maak) {
+		mapVersie += 1;
+		const berichten = maak(laatsteUitkomst.berichten);
+		laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+		laatstGemeld = berichten;
+		laatWeten();
+	}
+
+	/**
+	 * Wat de bezoeker leest na een wijziging die niet lukte, en wat er met de lijst gebeurt.
+	 *
+	 * Bestaat het bericht niet meer, dan gaat het uit de lijst: anders blijft het staan en geeft elke
+	 * volgende poging hetzelfde antwoord. Weten we niet of het gelukt is, dan halen we over de stroom
+	 * de lijst opnieuw op; daar komt een verplaatsing niet vanzelf langs, en het navragen doet dat al.
+	 */
+	function naMislukteWijziging(fout, berichtId, wat, waar) {
+		const reden = redenVan(fout);
+		if (reden === "configuratie") return FOUT_TEKSTEN.configuratie;
+		if (reden === "weg") {
+			werkLijstBij((berichten) => berichten.filter((b) => b.id !== berichtId));
+			return BERICHT_WEG;
+		}
+		if (reden === "stil" || reden === "onzeker") {
+			if (volgtStroom()) planLijstTik();
+			return wijzigOnzeker(wat, waar);
+		}
+		return wijzigFout(wat);
+	}
+
+	/** Verwijdert een bericht bij de organisatie die het stuurde. Niet terug te draaien. */
+	async function verwijderBericht(ontvanger, berichtId, magazijnId) {
+		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
+		const respons = await metTijdslimiet(adres, { method: "DELETE", headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
+	}
+
 	// --- Vertaling ----------------------------------------------------------------------------
 
 	// Zonder berichtId is er geen sleutel voor de state en geen detailpagina; zo'n bericht laten we
@@ -739,7 +979,10 @@
 			inhoud: bericht.inhoud || "",
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
 			isOngelezen: bericht.status !== "gelezen",
-			map: bericht.map || null,
+			// Het archief en de prullenbak zijn bij het stelsel mappen, maar hier een plek: ze hebben
+			// hun eigen tabblad en horen niet in het mappenoverzicht.
+			plek: plekVanMap(bericht.map),
+			map: plekVanMap(bericht.map) === "inbox" ? bericht.map || null : null,
 			heeftBijlage: (bericht.aantalBijlagen || 0) > 0,
 			// Merkteken voor berichtenbox.js: dit bericht heeft geen server-gerenderde
 			// detailpagina, want die worden bij de build uit de dataset gegenereerd.
@@ -998,9 +1241,14 @@
 				// onwaar: die vergelijking mag niet stilzwijgend voor "alles is er" doorgaan.
 			} else if (typeof uitvraag.gevonden === "number" && berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
+			} else if (lijst.nietGeleverd) {
+				// Wat de lijst zegt gaat vóór wat de ronde zag: de lijst draagt het ook na verversen, en
+				// een pagina die de sessie van een andere pagina leest heeft geen eigen ronde gezien.
+				if (lijst.nietGeleverd.aantal > 0) toonNietGeleverd(lijst.nietGeleverd);
 			} else if (uitvraag.stil.length > 0) {
 				toonUitval(uitvraag.stil);
 			}
+			laatstNietGeleverd = lijst.nietGeleverd;
 
 			return { berichten: berichten, magazijnen: magazijnen };
 		} catch (fout) {
@@ -1027,6 +1275,9 @@
 	let pollBezig = false;
 	let pollHerstelBezig = false;
 	let laatsteTikOp = 0;
+	// Telt op bij elke map-wijziging die hier gedaan is. Een tik die de lijst vóór die wijziging
+	// opvroeg en erna terugkomt, zou het bericht anders terugzetten in zijn map.
+	let mapVersie = 0;
 	// Kwam er tijdens een tik een `volgen-gestart` binnen, dan hoort er daarna nog een: de lopende
 	// tik begon vóór het volgen, en wat er tussen die twee binnenkwam, staat in geen van beide.
 	let tikNogEens = false;
@@ -1246,6 +1497,7 @@
 		// Waar deze tik bij hoort. Draait er onderweg een nieuwe ophaalronde, dan is wat hier
 		// terugkomt ouder dan wat die ronde opleverde.
 		const rondeVanTik = ronde;
+		const mapVersieVanTik = mapVersie;
 
 		try {
 			const lijst = await haalLijst(ontvangerVanRonde);
@@ -1253,7 +1505,7 @@
 			// De pagina is intussen weg geweest, of een nieuwere ronde heeft ons ingehaald. Dit antwoord
 			// stilzwijgend laten vallen is hier het juiste: het zou een verouderde lijst over een
 			// nieuwere heen leggen, en de bron zou een zojuist getoond bericht weer weghalen.
-			if (achterhaald(rondeVanTik)) return;
+			if (achterhaald(rondeVanTik, mapVersieVanTik)) return;
 
 			// Pas nullen als het verwerken ook lukte: een antwoord dat aankomt maar niet te lezen is,
 			// hoort mee te tellen in de foutenreeks en niet die van zijn voorgangers te wissen.
@@ -1265,7 +1517,7 @@
 			// rondes langs alle organisaties.
 			if (!volgtStroom()) pollHerstelPogingen = 0;
 		} catch (fout) {
-			if (achterhaald(rondeVanTik)) return;
+			if (achterhaald(rondeVanTik, mapVersieVanTik)) return;
 
 			// De sessie is weg. Doorpollen levert niets meer op: alleen een nieuwe ronde vult hem.
 			if (redenVan(fout) === "geenSessie") {
@@ -1312,10 +1564,14 @@
 	 * die ronde het over, via `herhaal` en `hervat`. Is de pagina weg of hebben we het opgegeven,
 	 * dan zorgt `opTerugkomen` of niemand voor het vervolg.
 	 */
-	function achterhaald(rondeVanTik) {
+	function achterhaald(rondeVanTik, mapVersieVanTik) {
 		if (pollGestopt || pollGeparkeerd) return true;
-		if (ronde !== rondeVanTik) {
+		if (ronde !== rondeVanTik || mapVersie !== mapVersieVanTik) {
 			planPoll();
+			// Een map-wijziging start geen ronde, en over de stroom komt er geen volgende tik vanzelf.
+			// Deze lijst kan de aansluiting zijn op wat er vóór het volgen binnenkwam, dus halen we
+			// haar opnieuw op.
+			if (ronde === rondeVanTik && volgtStroom()) planLijstTik();
 			return true;
 		}
 		return false;
@@ -1353,6 +1609,8 @@
 				if (!inLijst.has(bericht.id)) berichten.unshift(bericht);
 			}
 		}
+
+		werkNietGeleverdBij(lijst.nietGeleverd);
 
 		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
 		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
@@ -1396,10 +1654,36 @@
 		laatstGemeld = uitkomst.berichten;
 	}
 
+	/**
+	 * Dezelfde berichten, op dezelfde plek en in dezelfde mappen. Dat telt mee: een bericht dat uit
+	 * zijn map gehaald of gearchiveerd is — in een ander tabblad, of door de organisatie zelf — is
+	 * voor het overzicht een wijziging, ook al staat er geen bericht bij of af.
+	 */
 	function zelfdeBerichten(vorige, nieuwe) {
 		if (vorige.length !== nieuwe.length) return false;
-		const oud = new Set(vorige.map((bericht) => bericht.id));
-		return nieuwe.every((bericht) => oud.has(bericht.id));
+		const oud = new Map(vorige.map((bericht) => [bericht.id, plaatsVan(bericht)]));
+		return nieuwe.every((bericht) => oud.has(bericht.id) && oud.get(bericht.id) === plaatsVan(bericht));
+	}
+
+	/**
+	 * Houdt de melding over wie niet leverde gelijk met de lijst.
+	 *
+	 * Alleen als het veranderde: het meldingsblok is een live-regio, en elke tik dezelfde tekst erin
+	 * schrijven laat een schermlezer hem elke vijftien seconden voorlezen. En alleen onze eigen
+	 * melding intrekken — staat er iets anders, dan is dat nog steeds waar.
+	 */
+	function werkNietGeleverdBij(nietGeleverd) {
+		// Een stelsel dat het veld niet (meer) meestuurt, zegt er niets over. Dat is geen "alles
+		// geleverd", dus de melding die er staat blijft.
+		if (!nietGeleverd || zelfdeNietGeleverd(laatstNietGeleverd, nietGeleverd)) return;
+		laatstNietGeleverd = nietGeleverd;
+
+		if (nietGeleverd.aantal > 0) {
+			// Geen andere melding overschrijven: die gaat over iets anders en is nog steeds waar.
+			if (!melding || meldingOverNietGeleverd) toonNietGeleverd(nietGeleverd);
+		} else if (meldingOverNietGeleverd) {
+			verbergMeldingen();
+		}
 	}
 
 	/**
@@ -1908,6 +2192,95 @@
 				console.error("[Berichtenbox] berichtinhoud ophalen mislukt", fout);
 				return { fout: FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar };
 			}
+		},
+
+		/**
+		 * Haalt een bericht uit zijn map. Geeft `{}` als het lukte, of `{ fout }` met een tekst voor de
+		 * bezoeker. Werpt niet: de aanroeper is een knop, en die hoort te zeggen wat er misging.
+		 *
+		 * Lukt het, dan staat het bericht meteen zonder map in de lijst, zonder op de volgende tik te
+		 * wachten. Het stelsel heeft het dan al; de lijst hier bijwerken is niets vooruitlopen. Was het
+		 * het laatste bericht in die map, dan is de map daarmee weg: een lege map bestaat niet.
+		 */
+		haalUitMap: async function (berichtId) {
+			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId) {
+				console.warn("[Berichtenbox] Dit bericht is niet uit zijn map te halen: geen ontvanger of geen organisatie bekend.", berichtId);
+				return { fout: UIT_MAP_FOUT };
+			}
+			if (!bericht.map) return {};
+
+			try {
+				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, "");
+			} catch (fout) {
+				console.error("[Berichtenbox] bericht uit zijn map halen mislukt", fout);
+				// Bij een tijdslimiet weten we niet of het stelsel het al gedaan heeft; "het staat nog in
+				// de map" zou dan misschien onwaar zijn.
+				if (redenVan(fout) === "stil") return { fout: UIT_MAP_TRAAG };
+				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : UIT_MAP_FOUT };
+			}
+
+			mapVersie += 1;
+			const berichten = laatsteUitkomst.berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { map: null }) : b));
+			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+			laatstGemeld = berichten;
+			laatWeten();
+			return {};
+		},
+
+		/**
+		 * Zet een bericht in de inbox, het archief of de prullenbak. Geeft `{}` of `{ fout }` en werpt
+		 * niet, zoals `haalUitMap`.
+		 *
+		 * Het archief en de prullenbak zijn bij het stelsel mappen, dus dit is dezelfde wijziging als
+		 * een bericht in of uit een map zetten, bij de organisatie die het stuurde. Een bericht heeft
+		 * daar één map: wie archiveert, haalt het bericht uit de map waar het in stond, en terugzetten
+		 * brengt het naar de inbox zonder map.
+		 */
+		verplaats: async function (berichtId, plek) {
+			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
+			const wat = WAT_PER_PLEK[plek] || "te verplaatsen";
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || !WAT_PER_PLEK[plek]) {
+				console.warn("[Berichtenbox] Dit bericht is niet te verplaatsen: geen ontvanger, geen organisatie of een onbekende plek.", berichtId, plek);
+				return { fout: wijzigKanNiet(wat) };
+			}
+			if ((bericht.plek || "inbox") === plek && !(plek === "inbox" && bericht.map)) return {};
+
+			try {
+				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
+			} catch (fout) {
+				console.error("[Berichtenbox] bericht verplaatsen mislukt", fout);
+				return { fout: naMislukteWijziging(fout, berichtId, wat, "waar het bericht staat") };
+			}
+
+			werkLijstBij((berichten) => berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { plek: plek, map: null }) : b)));
+			return {};
+		},
+
+		/**
+		 * Verwijdert een bericht voorgoed, bij de organisatie die het stuurde. Geeft `{}` of `{ fout }`
+		 * en werpt niet. Lukt het, dan is het bericht meteen uit de lijst.
+		 *
+		 * Alleen vanuit de prullenbak: dit is niet terug te draaien, en een pagina die nog de knop
+		 * toont van een bericht dat intussen teruggezet is, hoort het niet alsnog weg te gooien.
+		 */
+		verwijder: async function (berichtId) {
+			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || bericht.plek !== "prullenbak") {
+				console.warn("[Berichtenbox] Dit bericht is niet te verwijderen: geen ontvanger, geen organisatie bekend, of het staat niet in de prullenbak.", berichtId);
+				return { fout: wijzigKanNiet(WAT_VOORGOED) };
+			}
+
+			try {
+				await verwijderBericht(ontvangerVanRonde, berichtId, bericht.magazijnId);
+			} catch (fout) {
+				console.error("[Berichtenbox] bericht verwijderen mislukt", fout);
+				// Het bericht is er al niet meer: dan is bereikt wat de bezoeker vroeg.
+				if (redenVan(fout) !== "weg") return { fout: naMislukteWijziging(fout, berichtId, WAT_VOORGOED, "of het bericht er nog staat") };
+			}
+
+			werkLijstBij((berichten) => berichten.filter((b) => b.id !== berichtId));
+			return {};
 		},
 
 		/**
