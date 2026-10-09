@@ -11,8 +11,12 @@ import { bouwPagina, bouwDemoDetailPagina, laadBerichtenbox, laatLaden, rijen } 
  */
 
 function ketenBericht(id, map, extra = {}) {
-	return { id, magazijnId: "00000001823288444000", afzender: "Belastingdienst", onderwerp: "Onderwerp " + id, datum: "2026-09-21", isOngelezen: false, map, inhoud: "", uitKeten: true, ...extra };
+	return { id, magazijnId: "00000001823288444000", afzender: "Belastingdienst", onderwerp: "Onderwerp " + id, datum: "2026-09-21", isOngelezen: false, plek: "inbox", map, inhoud: "", uitKeten: true, ...extra };
 }
+
+// Zoals het transport het levert: het archief en de prullenbak zijn bij het stelsel mappen, maar
+// komen hier als `plek` en zonder `map`.
+const opPlek = (uitkomst, plekken) => ({ ...uitkomst, berichten: uitkomst.berichten.map((b) => (plekken[b.id] ? { ...b, plek: plekken[b.id], map: null } : b)) });
 
 const UITKOMST = {
 	berichten: [ketenBericht("r1", "Subsidies", { magazijnId: "rvo", afzender: "RVO" }), ketenBericht("b1", "Boekhouding 2026"), ketenBericht("r2", "Boekhouding 2026", { magazijnId: "rvo", afzender: "RVO" }), ketenBericht("b2", "Te bespreken met adviseur"), ketenBericht("b3", null)],
@@ -29,7 +33,16 @@ function zetKeten({ uitkomst, haalUitMap = vi.fn(async () => ({})) } = {}) {
 	const wachten = new Promise((klaar) => {
 		losmaken = klaar;
 	});
+	let huidig = uitkomst === undefined ? null : uitkomst;
+	// Zoals het transport: de lijst is meteen bijgewerkt en gemeld, vóór het antwoord terugkomt.
+	const wijzig = (maak) => {
+		huidig = { ...huidig, berichten: maak(huidig.berichten) };
+		kijkers.forEach((k) => k({ melding: null, voortgang: null, uitkomst: huidig }));
+		return {};
+	};
 	const keten = {
+		verplaats: vi.fn(async (id, plek) => wijzig((berichten) => berichten.map((b) => (b.id === id ? { ...b, plek, map: null } : b)))),
+		verwijder: vi.fn(async (id) => wijzig((berichten) => berichten.filter((b) => b.id !== id))),
 		bezig: true,
 		aangesloten: true,
 		melding: null,
@@ -46,9 +59,11 @@ function zetKeten({ uitkomst, haalUitMap = vi.fn(async () => ({})) } = {}) {
 		keten,
 		meld(toestand) {
 			if ("voortgang" in toestand) keten.voortgang = toestand.voortgang;
+			if (toestand.uitkomst) huidig = toestand.uitkomst;
 			kijkers.forEach((k) => k({ melding: null, voortgang: null, uitkomst: null, ...toestand }));
 		},
 		klaar(u) {
+			huidig = u;
 			losmaken(u);
 		},
 	};
@@ -139,32 +154,70 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)"]);
 	});
 
-	// Een mapweergave toont alleen wat in de inbox staat. Telt het overzicht ook mee wat de bezoeker
-	// archiveerde of weggooide, dan staat er "(1 bericht)" bij een map die leeg opent.
-	it("telt alleen de berichten die de map ook toont, en laat een map zonder zulke berichten weg", async () => {
-		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true }, verwijderd: { r2: true } } });
-		zetKeten({ uitkomst: UITKOMST });
+	// Het archief en de prullenbak zijn bij het stelsel mappen, maar ze hebben hun eigen tabblad: in
+	// het mappenoverzicht horen ze niet, en een bericht dat daar staat telt bij geen andere map mee.
+	it("telt een gearchiveerd of weggegooid bericht niet mee, en zet het archief niet tussen de mappen", async () => {
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: opPlek(UITKOMST, { b2: "archief", r2: "prullenbak" }) });
 
 		await laadBerichtenbox();
 		await laatLaden();
 
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (1 bericht)", "Subsidies (1 bericht)"]);
 		expect(scheiding().hidden).toBe(false);
+		expect(rijen().map((r) => r.dataset.berichtId)).not.toContain("b2");
 	});
 
-	it("werkt het overzicht bij zodra de bezoeker een bericht archiveert of weggooit", async () => {
+	it("archiveert en gooit weg bij het stelsel, en werkt het overzicht daarna bij", async () => {
 		bouwPagina([], { mappenbalk: true });
-		zetKeten({ uitkomst: UITKOMST });
+		const keten = zetKeten({ uitkomst: UITKOMST });
 		await laadBerichtenbox();
 		await laatLaden();
 
 		const rij = (id) => rijen().find((r) => r.dataset.berichtId === id);
 		rij("b2").querySelector('[data-row-actie="archiveren"]').click();
+		await laatLaden();
+		expect(keten.keten.verplaats).toHaveBeenCalledWith("b2", "archief");
+		expect(rij("b2")).toBeUndefined();
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)"]);
 
 		rij("r2").querySelector('[data-row-actie="verwijderen"]').click();
+		await laatLaden();
+		expect(keten.keten.verplaats).toHaveBeenCalledWith("r2", "prullenbak");
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (1 bericht)", "Subsidies (1 bericht)"]);
 		expect(scheiding().hidden).toBe(false);
+		// Niets in deze browser: wie van persona wisselt en terugkomt, vindt het bericht waar het stond.
+		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
+		expect(bewaard.gearchiveerd || {}).toEqual({});
+		expect(bewaard.verwijderd || {}).toEqual({});
+	});
+
+	it("laat het bericht staan en zegt wat er misging als het stelsel het verplaatsen weigert", async () => {
+		bouwPagina([], { mappenbalk: true });
+		const keten = zetKeten({ uitkomst: UITKOMST });
+		keten.keten.verplaats = vi.fn(async () => ({ fout: "Wij konden dit bericht niet verplaatsen. Het staat nog waar het stond. Probeer het opnieuw." }));
+		await laadBerichtenbox();
+		await laatLaden();
+
+		rijen()
+			.find((r) => r.dataset.berichtId === "b2")
+			.querySelector('[data-row-actie="archiveren"]')
+			.click();
+		await laatLaden();
+
+		expect(rijen().map((r) => r.dataset.berichtId)).toContain("b2");
+		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verplaatsen");
+		expect(mappenInBalk()).toContain("Te bespreken met adviseur (1 bericht)");
+	});
+
+	it("toont in het archief wat bij het stelsel in het archief staat", async () => {
+		bouwPagina([], { view: "archief" });
+		zetKeten({ uitkomst: opPlek(UITKOMST, { b2: "archief", r2: "prullenbak" }) });
+
+		await laadBerichtenbox();
+		await laatLaden();
+
+		expect(rijen().map((r) => r.dataset.berichtId)).toEqual(["b2"]);
 	});
 
 	// Het tabblad is het enige op de pagina dat zegt welke map er openstaat. Verdwijnt het met het
@@ -176,6 +229,7 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		await laatLaden();
 
 		rijen()[0].querySelector('[data-row-actie="archiveren"]').click();
+		await laatLaden();
 
 		expect(rijen()).toEqual([]);
 		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)", "Subsidies (1 bericht)", "Te bespreken met adviseur (0 berichten)"]);
@@ -197,6 +251,7 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(leegMap().hidden).toBe(true);
 
 		rijen()[0].querySelector('[data-row-actie="archiveren"]').click();
+		await laatLaden();
 		expect(leegMap().hidden).toBe(false);
 		expect(leeg().hidden).toBe(true);
 
@@ -209,8 +264,8 @@ describe("het mappenoverzicht in de tabbalk", () => {
 	});
 
 	it("laat de algemene lege staat staan in een inbox zonder map", async () => {
-		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b3: true } } });
-		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null, { plek: "archief" })] } });
 		await laadBerichtenbox();
 		await laatLaden();
 
@@ -218,21 +273,10 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		expect(document.querySelector("[data-berichtenbox-empty-map]").hidden).toBe(true);
 	});
 
-	it("houdt een map zonder zichtbare berichten weg als de lijst daarna verandert", async () => {
-		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
-		const keten = zetKeten({ uitkomst: UITKOMST });
-		await laadBerichtenbox();
-		await laatLaden();
-
-		keten.meld({ uitkomst: { ...UITKOMST, berichten: UITKOMST.berichten.map((b) => (b.id === "r1" ? { ...b, map: null } : b)) } });
-
-		expect(mappenInBalk()).toEqual(["Boekhouding 2026 (2 berichten)"]);
-	});
-
-	// Tijdens de ronde staat een map er met het aantal van de organisatie. Blijkt daarna dat de
-	// bezoeker dat ene bericht al archiveerde, dan verdwijnt de map onder het toetsenbord vandaan.
+	// Tijdens de ronde staat een map er met het aantal van de organisatie. Staat het bericht aan het
+	// eind ergens anders, dan verdwijnt de map onder het toetsenbord vandaan.
 	it("zet de focus op een tabblad dat blijft als de map met de focus verdwijnt", async () => {
-		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
+		bouwPagina([], { mappenbalk: true });
 		const keten = zetKeten({});
 		await laadBerichtenbox();
 		await laatLaden();
@@ -242,10 +286,10 @@ describe("het mappenoverzicht in de tabbalk", () => {
 		map.querySelector("a").focus();
 		expect(map.contains(document.activeElement)).toBe(true);
 
-		keten.klaar(UITKOMST);
+		keten.klaar(opPlek(UITKOMST, { b2: "archief" }));
 		await laatLaden();
 
-		expect(map.hidden).toBe(true);
+		expect(map.isConnected).toBe(false);
 		const metFocus = document.activeElement.closest(".tablist li");
 		expect(metFocus).not.toBeNull();
 		expect(metFocus.hidden).toBe(false);
@@ -265,8 +309,8 @@ describe("het mappenoverzicht in de tabbalk", () => {
 	});
 
 	it("verbergt het kopje Mappen als alle berichten in mappen gearchiveerd zijn", async () => {
-		bouwPagina([], { mappenbalk: true, state: { gearchiveerd: { b2: true } } });
-		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur"), ketenBericht("b3", null)] } });
+		bouwPagina([], { mappenbalk: true });
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", null, { plek: "archief" }), ketenBericht("b3", null)] } });
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -340,6 +384,85 @@ describe("het mappenoverzicht in de tabbalk", () => {
 	});
 });
 
+describe("archiveren en weggooien op de detailpagina van een bericht uit het stelsel", () => {
+	const actie = (naam) => document.querySelector('[data-actie="' + naam + '"]');
+
+	async function open(bericht) {
+		bouwDemoDetailPagina(bericht);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht] } });
+		await laadBerichtenbox();
+		await laatLaden();
+		return keten.keten;
+	}
+
+	it.each([
+		["archiveren", "archief"],
+		["verwijderen", "prullenbak"],
+	])("zet het bericht met %s bij het stelsel in het %s", async (naam, plek) => {
+		const keten = await open(ketenBericht("b2", "Te bespreken met adviseur"));
+
+		actie(naam).click();
+		await laatLaden();
+
+		expect(keten.verplaats).toHaveBeenCalledWith("b2", plek);
+		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
+		expect(bewaard.gearchiveerd || {}).toEqual({});
+		expect(bewaard.verwijderd || {}).toEqual({});
+	});
+
+	it.each([
+		["archiveren", "archief", "Terugplaatsen in inbox"],
+		["verwijderen", "prullenbak", "Terugzetten"],
+	])("zet het met dezelfde knop (%s) terug in de inbox als het in het %s staat", async (naam, plek, label) => {
+		const keten = await open(ketenBericht("b2", null, { plek }));
+		expect(actie(naam).textContent).toContain(label);
+
+		actie(naam).click();
+		await laatLaden();
+
+		expect(keten.verplaats).toHaveBeenCalledWith("b2", "inbox");
+	});
+
+	it("blijft op de pagina en zegt wat er misging als het stelsel weigert", async () => {
+		const keten = await open(ketenBericht("b2", "Te bespreken met adviseur"));
+		keten.verplaats = vi.fn(async () => ({ fout: "Wij konden dit bericht niet verplaatsen. Het staat nog waar het stond. Probeer het opnieuw." }));
+		const pad = location.pathname;
+
+		actie("archiveren").click();
+		await laatLaden();
+
+		expect(location.pathname).toBe(pad);
+		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verplaatsen");
+		expect(actie("archiveren").getAttribute("aria-disabled")).toBeNull();
+	});
+
+	it("verwijdert een bericht uit de prullenbak voorgoed bij het stelsel, na bevestiging", async () => {
+		const keten = await open(ketenBericht("b2", null, { plek: "prullenbak" }));
+		expect(actie("voorgoed-verwijderen").hidden).toBe(false);
+
+		actie("voorgoed-verwijderen").click();
+		expect(keten.verwijder).not.toHaveBeenCalled();
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(keten.verwijder).toHaveBeenCalledWith("b2");
+		const bewaard = JSON.parse(window.localStorage.getItem("berichtenbox"));
+		expect(bewaard.voorgoedVerwijderd || {}).toEqual({});
+	});
+
+	it("laat het paneel staan en zegt wat er misging als het stelsel het verwijderen weigert", async () => {
+		const keten = await open(ketenBericht("b2", null, { plek: "prullenbak" }));
+		keten.verwijder = vi.fn(async () => ({ fout: "Wij konden dit bericht niet verwijderen. Het staat nog in de prullenbak. Probeer het opnieuw." }));
+
+		actie("voorgoed-verwijderen").click();
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(document.querySelector("[data-voorgoed-paneel]")).not.toBeNull();
+		expect(document.querySelector("[data-berichtenbox-storing-tekst]").textContent).toContain("niet verwijderen");
+	});
+});
+
 describe("een bericht uit zijn map halen op de detailpagina", () => {
 	const knop = () => document.querySelector('[data-actie="uit-map"]');
 
@@ -353,15 +476,14 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 		expect(knop().hidden).toBe(true);
 	});
 
-	// In het archief of de prullenbak belooft de melding na "Haal uit map" iets wat niet klopt: het
-	// bericht komt er niet mee in de inbox, en daar staat al een knop voor die dat wel doet.
+	// In het archief of de prullenbak staat al een knop die het bericht terugzet in de inbox.
 	it.each([
-		["het archief", { gearchiveerd: { b2: true } }],
-		["de prullenbak", { verwijderd: { b2: true } }],
-	])("biedt de knop niet aan voor een bericht in %s", async (_, state) => {
-		bouwDemoDetailPagina(ketenBericht("b2", "Te bespreken met adviseur"));
-		window.localStorage.setItem("berichtenbox", JSON.stringify({ eersteBezoekGehad: true, ...state }));
-		zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur")] } });
+		["het archief", "archief"],
+		["de prullenbak", "prullenbak"],
+	])("biedt de knop niet aan voor een bericht in %s", async (_, plek) => {
+		const bericht = ketenBericht("b2", null, { plek });
+		bouwDemoDetailPagina(bericht);
+		zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht] } });
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -373,7 +495,6 @@ describe("een bericht uit zijn map halen op de detailpagina", () => {
 	// was, met de knop er nog op.
 	it("haalt niets uit de map als het bericht intussen gearchiveerd is", async () => {
 		bouwDemoDetailPagina(ketenBericht("b2", "Te bespreken met adviseur"));
-		knop().insertAdjacentHTML("afterend", '<button class="icon-button" data-actie="archiveren">Archiveren</button>');
 		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", "Te bespreken met adviseur")] } });
 
 		await laadBerichtenbox();

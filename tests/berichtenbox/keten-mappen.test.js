@@ -336,3 +336,126 @@ describe("een bericht uit zijn map halen", () => {
 		expect(gemeld[gemeld.length - 1].berichten.find((b) => b.id === "b2").map).toBeNull();
 	});
 });
+
+/**
+ * Het archief en de prullenbak zijn bij het stelsel gewone mappen. Voorbij het transport zijn het
+ * plekken: ze hebben een eigen tabblad en horen niet in het mappenoverzicht.
+ */
+describe("het archief en de prullenbak als mappen bij het stelsel", () => {
+	const MET_ARCHIEF = [...BERICHTEN, bericht("a1", BD, "Archief"), bericht("p1", RVO, "Prullenbak")];
+
+	it("levert een bericht in de map Archief of Prullenbak als plek, zonder map", async () => {
+		await start([["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)]]);
+
+		const berichten = window.BerichtenboxKeten.huidigeUitkomst.berichten;
+		expect(berichten.find((b) => b.id === "a1")).toMatchObject({ plek: "archief", map: null });
+		expect(berichten.find((b) => b.id === "p1")).toMatchObject({ plek: "prullenbak", map: null });
+		expect(berichten.find((b) => b.id === "b2")).toMatchObject({ plek: "inbox", map: "Te bespreken met adviseur" });
+		expect(berichten.find((b) => b.id === "b3")).toMatchObject({ plek: "inbox", map: null });
+	});
+
+	it("laat ze tijdens de ronde uit het mappenoverzicht", async () => {
+		const gezien = [];
+		const stroom = () =>
+			sseVan([
+				voltooid(BD, "Belastingdienst", "OK", [
+					{ naam: "Archief", aantalBerichten: 4 },
+					{ naam: "Boekhouding 2026", aantalBerichten: 1 },
+					{ naam: "Prullenbak", aantalBerichten: 2 },
+				]),
+				{ event: "ophalen-gereed" },
+			]);
+
+		kijkVanafStart((toestand) => toestand.voortgang && gezien.push(toestand.voortgang.mappen));
+
+		await start(rondeMetLijst(lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [] }), stroom));
+
+		expect(gezien[0]).toEqual([{ naam: "Boekhouding 2026", aantalBerichten: 1 }]);
+	});
+
+	it.each([
+		["archief", "Archief"],
+		["prullenbak", "Prullenbak"],
+	])("zet een bericht in het %s met een merge-patch naar die map", async (plek, map) => {
+		const { aanroepen, ontvanger } = await start([
+			["/api/v1/berichten?", lijstMet({})],
+			["?magazijnId=", antwoord(200, {})],
+		]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		expect(await window.BerichtenboxKeten.verplaats("b2", plek)).toEqual({});
+
+		const patch = aanroepen.find((a) => a.methode === "PATCH");
+		expect(patch.pad).toBe("/api/v1/berichten/b2?magazijnId=" + BD);
+		expect(patch.headers["X-Ontvanger"]).toBe(ontvanger);
+		expect(JSON.parse(patch.body)).toEqual({ map: map });
+		// Een bericht heeft bij het stelsel één map: de map waar het in stond is het kwijt.
+		expect(gemeld[gemeld.length - 1].berichten.find((b) => b.id === "b2")).toMatchObject({ plek: plek, map: null });
+	});
+
+	it("zet een bericht uit het archief terug in de inbox met een lege map", async () => {
+		const { aanroepen } = await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			["?magazijnId=", antwoord(200, {})],
+		]);
+
+		expect(await window.BerichtenboxKeten.verplaats("a1", "inbox")).toEqual({});
+
+		expect(JSON.parse(aanroepen.find((a) => a.methode === "PATCH").body)).toEqual({ map: "" });
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.id === "a1")).toMatchObject({ plek: "inbox", map: null });
+	});
+
+	it("vraagt niets als het bericht er al staat", async () => {
+		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)]]);
+
+		expect(await window.BerichtenboxKeten.verplaats("a1", "archief")).toEqual({});
+		expect(await window.BerichtenboxKeten.verplaats("b3", "inbox")).toEqual({});
+		expect(aanroepen.some((a) => a.methode === "PATCH")).toBe(false);
+	});
+
+	it("laat het bericht staan en zegt dat, als het stelsel het verplaatsen weigert", async () => {
+		await start([
+			["/api/v1/berichten?", lijstMet({})],
+			["?magazijnId=", antwoord(400, { title: "Bad Request" }, "application/problem+json")],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verplaats("b2", "archief");
+
+		expect(uitkomst.fout).toMatch(/niet verplaatsen/);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.id === "b2")).toMatchObject({ plek: "inbox", map: "Te bespreken met adviseur" });
+	});
+
+	it("weigert een plek die het niet kent, zonder iets te vragen", async () => {
+		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({})]]);
+
+		expect((await window.BerichtenboxKeten.verplaats("b2", "elders")).fout).toMatch(/niet verplaatsen/);
+		expect(aanroepen.some((a) => a.methode === "PATCH")).toBe(false);
+	});
+
+	it("verwijdert een bericht voorgoed bij de organisatie, en haalt het uit de lijst", async () => {
+		const { aanroepen, ontvanger } = await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			["?magazijnId=", antwoord(200, {})],
+		]);
+
+		expect(await window.BerichtenboxKeten.verwijder("p1")).toEqual({});
+
+		const verzoek = aanroepen.find((a) => a.methode === "DELETE");
+		expect(verzoek.pad).toBe("/api/v1/berichten/p1?magazijnId=" + RVO);
+		expect(verzoek.headers["X-Ontvanger"]).toBe(ontvanger);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "p1")).toBe(false);
+	});
+
+	it("laat het bericht in de prullenbak en zegt dat, als het stelsel het verwijderen weigert", async () => {
+		await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			["?magazijnId=", antwoord(500, { title: "Fout" }, "application/problem+json")],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verwijder("p1");
+
+		expect(uitkomst.fout).toMatch(/niet verwijderen/);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.id === "p1")).toBe(true);
+	});
+});

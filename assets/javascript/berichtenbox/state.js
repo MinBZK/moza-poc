@@ -130,6 +130,9 @@ export function maakState(opslag, persona = null) {
 	}
 	ruw.persona = nu;
 
+	// Waar de bron zegt dat een bericht staat. Niet bewaard: het komt bij elke lijst opnieuw mee.
+	let plekVanBron = new Map();
+
 	return {
 		ruw,
 
@@ -141,7 +144,24 @@ export function maakState(opslag, persona = null) {
 			return onleesbaar ? "onleesbaar" : laatsteFout;
 		},
 
+		/**
+		 * Neemt over waar de bron zegt dat een bericht staat (`plek`: inbox, archief of prullenbak).
+		 *
+		 * Bij het Federatief Berichtenstelsel zijn het archief en de prullenbak mappen bij de
+		 * organisatie, dus de plek van zo'n bericht staat daar en niet in deze browser. Voor die
+		 * berichten gaat de bron voor; wat hier eerder over ze bewaard is, telt niet meer. Berichten
+		 * zonder `plek` — die van de dataset — houden hun plek uit de bewaarde staat.
+		 */
+		volgBron(berichten) {
+			plekVanBron = new Map();
+			for (const bericht of berichten || []) {
+				if (bericht && typeof bericht.plek === "string") plekVanBron.set(bericht.id, bericht.plek);
+			}
+		},
+
 		statusVan(berichtId) {
+			const plek = plekVanBron.get(berichtId);
+			if (plek) return plek;
 			// Vóór de rest: dit bericht hoort nergens meer te staan, ook niet in de prullenbak waar
 			// het vandaan kwam. Elke weergave filtert op zijn eigen naam, dus "weg" valt overal af.
 			if (ruw.voorgoedVerwijderd[berichtId]) return "weg";

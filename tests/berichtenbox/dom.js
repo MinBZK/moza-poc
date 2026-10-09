@@ -340,6 +340,9 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 			<div class="action-group action-options">
 				<button class="icon-button" data-actie="markeren" aria-pressed="false"><span data-markeer-label>Markeren</span></button>
 				<button class="icon-button" data-actie="uit-map" hidden>Haal uit map</button>
+				<button class="icon-button" data-actie="archiveren">Archiveren</button>
+				<button class="icon-button" data-actie="verwijderen">Verwijderen</button>
+				<button class="icon-button" data-actie="voorgoed-verwijderen" hidden aria-expanded="false">Voorgoed verwijderen</button>
 			</div>
 		</section>
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>

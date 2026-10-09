@@ -30,10 +30,10 @@
  * De naam is ook de sleutel (`slug`), woordelijk: "Belasting" en "belasting" zijn twee mappen, zoals
  * ze bij de organisatie staan. Een slug afleiden zou ze samenvoegen.
  *
- * `aantalBerichten` telt alles wat de bron in die map levert. Wat de bezoeker in zijn browser
- * archiveerde of weggooide telt mee: dat is een weergave in de render-laag die de bron niet kent, en
- * bij de organisatie staat het bericht nog in die map. De render-laag telt voor het scherm zelf na
- * wat de mapweergave toont.
+ * `aantalBerichten` telt alles wat de bron in die map levert. Het archief en de prullenbak zijn bij
+ * het stelsel ook mappen, maar het transport levert die als `plek` en zonder `map`: ze hebben hun
+ * eigen tabblad en staan dus niet in dit overzicht. De render-laag telt voor het scherm zelf na wat
+ * de mapweergave toont.
  */
 export function mappenVan(berichten) {
 	const aantallen = new Map();
@@ -76,19 +76,30 @@ function gelijkeMagazijnen(vorige, nieuwe) {
 function aanwasVan(getoond, nieuwe) {
 	if (!gelijkeMagazijnen(getoond.magazijnen, nieuwe.magazijnen)) return null;
 
-	const nu = new Map((nieuwe.berichten || []).map((bericht) => [bericht.id, bericht.map || null]));
-	for (const [id, map] of getoond.ids) {
-		if (!nu.has(id) || nu.get(id) !== map) return null;
+	const nu = new Map((nieuwe.berichten || []).map((bericht) => [bericht.id, plaatsVan(bericht)]));
+	for (const [id, plaats] of getoond.ids) {
+		if (!nu.has(id) || nu.get(id) !== plaats) return null;
 	}
 
 	const aanwas = (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
-	if (aanwas.some((bericht) => bericht.map)) return null;
+	// Ook een binnenkomer die al in het archief of de prullenbak staat: druppelen is voor de inbox.
+	if (aanwas.some((bericht) => plaatsVan(bericht) !== INBOX_ZONDER_MAP)) return null;
 	return aanwas;
 }
 
-/** Wat er op het scherm staat, per bericht met zijn map. */
+/**
+ * Plek en map van een bericht samen. Het archief en de prullenbak zijn bij het stelsel mappen; het
+ * transport levert ze als `plek`, zodat ze niet tussen de mappen komen te staan.
+ */
+function plaatsVan(bericht) {
+	return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
+}
+
+const INBOX_ZONDER_MAP = plaatsVan({});
+
+/** Wat er op het scherm staat, per bericht met zijn plek en map. */
 function getoondeIds(berichten) {
-	return new Map((berichten || []).map((bericht) => [bericht.id, bericht.map || null]));
+	return new Map((berichten || []).map((bericht) => [bericht.id, plaatsVan(bericht)]));
 }
 
 /** Zoveel keer bieden we dezelfde onbruikbare aanwas opnieuw aan; daarna zeggen we het en houden op. */
@@ -229,6 +240,28 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 		},
 
 		/**
+		 * Zet een bericht in de inbox, het archief of de prullenbak (`plek`), bij de organisatie die het
+		 * stuurde: daar zijn dat mappen. Werpt niet: geeft `{}` of `{ fout }`. Lukt het, dan meldt de
+		 * keten de gewijzigde lijst langs dezelfde weg als elke andere wijziging.
+		 */
+		async verplaats(berichtId, plek) {
+			if (!keten || typeof keten.verplaats !== "function") {
+				console.error("[Berichtenbox] Het keten-script kent geen verplaats; het bericht blijft waar het staat.");
+				return { fout: "Wij konden dit bericht niet verplaatsen. Ververs de pagina om het opnieuw te proberen." };
+			}
+			return keten.verplaats(berichtId, plek);
+		},
+
+		/** Verwijdert een bericht voorgoed bij de organisatie die het stuurde. Geeft `{}` of `{ fout }`. */
+		async verwijderVoorgoed(berichtId) {
+			if (!keten || typeof keten.verwijder !== "function") {
+				console.error("[Berichtenbox] Het keten-script kent geen verwijder; het bericht blijft staan.");
+				return { fout: "Wij konden dit bericht niet verwijderen. Ververs de pagina om het opnieuw te proberen." };
+			}
+			return keten.verwijder(berichtId);
+		},
+
+		/**
 		 * De inhoud van één bericht, pas opgehaald als de bezoeker het opent.
 		 *
 		 * De berichtenuitvraag levert kopgegevens; de inhoud blijft bij de organisatie tot iemand
@@ -359,7 +392,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 					// Doorgaan zou een lijst opleveren waar er middenin één ontbreekt, en dat is van een
 					// volledige lijst niet te onderscheiden. De rest wacht op de volgende wijziging.
 					if (fouten && fouten.length) return fouten;
-					getoond.ids.set(bericht.id, bericht.map || null);
+					getoond.ids.set(bericht.id, plaatsVan(bericht));
 				}
 				return [];
 			}

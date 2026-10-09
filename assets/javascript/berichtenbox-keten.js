@@ -169,6 +169,27 @@
 	// Het bericht blijft waar het was, dus opnieuw proberen kan: de knop staat er nog.
 	const UIT_MAP_TRAAG = "Het uit de map halen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
 	const UIT_MAP_FOUT = "Wij konden dit bericht niet uit de map halen. Het staat nog in de map. Probeer het opnieuw.";
+	const VERPLAATS_TRAAG = "Het verplaatsen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
+	const VERPLAATS_FOUT = "Wij konden dit bericht niet verplaatsen. Het staat nog waar het stond. Probeer het opnieuw.";
+	const VERWIJDER_TRAAG = "Het verwijderen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien of het bericht er nog staat.";
+	const VERWIJDER_FOUT = "Wij konden dit bericht niet verwijderen. Het staat nog in de prullenbak. Probeer het opnieuw.";
+
+	// Het archief en de prullenbak zijn in het stelsel gewone mappen: een eigenschap van het bericht,
+	// bij de organisatie die het stuurde. Er is nog geen stelselafspraak die hun naam vastlegt; tot
+	// die er is, zijn dit de namen. Alleen hier: alles voorbij deze laag kent ze als `plek`.
+	const PLEK_MAPPEN = { archief: "Archief", prullenbak: "Prullenbak" };
+
+	/** Waar een bericht staat volgens zijn map bij het stelsel: inbox, archief of prullenbak. */
+	function plekVanMap(map) {
+		if (map === PLEK_MAPPEN.archief) return "archief";
+		if (map === PLEK_MAPPEN.prullenbak) return "prullenbak";
+		return "inbox";
+	}
+
+	/** Plek en map samen: wat er aan een bericht kan veranderen zonder dat het erbij komt of weggaat. */
+	function plaatsVan(bericht) {
+		return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
+	}
 
 	// Het pollen geeft het op. Geen storing maar een mededeling: de lijst die er staat klopt nog, en
 	// wat er misgaat is dat zij zich niet meer bijwerkt. Zeggen wat er aan de hand is en wat de
@@ -473,6 +494,8 @@
 		for (const mappen of Object.values(mappenPerOrganisatie)) {
 			for (const map of mappen) {
 				if (!map || typeof map.naam !== "string" || map.naam.trim() === "") continue;
+				// Het archief en de prullenbak hebben hun eigen tabblad en horen niet tussen de mappen.
+				if (plekVanMap(map.naam) !== "inbox") continue;
 				aantallen.set(map.naam, (aantallen.get(map.naam) || 0) + (Number(map.aantalBerichten) || 0));
 			}
 		}
@@ -840,27 +863,34 @@
 	}
 
 	/**
-	 * Haalt een bericht uit zijn map, terug naar de inbox.
+	 * Zet een bericht in een map, of haalt het eruit met de lege naam: terug naar de inbox.
 	 *
 	 * De map is een eigenschap van het bericht en staat bij de organisatie die het stuurde; daar
-	 * gaat deze wijziging dus ook heen, via de uitvraag. `{"map": ""}` en niet `null`: in een
-	 * merge-patch betekent `null` "niet wijzigen", en dan gebeurt er niets terwijl het stelsel met
-	 * een 200 antwoordt.
+	 * gaat deze wijziging dus ook heen, via de uitvraag. Uit de map is `{"map": ""}` en niet `null`:
+	 * in een merge-patch betekent `null` "niet wijzigen", en dan gebeurt er niets terwijl het stelsel
+	 * met een 200 antwoordt.
 	 *
 	 * Werpt bij alles behalve een 2xx.
 	 */
-	async function patchUitMap(ontvanger, berichtId, magazijnId) {
+	async function patchMap(ontvanger, berichtId, magazijnId, map) {
 		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
 		const respons = await metTijdslimiet(
 			adres,
 			{
 				method: "PATCH",
 				headers: { "X-Ontvanger": ontvanger, "Content-Type": "application/merge-patch+json" },
-				body: JSON.stringify({ map: "" }),
+				body: JSON.stringify({ map: map }),
 			},
 			INHOUD_LIMIET_MS
 		);
-		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "een bericht uit zijn map halen"), "uit map halen mislukt (" + respons.status + ")");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de map van een bericht wijzigen"), "map wijzigen mislukt (" + respons.status + ")");
+	}
+
+	/** Verwijdert een bericht bij de organisatie die het stuurde. Niet terug te draaien. */
+	async function verwijderBericht(ontvanger, berichtId, magazijnId) {
+		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
+		const respons = await metTijdslimiet(adres, { method: "DELETE", headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
 	}
 
 	// --- Vertaling ----------------------------------------------------------------------------
@@ -885,7 +915,10 @@
 			inhoud: bericht.inhoud || "",
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
 			isOngelezen: bericht.status !== "gelezen",
-			map: bericht.map || null,
+			// Het archief en de prullenbak zijn bij het stelsel mappen, maar hier een plek: ze hebben
+			// hun eigen tabblad en horen niet in het mappenoverzicht.
+			plek: plekVanMap(bericht.map),
+			map: plekVanMap(bericht.map) === "inbox" ? bericht.map || null : null,
 			heeftBijlage: (bericht.aantalBijlagen || 0) > 0,
 			// Merkteken voor berichtenbox.js: dit bericht heeft geen server-gerenderde
 			// detailpagina, want die worden bij de build uit de dataset gegenereerd.
@@ -1558,14 +1591,14 @@
 	}
 
 	/**
-	 * Dezelfde berichten, in dezelfde mappen. De map telt mee: een bericht dat uit zijn map gehaald
-	 * is — in een ander tabblad, of door de organisatie zelf — is voor het mappenoverzicht een
-	 * wijziging, ook al staat er geen bericht bij of af.
+	 * Dezelfde berichten, op dezelfde plek en in dezelfde mappen. Dat telt mee: een bericht dat uit
+	 * zijn map gehaald of gearchiveerd is — in een ander tabblad, of door de organisatie zelf — is
+	 * voor het overzicht een wijziging, ook al staat er geen bericht bij of af.
 	 */
 	function zelfdeBerichten(vorige, nieuwe) {
 		if (vorige.length !== nieuwe.length) return false;
-		const oud = new Map(vorige.map((bericht) => [bericht.id, bericht.map || null]));
-		return nieuwe.every((bericht) => oud.has(bericht.id) && oud.get(bericht.id) === (bericht.map || null));
+		const oud = new Map(vorige.map((bericht) => [bericht.id, plaatsVan(bericht)]));
+		return nieuwe.every((bericht) => oud.has(bericht.id) && oud.get(bericht.id) === plaatsVan(bericht));
 	}
 
 	/**
@@ -2114,7 +2147,7 @@
 			if (!bericht.map) return {};
 
 			try {
-				await patchUitMap(ontvangerVanRonde, berichtId, bericht.magazijnId);
+				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, "");
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht uit zijn map halen mislukt", fout);
 				// Bij een tijdslimiet weten we niet of het stelsel het al gedaan heeft; "het staat nog in
@@ -2125,6 +2158,66 @@
 
 			mapVersie += 1;
 			const berichten = laatsteUitkomst.berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { map: null }) : b));
+			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+			laatstGemeld = berichten;
+			laatWeten();
+			return {};
+		},
+
+		/**
+		 * Zet een bericht in de inbox, het archief of de prullenbak. Geeft `{}` of `{ fout }` en werpt
+		 * niet, zoals `haalUitMap`.
+		 *
+		 * Het archief en de prullenbak zijn bij het stelsel mappen, dus dit is dezelfde wijziging als
+		 * een bericht in of uit een map zetten, bij de organisatie die het stuurde. Een bericht heeft
+		 * daar één map: wie archiveert, haalt het bericht uit de map waar het in stond, en terugzetten
+		 * brengt het naar de inbox zonder map.
+		 */
+		verplaats: async function (berichtId, plek) {
+			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId || (plek !== "inbox" && !PLEK_MAPPEN[plek])) {
+				console.warn("[Berichtenbox] Dit bericht is niet te verplaatsen: geen ontvanger, geen organisatie of een onbekende plek.", berichtId, plek);
+				return { fout: VERPLAATS_FOUT };
+			}
+			if ((bericht.plek || "inbox") === plek && !(plek === "inbox" && bericht.map)) return {};
+
+			try {
+				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
+			} catch (fout) {
+				console.error("[Berichtenbox] bericht verplaatsen mislukt", fout);
+				if (redenVan(fout) === "stil") return { fout: VERPLAATS_TRAAG };
+				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : VERPLAATS_FOUT };
+			}
+
+			mapVersie += 1;
+			const berichten = laatsteUitkomst.berichten.map((b) => (b.id === berichtId ? Object.assign({}, b, { plek: plek, map: null }) : b));
+			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
+			laatstGemeld = berichten;
+			laatWeten();
+			return {};
+		},
+
+		/**
+		 * Verwijdert een bericht voorgoed, bij de organisatie die het stuurde. Geeft `{}` of `{ fout }`
+		 * en werpt niet. Lukt het, dan is het bericht meteen uit de lijst.
+		 */
+		verwijder: async function (berichtId) {
+			const bericht = laatsteUitkomst && laatsteUitkomst.berichten.find((b) => b.id === berichtId);
+			if (!ontvangerVanRonde || !bericht || !bericht.magazijnId) {
+				console.warn("[Berichtenbox] Dit bericht is niet te verwijderen: geen ontvanger of geen organisatie bekend.", berichtId);
+				return { fout: VERWIJDER_FOUT };
+			}
+
+			try {
+				await verwijderBericht(ontvangerVanRonde, berichtId, bericht.magazijnId);
+			} catch (fout) {
+				console.error("[Berichtenbox] bericht verwijderen mislukt", fout);
+				if (redenVan(fout) === "stil") return { fout: VERWIJDER_TRAAG };
+				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : VERWIJDER_FOUT };
+			}
+
+			mapVersie += 1;
+			const berichten = laatsteUitkomst.berichten.filter((b) => b.id !== berichtId);
 			laatsteUitkomst = { berichten: berichten, magazijnen: laatsteUitkomst.magazijnen };
 			laatstGemeld = berichten;
 			laatWeten();
