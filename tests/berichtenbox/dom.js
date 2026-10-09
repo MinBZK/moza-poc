@@ -55,6 +55,15 @@ const MELDINGEN_INBOX = `
 		</div>
 	</div>`;
 
+// Alleen de inbox heeft het afzenderfilter, net als de templates.
+const AFZENDERFILTER = `
+	<div class="berichtenbox-afzender" data-berichtenbox-afzender hidden>
+		<label for="afzender-berichtenbox">Afzender</label>
+		<select id="afzender-berichtenbox" data-berichtenbox-afzender-filter>
+			<option value="">Alle afzenders</option>
+		</select>
+	</div>`;
+
 // Het blok voor een echte storing staat op elke berichtenbox-pagina.
 // Twee pictogrammen, in dezelfde volgorde als de templates: berichtenbox.js wisselt ze om.
 const STORING = `
@@ -106,6 +115,7 @@ ${STORING}
 		<label for="search-berichtenbox">Filter berichten</label>
 		<input id="search-berichtenbox" type="search" data-berichtenbox-search-input />
 	</div>
+	${inbox ? AFZENDERFILTER : ""}
 	${orgSchakelaar ? '<label><input type="checkbox" data-berichtenbox-org-toggle /> Ook andere organisaties</label>' : ""}
 
 	<div class="feedback-progress" data-berichtenbox-progress hidden role="status" aria-live="polite">

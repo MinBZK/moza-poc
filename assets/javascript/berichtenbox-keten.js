@@ -285,10 +285,52 @@
 		meld("storing", FOUT_TEKSTEN[reden] || FOUT_TEKSTEN.onbereikbaar);
 	}
 
-	// Organisaties die tijdens de ronde niet antwoordden. Een mededeling en geen storing: er staat
-	// wél een lijst, hij is alleen niet volledig.
-	function toonUitval(namen) {
-		meld("mededeling", namen.length > 1 ? "Deze organisaties waren tijdens het ophalen niet bereikbaar: " + namen.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk." : namen[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+	function rondeOnvolledig(uitvraag) {
+		return uitvraag.stil.length > 0 || (uitvraag.nietOpgehaald || []).length > 0 || (uitvraag.afgekapt || []).length > 0;
+	}
+
+	/**
+	 * Wat er in de ronde ontbrak. Een mededeling en geen storing: er staat wél een lijst, hij is
+	 * alleen niet volledig. Per oorzaak een eigen zin, samen in één mededeling want er is één
+	 * meldingsblok. Apart benoemd, want "niet bereikbaar", "niet aan toegekomen" en "niet alles
+	 * opgehaald" zijn drie verschillende verhalen.
+	 *
+	 * Geen "ververs de pagina": zolang de sessie leeft, draait verversen geen nieuwe ronde.
+	 */
+	function toonOnvolledigeRonde(uitvraag) {
+		const zinnen = [];
+		const stil = uitvraag.stil;
+		const nietOpgehaald = uitvraag.nietOpgehaald || [];
+		const afgekapt = uitvraag.afgekapt || [];
+
+		if (stil.length > 1) {
+			zinnen.push("Deze organisaties waren tijdens het ophalen niet bereikbaar: " + stil.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk.");
+		} else if (stil.length === 1) {
+			zinnen.push(stil[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
+		}
+
+		if (nietOpgehaald.length > 1) {
+			zinnen.push("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: " + nietOpgehaald.join(", ") + ". Er is daar niets mis, maar hun berichten ontbreken hier.");
+		} else if (nietOpgehaald.length === 1) {
+			zinnen.push("Bij " + nietOpgehaald[0] + " zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was. Er is daar niets mis, maar de berichten van deze organisatie ontbreken hier.");
+		}
+
+		if (afgekapt.length > 1) {
+			zinnen.push("Van deze organisaties zijn niet al uw berichten opgehaald: " + afgekapt.map(afgekaptNaam).join(", ") + ". Een deel van hun berichten staat hier niet.");
+		} else if (afgekapt.length === 1) {
+			const een = afgekapt[0];
+			zinnen.push(heeftAantallen(een) ? "Van " + een.naam + " zijn " + een.opgehaald + " van uw " + een.totaal + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.");
+		}
+
+		meld("mededeling", zinnen.join(" "));
+	}
+
+	function heeftAantallen(afgekapt) {
+		return typeof afgekapt.opgehaald === "number" && typeof afgekapt.totaal === "number" && afgekapt.totaal > afgekapt.opgehaald;
+	}
+
+	function afgekaptNaam(afgekapt) {
+		return heeftAantallen(afgekapt) ? afgekapt.naam + " (" + afgekapt.opgehaald + " van " + afgekapt.totaal + ")" : afgekapt.naam;
 	}
 
 	// De ronde telde meer berichten dan de lijst teruggaf: onderweg iets kwijtgeraakt. Stil
@@ -313,7 +355,7 @@
 	/**
 	 * Organisaties die in de laatste ronde niet leverden, zoals de berichtenlijst dat vastlegt.
 	 *
-	 * Anders dan `toonUitval` hierboven komt dit niet uit de ronde maar uit de lijst, en die draagt
+	 * Anders dan `toonOnvolledigeRonde` hierboven komt dit niet uit de ronde maar uit de lijst, en die draagt
 	 * het op elke pagina en ook na verversen. Daarom mag deze melding pas weg als het aantal nul is,
 	 * en niet als er alleen geen namen meer bij staan: een sessie die over een uitrol heen loopt kent
 	 * het aantal wél en de namen niet. Dan noemen we er geen, maar zeggen we nog steeds dat er iets
@@ -576,6 +618,8 @@
 	async function haalOp(ontvanger) {
 		const organisaties = {};
 		const stil = [];
+		const nietOpgehaald = [];
+		const afgekapt = [];
 		// Per organisatie de mappen die zij meldde. Per organisatie en niet meteen opgeteld: een
 		// organisatie kan zich — bij een herhaalde gebeurtenis — twee keer melden, en dan hoort haar
 		// telling vervangen te worden, niet verdubbeld.
@@ -630,7 +674,7 @@
 			if (gebeurtenis.event === "magazijn-bevraging-voltooid") {
 				klaar++;
 				gevonden += gebeurtenis.aantalBerichten || 0;
-				if (gebeurtenis.status !== "OK") stil.push(gebeurtenis.naam || gebeurtenis.magazijnId);
+				deelIn(gebeurtenis, { stil: stil, nietOpgehaald: nietOpgehaald, afgekapt: afgekapt });
 				// Alleen bij "OK" draagt de gebeurtenis mappen. Wie niet leverde, heeft er ook geen
 				// gemeld; die mappen ontbreken tot een volgende ronde, en de melding over wie niet
 				// leverde zegt dat.
@@ -666,7 +710,31 @@
 			throw ketenFout("afgebroken", "de ophaalronde brak af na " + klaar + " van " + Object.keys(organisaties).length + " organisaties");
 		}
 
-		return { organisaties: organisaties, stil: stil, gevonden: gevonden };
+		return { organisaties: organisaties, stil: stil, nietOpgehaald: nietOpgehaald, afgekapt: afgekapt, gevonden: gevonden };
+	}
+
+	/**
+	 * Waarom een organisatie niet (alles) leverde, in drie groepen die elk een eigen uitleg krijgen.
+	 *
+	 * `FOUT` en `TIMEOUT` zijn een storing bij die organisatie. `NIET_OPGEHAALD` is dat niet: het
+	 * stelsel had het te druk en heeft haar niet bevraagd; haar "niet bereikbaar" noemen legt de
+	 * schuld bij de verkeerde. Een status die we niet kennen telt als niet geleverd, nooit als
+	 * geslaagd, maar ook niet als storing: dat weten we niet.
+	 *
+	 * `afgekapt` hoort bij `OK`: de organisatie leverde, alleen niet alles.
+	 */
+	function deelIn(gebeurtenis, groepen) {
+		const naam = gebeurtenis.naam || gebeurtenis.magazijnId;
+
+		if (gebeurtenis.status === "OK") {
+			if (gebeurtenis.afgekapt === true) {
+				groepen.afgekapt.push({ naam: naam, opgehaald: gebeurtenis.aantalBerichten, totaal: gebeurtenis.totaalBeschikbaar });
+			}
+		} else if (gebeurtenis.status === "FOUT" || gebeurtenis.status === "TIMEOUT") {
+			groepen.stil.push(naam);
+		} else {
+			groepen.nietOpgehaald.push(naam);
+		}
 	}
 
 	/**
@@ -770,7 +838,7 @@
 	 * als geslaagd lezen zou een onvolledige lijst als volledig tonen.
 	 *
 	 * Geeft null als het veld ontbreekt: een stelsel van vóór dit veld zegt er niets over, en dan
-	 * blijft de melding uit de ronde (`toonUitval`) het enige wat we weten.
+	 * blijft de melding uit de ronde (`toonOnvolledigeRonde`) het enige wat we weten.
 	 */
 	function nietGeleverdVan(deel) {
 		const aantal = deel && deel.aantalNietGeleverd;
@@ -978,6 +1046,8 @@
 			onderwerp: bericht.onderwerp || "Bericht zonder onderwerp",
 			inhoud: bericht.inhoud || "",
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
+			// Het volledige tijdstip, zodat sorteren op datum ook berichten van dezelfde dag ordent.
+			tijdstip: bericht.publicatietijdstip || "",
 			isOngelezen: bericht.status !== "gelezen",
 			// Het archief en de prullenbak zijn bij het stelsel mappen, maar hier een plek: ze hebben
 			// hun eigen tabblad en horen niet in het mappenoverzicht.
@@ -1244,9 +1314,12 @@
 			} else if (lijst.nietGeleverd) {
 				// Wat de lijst zegt gaat vóór wat de ronde zag: de lijst draagt het ook na verversen, en
 				// een pagina die de sessie van een andere pagina leest heeft geen eigen ronde gezien.
+				// Afgekapte organisaties staan niet in die lijst — zij leverden wél — dus die komen
+				// nog altijd uit de ronde.
 				if (lijst.nietGeleverd.aantal > 0) toonNietGeleverd(lijst.nietGeleverd);
-			} else if (uitvraag.stil.length > 0) {
-				toonUitval(uitvraag.stil);
+				else if ((uitvraag.afgekapt || []).length > 0) toonOnvolledigeRonde({ stil: [], afgekapt: uitvraag.afgekapt });
+			} else if (rondeOnvolledig(uitvraag)) {
+				toonOnvolledigeRonde(uitvraag);
 			}
 			laatstNietGeleverd = lijst.nietGeleverd;
 
