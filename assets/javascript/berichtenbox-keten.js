@@ -239,6 +239,9 @@
 	// pollen vergelijkt ermee: verandert het, dan hoort de melding mee te veranderen, ook als de
 	// berichten zelf hetzelfde bleven.
 	let laatstNietGeleverd = null;
+	// Bij wie volgens de laatst gelezen lijst niet alles opgehaald is, of null als het stelsel dat
+	// (nog) niet zegt. Zelfde rol als hierboven.
+	let laatstAfgekapt = null;
 
 	// --- Wat de buitenwereld te horen krijgt ---------------------------------------------------
 
@@ -249,9 +252,9 @@
 
 	let melding = null; // { soort: "storing" | "mededeling", tekst }
 	let voortgang = null; // { bevraagd, klaar, gevonden, mappen? }
-	// Staat de melding van hierboven er omdat niet elke organisatie leverde? Dan mag een lijst die
-	// weer volledig is hem intrekken; een andere melding laat die lijst staan.
-	let meldingOverNietGeleverd = false;
+	// Staat de melding van hierboven er omdat de lijst zegt dat er iets ontbreekt? Dan mag een lijst
+	// die weer volledig is hem intrekken; een andere melding laat die lijst staan.
+	let meldingUitLijst = false;
 	let laatsteUitkomst = null;
 	// De laatste berichtenlijst die als wijziging naar de bron ging. Apart van `laatsteUitkomst`, want
 	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
@@ -277,7 +280,7 @@
 
 	function meld(soort, tekst) {
 		melding = tekst ? { soort: soort, tekst: tekst } : null;
-		meldingOverNietGeleverd = false;
+		meldingUitLijst = false;
 		laatWeten();
 	}
 
@@ -315,14 +318,17 @@
 			zinnen.push("Bij " + nietOpgehaald[0] + " zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was. Er is daar niets mis, maar de berichten van deze organisatie ontbreken hier.");
 		}
 
-		if (afgekapt.length > 1) {
-			zinnen.push("Van deze organisaties zijn niet al uw berichten opgehaald: " + afgekapt.map(afgekaptNaam).join(", ") + ". Een deel van hun berichten staat hier niet.");
-		} else if (afgekapt.length === 1) {
-			const een = afgekapt[0];
-			zinnen.push(heeftAantallen(een) ? "Van " + een.naam + " zijn " + een.opgehaald + " van uw " + een.totaal + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.");
-		}
+		if (afgekapt.length > 0) zinnen.push(zinOverAfgekapt(afgekapt));
 
 		meld("mededeling", zinnen.join(" "));
+	}
+
+	function zinOverAfgekapt(afgekapt) {
+		if (afgekapt.length > 1) {
+			return "Van deze organisaties zijn niet al uw berichten opgehaald: " + afgekapt.map(afgekaptNaam).join(", ") + ". Een deel van hun berichten staat hier niet.";
+		}
+		const een = afgekapt[0];
+		return heeftAantallen(een) ? "Van " + een.naam + " zijn " + een.opgehaald + " van uw " + een.totaal + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.";
 	}
 
 	function heeftAantallen(afgekapt) {
@@ -353,18 +359,30 @@
 	}
 
 	/**
-	 * Organisaties die in de laatste ronde niet leverden, zoals de berichtenlijst dat vastlegt.
+	 * Wat er volgens de berichtenlijst ontbreekt: organisaties die in de laatste ronde niet leverden,
+	 * en organisaties waarvan niet alles opgehaald is.
 	 *
-	 * Anders dan `toonOnvolledigeRonde` hierboven komt dit niet uit de ronde maar uit de lijst, en die draagt
-	 * het op elke pagina en ook na verversen. Daarom mag deze melding pas weg als het aantal nul is,
-	 * en niet als er alleen geen namen meer bij staan: een sessie die over een uitrol heen loopt kent
-	 * het aantal wél en de namen niet. Dan noemen we er geen, maar zeggen we nog steeds dat er iets
-	 * kan ontbreken.
-	 *
-	 * Mappen staan erbij omdat die bij het bericht horen, bij de organisatie die het stuurde. Levert
-	 * zij niet, dan ontbreken haar mappen ook — of tellen ze minder dan ze zouden moeten.
+	 * Anders dan `toonOnvolledigeRonde` hierboven komt dit niet uit de ronde maar uit de lijst, en die
+	 * draagt het op elke pagina en ook na verversen. Daarom mag de zin over niet leveren pas weg als
+	 * het aantal nul is, en niet als er alleen geen namen meer bij staan: een sessie die over een
+	 * uitrol heen loopt kent het aantal wél en de namen niet. Dan noemen we er geen, maar zeggen we
+	 * nog steeds dat er iets kan ontbreken.
 	 */
-	function toonNietGeleverd(nietGeleverd) {
+	function toonLijstOnvolledig(nietGeleverd, afgekapt) {
+		const zinnen = [];
+		if (nietGeleverd && nietGeleverd.aantal > 0) zinnen.push(zinOverNietGeleverd(nietGeleverd));
+		if (afgekapt && afgekapt.length > 0) zinnen.push(zinOverAfgekapt(afgekapt));
+		meld("mededeling", zinnen.join(" "));
+		meldingUitLijst = true;
+	}
+
+	function lijstOnvolledig(nietGeleverd, afgekapt) {
+		return (!!nietGeleverd && nietGeleverd.aantal > 0) || (!!afgekapt && afgekapt.length > 0);
+	}
+
+	// Mappen staan erbij omdat die bij het bericht horen, bij de organisatie die het stuurde. Levert
+	// zij niet, dan ontbreken haar mappen ook — of tellen ze minder dan ze zouden moeten.
+	function zinOverNietGeleverd(nietGeleverd) {
 		const namen = nietGeleverd.namen;
 		const rest = nietGeleverd.aantal - namen.length;
 		let wie;
@@ -376,8 +394,7 @@
 			wie = namen.length > 1 ? namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1] + " hebben" : namen[0] + " heeft";
 		}
 		const van = nietGeleverd.aantal === 1 ? "van die organisatie" : "van die organisaties";
-		meld("mededeling", wie + " uw berichten niet geleverd. Berichten en mappen " + van + " kunnen daardoor ontbreken.");
-		meldingOverNietGeleverd = true;
+		return wie + " uw berichten niet geleverd. Berichten en mappen " + van + " kunnen daardoor ontbreken.";
 	}
 
 	// Hoeveel organisaties bevraagd zijn, hoeveel er antwoordden en hoeveel berichten dat opleverde.
@@ -769,10 +786,11 @@
 	 * demonstratie hoort de hele berichtenbox te tonen en niet de eerste honderd, dus blijven we
 	 * bladeren zolang het stelsel een volgende pagina noemt.
 	 *
-	 * Geeft `{ berichten, afgekapt, nietGeleverd }`. `afgekapt` staat aan als we bij de bovengrens
-	 * stopten terwijl er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan
-	 * zijn. `nietGeleverd` zegt welke organisaties in de laatste ronde niet leverden; zie
-	 * `nietGeleverdVan`. Elke andere reden om te stoppen is een fout en werpt: een halve lijst die zich
+	 * Geeft `{ berichten, afgekapt, nietGeleverd, afgekaptBij }`. `afgekapt` staat aan als we bij de
+	 * bovengrens stopten terwijl er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er
+	 * meer kan zijn. `nietGeleverd` zegt welke organisaties in de laatste ronde niet leverden; zie
+	 * `nietGeleverdVan`. `afgekaptBij` zegt bij welke organisaties het stelsel niet alles ophaalde; zie
+	 * `afgekaptVan`. Elke andere reden om te stoppen is een fout en werpt: een halve lijst die zich
 	 * voordoet als een hele is het ergste wat hier kan gebeuren, want daar is aan het scherm niets van
 	 * te zien.
 	 */
@@ -781,6 +799,7 @@
 		const gezien = new Set();
 		const einde = Date.now() + LIJST_TOTAAL_LIMIET_MS;
 		let nietGeleverd = null;
+		let afgekaptBij = null;
 
 		for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
 			const resterend = einde - Date.now();
@@ -818,12 +837,13 @@
 
 			// Elke pagina draagt het; de laatste telt, want de ronde kan intussen opnieuw gedraaid zijn.
 			nietGeleverd = nietGeleverdVan(deel) || nietGeleverd;
+			afgekaptBij = afgekaptVan(deel) || afgekaptBij;
 
 			// Een lege pagina is het einde, ook als er nog een `next` naast staat: nog een ronde langs
 			// hetzelfde antwoord levert niets nieuws op.
-			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false, nietGeleverd: nietGeleverd };
+			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false, nietGeleverd: nietGeleverd, afgekaptBij: afgekaptBij };
 		}
-		return { berichten: berichten, afgekapt: true, nietGeleverd: nietGeleverd };
+		return { berichten: berichten, afgekapt: true, nietGeleverd: nietGeleverd, afgekaptBij: afgekaptBij };
 	}
 
 	/**
@@ -858,6 +878,33 @@
 	function zelfdeNietGeleverd(vorige, nieuwe) {
 		if (!vorige || !nieuwe) return vorige === nieuwe;
 		return vorige.aantal === nieuwe.aantal && vorige.namen.join("|") === nieuwe.namen.join("|");
+	}
+
+	/**
+	 * Bij welke organisaties het stelsel niet alles ophaalde, uit één pagina van de berichtenlijst. Ze
+	 * leverden wél, alleen niet alles, dus ze staan niet in `nietGeleverd`.
+	 *
+	 * Dezelfde vorm als de afgekapte organisaties uit de ronde (`deelIn`), zodat beide dezelfde zin
+	 * krijgen. Een totaal zonder geldig aantal ernaast noemen we niet; `heeftAantallen` beslist dat.
+	 *
+	 * Geeft null als het veld ontbreekt: een stelsel van vóór dit veld zegt er niets over, en dan
+	 * blijft de ronde het enige wat we weten.
+	 */
+	function afgekaptVan(deel) {
+		if (!deel || !Array.isArray(deel.afgekapt)) return null;
+
+		const afgekapt = [];
+		for (const organisatie of deel.afgekapt) {
+			const naam = organisatie && (organisatie.naam || organisatie.magazijnId);
+			if (typeof naam !== "string" || naam === "" || afgekapt.some((bekend) => bekend.naam === naam)) continue;
+			afgekapt.push({ naam: naam, opgehaald: organisatie.aantalOpgehaald, totaal: organisatie.totaalBeschikbaar });
+		}
+		return afgekapt;
+	}
+
+	function zelfdeAfgekapt(vorige, nieuwe) {
+		if (!vorige || !nieuwe) return vorige === nieuwe;
+		return vorige.map(afgekaptNaam).join("|") === nieuwe.map(afgekaptNaam).join("|");
 	}
 
 	/**
@@ -1318,6 +1365,8 @@
 			// onvolledige lijst of een organisatie die niet reageerde heeft een eigen melding nodig.
 			verbergVoortgang();
 			verbergMeldingen();
+			laatstNietGeleverd = lijst.nietGeleverd;
+			laatstAfgekapt = lijst.afgekaptBij;
 
 			if (lijst.afgekapt) {
 				// Het aantal dat er écht staat, niet de bovengrens van de client: de lus stopt op een
@@ -1333,17 +1382,17 @@
 				// onwaar: die vergelijking mag niet stilzwijgend voor "alles is er" doorgaan.
 			} else if (typeof uitvraag.gevonden === "number" && berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
-			} else if (lijst.nietGeleverd) {
+			} else if (lijst.nietGeleverd || lijst.afgekaptBij) {
 				// Wat de lijst zegt gaat vóór wat de ronde zag: de lijst draagt het ook na verversen, en
 				// een pagina die de sessie van een andere pagina leest heeft geen eigen ronde gezien.
-				// Afgekapte organisaties staan niet in die lijst — zij leverden wél — dus die komen
-				// nog altijd uit de ronde.
-				if (lijst.nietGeleverd.aantal > 0) toonNietGeleverd(lijst.nietGeleverd);
-				else if ((uitvraag.afgekapt || []).length > 0) toonOnvolledigeRonde({ stil: [], afgekapt: uitvraag.afgekapt });
+				// Zegt een stelsel van vóór `afgekapt` daar niets over, dan weet alleen de ronde het;
+				// dat onthouden we, anders trekt het pollen het in zodra niemand meer ontbreekt.
+				const afgekapt = lijst.afgekaptBij || uitvraag.afgekapt || null;
+				if (lijstOnvolledig(lijst.nietGeleverd, afgekapt)) toonLijstOnvolledig(lijst.nietGeleverd, afgekapt);
+				laatstAfgekapt = afgekapt;
 			} else if (rondeOnvolledig(uitvraag)) {
 				toonOnvolledigeRonde(uitvraag);
 			}
-			laatstNietGeleverd = lijst.nietGeleverd;
 
 			return { berichten: berichten, magazijnen: magazijnen };
 		} catch (fout) {
@@ -1705,7 +1754,7 @@
 			}
 		}
 
-		werkNietGeleverdBij(lijst.nietGeleverd);
+		werkVolledigheidBij(lijst.nietGeleverd, lijst.afgekaptBij);
 
 		// Zelfde telling als in de ophaalronde: een bericht zonder id kan nergens heen, maar het
 		// verdwijnt hier wél uit de berichtenbox van iemand die het bij het stelsel wel heeft staan.
@@ -1761,22 +1810,25 @@
 	}
 
 	/**
-	 * Houdt de melding over wie niet leverde gelijk met de lijst.
+	 * Houdt de melding over wat er ontbreekt gelijk met de lijst.
 	 *
 	 * Alleen als het veranderde: het meldingsblok is een live-regio, en elke tik dezelfde tekst erin
 	 * schrijven laat een schermlezer hem elke vijftien seconden voorlezen. En alleen onze eigen
 	 * melding intrekken — staat er iets anders, dan is dat nog steeds waar.
 	 */
-	function werkNietGeleverdBij(nietGeleverd) {
-		// Een stelsel dat het veld niet (meer) meestuurt, zegt er niets over. Dat is geen "alles
-		// geleverd", dus de melding die er staat blijft.
-		if (!nietGeleverd || zelfdeNietGeleverd(laatstNietGeleverd, nietGeleverd)) return;
+	function werkVolledigheidBij(nieuwNietGeleverd, nieuwAfgekapt) {
+		// Een stelsel dat een veld niet (meer) meestuurt, zegt er niets over. Dat is geen "alles
+		// geleverd", dus wat we wisten blijft staan.
+		const nietGeleverd = nieuwNietGeleverd || laatstNietGeleverd;
+		const afgekapt = nieuwAfgekapt || laatstAfgekapt;
+		if (zelfdeNietGeleverd(laatstNietGeleverd, nietGeleverd) && zelfdeAfgekapt(laatstAfgekapt, afgekapt)) return;
 		laatstNietGeleverd = nietGeleverd;
+		laatstAfgekapt = afgekapt;
 
-		if (nietGeleverd.aantal > 0) {
+		if (lijstOnvolledig(nietGeleverd, afgekapt)) {
 			// Geen andere melding overschrijven: die gaat over iets anders en is nog steeds waar.
-			if (!melding || meldingOverNietGeleverd) toonNietGeleverd(nietGeleverd);
-		} else if (meldingOverNietGeleverd) {
+			if (!melding || meldingUitLijst) toonLijstOnvolledig(nietGeleverd, afgekapt);
+		} else if (meldingUitLijst) {
 			verbergMeldingen();
 		}
 	}
