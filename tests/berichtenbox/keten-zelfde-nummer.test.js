@@ -83,4 +83,16 @@ describe("twee organisaties met hetzelfde berichtnummer", () => {
 		expect(daarna.find((b) => b.afzender === "RVO").plek).toBe("archief");
 		expect(daarna.find((b) => b.afzender === "Belastingdienst").plek).toBe("inbox");
 	});
+
+	it("splitst het id op de eerste dubbele punt, want alleen de OIN is daar gegarandeerd vrij van", async () => {
+		const { aanroepen } = await berichtenVan([
+			["/api/demo/personas", PERSONAS],
+			["/api/v1/berichten?", LIJST_MET_BEIDE],
+			["/api/v1/berichten/", antwoord(200, { inhoud: "x", bijlagen: [] })],
+		]);
+
+		await window.BerichtenboxKeten.inhoudVan(OIN_RVO + ":a:b");
+
+		expect(aanroepen[aanroepen.length - 1].pad).toBe("/api/v1/berichten/" + encodeURIComponent("a:b") + "?magazijnId=" + OIN_RVO);
+	});
 });

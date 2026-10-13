@@ -1037,14 +1037,14 @@
 
 	// Elke organisatie deelt haar berichtnummers zelf uit, dus hetzelfde nummer kan bij twee
 	// organisaties voorkomen: een bericht is het paar van organisatie en nummer. De berichtenbox
-	// rekent met één id per bericht, en dit is dat id. De dubbele punt staat in geen van beide delen:
-	// een berichtnummer is een UUID, een magazijnId een OIN.
+	// rekent met één id per bericht, en dit is dat id. Splitsen gebeurt op de eerste dubbele punt:
+	// een magazijnId is een OIN en heeft er gegarandeerd geen, een berichtnummer kiest de organisatie zelf.
 	function sleutelVan(bericht) {
 		return bericht.magazijnId + ":" + bericht.berichtId;
 	}
 
 	function uitSleutel(id) {
-		const scheiding = typeof id === "string" ? id.lastIndexOf(":") : -1;
+		const scheiding = typeof id === "string" ? id.indexOf(":") : -1;
 		if (scheiding <= 0 || scheiding === id.length - 1) return null;
 		return { magazijnId: id.slice(0, scheiding), berichtId: id.slice(scheiding + 1) };
 	}
@@ -1878,7 +1878,8 @@
 	 * De stroom begint met `volgen-gestart`: vanaf dan komt elk nieuw bericht als `bericht-bijgekomen`
 	 * voorbij, en wat daarvóór binnenkwam staat in de lijst. Daarom haalt die gebeurtenis de lijst
 	 * één keer op. Een bericht op het grensvlak kan in allebei zitten; dubbel tonen we het niet, want
-	 * `voegBijgekomenToe` en de bron kijken allebei naar het `berichtId`. Opnieuw verbinden na een
+	 * `voegBijgekomenToe` en de bron kijken allebei naar het id, het paar van organisatie en
+	 * berichtnummer. Opnieuw verbinden na een
 	 * haperende verbinding gaat precies zo, en daarna is de lijst dus weer compleet.
 	 *
 	 * Een verbinding die niet tot stand komt of wegvalt, blijft stil voor de bezoeker: de lijst die er

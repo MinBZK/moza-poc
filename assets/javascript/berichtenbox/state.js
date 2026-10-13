@@ -16,7 +16,7 @@
  * weggegooid — anders draagt een bezoeker het archief van een vorige persona met zich mee.
  *
  * Let op: dit is client-state. Het Federatief Berichtenstelsel is zelf eigenaar van leesstatus,
- * map en verwijdering (`PATCH`/`DELETE /berichten/{berichtId}`). Map en verwijdering lopen voor
+ * map en verwijdering (`PATCH`/`DELETE /berichten/{berichtId}?magazijnId=…`). Map en verwijdering lopen voor
  * berichten uit het stelsel via de bron, ook het archief en de prullenbak, want dat zijn daar
  * mappen. De leesstatus en het markeren nog niet: die blijven op één browser staan.
  */
