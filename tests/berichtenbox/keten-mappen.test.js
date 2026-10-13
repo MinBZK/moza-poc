@@ -275,14 +275,14 @@ describe("een organisatie waarvan niet alles opgehaald is", () => {
 		const afgekapt = [RVO_AFGEKAPT, { magazijnId: BD, naam: "Belastingdienst", aantalOpgehaald: 500 }];
 		await start([["/api/v1/berichten?", lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: afgekapt })]]);
 
-		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van deze organisaties zijn niet al uw berichten opgehaald: RVO (500 van 812), Belastingdienst. Een deel van hun berichten staat hier niet.");
+		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van deze organisaties zijn niet al uw berichten opgehaald: RVO (500 van 812) en Belastingdienst. Een deel van hun berichten staat hier niet.");
 	});
 
 	it("noemt een organisatie die twee keer genoemd wordt één keer, en valt zonder naam terug op het nummer", async () => {
 		const afgekapt = [RVO_AFGEKAPT, RVO_AFGEKAPT, { magazijnId: BD, aantalOpgehaald: 500 }];
 		await start([["/api/v1/berichten?", lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: afgekapt })]]);
 
-		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van deze organisaties zijn niet al uw berichten opgehaald: RVO (500 van 812), " + BD + ". Een deel van hun berichten staat hier niet.");
+		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van deze organisaties zijn niet al uw berichten opgehaald: RVO (500 van 812) en " + BD + ". Een deel van hun berichten staat hier niet.");
 	});
 
 	it("zet niet geleverd en niet alles opgehaald naast elkaar, elk met een eigen zin", async () => {
@@ -344,6 +344,86 @@ describe("een organisatie waarvan niet alles opgehaald is", () => {
 
 		await vi.advanceTimersByTimeAsync(15000);
 		expect(window.BerichtenboxKeten.melding.tekst).toContain("500 van uw 900");
+	});
+
+	it("werkt de melding bij als alleen de aantallen veranderen", async () => {
+		vi.useFakeTimers();
+		const antwoorden = [{ afgekapt: [RVO_AFGEKAPT] }, { afgekapt: [{ ...RVO_AFGEKAPT, aantalOpgehaald: 600, totaalBeschikbaar: 900 }] }];
+		let tik = 0;
+		await start([["/api/v1/berichten?", () => lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], ...antwoorden[Math.min(tik++, antwoorden.length - 1)] })]]);
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("500 van uw 812");
+
+		await vi.advanceTimersByTimeAsync(15000);
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("600 van uw 900");
+	});
+
+	it("houdt de organisaties uit de lijst vast als een volgende lijst niets over niet leveren zegt", async () => {
+		vi.useFakeTimers();
+		const antwoorden = [{ aantalNietGeleverd: 1, nietGeleverd: [{ magazijnId: BD, naam: "Belastingdienst", status: "FOUT" }], afgekapt: [] }, { afgekapt: [RVO_AFGEKAPT] }];
+		let tik = 0;
+		await start([["/api/v1/berichten?", () => lijstMet(antwoorden[Math.min(tik++, antwoorden.length - 1)])]]);
+		expect(window.BerichtenboxKeten.melding.tekst).toMatch(/^Belastingdienst heeft/);
+
+		await vi.advanceTimersByTimeAsync(15000);
+		const tekst = window.BerichtenboxKeten.melding.tekst;
+		expect(tekst).toMatch(/^Belastingdienst heeft/);
+		expect(tekst).toContain("500 van uw 812");
+	});
+
+	it("schrijft grote aantallen met een punt als duizendtalscheider", async () => {
+		await start([["/api/v1/berichten?", lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: [{ ...RVO_AFGEKAPT, aantalOpgehaald: 1000, totaalBeschikbaar: 12500 }] })]]);
+
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("Van RVO zijn 1.000 van uw 12.500 berichten opgehaald.");
+	});
+
+	it.each([
+		["een totaal dat niet hoger is dan het aantal", { aantalOpgehaald: 812, totaalBeschikbaar: 812 }],
+		["een aantal dat geen getal is", { aantalOpgehaald: "500", totaalBeschikbaar: 812 }],
+		["een ontbrekend aantal", { totaalBeschikbaar: 812 }],
+	])("noemt geen getallen bij %s", async (_, aantallen) => {
+		await start([["/api/v1/berichten?", lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: [{ magazijnId: RVO, naam: "RVO", ...aantallen }] })]]);
+
+		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van RVO zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.");
+	});
+
+	it("slaat een vermelding zonder bruikbare naam over", async () => {
+		const afgekapt = [null, { magazijnId: "", naam: "" }, { naam: 42, aantalOpgehaald: 1 }, RVO_AFGEKAPT];
+		await start([["/api/v1/berichten?", lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: afgekapt })]]);
+
+		expect(window.BerichtenboxKeten.melding.tekst).toBe("Van RVO zijn 500 van uw 812 berichten opgehaald. De overige berichten van deze organisatie staan hier niet.");
+	});
+
+	it("leest een veld dat geen lijst is als niet meegestuurd, en houdt dan wat de ronde zag", async () => {
+		const ronde = { ...voltooid(RVO, "RVO", "OK"), aantalBerichten: 5, afgekapt: true, totaalBeschikbaar: 812 };
+		await start(rondeMetLijst(lijstMet({ aantalNietGeleverd: 0, nietGeleverd: [], afgekapt: {} }), () => sseVan([ronde, { event: "ophalen-gereed" }])));
+
+		expect(window.BerichtenboxKeten.melding.tekst).toContain("5 van uw 812");
+	});
+
+	it("volgt de laatste pagina als de pagina's elkaar tegenspreken", async () => {
+		// De ronde kan tussen twee pagina's opnieuw gedraaid zijn; dan is de laatste de actuele.
+		const lijst = (pad) => {
+			const nummer = Number(new URLSearchParams(pad.slice(pad.indexOf("?"))).get("pagina"));
+			return antwoord(200, {
+				berichten: nummer === 0 ? BERICHTEN.slice(0, 3) : BERICHTEN.slice(3),
+				aantalNietGeleverd: 0,
+				nietGeleverd: [],
+				afgekapt: nummer === 0 ? [RVO_AFGEKAPT] : [],
+				_links: nummer === 0 ? { next: { href: "/api/v1/berichten?pagina=1" } } : {},
+			});
+		};
+		await start([["/api/v1/berichten?", lijst]]);
+
+		expect(window.BerichtenboxKeten.melding).toBeNull();
+	});
+
+	it("verbergt een storing uit de ronde niet als de lijst wel afkappen maar niet het niet leveren noemt", async () => {
+		const stroom = () => sseVan([voltooid(BD, "Belastingdienst", "FOUT"), { event: "ophalen-gereed" }]);
+		await start(rondeMetLijst(lijstMet({ afgekapt: [RVO_AFGEKAPT] }), stroom));
+
+		const tekst = window.BerichtenboxKeten.melding.tekst;
+		expect(tekst).toContain("Belastingdienst was tijdens het ophalen niet bereikbaar.");
+		expect(tekst).toContain("Van RVO zijn 500 van uw 812 berichten opgehaald.");
 	});
 
 	it("laat een andere melding staan, want die is nog steeds waar", async () => {

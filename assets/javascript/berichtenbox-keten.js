@@ -307,13 +307,13 @@
 		const afgekapt = uitvraag.afgekapt || [];
 
 		if (stil.length > 1) {
-			zinnen.push("Deze organisaties waren tijdens het ophalen niet bereikbaar: " + stil.join(", ") + ". Berichten van deze organisaties ontbreken mogelijk.");
+			zinnen.push("Deze organisaties waren tijdens het ophalen niet bereikbaar: " + opsomming(stil) + ". Berichten van deze organisaties ontbreken mogelijk.");
 		} else if (stil.length === 1) {
 			zinnen.push(stil[0] + " was tijdens het ophalen niet bereikbaar. Berichten van deze organisatie ontbreken mogelijk.");
 		}
 
 		if (nietOpgehaald.length > 1) {
-			zinnen.push("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: " + nietOpgehaald.join(", ") + ". Er is daar niets mis, maar hun berichten ontbreken hier.");
+			zinnen.push("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: " + opsomming(nietOpgehaald) + ". Er is daar niets mis, maar hun berichten ontbreken hier.");
 		} else if (nietOpgehaald.length === 1) {
 			zinnen.push("Bij " + nietOpgehaald[0] + " zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was. Er is daar niets mis, maar de berichten van deze organisatie ontbreken hier.");
 		}
@@ -325,10 +325,10 @@
 
 	function zinOverAfgekapt(afgekapt) {
 		if (afgekapt.length > 1) {
-			return "Van deze organisaties zijn niet al uw berichten opgehaald: " + afgekapt.map(afgekaptNaam).join(", ") + ". Een deel van hun berichten staat hier niet.";
+			return "Van deze organisaties zijn niet al uw berichten opgehaald: " + opsomming(afgekapt.map(afgekaptNaam)) + ". Een deel van hun berichten staat hier niet.";
 		}
 		const een = afgekapt[0];
-		return heeftAantallen(een) ? "Van " + een.naam + " zijn " + een.opgehaald + " van uw " + een.totaal + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.";
+		return heeftAantallen(een) ? "Van " + een.naam + " zijn " + getal(een.opgehaald) + " van uw " + getal(een.totaal) + " berichten opgehaald. De overige berichten van deze organisatie staan hier niet." : "Van " + een.naam + " zijn niet al uw berichten opgehaald. Een deel van de berichten van deze organisatie staat hier niet.";
 	}
 
 	function heeftAantallen(afgekapt) {
@@ -336,7 +336,17 @@
 	}
 
 	function afgekaptNaam(afgekapt) {
-		return heeftAantallen(afgekapt) ? afgekapt.naam + " (" + afgekapt.opgehaald + " van " + afgekapt.totaal + ")" : afgekapt.naam;
+		return heeftAantallen(afgekapt) ? afgekapt.naam + " (" + getal(afgekapt.opgehaald) + " van " + getal(afgekapt.totaal) + ")" : afgekapt.naam;
+	}
+
+	// Met een punt als duizendtalscheider, zoals de melding over de bovengrens van de lijst.
+	function getal(aantal) {
+		return aantal.toLocaleString("nl-NL");
+	}
+
+	// "A", "A en B", "A, B en C": dezelfde vorm in elke zin van één melding.
+	function opsomming(namen) {
+		return namen.length > 1 ? namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1] : namen.join("");
 	}
 
 	// De ronde telde meer berichten dan de lijst teruggaf: onderweg iets kwijtgeraakt. Stil
@@ -391,9 +401,9 @@
 		} else if (rest > 0) {
 			wie = namen.join(", ") + " en nog " + (rest === 1 ? "één organisatie" : rest + " organisaties") + " hebben";
 		} else {
-			wie = namen.length > 1 ? namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1] + " hebben" : namen[0] + " heeft";
+			wie = opsomming(namen) + (namen.length > 1 ? " hebben" : " heeft");
 		}
-		const van = nietGeleverd.aantal === 1 ? "van die organisatie" : "van die organisaties";
+		const van = nietGeleverd.aantal === 1 ? "van deze organisatie" : "van deze organisaties";
 		return wie + " uw berichten niet geleverd. Berichten en mappen " + van + " kunnen daardoor ontbreken.";
 	}
 
@@ -1382,7 +1392,7 @@
 				// onwaar: die vergelijking mag niet stilzwijgend voor "alles is er" doorgaan.
 			} else if (typeof uitvraag.gevonden === "number" && berichten.length < uitvraag.gevonden) {
 				toonOnvolledig(berichten.length, uitvraag.gevonden);
-			} else if (lijst.nietGeleverd || lijst.afgekaptBij) {
+			} else if (lijst.nietGeleverd) {
 				// Wat de lijst zegt gaat vóór wat de ronde zag: de lijst draagt het ook na verversen, en
 				// een pagina die de sessie van een andere pagina leest heeft geen eigen ronde gezien.
 				// Zegt een stelsel van vóór `afgekapt` daar niets over, dan weet alleen de ronde het;
@@ -1390,8 +1400,11 @@
 				const afgekapt = lijst.afgekaptBij || uitvraag.afgekapt || null;
 				if (lijstOnvolledig(lijst.nietGeleverd, afgekapt)) toonLijstOnvolledig(lijst.nietGeleverd, afgekapt);
 				laatstAfgekapt = afgekapt;
-			} else if (rondeOnvolledig(uitvraag)) {
-				toonOnvolledigeRonde(uitvraag);
+			} else {
+				// Zonder `aantalNietGeleverd` weet alleen de ronde wie er niet leverde; wat de lijst over
+				// afkappen zegt, gaat daarin wel voor.
+				const metLijst = lijst.afgekaptBij ? { ...uitvraag, afgekapt: lijst.afgekaptBij } : uitvraag;
+				if (rondeOnvolledig(metLijst)) toonOnvolledigeRonde(metLijst);
 			}
 
 			return { berichten: berichten, magazijnen: magazijnen };
