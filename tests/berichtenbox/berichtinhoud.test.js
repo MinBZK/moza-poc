@@ -17,8 +17,10 @@ const ONTVANGER_PAD = readFileSync(process.cwd() + "/assets/javascript/berichten
  * de bezoeker moet zien dat er iets wordt opgehaald, en lezen wat er misging als het niet lukt.
  */
 
+// Uit de keten draagt een bericht als id het paar van organisatie en nummer; zie berichtenbox-keten.js.
 const KETEN_BERICHT = bericht({
-	id: "3f1c-uit-de-keten",
+	id: "00000000000000100000:3f1c-uit-de-keten",
+	berichtId: "3f1c-uit-de-keten",
 	magazijnId: "00000000000000100000",
 	afzender: "RVO",
 	onderwerp: "Gecombineerde opgave verwerkt",
@@ -169,7 +171,8 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// type dat het niet inline stuurt wordt alsnog opgeslagen, met de bestandsnaam die de keten
 		// zelf saneerde.
 		const links = [...lijst.querySelectorAll("a")];
-		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-1", "/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/b-2"]);
+		const metOrganisatie = "?magazijnId=" + KETEN_BERICHT.magazijnId;
+		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/b-1" + metOrganisatie, "/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/b-2" + metOrganisatie]);
 		expect(links.map((a) => a.getAttribute("download"))).toEqual([null, null]);
 		expect(links.map((a) => a.getAttribute("target"))).toEqual(["_blank", "_blank"]);
 		expect(links.map((a) => a.getAttribute("rel"))).toEqual(["noopener", "noopener"]);
@@ -379,7 +382,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		await laatLaden();
 
 		const link = document.querySelector("[data-berichtenbox-attachments-list] a");
-		expect(link.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.id + "/bijlagen/" + encodeURIComponent("../../admin?x=1"));
+		expect(link.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/" + encodeURIComponent("../../admin?x=1") + "?magazijnId=" + KETEN_BERICHT.magazijnId);
 	});
 
 	it("laat de tekst-versie verborgen: het stelsel levert er geen", async () => {

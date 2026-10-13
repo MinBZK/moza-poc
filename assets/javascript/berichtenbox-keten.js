@@ -799,12 +799,12 @@
 
 			// De pagina's komen uit een sessie die een andere pagina van deze berichtenbox nog kan
 			// vullen. Groeit die lijst tussen twee verzoeken, dan schuiven berichten over de
-			// paginagrens en zien we er een twee keer. Ontdubbelen op berichtId houdt de lus
+			// paginagrens en zien we er een twee keer. Ontdubbelen op het paar houdt de lus
 			// herhaalbaar; dat berichten dan ook overgeslagen kunnen zijn valt hier niet te zien, dus
 			// dat gaat naar de console en niet naar de bezoeker.
 			let dubbel = 0;
 			for (const bericht of deel.berichten) {
-				const id = bericht && bericht.berichtId;
+				const id = bruikbaar(bericht) ? sleutelVan(bericht) : null;
 				if (id && gezien.has(id)) {
 					dubbel++;
 					continue;
@@ -919,8 +919,10 @@
 	 * bezoeker het bericht opent. Dat is niet alleen zuinig: het is ook wat er in een federatief
 	 * stelsel gebeurt, waar de inhoud bij de organisatie zelf blijft tot iemand erom vraagt.
 	 */
-	async function haalInhoud(ontvanger, berichtId) {
-		const respons = await metTijdslimiet("/api/v1/berichten/" + encodeURIComponent(berichtId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+	async function haalInhoud(ontvanger, id) {
+		const sleutel = uitSleutel(id);
+		if (!sleutel) throw ketenFout("weg", "geen bericht-id van het stelsel: " + id);
+		const respons = await metTijdslimiet(berichtAdres(sleutel.berichtId, sleutel.magazijnId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
 
 		// Een 404 zegt niet wat wij zouden willen dat hij zegt. Hij kan betekenen dat het bericht er
 		// niet meer is, maar net zo goed dat deze backend de route niet kent, dat een ingress iets
@@ -934,7 +936,7 @@
 		//
 		// Dus zeggen we wat we wél weten. Zodra het stelsel een kenmerk aanbiedt dat "ingetrokken"
 		// van "onbereikbaar" scheidt, kan het onderscheid terug — zie de open vraag in CLAUDE.md.
-		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + berichtId + ")");
+		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + id + ")");
 		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de inhoud van dit bericht ophalen"), "berichtinhoud laden mislukt (" + respons.status + ")");
 
 		const bericht = await respons.json();
@@ -955,7 +957,7 @@
 	 * Werpt bij alles behalve een 2xx.
 	 */
 	async function patchMap(ontvanger, berichtId, magazijnId, map) {
-		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
+		const adres = berichtAdres(berichtId, magazijnId);
 		const respons = await metTijdslimiet(
 			adres,
 			{
@@ -1020,17 +1022,36 @@
 
 	/** Verwijdert een bericht bij de organisatie die het stuurde. Niet terug te draaien. */
 	async function verwijderBericht(ontvanger, berichtId, magazijnId) {
-		const adres = "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
+		const adres = berichtAdres(berichtId, magazijnId);
 		const respons = await metTijdslimiet(adres, { method: "DELETE", headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
 		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
 	}
 
 	// --- Vertaling ----------------------------------------------------------------------------
 
-	// Zonder berichtId is er geen sleutel voor de state en geen detailpagina; zo'n bericht laten we
-	// vallen in plaats van het hele scherm te laten struikelen over een ontbrekende id.
+	// Zonder berichtId of magazijnId is er geen sleutel voor de state en geen detailpagina; zo'n
+	// bericht laten we vallen in plaats van het hele scherm te laten struikelen over een ontbrekende id.
 	function bruikbaar(bericht) {
-		return !!bericht && typeof bericht.berichtId === "string" && bericht.berichtId !== "";
+		return !!bericht && typeof bericht.berichtId === "string" && bericht.berichtId !== "" && typeof bericht.magazijnId === "string" && bericht.magazijnId !== "";
+	}
+
+	// Elke organisatie deelt haar berichtnummers zelf uit, dus hetzelfde nummer kan bij twee
+	// organisaties voorkomen: een bericht is het paar van organisatie en nummer. De berichtenbox
+	// rekent met één id per bericht, en dit is dat id. De dubbele punt staat in geen van beide delen:
+	// een berichtnummer is een UUID, een magazijnId een OIN.
+	function sleutelVan(bericht) {
+		return bericht.magazijnId + ":" + bericht.berichtId;
+	}
+
+	function uitSleutel(id) {
+		const scheiding = typeof id === "string" ? id.lastIndexOf(":") : -1;
+		if (scheiding <= 0 || scheiding === id.length - 1) return null;
+		return { magazijnId: id.slice(0, scheiding), berichtId: id.slice(scheiding + 1) };
+	}
+
+	// Het stelsel wil bij elk verzoek over één bericht beide weten, om dezelfde reden.
+	function berichtAdres(berichtId, magazijnId) {
+		return "/api/v1/berichten/" + encodeURIComponent(berichtId) + "?magazijnId=" + encodeURIComponent(magazijnId);
 	}
 
 	// Elk bericht draagt de weergavenaam van zijn afzender: `afzenderNaam` is verplicht in de
@@ -1040,7 +1061,8 @@
 	// verzonnen naam is dat niet.
 	function naarBerichtenboxVorm(bericht) {
 		return {
-			id: bericht.berichtId,
+			id: sleutelVan(bericht),
+			berichtId: bericht.berichtId,
 			magazijnId: bericht.magazijnId,
 			afzender: bericht.afzenderNaam || bericht.magazijnId || "Onbekende afzender",
 			onderwerp: bericht.onderwerp || "Bericht zonder onderwerp",
@@ -1283,7 +1305,7 @@
 			const berichten = ruw.filter(bruikbaar).map((bericht) => naarBerichtenboxVorm(bericht));
 			const overgeslagen = ruw.length - berichten.length;
 			if (overgeslagen > 0) {
-				console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen.");
+				console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId of magazijnId overgeslagen.");
 			}
 
 			const magazijnen = magazijnenVan(berichten, uitvraag.organisaties);
@@ -1692,7 +1714,7 @@
 		// is een live-regio: dezelfde tekst er elke tik opnieuw in schrijven laat een schermlezer hem
 		// elke keer voorlezen.
 		if (overgeslagen > 0 && overgeslagen !== gemeldOvergeslagen) {
-			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId overgeslagen tijdens het pollen.");
+			console.error("[Berichtenbox] " + overgeslagen + " bericht(en) zonder berichtId of magazijnId overgeslagen tijdens het pollen.");
 			toonOnbruikbaar(overgeslagen);
 		}
 		gemeldOvergeslagen = overgeslagen;
@@ -2116,7 +2138,7 @@
 	 */
 	function voegBijgekomenToe(ruw) {
 		if (!bruikbaar(ruw)) {
-			console.error("[Berichtenbox] De stroom meldde een bericht zonder berichtId; overgeslagen.", ruw);
+			console.error("[Berichtenbox] De stroom meldde een bericht zonder berichtId of magazijnId; overgeslagen.", ruw);
 			// De lijst telt het mee en zegt de bezoeker dat er een bericht niet te tonen is.
 			planLijstTik();
 			return;
@@ -2284,7 +2306,7 @@
 			if (!bericht.map) return {};
 
 			try {
-				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, "");
+				await patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, "");
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht uit zijn map halen mislukt", fout);
 				// Bij een tijdslimiet weten we niet of het stelsel het al gedaan heeft; "het staat nog in
@@ -2320,7 +2342,7 @@
 			if ((bericht.plek || "inbox") === plek && !(plek === "inbox" && bericht.map)) return {};
 
 			try {
-				await patchMap(ontvangerVanRonde, berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
+				await patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verplaatsen mislukt", fout);
 				return { fout: naMislukteWijziging(fout, berichtId, wat, "waar het bericht staat") };
@@ -2345,7 +2367,7 @@
 			}
 
 			try {
-				await verwijderBericht(ontvangerVanRonde, berichtId, bericht.magazijnId);
+				await verwijderBericht(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId);
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verwijderen mislukt", fout);
 				// Het bericht is er al niet meer: dan is bereikt wat de bezoeker vroeg.

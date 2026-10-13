@@ -15,6 +15,10 @@ import { BRON, ONTVANGER, BERICHT_ID, antwoord, sseAntwoord, PERSONAS, LIJST, st
  * keten-cookie-https.test.js.
  */
 
+// Een bericht uit het stelsel heet hier naar zijn organisatie én nummer; zie keten-zelfde-nummer.test.js.
+const MAGAZIJN_ID = "00000009000000000006";
+const SLEUTEL = MAGAZIJN_ID + ":" + BERICHT_ID;
+
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -233,11 +237,11 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/v1/berichten/", antwoord(200, { inhoud: "De brief.", bijlagen: [] })],
 		]);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst).toEqual({ inhoud: "De brief.", bijlagen: [] });
 		const laatste = aanroepen[aanroepen.length - 1];
-		expect(laatste.pad).toBe("/api/v1/berichten/" + BERICHT_ID);
+		expect(laatste.pad).toBe("/api/v1/berichten/" + BERICHT_ID + "?magazijnId=" + MAGAZIJN_ID);
 		// Zonder deze header levert het stelsel de berichten van niemand.
 		expect(laatste.headers["X-Ontvanger"]).toBe(ONTVANGER);
 	});
@@ -250,10 +254,25 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/v1/berichten/", antwoord(200, { inhoud: "x", bijlagen: [] })],
 		]);
 
-		await window.BerichtenboxKeten.inhoudVan("../../admin?x=1");
+		await window.BerichtenboxKeten.inhoudVan("a&b=1:../../admin?x=1");
 
 		// Rauw doorgeven zou een heel ander adres opleveren dan bedoeld.
-		expect(aanroepen[aanroepen.length - 1].pad).toBe("/api/v1/berichten/" + encodeURIComponent("../../admin?x=1"));
+		expect(aanroepen[aanroepen.length - 1].pad).toBe("/api/v1/berichten/" + encodeURIComponent("../../admin?x=1") + "?magazijnId=" + encodeURIComponent("a&b=1"));
+	});
+
+	it("vraagt niets op voor een id zonder organisatie", async () => {
+		const { aanroepen } = await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+			["/api/v1/berichten/", antwoord(200, { inhoud: "x", bijlagen: [] })],
+		]);
+		const voor = aanroepen.length;
+
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+
+		expect(uitkomst.fout).toBeTruthy();
+		expect(aanroepen.length).toBe(voor);
 	});
 
 	// Drie vormen van 404 die het stelsel of een laag ertussen kan sturen. Ze krijgen bewust
@@ -275,7 +294,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 				["/api/v1/berichten/", antwoord(404, body, soort)],
 			]);
 
-			const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+			const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 			// Wél: dat wij het niet konden ophalen, wat het kán zijn, en wat de bezoeker kan doen.
 			// Niet: dat het bericht zeker weg is — die stelligheid draagt een 404 niet.
@@ -306,7 +325,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			],
 		]);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst.fout).toContain("duurde te lang");
 		expect(uitkomst.fout).not.toContain("De bronnen reageren niet meer");
@@ -320,7 +339,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/v1/berichten/", antwoord(503, {})],
 		]);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst.fout).toContain("Er gaat iets mis met het ophalen");
 	});
@@ -335,7 +354,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/v1/berichten/", antwoord(200, "<html>Even geduld</html>", "text/html")],
 		]);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst.fout).toBeTruthy();
 	});
@@ -350,7 +369,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/v1/berichten/", antwoord(200, { inhoud: 42 })],
 		]);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst).toEqual({ inhoud: "", bijlagen: [] });
 	});
@@ -365,7 +384,7 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 
 		new Function(BRON).call(window);
 
-		const uitkomst = await window.BerichtenboxKeten.inhoudVan(BERICHT_ID);
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst.fout).toContain("niet opvragen");
 		expect(uitkomst.fout).not.toContain("bij de organisatie niet beschikbaar");

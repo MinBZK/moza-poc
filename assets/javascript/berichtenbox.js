@@ -2316,14 +2316,16 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	/**
 	 * Het adres van één bijlage bij het stelsel, of null als er geen te maken is.
 	 *
-	 * Eén plek, want de lijst en de viewer moeten naar hetzelfde wijzen. Beide id's ontsnappen: ze
-	 * komen van buiten en horen in één padsegment te blijven. Geen pathPrefix — het stelsel zit bij
-	 * de proxy altijd op /api/, net als de andere aanroepen in berichtenbox-keten.js.
+	 * Eén plek, want de lijst en de viewer moeten naar hetzelfde wijzen. Alle id's ontsnappen: ze
+	 * komen van buiten en horen in hun eigen deel van het adres te blijven. Het stelsel wil ook de
+	 * organisatie weten, want hetzelfde berichtnummer kan bij twee organisaties voorkomen. Geen
+	 * pathPrefix — het stelsel zit bij de proxy altijd op /api/, net als de andere aanroepen in
+	 * berichtenbox-keten.js.
 	 */
-	function bijlageAdres(bijlage, berichtId) {
+	function bijlageAdres(bijlage, bericht) {
 		const bijlageId = bijlage && bijlage.bijlageId;
-		if (!bijlageId || !berichtId) return null;
-		return "/api/v1/berichten/" + encodeURIComponent(berichtId) + "/bijlagen/" + encodeURIComponent(bijlageId);
+		if (!bijlageId || !bericht || !bericht.berichtId || !bericht.magazijnId) return null;
+		return "/api/v1/berichten/" + encodeURIComponent(bericht.berichtId) + "/bijlagen/" + encodeURIComponent(bijlageId) + "?magazijnId=" + encodeURIComponent(bericht.magazijnId);
 	}
 
 	function rondBijlagenAf(bijlagen, bericht, detail, geantwoord) {
@@ -2373,7 +2375,7 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 		toonBijlagen(
 			gekregen.map((bijlage) => ({
 				naam: (bijlage && bijlage.naam) || "Bijlage zonder naam",
-				adres: bijlageAdres(bijlage, bericht.id),
+				adres: bijlageAdres(bijlage, bericht),
 				nieuwTabblad: true,
 			})),
 			// Geen ingesloten kader: de frame-headers van het stelsel blokkeren dat, ook

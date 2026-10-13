@@ -178,3 +178,15 @@ export function ruimKetenOp() {
 	delete window.BerichtenboxKeten;
 	delete window.Personas;
 }
+
+/**
+ * Het id waarmee de berichtenbox een bericht uit het stelsel kent: het paar van organisatie en
+ * berichtnummer, want hetzelfde nummer kan bij twee organisaties voorkomen. Staat het bericht niet
+ * in de lijst, dan het nummer zelf — zo blijft een test die juist een onbekend bericht toetst
+ * leesbaar.
+ */
+export function idVan(berichtId) {
+	const uitkomst = window.BerichtenboxKeten.huidigeUitkomst;
+	const bericht = uitkomst && uitkomst.berichten.find((b) => b.berichtId === berichtId);
+	return bericht ? bericht.id : berichtId;
+}

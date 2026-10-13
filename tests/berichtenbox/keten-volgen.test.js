@@ -123,7 +123,7 @@ function volgGemeld() {
 	return () => gemeld[gemeld.length - 1];
 }
 
-const ids = (uitkomst) => uitkomst.berichten.map((bericht) => bericht.id);
+const ids = (uitkomst) => uitkomst.berichten.map((bericht) => bericht.berichtId);
 
 function zetZichtbaarheid(staat) {
 	Object.defineProperty(document, "visibilityState", { configurable: true, get: () => staat });
@@ -774,7 +774,7 @@ describe("van stroom tot bron", () => {
 		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
 		await vi.advanceTimersByTimeAsync(0);
 
-		const binnenkomers = gemeld.filter((wijziging) => wijziging.nieuwBericht).map((wijziging) => wijziging.nieuwBericht.id);
+		const binnenkomers = gemeld.filter((wijziging) => wijziging.nieuwBericht).map((wijziging) => wijziging.nieuwBericht.berichtId);
 		expect(binnenkomers).toEqual(["b-2"]);
 		expect(gemeld.filter((wijziging) => wijziging.berichten)).toEqual([]);
 	});
