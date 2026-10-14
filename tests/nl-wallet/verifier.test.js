@@ -116,13 +116,13 @@ describe("gegevens ophalen", () => {
 	});
 });
 
-const PID_MDOC = { attestation_type: "urn:eudi:pid:nl:1", attributes: { "urn:eudi:pid:nl:1": { given_name: "Claudia", family_name: "van Dam" } } };
+const PID_MDOC = { attestation_type: "urn:eudi:pid:nl:1", attributes: { "urn:eudi:pid:nl:1": { given_name: "Karin", family_name: "Jansen" } } };
 const BEVOEGDHEID = {
 	attestation_type: "com.example.kvk_bevoegdheid",
 	attributes: { kvk_nummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd", rechtsvorm: "Eenmanszaak" },
 };
 
-// Het echte antwoord van de lokale verification_server na inloggen met Claudia van Dam (17 september
+// Het echte antwoord van de lokale verification_server na inloggen met Karin Jansen (17 september
 // 2026), zonder issuer_uri, ca, validity en revocation: attributen zijn { type, value }.
 const ECHT_ANTWOORD = [
 	{
@@ -131,7 +131,7 @@ const ECHT_ANTWOORD = [
 			{
 				attestation_type: "urn:eudi:pid:nl:1",
 				format: "dc+sd-jwt",
-				attributes: { given_name: { type: "text", value: "Claudia" }, family_name: { type: "text", value: "van Dam" } },
+				attributes: { given_name: { type: "text", value: "Karin" }, family_name: { type: "text", value: "Jansen" } },
 				attestation_qualification: "QEAA",
 			},
 		],
@@ -157,8 +157,8 @@ const ECHT_ANTWOORD = [
 describe("inlog uit de gedeelde gegevens", () => {
 	it("leest naam en bevoegdheid uit het echte antwoord met getypeerde attributen", () => {
 		expect(inlogUitGegevens(ECHT_ANTWOORD)).toEqual({
-			voornaam: "Claudia",
-			achternaam: "van Dam",
+			voornaam: "Karin",
+			achternaam: "Jansen",
 			bevoegdheid: { kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd" },
 		});
 	});
@@ -169,8 +169,8 @@ describe("inlog uit de gedeelde gegevens", () => {
 			{ id: "bevoegdheid", attestations: [BEVOEGDHEID] },
 		];
 		expect(inlogUitGegevens(gedeeld)).toEqual({
-			voornaam: "Claudia",
-			achternaam: "van Dam",
+			voornaam: "Karin",
+			achternaam: "Jansen",
 			bevoegdheid: { kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd" },
 		});
 	});

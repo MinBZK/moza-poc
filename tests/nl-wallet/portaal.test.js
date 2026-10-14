@@ -15,11 +15,11 @@ const PERSONAS = [
 	{ id: "koffiebranderij", label: "Koffiebrander", bedrijf: { kvkNummer: "91827364" } },
 ];
 
-const CLAUDIA = JSON.stringify({ voornaam: "Claudia", achternaam: "van Dam", middel: "NL Wallet" });
+const KARIN = JSON.stringify({ voornaam: "Karin", achternaam: "Jansen", middel: "NL Wallet" });
 const NOON = { kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar" };
 const BLEND = { kvkNummer: "91827364", handelsnaam: "Koffiebranderij Blend", functie: "Eigenaar" };
 
-function balk({ inlog = CLAUDIA, ondernemingen = [NOON, BLEND], actief = "koffiebranderij" } = {}) {
+function balk({ inlog = KARIN, ondernemingen = [NOON, BLEND], actief = "koffiebranderij" } = {}) {
 	sessionStorage.clear();
 	if (inlog) sessionStorage.setItem("inlog:persoon", inlog);
 	if (ondernemingen) sessionStorage.setItem("inlog:ondernemingen", JSON.stringify(ondernemingen));
@@ -86,7 +86,7 @@ describe("mijn ondernemingen na inloggen met NL Wallet", () => {
 
 	it.each([
 		["zonder inlog", { inlog: null }],
-		["na een inlog met een ander middel", { inlog: JSON.stringify({ voornaam: "Claudia", achternaam: "van Dam", middel: "DigiD" }) }],
+		["na een inlog met een ander middel", { inlog: JSON.stringify({ voornaam: "Karin", achternaam: "Jansen", middel: "DigiD" }) }],
 		["zonder gedeelde ondernemingen", { ondernemingen: [] }],
 	])("verandert niets %s", (_, opties) => {
 		balk(opties);

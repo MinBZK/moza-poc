@@ -885,9 +885,9 @@
 		"actief": false,
 		"label": "Horecaondernemer",
 		"persoon": {
-			"voornaam": "Claudia",
-			"achternaam": "van Dam",
-			"initialen": "C.M."
+			"voornaam": "Karin",
+			"achternaam": "Jansen",
+			"initialen": "K."
 		},
 		"bedrijf": {
 			"handelsnaam": "Koffiezaak Noon",
@@ -946,9 +946,9 @@
 		"actief": false,
 		"label": "Koffiebrander",
 		"persoon": {
-			"voornaam": "Claudia",
-			"achternaam": "van Dam",
-			"initialen": "C.M."
+			"voornaam": "Karin",
+			"achternaam": "Jansen",
+			"initialen": "K."
 		},
 		"bedrijf": {
 			"handelsnaam": "Koffiebranderij Blend",

@@ -32,7 +32,7 @@ function draai(sessie) {
 	vi.stubGlobal("localStorage", opslag());
 	vi.stubGlobal("sessionStorage", opslag(sessie));
 	document.body.innerHTML = '<span data-profiel="naam"></span><span data-profiel="voornaam-bedrijf"></span>';
-	window.personasData = [{ id: "koffiezaak", label: "Horeca", actief: true, persoon: { voornaam: "Claudia", achternaam: "van Dam" }, bedrijf: { handelsnaam: "Koffiezaak De Boon", kvkNummer: "85234567" } }];
+	window.personasData = [{ id: "koffiezaak", label: "Horeca", actief: true, persoon: { voornaam: "Karin", achternaam: "Jansen" }, bedrijf: { handelsnaam: "Koffiezaak De Boon", kvkNummer: "85234567" } }];
 	new Function(BRON).call(window);
 	return [...document.querySelectorAll("[data-profiel]")].map((el) => el.textContent);
 }
@@ -51,7 +51,7 @@ afterEach(() => {
 
 describe("naam na inloggen met NL Wallet", () => {
 	it("toont de persona zolang er niet met de wallet is ingelogd", () => {
-		expect(draai({})).toEqual(["Claudia van Dam", "Claudia van Dam van Koffiezaak De Boon"]);
+		expect(draai({})).toEqual(["Karin Jansen", "Karin Jansen van Koffiezaak De Boon"]);
 	});
 
 	it("toont de naam uit de wallet bij het bedrijf van de persona", () => {
@@ -64,6 +64,6 @@ describe("naam na inloggen met NL Wallet", () => {
 		["een naam zonder achternaam", JSON.stringify({ voornaam: "Frouke" })],
 		["geen strings", JSON.stringify({ voornaam: ["<b>"], achternaam: 1 })],
 	])("valt terug op de persona bij %s", (_, waarde) => {
-		expect(draai({ "inlog:persoon": waarde })[0]).toBe("Claudia van Dam");
+		expect(draai({ "inlog:persoon": waarde })[0]).toBe("Karin Jansen");
 	});
 });

@@ -40,17 +40,17 @@ Op proef is een eigenaar van een eenmanszaak bevoegd omdat die met de eigen Digi
 
 Inloggen vraagt de PID-naam én de bevoegdheid. Beide zijn verplicht: NL Wallet weigert DCQL `credential_sets`, dus een optioneel onderdeel kan niet. Heeft precies één persona het KVK-nummer uit de bevoegdheid, dan gaat de gebruiker door naar die persona.
 
-## Twee ondernemingen voor Claudia
+## Twee ondernemingen voor Karin
 
-Claudia van Dam is eigenaar van Koffiezaak Noon (persona Horecaondernemer, KVK 85234567) en van Koffiebranderij Blend (persona Koffiebrander, KVK 91827364). Onder het inlogvenster staat per onderneming een link om die bevoegdheid in de wallet te zetten; de titel boven het venster noemt de onderneming.
+Karin Jansen is eigenaar van Koffiezaak Noon (persona Horecaondernemer, KVK 85234567) en van Koffiebranderij Blend (persona Koffiebrander, KVK 91827364). Onder het inlogvenster staat per onderneming een link om die bevoegdheid in de wallet te zetten; de titel boven het venster noemt de onderneming.
 
-NL Wallet deelt per gevraagd type één kaart (DCQL `multiple` wordt geweigerd). Heeft Claudia beide bevoegdheden, dan kiest ze bij het inloggen in de app welke ze deelt; MOZa kiest de persona op het KVK-nummer daarvan.
+NL Wallet deelt per gevraagd type één kaart (DCQL `multiple` wordt geweigerd). Heeft Karin beide bevoegdheden, dan kiest ze bij het inloggen in de app welke ze deelt; MOZa kiest de persona op het KVK-nummer daarvan.
 
 In het portaal staat daarom **Mijn ondernemingen** in de balk (`nl-wallet-portaal.js`, markup in `_includes/header-overheid.njk`): de ondernemingen waarvan in deze sessie een bevoegdheid is gedeeld (`sessionStorage` `inlog:ondernemingen`), met per onderneming een link naar de persona met dat KVK-nummer. Onderaan staat “Andere onderneming toevoegen met NL Wallet”: dat opent `/inloggen/zakelijk/?onderneming=toevoegen`, waar het venster direct opengaat. De gedeelde bevoegdheid komt erbij, mits naam en achternaam horen bij wie al is ingelogd.
 
 ## NL Wallet MOZa installeren
 
-`/inloggen/nl-wallet/app/` legt uit hoe een collega de testapp installeert en Claudia toevoegt, met een downloadknop naar `/downloads/nl-wallet-moza.apk`. Lokaal is dat de debug-APK uit de NL Wallet-build; die werkt alleen met een telefoon die via USB (`adb reverse`) aan deze Mac hangt. Voor collega’s is een build nodig met de adressen van een online NL Wallet-omgeving; zet het downloadadres dan in `NL_WALLET_APP_URL`.
+`/inloggen/nl-wallet/app/` legt uit hoe een collega de testapp installeert en Karin toevoegt, met een downloadknop naar `/downloads/nl-wallet-moza.apk`. Lokaal is dat de debug-APK uit de NL Wallet-build; die werkt alleen met een telefoon die via USB (`adb reverse`) aan deze Mac hangt. Voor collega’s is een build nodig met de adressen van een online NL Wallet-omgeving; zet het downloadadres dan in `NL_WALLET_APP_URL`.
 
 ## Testpersonen
 
@@ -58,7 +58,7 @@ In het portaal staat daarom **Mijn ondernemingen** in de balk (`nl-wallet-portaa
 
 | BSN       | Naam                                                                                   | Geboren      | Adres                          |
 | --------- | -------------------------------------------------------------------------------------- | ------------ | ------------------------------ |
-| 999992004 | Claudia van Dam (persona Horecaondernemer, bevoegd voor Koffiezaak Noon, KVK 85234567) | 12 juni 1986 | Oudedijk 21, 3061 AB Rotterdam |
+| 999992004 | Karin Jansen (persona Horecaondernemer, bevoegd voor Koffiezaak Noon, KVK 85234567) | 12 juni 1986 | Oudedijk 21, 3061 AB Rotterdam |
 
 Laad `nl-wallet-web` niet via npm of een CDN: het pakket met die naam op npm is een beveiligingsplaceholder.
 
