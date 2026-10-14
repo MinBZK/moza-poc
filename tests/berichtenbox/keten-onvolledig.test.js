@@ -89,8 +89,8 @@ describe("berichtenbox-keten.js — een onvolledige ronde", () => {
 	it("noemt meerdere organisaties per groep bij naam", async () => {
 		const melding = await rondeMet([voltooid(BD, "Belastingdienst", "OK", { aantalBerichten: 200, afgekapt: true, totaalBeschikbaar: 350 }), voltooid(KVK, "KVK", "OK", { aantalBerichten: 200, afgekapt: true }), voltooid(RVO, "RVO", "NIET_OPGEHAALD"), voltooid("00000001000000000001", "RDW", "NIET_OPGEHAALD")]);
 
-		expect(melding.tekst).toContain("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: RVO, RDW.");
-		expect(melding.tekst).toContain("Van deze organisaties zijn niet al uw berichten opgehaald: Belastingdienst (200 van 350), KVK.");
+		expect(melding.tekst).toContain("Bij deze organisaties zijn uw berichten deze keer niet opgehaald, omdat het op dat moment te druk was: RVO en RDW.");
+		expect(melding.tekst).toContain("Van deze organisaties zijn niet al uw berichten opgehaald: Belastingdienst (200 van 350) en KVK.");
 	});
 
 	it("zet alle drie de oorzaken naast elkaar, elk met een eigen zin", async () => {
