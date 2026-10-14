@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
  *
  * Na het inloggen bewaart het script de naam uit de wallet en stuurt door naar MijnOverheid
  * Zakelijk. De persona volgt uit de bevoegdheid: heeft precies één persona dat KVK-nummer, dan gaat
- * de gebruiker naar die persona. Claudia van Dam met KVK 85234567 is de Horecaondernemer.
+ * de gebruiker naar die persona. Karin Jansen met KVK 85234567 is de Horecaondernemer.
  *
  * jsdom kent de custom element van NL Wallet niet, dus het venster zelf gaat hier niet open; de
  * tests kijken naar de knoppen die het script maakt en naar wat het met hun gebeurtenissen doet.
@@ -18,16 +18,16 @@ import { readFileSync } from "node:fs";
 const BRON = readFileSync(process.cwd() + "/assets/javascript/nl-wallet-inloggen.js", "utf8");
 
 const PERSONAS = [
-	{ id: "koffiezaak", label: "Horecaondernemer", persoon: { voornaam: "Claudia", achternaam: "van Dam" }, bedrijf: { kvkNummer: "85234567" } },
-	{ id: "koffiebranderij", label: "Koffiebrander", persoon: { voornaam: "Claudia", achternaam: "van Dam" }, bedrijf: { kvkNummer: "91827364" } },
+	{ id: "koffiezaak", label: "Horecaondernemer", persoon: { voornaam: "Karin", achternaam: "Jansen" }, bedrijf: { kvkNummer: "85234567" } },
+	{ id: "koffiebranderij", label: "Koffiebrander", persoon: { voornaam: "Karin", achternaam: "Jansen" }, bedrijf: { kvkNummer: "91827364" } },
 	{ id: "bloom", label: "Bloemist", persoon: { voornaam: "Robin", achternaam: "Vogel" }, bedrijf: { kvkNummer: "11111111" } },
 	{ id: "dubbel-een", label: "Dubbel een", persoon: {}, bedrijf: { kvkNummer: "33333333" } },
 	{ id: "dubbel-twee", label: "Dubbel twee", persoon: {}, bedrijf: { kvkNummer: "33333333" } },
 ];
 
-const CLAUDIA = {
-	voornaam: "Claudia",
-	achternaam: "van Dam",
+const KARIN = {
+	voornaam: "Karin",
+	achternaam: "Jansen",
 	bevoegdheid: { kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd" },
 };
 
@@ -40,11 +40,11 @@ const CONFIG = {
 };
 
 function metKvk(kvkNummer) {
-	return { ...CLAUDIA, bevoegdheid: { ...CLAUDIA.bevoegdheid, kvkNummer } };
+	return { ...KARIN, bevoegdheid: { ...KARIN.bevoegdheid, kvkNummer } };
 }
 
 // Antwoorden per endpoint; /api/nl-wallet/sessie loopt een reeks af en blijft op de laatste staan.
-function nepFetch({ gegevens = CLAUDIA, config = CONFIG, sessie = [{ status: "GEEN" }] } = {}) {
+function nepFetch({ gegevens = KARIN, config = CONFIG, sessie = [{ status: "GEEN" }] } = {}) {
 	const reeks = [...sessie];
 	const json = (body) => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
 	return vi.fn((url) => {
@@ -149,14 +149,14 @@ describe("de kaart opent direct het inlogvenster", () => {
 
 describe("na het inloggen", () => {
 	it("bewaart alleen de naam uit de wallet voor personas.js", async () => {
-		await sluitVensterNaSucces(CLAUDIA);
-		expect(JSON.parse(sessionStorage.getItem("inlog:persoon"))).toEqual({ voornaam: "Claudia", achternaam: "van Dam", middel: "NL Wallet" });
-		expect(document.querySelector("[data-nl-wallet-naam]").textContent).toBe("Claudia van Dam");
+		await sluitVensterNaSucces(KARIN);
+		expect(JSON.parse(sessionStorage.getItem("inlog:persoon"))).toEqual({ voornaam: "Karin", achternaam: "Jansen", middel: "NL Wallet" });
+		expect(document.querySelector("[data-nl-wallet-naam]").textContent).toBe("Karin Jansen");
 		expect(document.querySelector("[data-nl-wallet-onderneming]").textContent).toBe("Koffiezaak Noon");
 	});
 
 	it("stuurt naar de persona met het KVK-nummer uit de bevoegdheid", async () => {
-		expect(await sluitVensterNaSucces(CLAUDIA)).toBe("/moza/?persona=Horecaondernemer");
+		expect(await sluitVensterNaSucces(KARIN)).toBe("/moza/?persona=Horecaondernemer");
 	});
 
 	it("kiest op KVK-nummer en niet op naam", async () => {
@@ -166,12 +166,12 @@ describe("na het inloggen", () => {
 	it("kiest geen persona bij een dubbel of onbekend KVK-nummer, of zonder bevoegdheid", async () => {
 		expect(await sluitVensterNaSucces(metKvk("33333333"))).toBe("/moza/");
 		expect(await sluitVensterNaSucces(metKvk("99999999"))).toBe("/moza/");
-		expect(await sluitVensterNaSucces({ ...CLAUDIA, bevoegdheid: null })).toBe("/moza/");
+		expect(await sluitVensterNaSucces({ ...KARIN, bevoegdheid: null })).toBe("/moza/");
 	});
 
 	it("houdt een gevraagd vervolgpad aan en zet de persona erachter", async () => {
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?vervolg=/moza/berichtenbox/");
-		expect(await sluitVensterNaSucces(CLAUDIA)).toBe("/moza/berichtenbox/?persona=Horecaondernemer");
+		expect(await sluitVensterNaSucces(KARIN)).toBe("/moza/berichtenbox/?persona=Horecaondernemer");
 	});
 
 	// Een vervolgpad komt uit de URL, dus iemand anders kan het in een link zetten. Elk van deze
@@ -185,7 +185,7 @@ describe("na het inloggen", () => {
 		["een regeleinde tussen twee schuine strepen", "/\n/evil.example/"],
 	])("negeert een vervolgpad met %s", async (_, pad) => {
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?vervolg=" + encodeURIComponent(pad));
-		expect(await sluitVensterNaSucces(CLAUDIA)).toBe("/moza/?persona=Horecaondernemer");
+		expect(await sluitVensterNaSucces(KARIN)).toBe("/moza/?persona=Horecaondernemer");
 	});
 });
 
@@ -199,12 +199,12 @@ describe("titel in de overlay, want beide vensters zien er hetzelfde uit", () =>
 });
 
 describe("ondernemingen in deze sessie", () => {
-	const BLEND = { ...CLAUDIA, bevoegdheid: { kvkNummer: "91827364", handelsnaam: "Koffiebranderij Blend", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd" } };
+	const BLEND = { ...KARIN, bevoegdheid: { kvkNummer: "91827364", handelsnaam: "Koffiebranderij Blend", functie: "Eigenaar", bevoegdheid: "Volledig bevoegd" } };
 	const opgeslagen = () => JSON.parse(sessionStorage.getItem("inlog:ondernemingen"));
 
 	it("begint bij een gewone inlog met alleen de gedeelde onderneming", async () => {
 		sessionStorage.setItem("inlog:ondernemingen", JSON.stringify([{ kvkNummer: "11111111", handelsnaam: "Oud", functie: "x" }]));
-		await sluitVensterNaSucces(CLAUDIA);
+		await sluitVensterNaSucces(KARIN);
 		expect(opgeslagen()).toEqual([{ kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar" }]);
 	});
 
@@ -215,7 +215,7 @@ describe("ondernemingen in deze sessie", () => {
 	});
 
 	it("voegt bij toevoegen de onderneming toe aan de bestaande en stuurt naar die persona", async () => {
-		sessionStorage.setItem("inlog:persoon", JSON.stringify({ voornaam: "Claudia", achternaam: "van Dam", middel: "NL Wallet" }));
+		sessionStorage.setItem("inlog:persoon", JSON.stringify({ voornaam: "Karin", achternaam: "Jansen", middel: "NL Wallet" }));
 		sessionStorage.setItem("inlog:ondernemingen", JSON.stringify([{ kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar" }]));
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?onderneming=toevoegen&vervolg=/moza/berichtenbox/");
 		pagina({ gegevens: BLEND });
@@ -226,10 +226,10 @@ describe("ondernemingen in deze sessie", () => {
 	});
 
 	it("voegt dezelfde onderneming geen tweede keer toe", async () => {
-		sessionStorage.setItem("inlog:persoon", JSON.stringify({ voornaam: "Claudia", achternaam: "van Dam", middel: "NL Wallet" }));
+		sessionStorage.setItem("inlog:persoon", JSON.stringify({ voornaam: "Karin", achternaam: "Jansen", middel: "NL Wallet" }));
 		sessionStorage.setItem("inlog:ondernemingen", JSON.stringify([{ kvkNummer: "85234567", handelsnaam: "Koffiezaak Noon", functie: "Eigenaar" }]));
 		window.history.replaceState({}, "", "/inloggen/zakelijk/?onderneming=toevoegen");
-		pagina({ gegevens: CLAUDIA });
+		pagina({ gegevens: KARIN });
 		loginKnop().dispatchEvent(new CustomEvent("success", { detail: ["UbGVHMKhupFHDHsNplXp4zlTtXPa3UWD", "cross_device"] }));
 		await vi.waitFor(() => expect(document.querySelector("[data-nl-wallet-status='ingelogd']").hidden).toBe(false));
 		expect(opgeslagen()).toHaveLength(1);
@@ -250,7 +250,7 @@ describe("ondernemingen in deze sessie", () => {
 describe("sessie volgen, zodat na Gelukt het venster niet gesloten hoeft te worden", () => {
 	it("verwerkt het inloggen zodra de sessie gelukt is", async () => {
 		vi.useFakeTimers();
-		pagina({ sessie: [{ status: "GEEN" }, { status: "WAITING_FOR_RESPONSE" }, { status: "DONE", gegevens: CLAUDIA }] });
+		pagina({ sessie: [{ status: "GEEN" }, { status: "WAITING_FOR_RESPONSE" }, { status: "DONE", gegevens: KARIN }] });
 		klikKaart();
 
 		await vi.advanceTimersByTimeAsync(6000);

@@ -11,7 +11,7 @@
  * vensters zien er hetzelfde uit. Per onderneming bouwt dit script uit /api/nl-wallet/config een
  * onzichtbare link om de bevoegdheid (demo-attestatie van KVK Demo) in de wallet te zetten; de
  * toelichting (Shift+P, nl-wallet-toelichting.js) toont ze, samen met de installatie van NL Wallet MOZa
- * met de testpersoon Claudia van Dam. Het venster voor een bevoegdheid werkt met vaste
+ * met de testpersoon Karin Jansen. Het venster voor een bevoegdheid werkt met vaste
  * links en kan niet zien wanneer de uitgifte klaar is (wallet_web meldt daar alleen "close"); onder
  * dat venster staat daarom een link terug naar inloggen, en sluiten opent het inlogvenster ook weer.
  *
@@ -22,7 +22,7 @@
  * "inlog:ondernemingen" de bevoegdheden die in deze sessie gedeeld zijn (nl-wallet-portaal.js toont ze);
  * personas.js toont die naam in plaats van die van de persona. De persona is het bedrijf:
  * heeft precies één persona het KVK-nummer uit de bevoegdheid, dan gaat de gebruiker door
- * naar die persona (Claudia van Dam met KVK 85234567 is de Horecaondernemer).
+ * naar die persona (Karin Jansen met KVK 85234567 is de Horecaondernemer).
  *
  * Afloopwegen bij het inloggen:
  *   - Andere telefoon (cross_device): dit script volgt de sessie via /api/nl-wallet/sessie
