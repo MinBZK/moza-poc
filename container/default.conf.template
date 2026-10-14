@@ -253,8 +253,10 @@ server {
             return 502 "Deze bijlage is nu niet op te halen. Probeer het later opnieuw of meld het bij de beheerder van deze proeftuin.";
         }
 
-        # $uri en niet $request_uri: een queryparameter hoort hier niet bij en gaat niet mee.
-        proxy_pass $backend_keten$uri;
+        # $uri en niet $request_uri: van de query gaat alleen magazijnId mee. Het stelsel wil die bij
+        # elke vraag over één bericht, want hetzelfde berichtnummer kan bij twee organisaties
+        # voorkomen; elke andere parameter hoort hier niet bij.
+        proxy_pass $backend_keten$uri?magazijnId=$arg_magazijnId;
         proxy_set_header Host $backend_keten_host;
         proxy_set_header X-Ontvanger $cookie_ontvanger;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

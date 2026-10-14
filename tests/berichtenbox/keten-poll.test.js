@@ -121,7 +121,7 @@ describe("de pollcyclus haalt op zonder de organisaties te bevragen", () => {
 		await vi.advanceTimersByTimeAsync(15000);
 
 		const laatste = gemeld[gemeld.length - 1];
-		expect(laatste.berichten.map((bericht) => bericht.id)).toEqual(["b-1"]);
+		expect(laatste.berichten.map((bericht) => bericht.berichtId)).toEqual(["b-1"]);
 	});
 
 	it("meldt niets als de lijst niet veranderd is", async () => {
@@ -400,7 +400,7 @@ describe("een antwoord dat te laat komt", () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		const laatste = gemeld.filter(Boolean).pop();
-		expect(laatste.berichten.map((bericht) => bericht.id)).toEqual(["b-1"]);
+		expect(laatste.berichten.map((bericht) => bericht.berichtId)).toEqual(["b-1"]);
 	});
 });
 
