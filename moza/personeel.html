@@ -1,5 +1,6 @@
 ---
 title: "MijnOverheid Zakelijk: Personeel"
+styles: ["/assets/da-iemand-aannemen.css"]
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -17,25 +18,27 @@ title: "MijnOverheid Zakelijk: Personeel"
 	<h1>Personeel</h1>
 
 	<section class="card">
-		<h2>
-			Binnenkort beschikbaar
-			<span class="badge">2029</span>
-		</h2>
-		<p>Straks vindt u hier uw personeelszaken overzichtelijk bij elkaar.</p>
-	</section>
-
-	<section class="card">
-		<video controls src="https://placeholdervideo.dev/1920x1080" poster="/assets/images/video-placeholder-poster.png">
-			<p>Uw browser ondersteunt geen video.</p>
-		</video>
-	</section>
-
-	<section class="card">
-		<h2>Wat kunt u zoal verwachten?</h2>
+		<h2>Iemand aannemen met een afstand tot de arbeidsmarkt</h2>
+		<p class="intro">Neemt u iemand aan die in het doelgroepregister staat, een uitkering heeft of om een andere reden niet zelfstandig het minimumloon kan verdienen? Dan ziet u hier vooraf welke regelingen voor u kunnen gelden en wat ze opleveren, op basis van wat de overheid al van u en van de kandidaat weet.</p>
 		<ul>
-			<li>Bekijk een overzicht van uw werknemers en hun dienstverbanden</li>
-			<li>Zie de status van lopende verzuimmeldingen en verlofregistraties</li>
-			<li>Houd bij welke mutaties u heeft doorgegeven aan het UWV en de Belastingdienst</li>
+			<li>U vult alleen in wat de overheid nog niet weet.</li>
+			<li>Per bron ziet u welke gegevens worden gebruikt en vinkt u aan dat ze kloppen.</li>
+			<li>Een aanvraag staat daarna klaar als concept; u verstuurt hem pas als u dat wilt.</li>
+		</ul>
+		<div class="action-group">
+			<a class="btn-cta" href="{{ '/moza/iemand-aannemen/' | url }}">Start: iemand aannemen</a>
+		</div>
+	</section>
+
+	<section class="card" data-da-zaak hidden>
+		<h2>Lopende zaken over personeel</h2>
+		<ul class="list-content-links">
+			<li>
+				<a class="content-link" href="{{ daKoen.zaak.url | url }}">
+					<h3>{{ daKoen.zaak.onderwerp }}</h3>
+					<p>{{ daKoen.zaak.organisatie }} · <span data-da-status>In behandeling</span></p>
+				</a>
+			</li>
 		</ul>
 	</section>
 
@@ -45,33 +48,35 @@ title: "MijnOverheid Zakelijk: Personeel"
 			<li>
 				<details name="faq">
 					<summary>
-						<h3>Welke personeelsgegevens kan ik hier inzien?</h3>
+						<h3>Welke gegevens van de kandidaat worden gebruikt?</h3>
 					</summary>
 					<div>
-						<p>U vindt hier een overzicht van uw werknemers, dienstverbanden en meldingen aan het UWV en de Belastingdienst. Denk aan loonheffingsgegevens, verzuimmeldingen en arbeidscontracten.</p>
+						<p>Alleen wat de wet nodig heeft om te bepalen of een regeling geldt: of de kandidaat in het doelgroepregister staat (UWV), of de gemeente de kandidaat ondersteunt en wat de loonwaarde is (gemeente), en uw eigen opgave over uren, startdatum en loon. De kandidaat geeft daarvoor toestemming. U ziet per gegeven de bron en de datum waarop het is opgehaald.</p>
 					</div>
 				</details>
 			</li>
 			<li>
 				<details name="faq">
 					<summary>
-						<h3>Kan ik hier ook mutaties doorgeven?</h3>
+						<h3>Is de uitkomst een besluit?</h3>
 					</summary>
 					<div>
-						<p>Nee, MijnOverheid Zakelijk biedt een overzicht van uw personeelszaken. Voor het doorgeven van wijzigingen gebruikt u uw loonadministratiesoftware of gaat u naar <a href="https://www.uwv.nl/">uwv.nl</a>.</p>
-					</div>
-				</details>
-			</li>
-			<li>
-				<details name="faq">
-					<summary>
-						<h3>Ik zie een werknemer die niet meer in dienst is. Wat kan ik doen?</h3>
-					</summary>
-					<div>
-						<p>Controleer of de uitdienstmelding correct is doorgegeven via uw loonadministratie. Als het probleem aanhoudt, neem dan contact op met het UWV of de Belastingdienst om de gegevens te laten corrigeren.</p>
+						<p>Nee. Wat u vooraf ziet is een berekening met dezelfde regels als de organisatie later gebruikt. Het besluit neemt de gemeente, UWV of de Belastingdienst nadat u een aanvraag heeft verstuurd. Bij het besluit ziet u dezelfde berekening terug.</p>
 					</div>
 				</details>
 			</li>
 		</ul>
 	</section>
+
+	<section class="card da-onderzoeker" data-feature="Onderzoeksbediening" data-feature-type="functionaliteit">
+		<h2>Voor de onderzoeker</h2>
+		<div class="da-veld">
+			<label for="da-persona">Deelnemer speelt</label>
+			<select id="da-persona"></select>
+			<p class="form-field-helper-text">Bedrijf en ondernemer wisselen; de kandidaat blijft Koen de Wit. Bij een wissel begint het scenario opnieuw. Ook te kiezen via <code>?persona=Bloemenkweker</code> in het adres of het flags-paneel.</p>
+		</div>
+		<p><button class="link-button" type="button" data-da-reset>Begin het scenario opnieuw</button></p>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
 </article>

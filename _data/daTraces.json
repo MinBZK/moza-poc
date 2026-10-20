@@ -1,0 +1,7789 @@
+{
+ "participatiewet:heeft_recht_op_lks": {
+  "wet": "participatiewet",
+  "uitkomst": "heeft_recht_op_lks",
+  "peildatum": "2026-07-01",
+  "scenario": "Gemeente betaalt €897,41 per maand LKS aan werkgever van Koen (32 uur)",
+  "bestand": "012_participatiewet_heeft_recht_op_lks_2026-07-01.json",
+  "gegevens": {
+   "behoort_tot_doelgroep_lks": true,
+   "bsn": 999990101,
+   "college_heeft_loonwaarde_vastgesteld": false,
+   "datum_aanvang_dienstbetrekking": "2026-01-01",
+   "datum_aanvraag_lks": "2026-02-01",
+   "datum_einde_deelname_onderwijs_lid_2_a": null,
+   "dienstbetrekking_is_tot_stand_gekomen": false,
+   "is_wsw_dienstbetrekking": false,
+   "kan_minimumloon_niet_verdienen": true,
+   "loonwaarde_percentage": 60,
+   "overeengekomen_arbeidsduur_uren_per_week": 32,
+   "vaststelling_loonwaarde_blijft_achterwege": false,
+   "volgde_onderwijs_zonder_startkwalificatie_leerwerktraject": false,
+   "was_persoon_7_lid_1_a_of_7a_in_zes_maanden_voorafgaand": true,
+   "werkgever_is_voornemens_dienstbetrekking_aan_te_gaan": false
+  },
+  "gevraagd": [
+   "heeft_recht_op_lks",
+   "bruto_subsidie_eurocent_per_maand",
+   "maximum_subsidie_eurocent_per_maand",
+   "hoogte_lks_voltijd_eurocent_per_maand",
+   "hoogte_lks_eurocent_per_maand"
+  ],
+  "tussenuitkomsten": {
+   "aanvraag_lks_binnen_zes_maanden": true,
+   "arbeidsduur_voor_evenredigheid_uren_per_week": 32,
+   "bruto_subsidie_eurocent_per_maand": 100958.4,
+   "grondslag_maximum_eurocent_per_maand": 315495.0,
+   "heeft_recht_op_lks": true,
+   "heeft_recht_op_lks_lid_1": false,
+   "heeft_recht_op_lks_lid_2": true,
+   "hoogte_lks_eurocent_per_maand": 89740.8,
+   "hoogte_lks_lid_4_voltijd_eurocent_per_maand": 100958.4,
+   "hoogte_lks_lid_5_voltijd_eurocent_per_maand": 0,
+   "hoogte_lks_voltijd_eurocent_per_maand": 100958.4,
+   "is_uitgesloten_lid_3": false,
+   "loonwaarde_eurocent_per_maand": 151437.6,
+   "maximum_subsidie_eurocent_per_maand": 220846.5,
+   "volgt_de_vijftig_procent_route": false,
+   "voorafgaand_relevante_onderwijsroute_of_doelgroep": true,
+   "werkgeverslastenvergoeding_eurocent_per_maand": 63099.0
+  },
+  "resultaat": {
+   "bruto_subsidie_eurocent_per_maand": 100958.4,
+   "heeft_recht_op_lks": true,
+   "hoogte_lks_eurocent_per_maand": 89740.8,
+   "hoogte_lks_voltijd_eurocent_per_maand": 100958.4,
+   "maximum_subsidie_eurocent_per_maand": 220846.5
+  },
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de ambtshalve herziening van de hoogte per 1 januari",
+    "tekst": "Marking: de ambtshalve herziening van de hoogte per 1 januari — Het formaat rekent een artikel uit op een peildatum en kent geen herrekening die zichzelf jaarlijks opnieuw uitvoert op een eerder genomen besluit. (needs a new shape in the format: Een vorm voor een periodieke herrekening van een eerder vastgestelde beschikking.)",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de samenloop met de no-riskpolis en het loonkostenvoordeel",
+    "tekst": "Marking: de samenloop met de no-riskpolis en het loonkostenvoordeel — Samenloop is een regel over regelingen heen. Het formaat kent alleen regels binnen een artikel en verdringing tussen twee regelingen via overrides, en heeft geen vorm voor een regel die boven het stelsel staat. (needs a new shape in the format: Een vorm voor een stelselregel die de uitkomsten van meerdere regelingen tegen elkaar afzet.)",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "is_uitgesloten_lid_3",
+    "tekst": "Computing is_uitgesloten_lid_3",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "is_wsw_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_lks_lid_1",
+    "tekst": "Computing heeft_recht_op_lks_lid_1",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "werkgever_is_voornemens_dienstbetrekking_aan_te_gaan",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "dienstbetrekking_is_tot_stand_gekomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_1",
+    "tekst": "CASE 1: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "werkgever_is_voornemens_dienstbetrekking_aan_te_gaan",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voorafgaand_relevante_onderwijsroute_of_doelgroep",
+    "tekst": "Computing voorafgaand_relevante_onderwijsroute_of_doelgroep",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "datum_einde_deelname_onderwijs_lid_2_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "was_persoon_7_lid_1_a_of_7a_in_zes_maanden_voorafgaand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "aanvraag_lks_binnen_zes_maanden",
+    "tekst": "Computing aanvraag_lks_binnen_zes_maanden",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvraag_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-02-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "GREATER_THAN_OR_EQUAL",
+    "tekst": "Compute GREATER_THAN_OR_EQUAL(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvraag_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-02-01"
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "LESS_THAN_OR_EQUAL",
+    "tekst": "Compute LESS_THAN_OR_EQUAL(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvraag_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-02-01"
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "DATE_ADD",
+    "tekst": "Compute DATE_ADD(...) = '2026-07-01'",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-07-01"
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_lks_lid_2",
+    "tekst": "Computing heeft_recht_op_lks_lid_2",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "kan_minimumloon_niet_verdienen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "aanvraag_lks_binnen_zes_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "voorafgaand_relevante_onderwijsroute_of_doelgroep",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_lks",
+    "tekst": "Computing heeft_recht_op_lks",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lks_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_lid_3",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "volgt_de_vijftig_procent_route",
+    "tekst": "Computing volgt_de_vijftig_procent_route",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "vaststelling_loonwaarde_blijft_achterwege",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_1",
+    "tekst": "CASE 1: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "vaststelling_loonwaarde_blijft_achterwege",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "werkgeverslastenvergoeding_eurocent_per_maand",
+    "tekst": "Computing werkgeverslastenvergoeding_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 63099.0
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "DIVIDE",
+    "tekst": "Compute DIVIDE(...) = 63099",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 63099.0
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 6309900",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 6309900.0
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 5,
+    "soort": "cross_law_reference",
+    "naam": "wet_minimumloon_en_minimumvakantiebijslag#minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "Computing minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "DIVIDE",
+    "tekst": "Compute DIVIDE(...) = 252396",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 25239600",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 25239600
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "minimumloon_per_maand_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 233700
+   },
+   {
+    "diepte": 10,
+    "soort": "cross_law_reference",
+    "naam": "wet_minimumloon_en_minimumvakantiebijslag#minimumloon_per_maand_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 233700
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 11,
+    "soort": "action",
+    "naam": "minimumloon_per_maand_eurocent",
+    "tekst": "Computing minimumloon_per_maand_eurocent",
+    "wet": null,
+    "artikel": "8",
+    "lid": null,
+    "resultaat": 233700
+   },
+   {
+    "diepte": 12,
+    "soort": "resolve",
+    "naam": "herzien_minimumloon_per_maand_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8",
+    "lid": null,
+    "resultaat": 233700
+   },
+   {
+    "diepte": 13,
+    "soort": "open_term_resolution",
+    "naam": "herzien_minimumloon_per_maand_eurocent",
+    "tekst": "Open term 'herzien_minimumloon_per_maand_eurocent' using default value",
+    "wet": null,
+    "artikel": "8",
+    "lid": null,
+    "resultaat": 233700
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "ADD",
+    "tekst": "Compute ADD(...) = 108",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 108
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "vakantiebijslag_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "15",
+    "lid": null,
+    "resultaat": 8
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "werkgeverslastenvergoeding_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 25
+   },
+   {
+    "diepte": 5,
+    "soort": "open_term_resolution",
+    "naam": "werkgeverslastenvergoeding_percentage",
+    "tekst": "Open term 'werkgeverslastenvergoeding_percentage' implemented by regeling_loonkostensubsidie_participatiewet_2021 article 1",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 25
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "werkgeverslastenvergoeding_percentage",
+    "tekst": "Computing werkgeverslastenvergoeding_percentage",
+    "wet": null,
+    "artikel": "1",
+    "lid": null,
+    "resultaat": 25
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "vergoeding_werkgeverslasten_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "1",
+    "lid": null,
+    "resultaat": 25
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "grondslag_maximum_eurocent_per_maand",
+    "tekst": "Computing grondslag_maximum_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 315495.0
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "ADD",
+    "tekst": "Compute ADD(...) = 315495",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 315495.0
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "werkgeverslastenvergoeding_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 63099.0
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "loonwaarde_eurocent_per_maand",
+    "tekst": "Computing loonwaarde_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 151437.6
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "DIVIDE",
+    "tekst": "Compute DIVIDE(...) = 151437.60",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 151437.6
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 15143760",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 15143760.0
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "bruto_subsidie_eurocent_per_maand",
+    "tekst": "Computing bruto_subsidie_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "SUBTRACT",
+    "tekst": "Compute SUBTRACT(...) = 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "minimumloon_plus_vakantiebijslag_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 252396.0
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "loonwaarde_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 151437.6
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "maximum_subsidie_eurocent_per_maand",
+    "tekst": "Computing maximum_subsidie_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 220846.5
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "DIVIDE",
+    "tekst": "Compute DIVIDE(...) = 220846.50",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 220846.5
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 22084650",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 22084650.0
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "grondslag_maximum_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 315495.0
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "maximum_percentage_lid_4",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 70
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "hoogte_lks_lid_4_voltijd_eurocent_per_maand",
+    "tekst": "Computing hoogte_lks_lid_4_voltijd_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "MAX",
+    "tekst": "Compute MAX(...) = 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "MIN",
+    "tekst": "Compute MIN(...) = 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "bruto_subsidie_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "maximum_subsidie_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 220846.5
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "hoogte_lks_lid_5_voltijd_eurocent_per_maand",
+    "tekst": "Computing hoogte_lks_lid_5_voltijd_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = 0",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "volgt_de_vijftig_procent_route",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: 0",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "hoogte_lks_voltijd_eurocent_per_maand",
+    "tekst": "Computing hoogte_lks_voltijd_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "volgt_de_vijftig_procent_route",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: 100958.40",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "hoogte_lks_lid_4_voltijd_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "arbeidsduur_voor_evenredigheid_uren_per_week",
+    "tekst": "Computing arbeidsduur_voor_evenredigheid_uren_per_week",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 32
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = 32",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 32
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "gebruikelijke_volledige_dienstbetrekking_uren",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "open_term_resolution",
+    "naam": "gebruikelijke_volledige_dienstbetrekking_uren",
+    "tekst": "Open term 'gebruikelijke_volledige_dienstbetrekking_uren' not required, no implementation, resolved as null",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: 32",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 32
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "overeengekomen_arbeidsduur_uren_per_week",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 32
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "hoogte_lks_eurocent_per_maand",
+    "tekst": "Computing hoogte_lks_eurocent_per_maand",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 89740.8
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "DIVIDE",
+    "tekst": "Compute DIVIDE(...) = 89740.80",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 89740.8
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 3230668.80",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 3230668.8
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "hoogte_lks_voltijd_eurocent_per_maand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 100958.4
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "arbeidsduur_voor_evenredigheid_uren_per_week",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 32
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "normarbeidsduur_uren_per_week",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10d",
+    "lid": null,
+    "resultaat": 36
+   }
+  ],
+  "ankers": [
+   [
+    "participatiewet",
+    "1",
+    ""
+   ],
+   [
+    "participatiewet",
+    "10d",
+    ""
+   ],
+   [
+    "participatiewet",
+    "15",
+    ""
+   ],
+   [
+    "participatiewet",
+    "8",
+    ""
+   ]
+  ]
+ },
+ "participatiewet:heeft_aanspraak_op_begeleiding_op_de_werkplek": {
+  "wet": "participatiewet",
+  "uitkomst": "heeft_aanspraak_op_begeleiding_op_de_werkplek",
+  "peildatum": "2026-07-01",
+  "scenario": "Koen heeft als LKS-doelgroep een harde aanspraak op begeleiding op de werkplek",
+  "bestand": "016_participatiewet_heeft_aanspraak_op_begeleiding_op_de_werkplek_2026-07-01.json",
+  "gegevens": {
+   "behoort_tot_doelgroep_lks": true,
+   "bsn": 999990101,
+   "college_heeft_loonwaarde_vastgesteld": false,
+   "datum_aanvang_dienstbetrekking": "2026-01-01",
+   "dienstbetrekking_is_tot_stand_gekomen": false,
+   "vaststelling_loonwaarde_blijft_achterwege": false,
+   "werkgever_is_voornemens_dienstbetrekking_aan_te_gaan": false
+  },
+  "gevraagd": [
+   "heeft_aanspraak_op_begeleiding_op_de_werkplek"
+  ],
+  "tussenuitkomsten": {
+   "heeft_aanspraak_op_begeleiding_op_de_werkplek": true
+  },
+  "resultaat": true,
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_aanspraak_op_begeleiding_op_de_werkplek",
+    "tekst": "Computing heeft_aanspraak_op_begeleiding_op_de_werkplek",
+    "wet": null,
+    "artikel": "10da",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_lks",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10da",
+    "lid": null,
+    "resultaat": true
+   }
+  ],
+  "ankers": [
+   [
+    "participatiewet",
+    "10da",
+    ""
+   ]
+  ]
+ },
+ "participatiewet:mag_proefplaatsing_aangaan": {
+  "wet": "participatiewet",
+  "uitkomst": "mag_proefplaatsing_aangaan",
+  "peildatum": "2026-07-01",
+  "scenario": "Koen kan via Pwet art. 8a op proefplaats met behoud van bijstand",
+  "bestand": "017_participatiewet_mag_proefplaatsing_aangaan_2026-07-01.json",
+  "gegevens": {
+   "behoort_tot_doelgroep_artikel_7_lid_1_a": true,
+   "behoort_tot_doelgroep_lks": true,
+   "bsn": 999990101,
+   "college_verleent_toestemming_proefplaatsing": true,
+   "ontvangt_algemene_bijstand": true
+  },
+  "gevraagd": [
+   "mag_proefplaatsing_aangaan",
+   "max_duur_proefplaatsing_maanden",
+   "max_duur_verlenging_proefplaatsing_maanden",
+   "max_totale_duur_proefplaatsing_maanden"
+  ],
+  "tussenuitkomsten": {
+   "mag_proefplaatsing_aangaan": true,
+   "max_duur_proefplaatsing_maanden": 2,
+   "max_duur_verlenging_proefplaatsing_maanden": 4,
+   "max_totale_duur_proefplaatsing_maanden": 6
+  },
+  "resultaat": {
+   "mag_proefplaatsing_aangaan": true,
+   "max_duur_proefplaatsing_maanden": 2,
+   "max_duur_verlenging_proefplaatsing_maanden": 4,
+   "max_totale_duur_proefplaatsing_maanden": 6
+  },
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "mag_proefplaatsing_aangaan",
+    "tekst": "Computing mag_proefplaatsing_aangaan",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_artikel_7_lid_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "ontvangt_algemene_bijstand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "college_verleent_toestemming_proefplaatsing",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "max_duur_proefplaatsing_maanden",
+    "tekst": "Computing max_duur_proefplaatsing_maanden",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 2
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "max_duur_proefplaatsing_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 2
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "max_duur_verlenging_proefplaatsing_maanden",
+    "tekst": "Computing max_duur_verlenging_proefplaatsing_maanden",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 4
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "max_duur_verlenging_proefplaatsing_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 4
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "max_totale_duur_proefplaatsing_maanden",
+    "tekst": "Computing max_totale_duur_proefplaatsing_maanden",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 6
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "max_totale_duur_proefplaatsing_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "8a",
+    "lid": null,
+    "resultaat": 6
+   }
+  ],
+  "ankers": [
+   [
+    "participatiewet",
+    "8a",
+    ""
+   ]
+  ]
+ },
+ "wet_arbeidsongeschiktheidsvoorziening_jonggehandicapten:heeft_recht_op_loondispensatie": {
+  "wet": "wet_arbeidsongeschiktheidsvoorziening_jonggehandicapten",
+  "uitkomst": "heeft_recht_op_loondispensatie",
+  "peildatum": "2026-07-01",
+  "scenario": "Koen heeft geen recht op loondispensatie, want geen Wajong-status",
+  "bestand": "067_wet_arbeidsongeschiktheidsvoorziening_jonggehandicapten_heeft_recht_op_loondispensatie_2026-07-01.json",
+  "gegevens": {
+   "aanvraag_loondispensatie_ingediend": false,
+   "arbeidsprestatie_duidelijk_minder_dan_minimumloon": true,
+   "bsn": 999990101,
+   "gebruikelijke_beloning_per_uur_eurocent": 1450,
+   "gerechtvaardigde_beloning_per_uur_eurocent": 1000,
+   "heeft_recht_op_arbeidsondersteuning_wajong": false,
+   "is_wsw_werknemer": false,
+   "minimumloon_per_uur_eurocent": 1450,
+   "vastgesteld_aanspraakpercentage_minimumloon": 70,
+   "verwachte_duur_verminderde_prestatie_maanden": 12
+  },
+  "gevraagd": [
+   "heeft_recht_op_loondispensatie"
+  ],
+  "tussenuitkomsten": {
+   "heeft_recht_op_loondispensatie": false
+  },
+  "resultaat": false,
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de samenloop met de no-riskpolis en het loonkostenvoordeel",
+    "tekst": "Marking: de samenloop met de no-riskpolis en het loonkostenvoordeel — Samenloop is een regel over regelingen heen. Het formaat kent alleen regels binnen een artikel en verdringing tussen twee regelingen via overrides, en heeft geen vorm voor een regel die boven het stelsel staat. (needs a new shape in the format: Een vorm voor een stelselregel die de uitkomsten van meerdere regelingen tegen elkaar afzet.)",
+    "wet": null,
+    "artikel": "2:20",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_loondispensatie",
+    "tekst": "Computing heeft_recht_op_loondispensatie",
+    "wet": null,
+    "artikel": "2:20",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2:20",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_arbeidsondersteuning_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2:20",
+    "lid": null,
+    "resultaat": false
+   }
+  ],
+  "ankers": [
+   [
+    "wet_arbeidsongeschiktheidsvoorziening_jonggehandicapten",
+    "2:20",
+    ""
+   ]
+  ]
+ },
+ "wet_financiering_sociale_verzekeringen:is_arbeidsbeperkte": {
+  "wet": "wet_financiering_sociale_verzekeringen",
+  "uitkomst": "is_arbeidsbeperkte",
+  "peildatum": "2026-07-01",
+  "scenario": "Koen staat in het register op grond van onderdeel a",
+  "bestand": "094_wet_financiering_sociale_verzekeringen_is_arbeidsbeperkte_2026-07-01.json",
+  "gegevens": {
+   "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk": null,
+   "bsn": 999990101,
+   "college_heeft_loonwaarde_vastgesteld_conform_10d": true,
+   "datum_eerste_opname_doelgroepregister": "2025-11-03",
+   "experiment_instrument_82a_suwi_ingezet": false,
+   "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie": false,
+   "heeft_wajong_arbeidsondersteuning_of_uitkering": false,
+   "heeft_wajong_duurzaam_geen_mogelijkheden": false,
+   "heeft_wia_uitkering_hoofdstuk_6": false,
+   "heeft_zich_schriftelijk_gemeld_bij_uwv": false,
+   "is_jonggehandicapt_uwv_oordeel_lid_2": false,
+   "is_pwet_toegeleid_naar_dienstbetrekking": false,
+   "is_pwet_toegeleid_of_lks_lid_2": true,
+   "is_uitgesloten_beschut_werk_pwet_10b": false,
+   "is_wsw_geindiceerd_of_oude_indicatie": false,
+   "komt_uit_praktijkonderwijs": false,
+   "komt_uit_voortgezet_speciaal_onderwijs": false,
+   "laatste_dag_persoon_lid_1_b_of_c": null,
+   "loonwaarde_percentage": 60,
+   "ontvangt_voorziening_pwet_10": false,
+   "ontvangt_voorziening_wia_35_lid_2": false,
+   "registratie_nog_niet_geeindigd": true,
+   "uwv_heeft_op_eigen_verzoek_vastgesteld_niet_in_staat_minimumloon": false,
+   "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon": false,
+   "verricht_arbeid_in_dienstbetrekking": false,
+   "verzoek_van_college_of_eigen_aanvraag": false,
+   "was_arbeidsbeperkte_lid_1_of_2": false,
+   "was_lid_1_c_en_nu_wajong_duurzaam_geen_mogelijkheden": false
+  },
+  "gevraagd": [
+   "is_arbeidsbeperkte",
+   "voldoet_aan_grond_38b_1_a",
+   "voldoet_aan_grond_38b_1_b",
+   "voldoet_aan_grond_38b_1_c",
+   "voldoet_aan_grond_38b_1_d",
+   "voldoet_aan_grond_38b_1_e",
+   "voldoet_aan_grond_38b_1_f",
+   "voldoet_aan_grond_38b_2",
+   "voldoet_aan_grond_38b_6",
+   "grond_opname_doelgroepregister",
+   "datum_opname_doelgroepregister",
+   "vaststelling_door"
+  ],
+  "tussenuitkomsten": {
+   "datum_opname_doelgroepregister": "2025-11-03",
+   "grond_opname_doelgroepregister": "pwet_lks_uwv_loonwaarde",
+   "is_arbeidsbeperkte": true,
+   "loonwaarde_onder_minimumloon_vastgesteld": true,
+   "vaststelling_door": "UWV",
+   "voldoet_aan_grond_38b_1_a": true,
+   "voldoet_aan_grond_38b_1_b": false,
+   "voldoet_aan_grond_38b_1_c": false,
+   "voldoet_aan_grond_38b_1_d": false,
+   "voldoet_aan_grond_38b_1_e": false,
+   "voldoet_aan_grond_38b_1_f": false,
+   "voldoet_aan_grond_38b_1_g": false,
+   "voldoet_aan_grond_38b_2": false,
+   "voldoet_aan_grond_38b_6": false
+  },
+  "resultaat": {
+   "datum_opname_doelgroepregister": "2025-11-03",
+   "grond_opname_doelgroepregister": "pwet_lks_uwv_loonwaarde",
+   "is_arbeidsbeperkte": true,
+   "vaststelling_door": "UWV",
+   "voldoet_aan_grond_38b_1_a": true,
+   "voldoet_aan_grond_38b_1_b": false,
+   "voldoet_aan_grond_38b_1_c": false,
+   "voldoet_aan_grond_38b_1_d": false,
+   "voldoet_aan_grond_38b_1_e": false,
+   "voldoet_aan_grond_38b_1_f": false,
+   "voldoet_aan_grond_38b_2": false,
+   "voldoet_aan_grond_38b_6": false
+  },
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "Computing loonwaarde_onder_minimumloon_vastgesteld",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "college_heeft_loonwaarde_vastgesteld_conform_10d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "LESS_THAN",
+    "tekst": "Compute LESS_THAN(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "Computing voldoet_aan_grond_38b_1_a",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_of_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_b",
+    "tekst": "Computing voldoet_aan_grond_38b_1_b",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "is_wsw_geindiceerd_of_oude_indicatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_c",
+    "tekst": "Computing voldoet_aan_grond_38b_1_c",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_wajong_arbeidsondersteuning_of_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_d",
+    "tekst": "Computing voldoet_aan_grond_38b_1_d",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "open_term_resolution",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Open term 'amvb_indicatie_38b_1_d' implemented by besluit_wfsv article 2.24",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "article",
+    "naam": "marking:het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015",
+    "tekst": "Marking: het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015 — Het formaat kan deze voorwaarden uitdrukken, maar het dossier reikt niet tot de aanvraaggeschiedenis van 2014 en 2015. De aanwijzing is daarom buiten de scope gelaten en niet vanwege een tekort van het formaat. (needs a new shape in the format: Een uitbreiding van de scope naar het overgangsrecht, met de aanvraagmomenten en beoordelingsuitkomsten uit die periode als invoer.)",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 4,
+    "soort": "action",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "Computing behoort_tot_onderwijsdoelgroep_lid_1",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "komt_uit_voortgezet_speciaal_onderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "komt_uit_praktijkonderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "action",
+    "naam": "is_uitgesloten_lid_3",
+    "tekst": "Computing is_uitgesloten_lid_3",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "action",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Computing amvb_indicatie_38b_1_d",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_e",
+    "tekst": "Computing voldoet_aan_grond_38b_1_e",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_naar_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_f",
+    "tekst": "Computing voldoet_aan_grond_38b_1_f",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "laatste_dag_persoon_lid_1_b_of_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_g",
+    "tekst": "Computing voldoet_aan_grond_38b_1_g",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_wia_uitkering_hoofdstuk_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_2",
+    "tekst": "Computing voldoet_aan_grond_38b_2",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapt_uwv_oordeel_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_6",
+    "tekst": "Computing voldoet_aan_grond_38b_6",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "was_arbeidsbeperkte_lid_1_of_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "is_arbeidsbeperkte",
+    "tekst": "Computing is_arbeidsbeperkte",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "grond_opname_doelgroepregister",
+    "tekst": "Computing grond_opname_doelgroepregister",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "pwet_lks_uwv_loonwaarde"
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = 'pwet_lks_uwv_loonwaarde'",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "pwet_lks_uwv_loonwaarde"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: 'pwet_lks_uwv_loonwaarde'",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "pwet_lks_uwv_loonwaarde"
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "datum_opname_doelgroepregister",
+    "tekst": "Computing datum_opname_doelgroepregister",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "2025-11-03"
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "datum_eerste_opname_doelgroepregister",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "2025-11-03"
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "vaststelling_door",
+    "tekst": "Computing vaststelling_door",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": "UWV"
+   }
+  ],
+  "ankers": [
+   [
+    "wet_financiering_sociale_verzekeringen",
+    "2.24",
+    ""
+   ],
+   [
+    "wet_financiering_sociale_verzekeringen",
+    "38b",
+    ""
+   ]
+  ]
+ },
+ "wet_tegemoetkomingen_loondomein:heeft_recht_op_lkv": {
+  "wet": "wet_tegemoetkomingen_loondomein",
+  "uitkomst": "heeft_recht_op_lkv",
+  "peildatum": "2026-07-01",
+  "scenario": "Werkgever ontvangt €1.680,64 per jaar LKV-banenafspraak voor Koen",
+  "bestand": "114_wet_tegemoetkomingen_loondomein_heeft_recht_op_lkv_2026-07-01.json",
+  "gegevens": {
+   "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk": null,
+   "behoort_tot_doelgroep_10b_lid_1": false,
+   "bsn": 999990101,
+   "college_heeft_loonwaarde_vastgesteld_conform_10d": true,
+   "datum_aanvang_aanvraagtermijn_doelgroepverklaring_2_15": null,
+   "datum_aanvang_eerste_dienstbetrekking_2_6": "2026-01-01",
+   "datum_eerste_opname_doelgroepregister": "2025-11-03",
+   "experiment_instrument_82a_suwi_ingezet": false,
+   "had_wia_recht_maand_voor_aanvang": false,
+   "heeft_dienstbetrekking_beschut_werk": false,
+   "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie": false,
+   "heeft_geldige_doelgroepverklaring_2_15": false,
+   "heeft_geldige_doelgroepverklaring_2_7": false,
+   "heeft_loonaangifte_verzoek_ingediend": true,
+   "heeft_of_krijgt_wia_recht_bij_hervatting": false,
+   "heeft_pensioengerechtigde_leeftijd_bereikt": false,
+   "heeft_wajong_arbeidsondersteuning_of_uitkering": false,
+   "heeft_wajong_duurzaam_geen_mogelijkheden": false,
+   "heeft_wia_uitkering_hoofdstuk_6": false,
+   "heeft_zich_schriftelijk_gemeld_bij_uwv": false,
+   "hervat_eigen_arbeid_of_andere_functie": false,
+   "is_jonggehandicapt_uwv_oordeel_lid_2": false,
+   "is_pwet_toegeleid_naar_dienstbetrekking": false,
+   "is_pwet_toegeleid_of_lks_lid_2": true,
+   "is_uitgesloten_beschut_werk_pwet_10b": false,
+   "is_wsw_geindiceerd_of_oude_indicatie": false,
+   "is_wsw_of_beschut_werk_dienstbetrekking": false,
+   "komt_uit_praktijkonderwijs": false,
+   "komt_uit_voortgezet_speciaal_onderwijs": false,
+   "laatste_dag_persoon_lid_1_b_of_c": null,
+   "loonwaarde_percentage": 60,
+   "ontvangt_voorziening_pwet_10": false,
+   "ontvangt_voorziening_wia_35_lid_2": false,
+   "periode_2_12_is_verstreken": false,
+   "registratie_nog_niet_geeindigd": true,
+   "uwv_heeft_op_eigen_verzoek_vastgesteld_niet_in_staat_minimumloon": false,
+   "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon": false,
+   "valt_onder_uitzondering_lid_2": false,
+   "verloonde_uren": 1664,
+   "verloonde_uren_voorwaarden_2_10": 1664,
+   "verloonde_uren_voorwaarden_2_14": 1664,
+   "verloonde_uren_voorwaarden_2_6": 1664,
+   "verricht_arbeid_in_dienstbetrekking": false,
+   "verricht_wsw_arbeid_artikel_2_zonder_terbeschikkingstelling": false,
+   "verzoek_van_college_of_eigen_aanvraag": false,
+   "was_arbeidsbeperkte_lid_1_of_2": false,
+   "was_in_dienst_bij_werkgever_binnen_zes_maanden": false,
+   "was_lid_1_c_en_nu_wajong_duurzaam_geen_mogelijkheden": false,
+   "was_rea_arbeidsgehandicapte_voor_2006": false
+  },
+  "gevraagd": [
+   "heeft_recht_op_lkv",
+   "categorie_lkv",
+   "tegemoetkoming_banenafspraak_eurocent",
+   "hoogte_lkv_per_jaar_eurocent"
+  ],
+  "tussenuitkomsten": {
+   "categorie_lkv": "banenafspraak",
+   "heeft_recht_op_lkv": true,
+   "hoogte_lkv_per_jaar_eurocent": 168064,
+   "is_uitgesloten_2_10_lid_2_of_3": false,
+   "periode_2_8_is_verstreken": false,
+   "tegemoetkoming_arbeidsgehandicapte_eurocent": 0,
+   "tegemoetkoming_banenafspraak_eurocent": 168064,
+   "tegemoetkoming_herplaatsen_eurocent": 0,
+   "voldoet_aan_voorwaarden_2_10": true
+  },
+  "resultaat": {
+   "categorie_lkv": "banenafspraak",
+   "heeft_recht_op_lkv": true,
+   "hoogte_lkv_per_jaar_eurocent": 168064,
+   "tegemoetkoming_banenafspraak_eurocent": 168064
+  },
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de uitsluiting van de werknemer die in de zes maanden voor de indiensttreding al bij dezelfde werkgever in dienst was",
+    "tekst": "Marking: de uitsluiting van de werknemer die in de zes maanden voor de indiensttreding al bij dezelfde werkgever in dienst was — Het formaat kent een toets op de peildatum en geen toets over een terugkijkvenster op een reeks eerdere dienstverbanden. De uitkomst komt daarom als boolean binnen. (needs a new shape in the format: Een vorm waarin een voorwaarde over een reeks eerdere dienstbetrekkingen binnen een venster kan worden uitgedrukt.)",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de samenloop met de no-riskpolis, de loonkostensubsidie en de loondispensatie",
+    "tekst": "Marking: de samenloop met de no-riskpolis, de loonkostensubsidie en de loondispensatie — Samenloop is een regel over regelingen heen. Het formaat kent alleen regels binnen een artikel en verdringing tussen twee regelingen via overrides, en heeft geen vorm voor een regel die boven het stelsel staat. (needs a new shape in the format: Een vorm voor een stelselregel die de uitkomsten van meerdere regelingen tegen elkaar afzet, met de voorrangsregel van Wtl artikel 4.1 lid 3 als eerste toepassing.)",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "is_uitgesloten_2_10_lid_2_of_3",
+    "tekst": "Computing is_uitgesloten_2_10_lid_2_of_3",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "verricht_wsw_arbeid_artikel_2_zonder_terbeschikkingstelling",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "periode_2_12_is_verstreken",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_voorwaarden_2_10",
+    "tekst": "Computing voldoet_aan_voorwaarden_2_10",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "is_doelgroep_banenafspraak",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "cross_law_reference",
+    "naam": "wet_financiering_sociale_verzekeringen#is_arbeidsbeperkte",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_10b_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "college_heeft_loonwaarde_vastgesteld_conform_10d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_eerste_opname_doelgroepregister",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "2025-11-03"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "experiment_instrument_82a_suwi_ingezet",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_dienstbetrekking_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_wajong_arbeidsondersteuning_of_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_wajong_duurzaam_geen_mogelijkheden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_wia_uitkering_hoofdstuk_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_zich_schriftelijk_gemeld_bij_uwv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapt_uwv_oordeel_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_naar_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_of_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_wsw_geindiceerd_of_oude_indicatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "komt_uit_praktijkonderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "komt_uit_voortgezet_speciaal_onderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "laatste_dag_persoon_lid_1_b_of_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "ontvangt_voorziening_pwet_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "ontvangt_voorziening_wia_35_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "registratie_nog_niet_geeindigd",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_eigen_verzoek_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "verricht_arbeid_in_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "verzoek_van_college_of_eigen_aanvraag",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "was_arbeidsbeperkte_lid_1_of_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "was_lid_1_c_en_nu_wajong_duurzaam_geen_mogelijkheden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "Computing loonwaarde_onder_minimumloon_vastgesteld",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "college_heeft_loonwaarde_vastgesteld_conform_10d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "LESS_THAN",
+    "tekst": "Compute LESS_THAN(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "Computing voldoet_aan_grond_38b_1_a",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_of_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_b",
+    "tekst": "Computing voldoet_aan_grond_38b_1_b",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_wsw_geindiceerd_of_oude_indicatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_c",
+    "tekst": "Computing voldoet_aan_grond_38b_1_c",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "heeft_wajong_arbeidsondersteuning_of_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_d",
+    "tekst": "Computing voldoet_aan_grond_38b_1_d",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "open_term_resolution",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Open term 'amvb_indicatie_38b_1_d' implemented by besluit_wfsv article 2.24",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "article",
+    "naam": "marking:het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015",
+    "tekst": "Marking: het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015 — Het formaat kan deze voorwaarden uitdrukken, maar het dossier reikt niet tot de aanvraaggeschiedenis van 2014 en 2015. De aanwijzing is daarom buiten de scope gelaten en niet vanwege een tekort van het formaat. (needs a new shape in the format: Een uitbreiding van de scope naar het overgangsrecht, met de aanvraagmomenten en beoordelingsuitkomsten uit die periode als invoer.)",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 8,
+    "soort": "action",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "Computing behoort_tot_onderwijsdoelgroep_lid_1",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "komt_uit_voortgezet_speciaal_onderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "komt_uit_praktijkonderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "action",
+    "naam": "is_uitgesloten_lid_3",
+    "tekst": "Computing is_uitgesloten_lid_3",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "action",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Computing amvb_indicatie_38b_1_d",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_e",
+    "tekst": "Computing voldoet_aan_grond_38b_1_e",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_naar_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_f",
+    "tekst": "Computing voldoet_aan_grond_38b_1_f",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "laatste_dag_persoon_lid_1_b_of_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_g",
+    "tekst": "Computing voldoet_aan_grond_38b_1_g",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "heeft_wia_uitkering_hoofdstuk_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_2",
+    "tekst": "Computing voldoet_aan_grond_38b_2",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapt_uwv_oordeel_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_6",
+    "tekst": "Computing voldoet_aan_grond_38b_6",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "was_arbeidsbeperkte_lid_1_of_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "is_arbeidsbeperkte",
+    "tekst": "Computing is_arbeidsbeperkte",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_2_10_lid_2_of_3",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "periode_2_8_is_verstreken",
+    "tekst": "Computing periode_2_8_is_verstreken",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_aanvang_eerste_dienstbetrekking_2_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "GREATER_THAN_OR_EQUAL",
+    "tekst": "Compute GREATER_THAN_OR_EQUAL(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "referencedate.iso",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "2026-07-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "DATE_ADD",
+    "tekst": "Compute DATE_ADD(...) = '2029-01-01'",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "2029-01-01"
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvang_eerste_dienstbetrekking_2_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "Computing heeft_recht_op_lkv",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_loonaangifte_verzoek_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_arbeidsgehandicapte_werknemer",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "cross_law_reference",
+    "naam": "wet_tegemoetkomingen_loondomein#is_arbeidsgehandicapte_werknemer",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "had_wia_recht_maand_voor_aanvang",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "heeft_geldige_doelgroepverklaring_2_7",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_wsw_of_beschut_werk_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "valt_onder_uitzondering_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "was_in_dienst_bij_werkgever_binnen_zes_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "was_rea_arbeidsgehandicapte_voor_2006",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "article",
+    "naam": "marking:de toets of de werknemer op enig moment in de zes maanden voor de indiensttreding bij deze werkgever in dienstbetrekking was",
+    "tekst": "Marking: de toets of de werknemer op enig moment in de zes maanden voor de indiensttreding bij deze werkgever in dienstbetrekking was — Zelfde vorm als de uitsluiting in artikel 2.1: het formaat kent geen toets over een terugkijkvenster op de loonaangifteketen. (needs a new shape in the format: Een vorm waarin een voorwaarde over een reeks eerdere dienstbetrekkingen binnen een venster kan worden uitgedrukt.)",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 7,
+    "soort": "article",
+    "naam": "marking:het vijfjaarsvenster met vier alternatieve startpunten en de elf- wekenvoorwaarde met tenzij-clausule van lid 2",
+    "tekst": "Marking: het vijfjaarsvenster met vier alternatieve startpunten en de elf- wekenvoorwaarde met tenzij-clausule van lid 2 — Het formaat kan een termijn vanaf een van vier alternatieve startpunten niet uitdrukken, en evenmin een voorwaarde met een uitzondering die van een eerdere dienstbetrekking afhangt. (needs a new shape in the format: Een vorm voor een termijn met alternatieve startpunten, en een uitzonderingsclausule binnen een voorwaarde.)",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 7,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_2_6_lid_1_a",
+    "tekst": "Computing voldoet_aan_grond_2_6_lid_1_a",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "had_wia_recht_maand_voor_aanvang",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "was_rea_arbeidsgehandicapte_voor_2006",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_2_6_lid_1_b",
+    "tekst": "Computing voldoet_aan_grond_2_6_lid_1_b",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "was_in_dienst_bij_werkgever_binnen_zes_maanden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "action",
+    "naam": "is_uitgesloten_2_6_lid_3",
+    "tekst": "Computing is_uitgesloten_2_6_lid_3",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "is_wsw_of_beschut_werk_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "action",
+    "naam": "is_arbeidsgehandicapte_werknemer",
+    "tekst": "Computing is_arbeidsgehandicapte_werknemer",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_2_6_lid_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "valt_onder_uitzondering_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.6",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_herplaatsen_arbeidsgehandicapte",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "cross_law_reference",
+    "naam": "wet_tegemoetkomingen_loondomein#is_herplaatsen_arbeidsgehandicapte",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_aanvang_aanvraagtermijn_doelgroepverklaring_2_15",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_geldige_doelgroepverklaring_2_15",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_of_krijgt_wia_recht_bij_hervatting",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "hervat_eigen_arbeid_of_andere_functie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_wsw_of_beschut_werk_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "was_rea_arbeidsgehandicapte_voor_2006",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "article",
+    "naam": "marking:onderbrekingen die geacht worden niet te hebben plaatsgevonden binnen de periode van artikel 2.16",
+    "tekst": "Marking: onderbrekingen die geacht worden niet te hebben plaatsgevonden binnen de periode van artikel 2.16 — Het formaat rekent over een dienstbetrekking en kent geen samentelling van meerdere dienstbetrekkingen tussen dezelfde werkgever en werknemer tot een doorlopende periode. (needs a new shape in the format: Een vorm waarin meerdere dienstbetrekkingen tot een doorlopende periode worden samengeteld.)",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "periode_2_16_is_verstreken",
+    "tekst": "Computing periode_2_16_is_verstreken",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "datum_aanvang_aanvraagtermijn_doelgroepverklaring_2_15",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_2_14_lid_1_a",
+    "tekst": "Computing voldoet_aan_grond_2_14_lid_1_a",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "hervat_eigen_arbeid_of_andere_functie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "is_uitgesloten_2_14_lid_2",
+    "tekst": "Computing is_uitgesloten_2_14_lid_2",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "is_wsw_of_beschut_werk_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "periode_2_16_is_verstreken",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "is_herplaatsen_arbeidsgehandicapte",
+    "tekst": "Computing is_herplaatsen_arbeidsgehandicapte",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_2_14_lid_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.14",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "voldoet_aan_voorwaarden_2_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "tegemoetkoming_arbeidsgehandicapte_eurocent",
+    "tekst": "Computing tegemoetkoming_arbeidsgehandicapte_eurocent",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = 0",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_arbeidsgehandicapte_werknemer",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: 0",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "tegemoetkoming_banenafspraak_eurocent",
+    "tekst": "Computing tegemoetkoming_banenafspraak_eurocent",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = 168064",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_voorwaarden_2_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: 168064",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "MIN",
+    "tekst": "Compute MIN(...) = 168064",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "MULTIPLY",
+    "tekst": "Compute MULTIPLY(...) = 168064",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "verloonde_uren_voorwaarden_2_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 1664
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "tegemoetkoming_herplaatsen_eurocent",
+    "tekst": "Computing tegemoetkoming_herplaatsen_eurocent",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = 0",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_herplaatsen_arbeidsgehandicapte",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: 0",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "hoogte_lkv_per_jaar_eurocent",
+    "tekst": "Computing hoogte_lkv_per_jaar_eurocent",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "MAX",
+    "tekst": "Compute MAX(...) = 168064",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "tegemoetkoming_arbeidsgehandicapte_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "tegemoetkoming_banenafspraak_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "tegemoetkoming_herplaatsen_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 0
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "categorie_lkv",
+    "tekst": "Computing categorie_lkv",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "banenafspraak"
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 1 matched) = 'banenafspraak'",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "banenafspraak"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_arbeidsgehandicapte_werknemer",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_1",
+    "tekst": "CASE 1: True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_lkv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_voorwaarden_2_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "tegemoetkoming_banenafspraak_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "hoogte_lkv_per_jaar_eurocent",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": 168064
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: 'banenafspraak'",
+    "wet": null,
+    "artikel": "2.1",
+    "lid": null,
+    "resultaat": "banenafspraak"
+   }
+  ],
+  "ankers": [
+   [
+    "wet_tegemoetkomingen_loondomein",
+    "2.1",
+    ""
+   ],
+   [
+    "wet_tegemoetkomingen_loondomein",
+    "2.14",
+    ""
+   ],
+   [
+    "wet_tegemoetkomingen_loondomein",
+    "2.24",
+    ""
+   ],
+   [
+    "wet_tegemoetkomingen_loondomein",
+    "2.6",
+    ""
+   ],
+   [
+    "wet_tegemoetkomingen_loondomein",
+    "38b",
+    ""
+   ]
+  ]
+ },
+ "ziektewet:heeft_recht_op_no_risk_polis": {
+  "wet": "ziektewet",
+  "uitkomst": "heeft_recht_op_no_risk_polis",
+  "peildatum": "2026-07-01",
+  "scenario": "Koen krijgt no-risk polis als banenafspraak-werknemer met LKS",
+  "bestand": "163_ziektewet_heeft_recht_op_no_risk_polis_2026-07-01.json",
+  "gegevens": {
+   "aantal_dagloondagen_sinds_aanvang_dienstbetrekking": null,
+   "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk": null,
+   "aanvraag_arbeidsondersteuning_wajong_ingediend": false,
+   "arbeidskundig_onderzoek_verricht": false,
+   "behoort_tot_doelgroep_10b_lid_1": false,
+   "behoort_tot_doelgroep_lks": true,
+   "bsn": 999990101,
+   "college_heeft_loonwaarde_vastgesteld": false,
+   "college_heeft_loonwaarde_vastgesteld_conform_10d": true,
+   "datum_aanvang_dienstbetrekking": "2026-01-01",
+   "datum_aanvraag_arbeidsondersteuning_wajong": "1900-01-01",
+   "datum_aanvraag_lks": "2026-02-01",
+   "datum_eerste_opname_doelgroepregister": "2025-11-03",
+   "datum_einde_deelname_onderwijs_lid_2_a": null,
+   "datum_ontstaan_recht_wajong": null,
+   "datum_voldaan_aan_lid_1": "1900-01-01",
+   "dienstbetrekking_aangevangen_na_aanvang_referteperiode": true,
+   "dienstbetrekking_is_tot_stand_gekomen": false,
+   "dienstbetrekking_voortgezet_na_vaststelling_wia_recht": false,
+   "eerste_dag_wachttijd_wia": "1900-01-01",
+   "einddatum_tijdvak_lid_1_b": null,
+   "experiment_instrument_82a_suwi_ingezet": false,
+   "geboortedatum": "1984-03-15",
+   "geen_dienstbetrekking_elders_elf_weken_voor_einde_wachttijd": false,
+   "had_of_heeft_wajong_arbeidsongeschiktheidsuitkering": false,
+   "had_wsw_dienstbetrekking_of_indicatie_voorafgaand": false,
+   "heeft_belemmering_bij_onderwijs_door_ziekte_of_gebrek": false,
+   "heeft_dienstbetrekking_beschut_werk": false,
+   "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie": false,
+   "heeft_pensioengerechtigde_leeftijd_bereikt": false,
+   "heeft_recht_op_uitkering_hoofdstuk_6_of_7": false,
+   "heeft_wajong_arbeidsondersteuning_of_uitkering": false,
+   "heeft_wajong_duurzaam_geen_mogelijkheden": false,
+   "heeft_wia_uitkering_hoofdstuk_6": false,
+   "heeft_zich_schriftelijk_gemeld_bij_uwv": false,
+   "is_jonggehandicapt_uwv_oordeel_lid_2": false,
+   "is_jonggehandicapte_hoofdstuk_2_wajong": false,
+   "is_medisch_duurzaam_wia": false,
+   "is_overleden": false,
+   "is_pwet_toegeleid_naar_dienstbetrekking": false,
+   "is_pwet_toegeleid_of_lks_lid_2": true,
+   "is_rechtens_vrijheid_ontnomen": false,
+   "is_uitgesloten_beschut_werk_pwet_10b": false,
+   "is_uitreiziger": false,
+   "is_uitsluitingsgrond_2_11_wajong_van_toepassing": false,
+   "is_verzekerde_wia": true,
+   "is_volledig_en_duurzaam_arbeidsongeschikt_wajong": false,
+   "is_wsw_dienstbetrekking": false,
+   "is_wsw_geindiceerd_of_oude_indicatie": false,
+   "is_wsw_werknemer": false,
+   "is_ziek_geworden_wia": false,
+   "kan_minimumloon_niet_verdienen": true,
+   "komt_uit_praktijkonderwijs": false,
+   "komt_uit_voortgezet_speciaal_onderwijs": false,
+   "laatste_dag_persoon_lid_1_b_of_c": null,
+   "loon_referteperiode_eurocent": 0,
+   "loondoorbetalings_of_ziekengeldtijdvak_loopt_nog": false,
+   "loonwaarde_percentage": 60,
+   "niet_in_staat_tot_eigen_of_passende_arbeid_bij_eigen_werkgever": false,
+   "onttrekt_zich_aan_vrijheidsstraf": false,
+   "ontvangt_voorziening_pwet_10": false,
+   "ontvangt_voorziening_wia_35_lid_2": false,
+   "ontvangt_wazo_uitkering_wegens_ziekte_door_zwangerschap": false,
+   "opgebouwde_vakantiebijslag_referteperiode_eurocent": 0,
+   "overeengekomen_arbeidsduur_uren_per_week": 32,
+   "periode_zonder_ziekengeld_29_lid_11_loopt_nog": false,
+   "recht_op_arbeidsondersteuning_herleeft_2_17": false,
+   "registratie_nog_niet_geeindigd": true,
+   "uitbetaalde_vakantiebijslag_referteperiode_eurocent": 0,
+   "uwv_heeft_op_eigen_verzoek_vastgesteld_niet_in_staat_minimumloon": false,
+   "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon": false,
+   "vaststelling_loonwaarde_blijft_achterwege": false,
+   "verdiencapaciteit_percentage_maatmaninkomen": 100,
+   "verdiencapaciteit_wajong_percentage_maatmaninkomen": 100,
+   "verricht_arbeid_in_dienstbetrekking": false,
+   "verricht_arbeid_in_wsw_dienstbetrekking_artikel_2": false,
+   "verzoek_van_college_of_eigen_aanvraag": false,
+   "volgde_onderwijs_zonder_startkwalificatie_leerwerktraject": false,
+   "was_arbeidsbeperkte_lid_1_of_2": false,
+   "was_lid_1_c_en_nu_wajong_duurzaam_geen_mogelijkheden": false,
+   "was_persoon_7_lid_1_a_of_7a_in_zes_maanden_voorafgaand": true,
+   "werkgever_is_voornemens_dienstbetrekking_aan_te_gaan": false,
+   "woont_niet_in_nederland": false,
+   "wsw_subsidiebedrag_per_werkdag_eurocent": null
+  },
+  "gevraagd": [
+   "heeft_recht_op_no_risk_polis",
+   "heeft_recht_op_wia_uitkering",
+   "voldoet_aan_lid_1",
+   "voldoet_aan_lid_2_a",
+   "voldoet_aan_lid_2_e",
+   "voldoet_aan_lid_2_f",
+   "voldoet_aan_lid_2",
+   "voldoet_aan_lid_4",
+   "duur_no_risk_polis_jaren"
+  ],
+  "tussenuitkomsten": {
+   "dienstbetrekking_aangevangen_voor_achttien_en_voor_wajong_recht": false,
+   "duur_no_risk_polis_jaren": -1,
+   "heeft_recht_op_no_risk_polis": true,
+   "heeft_recht_op_wia_uitkering": false,
+   "is_uitgesloten_lid_8": false,
+   "peildatum_lid_1_b": null,
+   "voldoet_aan_lid_1": false,
+   "voldoet_aan_lid_1_a": false,
+   "voldoet_aan_lid_1_b": false,
+   "voldoet_aan_lid_1_c": false,
+   "voldoet_aan_lid_1_d": false,
+   "voldoet_aan_lid_2": true,
+   "voldoet_aan_lid_2_a": false,
+   "voldoet_aan_lid_2_e": true,
+   "voldoet_aan_lid_2_f": false,
+   "voldoet_aan_lid_4": false,
+   "ziekte_nu_binnen_termijn_lid_1": true,
+   "ziekte_nu_binnen_termijn_lid_4": {
+    "__unknown": true,
+    "missing": [
+     {
+      "kind": "not_passed",
+      "law": "ziektewet",
+      "name": "datum_vaststelling_recht_wia_uitkering"
+     }
+    ]
+   }
+  },
+  "resultaat": {
+   "duur_no_risk_polis_jaren": -1,
+   "heeft_recht_op_no_risk_polis": true,
+   "heeft_recht_op_wia_uitkering": false,
+   "voldoet_aan_lid_1": false,
+   "voldoet_aan_lid_2": true,
+   "voldoet_aan_lid_2_a": false,
+   "voldoet_aan_lid_2_e": true,
+   "voldoet_aan_lid_2_f": false,
+   "voldoet_aan_lid_4": false
+  },
+  "stappen": [
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de eis dat het recht bestond onmiddellijk voorafgaand aan de dienstbetrekking",
+    "tekst": "Marking: de eis dat het recht bestond onmiddellijk voorafgaand aan de dienstbetrekking — Het formaat stelt rechten vast op de peildatum en legt geen volgorde in de tijd vast tussen het ontstaan van een recht en de aanvang van een dienstbetrekking. (needs a new shape in the format: Een vorm waarin de volgorde van twee gebeurtenissen in de tijd kan worden getoetst.)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:het ontstaansmoment van het recht op ziekengeld in de slotzin van lid 2",
+    "tekst": "Marking: het ontstaansmoment van het recht op ziekengeld in de slotzin van lid 2 — Het formaat beantwoordt of op de peildatum recht bestaat en berekent geen ingangsdatum die van het ontstaan van een ander recht afhangt. (needs a new shape in the format: Een vorm waarin de ingangsdatum van een recht uit het ontstaansmoment van een ander recht volgt.)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de duur van lid 2, die geen maximum kent zolang de dienstbetrekking voortduurt",
+    "tekst": "Marking: de duur van lid 2, die geen maximum kent zolang de dienstbetrekking voortduurt — Het formaat drukt een duur uit als een getal in jaren en kent geen waarde voor onbepaalde duur, zodat hier de sentinel -1 wordt gebruikt. (needs a new shape in the format: Een vorm waarin een duur onbepaald kan zijn, zodat de sentinel -1 vervalt.)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "article",
+    "naam": "marking:de samenloop met het loonkostenvoordeel, de loonkostensubsidie en de loondispensatie",
+    "tekst": "Marking: de samenloop met het loonkostenvoordeel, de loonkostensubsidie en de loondispensatie — De Ziektewet zegt het zelf: de samenloop is een eigenschap van het stelsel en geen regel binnen dit artikel. Het formaat kent alleen regels binnen een artikel en verdringing via overrides. (needs a new shape in the format: Een vorm voor een stelselregel die de uitkomsten van meerdere regelingen tegen elkaar afzet.)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_wia_uitkering",
+    "tekst": "Computing heeft_recht_op_wia_uitkering",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_iva_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "cross_law_reference",
+    "naam": "wet_werk_en_inkomen_naar_arbeidsvermogen#heeft_recht_op_iva_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "eerste_dag_wachttijd_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "1900-01-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_uitkering_hoofdstuk_6_of_7",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_medisch_duurzaam_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_overleden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_rechtens_vrijheid_ontnomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitreiziger",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_verzekerde_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_ziek_geworden_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "loondoorbetalings_of_ziekengeldtijdvak_loopt_nog",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "onttrekt_zich_aan_vrijheidsstraf",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "ontvangt_wazo_uitkering_wegens_ziekte_door_zwangerschap",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "periode_zonder_ziekengeld_29_lid_11_loopt_nog",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "verdiencapaciteit_percentage_maatmaninkomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 100
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "woont_niet_in_nederland",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "heeft_recht_op_iva_uitkering",
+    "tekst": "Computing heeft_recht_op_iva_uitkering",
+    "wet": null,
+    "artikel": "47",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "47",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_verzekerde_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "47",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_ziek_geworden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "47",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_wga_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "cross_law_reference",
+    "naam": "wet_werk_en_inkomen_naar_arbeidsvermogen#heeft_recht_op_wga_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "eerste_dag_wachttijd_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "1900-01-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_pensioengerechtigde_leeftijd_bereikt",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_uitkering_hoofdstuk_6_of_7",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_medisch_duurzaam_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_overleden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_rechtens_vrijheid_ontnomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitreiziger",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_verzekerde_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_ziek_geworden_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "loondoorbetalings_of_ziekengeldtijdvak_loopt_nog",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "onttrekt_zich_aan_vrijheidsstraf",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "ontvangt_wazo_uitkering_wegens_ziekte_door_zwangerschap",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "periode_zonder_ziekengeld_29_lid_11_loopt_nog",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "verdiencapaciteit_percentage_maatmaninkomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 100
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "woont_niet_in_nederland",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "heeft_recht_op_wga_uitkering",
+    "tekst": "Computing heeft_recht_op_wga_uitkering",
+    "wet": null,
+    "artikel": "54",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "54",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_verzekerde_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "54",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "is_ziek_geworden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "54",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_1_a",
+    "tekst": "Computing voldoet_aan_lid_1_a",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_wia_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "peildatum_lid_1_b",
+    "tekst": "Computing peildatum_lid_1_b",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(no case matched, no default) = None",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "einddatum_tijdvak_lid_1_b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_1",
+    "tekst": "CASE 1: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_ziek_geworden_wia",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_1_b",
+    "tekst": "Computing voldoet_aan_lid_1_b",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "peildatum_lid_1_b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_2_a",
+    "tekst": "Computing voldoet_aan_lid_2_a",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_arbeidsondersteuning_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "cross_law_reference",
+    "naam": "wet_arbeidsongeschiktheidsvoorziening_jonggehandicapten#heeft_recht_op_arbeidsondersteuning",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "aanvraag_arbeidsondersteuning_wajong_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_aanvraag_arbeidsondersteuning_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "1900-01-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_voldaan_aan_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "1900-01-01"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "geboortedatum",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "1984-03-15"
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapte_hoofdstuk_2_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitsluitingsgrond_2_11_wajong_van_toepassing",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_volledig_en_duurzaam_arbeidsongeschikt_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "recht_op_arbeidsondersteuning_herleeft_2_17",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "verdiencapaciteit_wajong_percentage_maatmaninkomen",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 100
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "voldoet_aan_voorwaarden_lid_1",
+    "tekst": "Computing voldoet_aan_voorwaarden_lid_1",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "aanvraag_arbeidsondersteuning_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "ingangsdatum_recht_op_arbeidsondersteuning",
+    "tekst": "Computing ingangsdatum_recht_op_arbeidsondersteuning",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = None",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "aanvraag_arbeidsondersteuning_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: None",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "recht_kan_nog_ontstaan",
+    "tekst": "Computing recht_kan_nog_ontstaan",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "aanvraag_arbeidsondersteuning_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "heeft_recht_op_arbeidsondersteuning",
+    "tekst": "Computing heeft_recht_op_arbeidsondersteuning",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "aanvraag_arbeidsondersteuning_ingediend",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "2:15",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "had_of_heeft_wajong_arbeidsongeschiktheidsuitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_1_c",
+    "tekst": "Computing voldoet_aan_lid_1_c",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_belemmering_bij_onderwijs_door_ziekte_of_gebrek",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_1_d",
+    "tekst": "Computing voldoet_aan_lid_1_d",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "heeft_belemmering_bij_onderwijs_door_ziekte_of_gebrek",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_2_e",
+    "tekst": "Computing voldoet_aan_lid_2_e",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "GREATER_THAN_OR_EQUAL",
+    "tekst": "Compute GREATER_THAN_OR_EQUAL(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "datum_ingang_lid_2_onderdeel_e",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2015-01-01"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_banenafspraak_doelgroep",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "cross_law_reference",
+    "naam": "wet_financiering_sociale_verzekeringen#is_arbeidsbeperkte_grond_a_d_e_f_lid_2_of_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_10b_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "college_heeft_loonwaarde_vastgesteld_conform_10d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "datum_eerste_opname_doelgroepregister",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2025-11-03"
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "experiment_instrument_82a_suwi_ingezet",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_dienstbetrekking_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_wajong_arbeidsondersteuning_of_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_wajong_duurzaam_geen_mogelijkheden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_wia_uitkering_hoofdstuk_6",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "heeft_zich_schriftelijk_gemeld_bij_uwv",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapt_uwv_oordeel_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_naar_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_of_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "is_wsw_geindiceerd_of_oude_indicatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "komt_uit_praktijkonderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "komt_uit_voortgezet_speciaal_onderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "laatste_dag_persoon_lid_1_b_of_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "ontvangt_voorziening_pwet_10",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "ontvangt_voorziening_wia_35_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "registratie_nog_niet_geeindigd",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_eigen_verzoek_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "verricht_arbeid_in_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "verzoek_van_college_of_eigen_aanvraag",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "was_arbeidsbeperkte_lid_1_of_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "resolve",
+    "naam": "was_lid_1_c_en_nu_wajong_duurzaam_geen_mogelijkheden",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "Computing loonwaarde_onder_minimumloon_vastgesteld",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(took default) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "DEFAULT",
+    "tekst": "DEFAULT: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "college_heeft_loonwaarde_vastgesteld_conform_10d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "operation",
+    "naam": "LESS_THAN",
+    "tekst": "Compute LESS_THAN(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "loonwaarde_percentage",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": 60
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "Computing voldoet_aan_grond_38b_1_a",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_of_lks_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "uwv_heeft_op_verzoek_college_vastgesteld_niet_in_staat_minimumloon",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "resolve",
+    "naam": "loonwaarde_onder_minimumloon_vastgesteld",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_d",
+    "tekst": "Computing voldoet_aan_grond_38b_1_d",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "open_term_resolution",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Open term 'amvb_indicatie_38b_1_d' implemented by besluit_wfsv article 2.24",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "article",
+    "naam": "marking:het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015",
+    "tekst": "Marking: het overgangsrecht van lid 2 en van artikel 2.25, dat groepen aanwijst op grond van gebeurtenissen tussen 10 september 2014 en 17 juli 2015 — Het formaat kan deze voorwaarden uitdrukken, maar het dossier reikt niet tot de aanvraaggeschiedenis van 2014 en 2015. De aanwijzing is daarom buiten de scope gelaten en niet vanwege een tekort van het formaat. (needs a new shape in the format: Een uitbreiding van de scope naar het overgangsrecht, met de aanvraagmomenten en beoordelingsuitkomsten uit die periode als invoer.)",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 9,
+    "soort": "action",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "Computing behoort_tot_onderwijsdoelgroep_lid_1",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "komt_uit_voortgezet_speciaal_onderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "komt_uit_praktijkonderwijs",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "action",
+    "naam": "is_uitgesloten_lid_3",
+    "tekst": "Computing is_uitgesloten_lid_3",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "heeft_duurzaam_geen_mogelijkheden_arbeidsparticipatie",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "action",
+    "naam": "amvb_indicatie_38b_1_d",
+    "tekst": "Computing amvb_indicatie_38b_1_d",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 10,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "behoort_tot_onderwijsdoelgroep_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "2.24",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_e",
+    "tekst": "Computing voldoet_aan_grond_38b_1_e",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "is_pwet_toegeleid_naar_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_1_f",
+    "tekst": "Computing voldoet_aan_grond_38b_1_f",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 11,
+    "soort": "resolve",
+    "naam": "laatste_dag_persoon_lid_1_b_of_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_2",
+    "tekst": "Computing voldoet_aan_grond_38b_2",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "is_jonggehandicapt_uwv_oordeel_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "voldoet_aan_grond_38b_6",
+    "tekst": "Computing voldoet_aan_grond_38b_6",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 8,
+    "soort": "resolve",
+    "naam": "was_arbeidsbeperkte_lid_1_of_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "action",
+    "naam": "is_arbeidsbeperkte_grond_a_d_e_f_lid_2_of_6",
+    "tekst": "Computing is_arbeidsbeperkte_grond_a_d_e_f_lid_2_of_6",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 7,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 8,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 9,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 10,
+    "soort": "resolve",
+    "naam": "voldoet_aan_grond_38b_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "38b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_2_f",
+    "tekst": "Computing voldoet_aan_lid_2_f",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "verricht_arbeid_in_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "cross_law_reference",
+    "naam": "participatiewet#verricht_arbeid_in_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "aantal_gerealiseerde_dienstbetrekkingen_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_10b_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "bsn",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 999990101
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_beschut_werk_pwet_10b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "heeft_dienstbetrekking_beschut_werk",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "action",
+    "naam": "verricht_arbeid_in_beschut_werk",
+    "tekst": "Computing verricht_arbeid_in_beschut_werk",
+    "wet": null,
+    "artikel": "10b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 6,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "10b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 7,
+    "soort": "resolve",
+    "naam": "behoort_tot_doelgroep_10b_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "10b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_1",
+    "tekst": "Computing voldoet_aan_lid_1",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_1_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_1_b",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_1_c",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_1_d",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "dienstbetrekking_aangevangen_voor_achttien_en_voor_wajong_recht",
+    "tekst": "Computing dienstbetrekking_aangevangen_voor_achttien_en_voor_wajong_recht",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0 matched) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "Compute EQUALS(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_ontstaan_recht_wajong",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_2",
+    "tekst": "Computing voldoet_aan_lid_2",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_2_a",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "is_wsw_werknemer",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "dienstbetrekking_aangevangen_voor_achttien_en_voor_wajong_recht",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "had_wsw_dienstbetrekking_of_indicatie_voorafgaand",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_2_e",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "voldoet_aan_lid_4",
+    "tekst": "Computing voldoet_aan_lid_4",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "heeft_recht_op_wia_uitkering",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "is_uitgesloten_lid_8",
+    "tekst": "Computing is_uitgesloten_lid_8",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 2,
+    "soort": "resolve",
+    "naam": "verricht_arbeid_in_wsw_dienstbetrekking_artikel_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "ziekte_nu_binnen_termijn_lid_1",
+    "tekst": "Computing ziekte_nu_binnen_termijn_lid_1",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "LESS_THAN",
+    "tekst": "Compute LESS_THAN(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "resolve",
+    "naam": "referencedate.iso",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2026-07-01"
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "DATE_ADD",
+    "tekst": "Compute DATE_ADD(...) = '2031-01-01'",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2031-01-01"
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "datum_aanvang_dienstbetrekking",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": "2026-01-01"
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "duur_no_risk_polis_lid_1_jaren",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": 5
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "ziekte_nu_binnen_termijn_lid_4",
+    "tekst": "Computing ziekte_nu_binnen_termijn_lid_4",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 0: condition unknown, so the result is unknown (missing: ziektewet.datum_vaststelling_recht_wia_uitkering)) = UNKNOWN(datum_vaststelling_recht_wia_uitkering)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: UNKNOWN(datum_vaststelling_recht_wia_uitkering)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "EQUALS",
+    "tekst": "EQUALS with an unknown in an operand: unknown (missing: ziektewet.datum_vaststelling_recht_wia_uitkering)",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "datum_vaststelling_recht_wia_uitkering",
+    "tekst": "Parameter 'datum_vaststelling_recht_wia_uitkering' is optional and was not passed: unknown",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": null
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "heeft_recht_op_no_risk_polis",
+    "tekst": "Computing heeft_recht_op_no_risk_polis",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "OR",
+    "tekst": "Compute OR(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "operation",
+    "naam": "AND",
+    "tekst": "Compute AND(...) = False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 5,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_1",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "NOT",
+    "tekst": "Compute NOT(...) = True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_lid_8",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 1,
+    "soort": "action",
+    "naam": "duur_no_risk_polis_jaren",
+    "tekst": "Computing duur_no_risk_polis_jaren",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": -1
+   },
+   {
+    "diepte": 2,
+    "soort": "operation",
+    "naam": "IF",
+    "tekst": "IF(case 1 matched) = -1",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": -1
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_0",
+    "tekst": "CASE 0: False",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "is_uitgesloten_lid_8",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": false
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "CASE_1",
+    "tekst": "CASE 1: True",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 4,
+    "soort": "resolve",
+    "naam": "voldoet_aan_lid_2",
+    "tekst": "",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": true
+   },
+   {
+    "diepte": 3,
+    "soort": "operation",
+    "naam": "THEN",
+    "tekst": "THEN: -1",
+    "wet": null,
+    "artikel": "29b",
+    "lid": null,
+    "resultaat": -1
+   }
+  ],
+  "ankers": [
+   [
+    "ziektewet",
+    "10b",
+    ""
+   ],
+   [
+    "ziektewet",
+    "2.24",
+    ""
+   ],
+   [
+    "ziektewet",
+    "29b",
+    ""
+   ],
+   [
+    "ziektewet",
+    "2:15",
+    ""
+   ],
+   [
+    "ziektewet",
+    "38b",
+    ""
+   ],
+   [
+    "ziektewet",
+    "47",
+    ""
+   ],
+   [
+    "ziektewet",
+    "54",
+    ""
+   ]
+  ]
+ }
+}

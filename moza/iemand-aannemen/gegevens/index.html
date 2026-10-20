@@ -1,0 +1,54 @@
+---
+title: "MijnOverheid Zakelijk: Gegevens per bron"
+permalink: "/moza/iemand-aannemen/gegevens/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+{% import "da-macros.njk" as da %}
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/personeel/' | url }}">Personeel</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/iemand-aannemen/' | url }}">Iemand aannemen</a>
+			</li>
+			<li aria-current="page">Gegevens per bron</li>
+		</ol>
+	</nav>
+
+	<h1>Gegevens per bron</h1>
+
+	<ol class="da-stappen" aria-label="Stappen">
+		<li>1. Kandidaat</li>
+		<li aria-current="step">2. Gegevens per bron</li>
+		<li>3. Wat het oplevert</li>
+		<li>4. Concept-aanvraag</li>
+	</ol>
+
+	<div class="feedback feedback-info">
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Dit weet de overheid al over {{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }} en over uw bedrijf. Per gegeven ziet u de bron, de datum en de vraag van de wet waarvoor het nodig is. Vink per bron aan dat de gegevens kloppen en gebruikt mogen worden; pas dan wordt er gerekend.</p>
+		</div>
+	</div>
+
+	{% for b in daKoen.bronnen %}
+		{{ da.bron(b, false) }}
+	{% endfor %}
+
+	<section class="card">
+		<p id="da-bronnen-stand" class="text-muted" aria-live="polite">Nog geen bron bevestigd.</p>
+		<div class="action-group">
+			<a id="da-bereken" class="btn-cta" href="{{ '/moza/iemand-aannemen/wat-het-oplevert/' | url }}" aria-disabled="true">Bereken wat het oplevert</a>
+			<a class="link-button" href="{{ '/moza/iemand-aannemen/' | url }}">Terug naar de kandidaat</a>
+		</div>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

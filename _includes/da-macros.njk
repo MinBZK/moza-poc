@@ -1,0 +1,103 @@
+{# Macro's voor het prototype Iemand aannemen (Digitale assistent 2.0).
+Gebruik: {% import "da-macros.njk" as da %} #}
+
+{# Een engine-waarde leesbaar: eurocenten als bedrag, booleans als ja/nee, de rest als tekst. #}
+{% macro waarde(naam, w) %}
+	{%- if w === true %}ja{% elif w === false %}nee{% elif w === null or w === undefined %}niet van toepassing{% elif naam and ('eurocent' in naam) %}{{ w | euro }}{% else %}{{ w }}{% endif -%}
+{% endmacro %}
+
+{# Soort van een gebeurtenis in de tijdlijn, in gewone woorden. #}
+{% macro soort(s) %}
+	{%- if s == 'regelgeving' %}Regelgeving{% elif s == 'besluit' %}Besluit{% else %}Uitvoering{% endif -%}
+{% endmacro %}
+
+{# Een kaart per regeling op "Wat het oplevert". #}
+{% macro regeling(r, traces, labels) %}
+	<section id="regeling-{{ r.id }}" class="card da-regeling da-regeling--{{ r.soort }}">
+		<h2>
+			{{ r.naam }}
+			<span class="da-label da-label--{{ r.soort }}">{{ r.soortLabel }}</span>
+		</h2>
+		<p class="text-muted">{{ r.organisatie }}</p>
+		<dl class="data-overview">
+			<div>
+				<dt>Uitkomst</dt>
+				<dd>{{ r.uitkomst }}</dd>
+			</div>
+			{% if r.bedragLabel %}
+				<div>
+					<dt>Wat het oplevert</dt>
+					<dd>
+						<strong>{{ r.bedragLabel }}</strong>
+						{% if r.bedragToelichting %}
+							<br />
+							<span class="text-muted">
+								{{ r.bedragToelichting }}
+							</span>
+						{% endif %}
+					</dd>
+				</div>
+			{% endif %}
+		</dl>
+		<p>{{ r.tekst }}</p>
+		<details class="da-waarom">
+			<summary>Waarom dit geldt</summary>
+			<div>
+				<p><strong>Grond:</strong> {{ r.grond }}.</p>
+				{% set t = traces[r.trace] %}
+				{% if t %}
+					<p class="text-muted">Berekend door de regelrecht-engine op peildatum {{ t.peildatum | datumNL }}, wetsversie 1 juli 2026. Tussenstappen:</p>
+					<dl class="data-overview da-trace">
+						{% for naam, w in t.tussenuitkomsten %}
+							<div>
+								<dt>{{ labels[naam] | default(naam) }}</dt>
+								<dd>{{ waarde(naam, w) }}</dd>
+							</div>
+						{% endfor %}
+					</dl>
+				{% endif %}
+			</div>
+		</details>
+		{% if r.actie %}
+			<div class="action-group">
+				<a class="btn-cta" href="{{ r.actie.url | url }}">{{ r.actie.label }}</a>
+			</div>
+		{% endif %}
+	</section>
+{% endmacro %}
+
+{# Eén bron met haar gegevens en het vinkje. #}
+{% macro bron(b, bevestigd) %}
+	<section id="bron-{{ b.id }}" class="card da-bron" data-bron="{{ b.id }}">
+		<h2>{{ b.organisatie }}</h2>
+		<p class="text-muted">{{ b.register }} · opgehaald op {{ b.opgehaald | datumNL }}</p>
+		<dl class="data-overview">
+			{% for g in b.gegevens %}
+				<div>
+					<dt>{{ g.vraag }}</dt>
+					<dd>
+						{{ g.waarde | safe }}
+						<details class="da-wetsvraag">
+							<summary>Zo vraagt de wet het</summary>
+							<p>“{{ g.wetsvraag }}” <span class="text-muted">({{ g.grond }})</span></p>
+						</details>
+					</dd>
+				</div>
+			{% endfor %}
+		</dl>
+		{% if bevestigd %}
+			<p class="da-bevestigd">{% icon "/assets/icons/icon-succes.svg" %} Bevestigd op 7 september 2026</p>
+		{% else %}
+			<div class="da-vinkje">
+				<input id="vinkje-{{ b.id }}" type="checkbox" data-vinkje="{{ b.id }}" />
+				<label for="vinkje-{{ b.id }}">
+					{% if b.id == 'eigen' %}
+						Klopt, gebruik mijn eigen opgave
+					{% else %}
+						Klopt, gebruik deze gegevens van {{ b.organisatie }}
+					{% endif %}
+				</label>
+			</div>
+		{% endif %}
+	</section>
+{% endmacro %}

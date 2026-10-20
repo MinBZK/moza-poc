@@ -87,6 +87,13 @@ module.exports = function (eleventyConfig) {
 		return years + (years === 1 ? " jaar geleden" : " jaar geleden");
 	});
 
+	// Eurocenten uit de regelrecht-engine als bedrag: 89740.8 -> "€ 897,41" (Iemand aannemen).
+	eleventyConfig.addFilter("euro", function (eurocent) {
+		if (eurocent === null || eurocent === undefined || eurocent === "") return "";
+		const n = Math.round(Number(eurocent)) / 100;
+		return "€ " + n.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	});
+
 	// Statische bestanden kopiëren naar _site
 	eleventyConfig.addPassthroughCopy("assets");
 	eleventyConfig.addPassthroughCopy("style");

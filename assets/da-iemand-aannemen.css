@@ -1,0 +1,185 @@
+/* Iemand aannemen (Digitale assistent 2.0): alleen wat de proeftuin-stijl niet heeft.
+   Alleen --toepassing-*-tokens, logical properties. */
+
+.da-stappen {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--toepassing-space-margin-xs);
+	list-style: none;
+	margin-block: 0 var(--toepassing-space-margin-md);
+	padding: 0;
+	font: var(--toepassing-text-smalltext);
+}
+.da-stappen li {
+	border-block-end: 3px solid var(--toepassing-color-border-subtle, currentcolor);
+	padding-block-end: var(--toepassing-space-margin-3xs);
+	color: var(--toepassing-color-text-subtle, inherit);
+}
+.da-stappen li[aria-current="step"] {
+	border-block-end-color: var(--toepassing-color-interactive-default-text);
+	color: var(--toepassing-color-text-default);
+	font-weight: var(--toepassing-text-font-weight-semi-bold);
+}
+
+.da-veld {
+	display: grid;
+	gap: var(--toepassing-space-margin-3xs);
+	margin-block-end: var(--toepassing-space-margin-sm);
+}
+.da-veld input,
+.da-veld select,
+.da-veld textarea {
+	inline-size: 100%;
+	max-inline-size: min(32rem, 100%);
+	box-sizing: border-box;
+}
+
+.da-vinkje {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--toepassing-space-margin-2xs);
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+.da-vinkje input {
+	flex: none;
+	margin-block-start: 0.25em;
+}
+.da-bevestigd {
+	display: flex;
+	align-items: center;
+	gap: var(--toepassing-space-margin-2xs);
+	color: var(--toepassing-color-feedback-success-text, var(--toepassing-color-text-default));
+	font: var(--toepassing-text-smalltext);
+}
+.da-bevestigd svg {
+	inline-size: var(--toepassing-size-icon-sm);
+	block-size: var(--toepassing-size-icon-sm);
+}
+
+.da-wetsvraag {
+	font: var(--toepassing-text-smalltext);
+	margin-block-start: var(--toepassing-space-margin-3xs);
+}
+.da-wetsvraag summary {
+	cursor: pointer;
+	color: var(--toepassing-color-interactive-default-text);
+}
+.da-wetsvraag p {
+	margin-block-start: var(--toepassing-space-margin-3xs);
+}
+
+.da-label {
+	display: inline-block;
+	border: 1px solid currentcolor;
+	border-radius: var(--toepassing-space-margin-xs);
+	padding-block: var(--toepassing-space-margin-3xs);
+	padding-inline: var(--toepassing-space-margin-2xs);
+	font: var(--toepassing-text-smalltext);
+	font-weight: var(--toepassing-text-font-weight-semi-bold);
+	margin-inline-start: var(--toepassing-space-margin-2xs);
+	vertical-align: middle;
+	color: var(--toepassing-color-interactive-default-text);
+	white-space: nowrap;
+}
+.da-label--overheid-zelf,
+.da-label--loonaangifte {
+	background: var(--toepassing-color-feedback-info-background, transparent);
+	color: var(--toepassing-color-feedback-info-text, inherit);
+}
+.da-label--optioneel {
+	background: var(--toepassing-color-background-subtle-2);
+	color: var(--toepassing-color-text-default);
+}
+.da-label--niet {
+	background: var(--toepassing-color-background-subtle-2);
+	color: var(--toepassing-color-text-subtle, inherit);
+}
+.da-label--correctie {
+	background: var(--toepassing-color-feedback-warning-background, transparent);
+	color: var(--toepassing-color-feedback-warning-text, inherit);
+}
+.da-label--gecorrigeerd {
+	background: var(--toepassing-color-background-subtle-2);
+	color: var(--toepassing-color-text-subtle, inherit);
+}
+.da-regeling--niet h2,
+.da-regeling--niet p {
+	color: var(--toepassing-color-text-subtle, inherit);
+}
+
+.da-waarom {
+	margin-block-start: var(--toepassing-space-margin-sm);
+}
+.da-waarom > summary {
+	cursor: pointer;
+	font-weight: var(--toepassing-text-font-weight-semi-bold);
+}
+.da-waarom > div > * + * {
+	margin-block-start: var(--toepassing-space-margin-xs);
+}
+.da-trace dt {
+	font-weight: normal;
+}
+.da-trace-boom {
+	font: var(--toepassing-text-smalltext);
+	font-family: ui-monospace, monospace;
+}
+.da-berekening dd {
+	font-variant-numeric: tabular-nums;
+}
+
+.da-tijdlijn {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-inline-start: 3px solid var(--toepassing-color-border-subtle, currentcolor);
+}
+.da-gebeurtenis {
+	position: relative;
+	padding-inline-start: var(--toepassing-space-padding-md);
+	padding-block: var(--toepassing-space-margin-xs);
+}
+.da-gebeurtenis::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: calc(-1 * var(--toepassing-space-margin-2xs) - 1.5px);
+	inset-block-start: calc(var(--toepassing-space-margin-xs) + 0.35em);
+	inline-size: var(--toepassing-space-margin-xs);
+	block-size: var(--toepassing-space-margin-xs);
+	border-radius: 50%;
+	background: var(--toepassing-color-interactive-default-text);
+}
+.da-gebeurtenis--besluit::before {
+	background: var(--toepassing-color-feedback-success-icon, var(--toepassing-color-interactive-default-text));
+}
+.da-gebeurtenis--regelgeving::before {
+	background: var(--toepassing-color-text-subtle, currentcolor);
+}
+.da-gebeurtenis h3 {
+	margin: 0;
+	font: var(--toepassing-text-heading-h4);
+}
+.da-gebeurtenis-kop {
+	margin: 0;
+	font: var(--toepassing-text-smalltext);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.da-gebeurtenis-meta {
+	font: var(--toepassing-text-smalltext);
+}
+.da-gebeurtenis[data-gecorrigeerd-door] h3 {
+	text-decoration: line-through;
+	text-decoration-thickness: 1px;
+}
+
+.da-komt-hierna li + li {
+	margin-block-start: var(--toepassing-space-margin-2xs);
+}
+
+.da-onderzoeker {
+	border-inline-start: 4px solid var(--toepassing-color-feedback-warning-icon, currentcolor);
+}
+.da-vraag textarea {
+	inline-size: 100%;
+}

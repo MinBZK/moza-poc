@@ -1,0 +1,92 @@
+---
+title: "MijnOverheid Zakelijk: Iemand aannemen"
+permalink: "/moza/iemand-aannemen/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/personeel/' | url }}">Personeel</a>
+			</li>
+			<li aria-current="page">Iemand aannemen</li>
+		</ol>
+	</nav>
+
+	<h1>Iemand aannemen</h1>
+
+	<ol class="da-stappen" aria-label="Stappen">
+		<li aria-current="step">1. Kandidaat</li>
+		<li>2. Gegevens per bron</li>
+		<li>3. Wat het oplevert</li>
+		<li>4. Concept-aanvraag</li>
+	</ol>
+
+	<section class="card">
+		<p class="intro">Vul in wie u wilt aannemen en wat u heeft afgesproken. De rest haalt MijnOverheid Zakelijk op bij UWV, uw gemeente, de KVK en de Belastingdienst, met toestemming van de kandidaat.</p>
+
+		<form id="da-kandidaat-form" action="{{ '/moza/iemand-aannemen/gegevens/' | url }}" method="get">
+			<fieldset>
+				<legend>Kandidaat</legend>
+				<div class="da-veld">
+					<label for="voornaam">Voornaam</label>
+					<input id="voornaam" type="text" name="voornaam" value="{{ daKoen.kandidaat.voornaam }}" autocomplete="off" />
+				</div>
+				<div class="da-veld">
+					<label for="achternaam">Achternaam</label>
+					<input id="achternaam" type="text" name="achternaam" value="{{ daKoen.kandidaat.achternaam }}" autocomplete="off" />
+				</div>
+				<div class="da-veld">
+					<label for="geboortedatum">Geboortedatum</label>
+					<input id="geboortedatum" type="date" name="geboortedatum" value="{{ daKoen.kandidaat.geboortedatum }}" />
+				</div>
+				<div class="da-veld">
+					<label for="bsn">Burgerservicenummer (BSN)</label>
+					<input id="bsn" type="text" name="bsn" value="{{ daKoen.kandidaat.bsnMasker }}" inputmode="numeric" autocomplete="off" />
+					<p class="form-field-helper-text">Het BSN wordt alleen gebruikt om de gegevens bij UWV en de gemeente op te halen. Het staat nergens op het scherm.</p>
+				</div>
+				<div class="da-vinkje">
+					<input id="toestemming" type="checkbox" name="toestemming" checked />
+					<label for="toestemming">{{ daKoen.kandidaat.voornaam }} heeft toestemming gegeven dat <span data-profiel="handelsnaam">Kwekerij De Bloesem</span> zijn gegevens bij UWV en de gemeente gebruikt voor deze aanvraag (gegeven op {{ daKoen.kandidaat.toestemmingOp | datumNL }})</label>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Dienstverband</legend>
+				<div class="da-veld">
+					<label for="functie">Functie</label>
+					<input id="functie" type="text" name="functie" value="{{ daKoen.dienstverband.functie }}" />
+				</div>
+				<div class="da-veld">
+					<label for="uren">Uren per week</label>
+					<input id="uren" type="number" name="uren" value="{{ daKoen.dienstverband.urenPerWeek }}" min="1" max="40" inputmode="numeric" />
+					<p class="form-field-helper-text">Dit prototype rekent met 32 uur. Andere uren rekent de gemeente bij de aanvraag door.</p>
+				</div>
+				<div class="da-veld">
+					<label for="aanvang">Eerste werkdag</label>
+					<input id="aanvang" type="date" name="aanvang" value="{{ daKoen.dienstverband.aanvang }}" />
+				</div>
+				<div class="da-veld">
+					<label for="loon">Loon</label>
+					<select id="loon" name="loon">
+						<option selected>Wettelijk minimumloon (€ 14,99 per uur)</option>
+						<option>Meer dan het minimumloon</option>
+					</select>
+				</div>
+			</fieldset>
+
+			<div class="action-group">
+				<button class="btn-cta" type="submit">Haal de gegevens op</button>
+				<a class="link-button" href="{{ '/moza/personeel/' | url }}">Annuleer</a>
+			</div>
+		</form>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

@@ -1,0 +1,155 @@
+---
+title: "MijnOverheid Zakelijk: Besluit loonkostensubsidie voor Koen de Wit"
+permalink: "/moza/lopende-zaken/loonkostensubsidie-koen/besluit/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+{% import "da-macros.njk" as da %}
+{% include "side-nav-overheid.njk" %}
+{% set t = daTraces['participatiewet:heeft_recht_op_lks'] %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/lopende-zaken/' | url }}">Lopende zaken</a>
+			</li>
+			<li>
+				<a href="{{ daKoen.zaak.url | url }}">{{ daKoen.zaak.onderwerp }}</a>
+			</li>
+			<li aria-current="page">Besluit</li>
+		</ol>
+	</nav>
+
+	<div id="da-nog-geen-besluit" class="feedback feedback-info" hidden>
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Er is nog geen besluit op deze aanvraag. <a href="{{ daKoen.zaak.url | url }}">Bekijk de voortgang van de zaak</a>.</p>
+		</div>
+	</div>
+
+	<section id="da-besluit" class="card">
+		<a class="back-link" href="{{ daKoen.zaak.url | url }}">Terug naar de zaak</a>
+		<h1>Besluit: loonkostensubsidie voor {{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }}</h1>
+
+		<dl class="data-overview">
+			<div>
+				<dt>Genomen door</dt>
+				<dd>College van burgemeester en wethouders van Lansingerland</dd>
+			</div>
+			<div>
+				<dt>Datum</dt>
+				<dd>3 november 2026</dd>
+			</div>
+			<div>
+				<dt>Kenmerk</dt>
+				<dd>{{ daKoen.zaak.nummer }}</dd>
+			</div>
+			<div>
+				<dt>Regel</dt>
+				<dd>{{ daKoen.zaak.regel }}</dd>
+			</div>
+			<div>
+				<dt>Loonwaarde</dt>
+				<dd>60 procent van het wettelijk minimumloon, vastgesteld op 27 oktober 2026</dd>
+			</div>
+		</dl>
+
+		<h2>Besluit</h2>
+		<p>Het college kent u loonkostensubsidie toe voor {{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }}: <strong>€ 897,41 per maand</strong>, vanaf 1 oktober 2026, bij een dienstbetrekking van 32 uur per week tegen het wettelijk minimumloon. De subsidie wordt maandelijks betaald en per 1 januari opnieuw berekend bij wijziging van het minimumloon.</p>
+
+		<h2>Berekening</h2>
+		<p>Dezelfde berekening als u vooraf zag, nu met de vastgestelde loonwaarde.</p>
+		<dl class="data-overview da-berekening">
+			{% for s in daKoen.berekeningLks.stappen %}
+				<div>
+					<dt>
+						{{ s.label }}
+						<span class="text-muted">({{ s.grond }})</span>
+					</dt>
+					<dd>{{ s.waarde }}</dd>
+				</div>
+			{% endfor %}
+		</dl>
+
+		<details class="da-waarom">
+			<summary>Waarom: de gegevens en de stappen van de berekening</summary>
+			<div>
+				<h3>Gegevens die zijn gebruikt</h3>
+				<dl class="data-overview">
+					{% for b in daKoen.bronnen %}
+						{% for g in b.gegevens %}
+							<div>
+								<dt>{{ g.vraag }}</dt>
+								<dd>
+									{{ g.waarde | safe }}
+									<span class="text-muted">· {{ b.organisatie }}, {{ b.opgehaald | datumNL }}</span>
+								</dd>
+							</div>
+						{% endfor %}
+					{% endfor %}
+				</dl>
+				<h3>Stappen van de regelrecht-engine</h3>
+				<p class="text-muted">Artikel 10d van de Participatiewet, wetsversie {{ t.peildatum | datumNL }}; minimumloon uit artikel 8 en 15 van de Wet minimumloon. Elke stap is een uitkomst van de wet, in de volgorde van het artikel.</p>
+				<dl class="data-overview da-trace">
+					{% for naam, w in t.tussenuitkomsten %}
+						<div>
+							<dt>{{ daKoen.labels[naam] | default(naam) }}</dt>
+							<dd>{{ da.waarde(naam, w) }}</dd>
+						</div>
+					{% endfor %}
+				</dl>
+				<details>
+					<summary>Volledige trace ({{ t.stappen | length }} stappen)</summary>
+					<ol class="da-trace-boom">
+						{% for s in t.stappen %}
+							{% if s.soort == 'action' or s.soort == 'cross_law_reference' or s.soort == 'open_term_resolution' %}
+								<li>
+									{{ s.tekst }}
+									{% if s.artikel %}
+										<span class="text-muted">(artikel {{ s.artikel }})</span>
+									{% endif %}
+								</li>
+							{% endif %}
+						{% endfor %}
+					</ol>
+				</details>
+			</div>
+		</details>
+
+		<h2>Niet eens met dit besluit?</h2>
+		<p>U kunt binnen zes weken na 3 november 2026 bezwaar maken bij het college van burgemeester en wethouders van Lansingerland (Algemene wet bestuursrecht, artikel 6:7). Heeft u eerst een vraag? Stel die hieronder; de gemeente antwoordt in deze zaak.</p>
+
+		<form id="da-vraag-form" class="da-vraag">
+			<div class="da-veld">
+				<label for="da-vraag">Klopt dit niet? Stel uw vraag</label>
+				<textarea id="da-vraag" rows="3" placeholder="Bijvoorbeeld: telt de vergoeding voor werkgeverslasten niet mee in het bedrag?"></textarea>
+			</div>
+			<div class="action-group">
+				<button class="btn-cta" type="submit">Verstuur uw vraag</button>
+			</div>
+			<p id="da-vraag-stand" class="text-muted" role="status"></p>
+		</form>
+	</section>
+
+	<section class="card da-onderzoeker" data-feature="Onderzoeksbediening" data-feature-type="functionaliteit">
+		<h2>Voor de onderzoeker</h2>
+		<div class="da-veld">
+			<label for="da-fase">Toon de zaak op het moment</label>
+			<select id="da-fase">
+				{% for f in daKoen.fasen %}
+					{% if f.id != 'indicatie' %}
+						<option value="{{ f.id }}">
+							{{ f.label }}
+						</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+		</div>
+		<p><button class="link-button" type="button" data-da-reset>Begin het scenario opnieuw</button></p>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

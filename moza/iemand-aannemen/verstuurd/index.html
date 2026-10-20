@@ -1,0 +1,54 @@
+---
+title: "MijnOverheid Zakelijk: Aanvraag verstuurd"
+permalink: "/moza/iemand-aannemen/verstuurd/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/personeel/' | url }}">Personeel</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/iemand-aannemen/' | url }}">Iemand aannemen</a>
+			</li>
+			<li aria-current="page">Aanvraag verstuurd</li>
+		</ol>
+	</nav>
+
+	<h1>Uw aanvraag is verstuurd</h1>
+
+	<div class="feedback feedback-success">
+		{% include "icon-feedback-success.njk" %}
+		<div>
+			<p>De aanvraag loonkostensubsidie voor {{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }} is verstuurd naar de gemeente Lansingerland op <span data-da-verstuurd-op>5 oktober 2026</span>.</p>
+		</div>
+	</div>
+
+	<section class="card">
+		<h2>Wat u nu ziet</h2>
+		<ul>
+			<li>
+				<a href="{{ daKoen.zaak.url | url }}">De zaak bij Lopende zaken</a>
+				: elke stap van de gemeente, met datum en afzender, tot en met het besluit en de betaling.
+			</li>
+			<li>
+				De ontvangstbevestiging met het zaaknummer komt in uw
+				<a href="{{ '/moza/berichtenbox/' | url }}">Berichtenbox</a>.
+			</li>
+			<li>Bij het besluit ziet u dezelfde berekening als vooraf, met de loonwaarde die de gemeente heeft vastgesteld.</li>
+		</ul>
+		<div class="action-group">
+			<a class="btn-cta" href="{{ daKoen.zaak.url | url }}">Bekijk de zaak</a>
+			<a class="link-button" href="{{ '/moza/personeel/' | url }}">Terug naar Personeel</a>
+		</div>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

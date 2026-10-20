@@ -1,0 +1,87 @@
+---
+title: "MijnOverheid Zakelijk: Wat het oplevert"
+permalink: "/moza/iemand-aannemen/wat-het-oplevert/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+{% import "da-macros.njk" as da %}
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/personeel/' | url }}">Personeel</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/iemand-aannemen/' | url }}">Iemand aannemen</a>
+			</li>
+			<li aria-current="page">Wat het oplevert</li>
+		</ol>
+	</nav>
+
+	<h1>Wat het oplevert als u {{ daKoen.kandidaat.voornaam }} aanneemt</h1>
+
+	<ol class="da-stappen" aria-label="Stappen">
+		<li>1. Kandidaat</li>
+		<li>2. Gegevens per bron</li>
+		<li aria-current="step">3. Wat het oplevert</li>
+		<li>4. Concept-aanvraag</li>
+	</ol>
+
+	<div id="da-niet-bevestigd" class="feedback feedback-warning" hidden>
+		{% include "icon-feedback-warning.njk" %}
+		<div>
+			<p>U heeft nog niet alle bronnen bevestigd. <a href="{{ '/moza/iemand-aannemen/gegevens/' | url }}">Ga terug naar de gegevens per bron</a>.</p>
+		</div>
+	</div>
+
+	<section class="card da-samenvatting">
+		<h2>Samenvatting</h2>
+		<p class="intro">{{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }}, {{ daKoen.dienstverband.urenPerWeek }} uur per week tegen het minimumloon, vanaf {{ daKoen.dienstverband.aanvang | datumNL }}. Berekend met de wetsversie van 1 juli 2026 en de gegevens die u heeft bevestigd.</p>
+		<dl class="data-overview">
+			<div>
+				<dt>Loonkostensubsidie van de gemeente</dt>
+				<dd>
+					<strong>€ 897,41 per maand</strong>
+					na vaststelling van de loonwaarde (voorbeeld bij 60 procent)
+				</dd>
+			</div>
+			<div>
+				<dt>Loonkostenvoordeel via de loonaangifte</dt>
+				<dd>
+					<strong>€ 1.680,64 per jaar</strong>
+				</dd>
+			</div>
+			<div>
+				<dt>No-riskpolis bij ziekte</dt>
+				<dd>Geldt, zonder aanvraag</dd>
+			</div>
+			<div>
+				<dt>Begeleiding op de werkplek</dt>
+				<dd>Aanspraak, aanvragen als u wilt</dd>
+			</div>
+		</dl>
+		<p class="text-muted">Dit is geen besluit. De gemeente, UWV en de Belastingdienst beslissen na uw aanvraag met dezelfde regels; u ziet de berekening dan terug bij het besluit.</p>
+	</section>
+
+	{% for r in daKoen.regelingen %}
+		{{ da.regeling(r, daTraces, daKoen.labels) }}
+	{% endfor %}
+
+	<section class="card">
+		<h2>Wat u nu kunt doen</h2>
+		<ol>
+			<li>
+				<a href="{{ '/moza/iemand-aannemen/concept-aanvraag-loonkostensubsidie/' | url }}">Bekijk de concept-aanvraag loonkostensubsidie</a>
+				en verstuur hem naar de gemeente, binnen zes maanden na de eerste werkdag.
+			</li>
+			<li>Zet in de eerste loonaangifte na de start het vakje loonkostenvoordeel aan. De Belastingdienst rekent het na afloop van het jaar uit.</li>
+			<li>Wilt u een jobcoach? Vraag begeleiding op de werkplek aan bij de gemeente.</li>
+		</ol>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

@@ -1,0 +1,197 @@
+---
+title: "MijnOverheid Zakelijk: Concept-aanvraag loonkostensubsidie"
+permalink: "/moza/iemand-aannemen/concept-aanvraag-loonkostensubsidie/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+{% import "da-macros.njk" as da %}
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/personeel/' | url }}">Personeel</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/iemand-aannemen/' | url }}">Iemand aannemen</a>
+			</li>
+			<li aria-current="page">Concept-aanvraag loonkostensubsidie</li>
+		</ol>
+	</nav>
+
+	<h1>Concept-aanvraag loonkostensubsidie</h1>
+
+	<ol class="da-stappen" aria-label="Stappen">
+		<li>1. Kandidaat</li>
+		<li>2. Gegevens per bron</li>
+		<li>3. Wat het oplevert</li>
+		<li aria-current="step">4. Concept-aanvraag</li>
+	</ol>
+
+	<div id="da-al-verstuurd" class="feedback feedback-success" hidden>
+		{% include "icon-feedback-success.njk" %}
+		<div>
+			<p>Deze aanvraag is al verstuurd. <a href="{{ daKoen.zaak.url | url }}">Bekijk de zaak bij Lopende zaken</a>.</p>
+		</div>
+	</div>
+
+	<section class="card">
+		<p class="intro">Aanvraag van loonkostensubsidie bij de gemeente Lansingerland voor {{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }}. Alles is ingevuld uit de bronnen die u heeft bevestigd; u hoeft niets over te typen. Controleer en verstuur.</p>
+		<dl class="data-overview">
+			<div>
+				<dt>Aan</dt>
+				<dd>College van burgemeester en wethouders van Lansingerland</dd>
+			</div>
+			<div>
+				<dt>Op grond van</dt>
+				<dd>Artikel 10d, tweede lid, van de Participatiewet (aanvraag binnen zes maanden na de eerste werkdag)</dd>
+			</div>
+			<div>
+				<dt>Termijn</dt>
+				<dd>Uiterlijk 31 maart 2027 (zes maanden na {{ daKoen.dienstverband.aanvang | datumNL }})</dd>
+			</div>
+		</dl>
+	</section>
+
+	<section class="card">
+		<h2>Werkgever</h2>
+		<dl class="data-overview">
+			<div>
+				<dt>Onderneming</dt>
+				<dd>
+					<span data-profiel="handelsnaam">Kwekerij De Bloesem</span>,<span data-profiel="rechtsvorm">vennootschap onder firma</span>
+				</dd>
+			</div>
+			<div>
+				<dt>KVK-nummer</dt>
+				<dd data-profiel="kvkNummer">62345681</dd>
+			</div>
+			<div>
+				<dt>Vestiging</dt>
+				<dd data-profiel="vestigingsadresVolledig">Hoefweg 210, 2665 KG Bleiswijk</dd>
+			</div>
+			<div>
+				<dt>Loonheffingennummer</dt>
+				<dd data-profiel="loonheffingennummer">062345681L01</dd>
+			</div>
+			<div>
+				<dt>Rekeningnummer voor de subsidie</dt>
+				<dd data-profiel="iban">NL62 RABO 0006 2345 68</dd>
+			</div>
+		</dl>
+		<p class="da-bevestigd">{% icon "/assets/icons/icon-succes.svg" %} Uit het Handelsregister (KVK) en uw bedrijfsgegevens, bevestigd op 7 september 2026</p>
+	</section>
+
+	<section class="card">
+		<h2>Werknemer</h2>
+		<dl class="data-overview">
+			<div>
+				<dt>Naam</dt>
+				<dd>{{ daKoen.kandidaat.voornaam }} {{ daKoen.kandidaat.achternaam }}</dd>
+			</div>
+			<div>
+				<dt>Geboortedatum</dt>
+				<dd>{{ daKoen.kandidaat.geboortedatum | datumNL }}</dd>
+			</div>
+			<div>
+				<dt>Woonplaats</dt>
+				<dd>{{ daKoen.kandidaat.woonplaats }}, gemeente {{ daKoen.kandidaat.gemeente }}</dd>
+			</div>
+			<div>
+				<dt>BSN</dt>
+				<dd>{{ daKoen.kandidaat.bsnMasker }} (gaat mee, staat niet op het scherm)</dd>
+			</div>
+			<div>
+				<dt>Toestemming</dt>
+				<dd>Gegeven op {{ daKoen.kandidaat.toestemmingOp | datumNL }}</dd>
+			</div>
+		</dl>
+	</section>
+
+	<section class="card">
+		<h2>Dienstbetrekking</h2>
+		<dl class="data-overview">
+			<div>
+				<dt>Functie</dt>
+				<dd>{{ daKoen.dienstverband.functie }}</dd>
+			</div>
+			<div>
+				<dt>Eerste werkdag</dt>
+				<dd>{{ daKoen.dienstverband.aanvang | datumNL }}</dd>
+			</div>
+			<div>
+				<dt>Uren per week</dt>
+				<dd>{{ daKoen.dienstverband.urenPerWeek }}</dd>
+			</div>
+			<div>
+				<dt>Loon</dt>
+				<dd>{{ daKoen.dienstverband.uurloonLabel }}</dd>
+			</div>
+			<div>
+				<dt>Soort contract</dt>
+				<dd>{{ daKoen.dienstverband.soort }}</dd>
+			</div>
+		</dl>
+		<p class="da-bevestigd">{% icon "/assets/icons/icon-succes.svg" %} Uw eigen opgave, bevestigd op 7 september 2026</p>
+	</section>
+
+	<section class="card">
+		<h2>Wat de gemeente en UWV al weten</h2>
+		<p class="text-muted">Deze gegevens hoeft u niet aan te leveren; ze staan hier zodat u ziet waarop de aanvraag rust.</p>
+		{% for b in daKoen.bronnen %}
+			{% if b.id == 'gemeente' or b.id == 'uwv' %}
+				<h3>
+					{{ b.organisatie }}
+					<span class="text-muted">· {{ b.register }}, opgehaald op {{ b.opgehaald | datumNL }}</span>
+				</h3>
+				<dl class="data-overview">
+					{% for g in b.gegevens %}
+						<div>
+							<dt>{{ g.vraag }}</dt>
+							<dd>
+								{{ g.waarde | safe }}
+								<span class="text-muted">({{ g.grond }})</span>
+							</dd>
+						</div>
+					{% endfor %}
+				</dl>
+			{% endif %}
+		{% endfor %}
+		<p class="da-bevestigd">{% icon "/assets/icons/icon-succes.svg" %} Bevestigd op 7 september 2026</p>
+	</section>
+
+	<section class="card">
+		<h2>Berekening vooraf</h2>
+		<p>Zo rekent de gemeente straks, met dezelfde regels. De loonwaarde van 60 procent is een voorbeeld; de gemeente meet die op de werkplek na uw aanvraag.</p>
+		<dl class="data-overview da-berekening">
+			{% for s in daKoen.berekeningLks.stappen %}
+				<div>
+					<dt>
+						{{ s.label }}
+						<span class="text-muted">({{ s.grond }})</span>
+					</dt>
+					<dd>{{ s.waarde }}</dd>
+				</div>
+			{% endfor %}
+		</dl>
+	</section>
+
+	<section class="card">
+		<h2>Wat er na het versturen gebeurt</h2>
+		<ol>
+			<li>De gemeente bevestigt de ontvangst met een zaaknummer in uw Berichtenbox.</li>
+			<li>Een arbeidsdeskundige meet de loonwaarde van {{ daKoen.kandidaat.voornaam }} op de werkplek.</li>
+			<li>Het college stelt de loonwaarde vast en neemt het besluit over de subsidie. Bij het besluit ziet u deze berekening terug.</li>
+			<li>De subsidie wordt maandelijks betaald, vanaf de eerste werkdag.</li>
+		</ol>
+		<div class="action-group">
+			<button id="da-verstuur" class="btn-cta" type="button">Verstuur naar gemeente Lansingerland</button>
+			<a class="link-button" href="{{ '/moza/iemand-aannemen/wat-het-oplevert/' | url }}">Annuleer</a>
+		</div>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

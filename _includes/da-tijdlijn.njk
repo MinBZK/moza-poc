@@ -1,0 +1,61 @@
+{# De tijdlijn van een zaak: elke regel is een vastlegging (regelgeving, besluit of uitvoering),
+nieuwste bovenaan. Welke regels zichtbaar zijn, bepaalt da-iemand-aannemen.js aan de hand van
+de stand (data-stap). Geen <time>-elementen: lopende-zaken.js van de proeftuin verschuift die
+naar vandaag, en dit verhaal heeft vaste datums. #}
+{% import "da-macros.njk" as da %}
+<ol id="da-tijdlijn" class="da-tijdlijn">
+	{% for g in daKoen.gebeurtenissen | reverse %}
+		<li
+			class="da-gebeurtenis da-gebeurtenis--{{ g.soort }}"
+			data-stap="{{ g.stap }}"
+			data-id="{{ g.id }}"
+			{% if g.herstelt %}
+				data-herstelt="{{ g.herstelt }}"
+			{% endif %}
+			{% if g.gecorrigeerdDoor %}
+				data-gecorrigeerd-door="{{ g.gecorrigeerdDoor }}"
+			{% endif %}
+		>
+			<p class="da-gebeurtenis-kop">
+				<span class="da-soort">{{ da.soort(g.soort) }}</span>
+				{% if g.herstelt %}
+					<span class="da-label da-label--correctie">Correctie</span>
+				{% endif %}
+				{% if g.gecorrigeerdDoor %}
+					<span class="da-label da-label--gecorrigeerd">Gecorrigeerd</span>
+				{% endif %}
+			</p>
+			<h3>
+				{% if g.url %}
+					<a href="{{ g.url | url }}">
+						{{ g.titel }}
+					</a>
+				{% else %}
+					{{ g.titel }}
+				{% endif %}
+			</h3>
+			{% if g.tekst %}
+				<p data-tekst>
+					{{ g.tekst | safe }}
+				</p>
+			{% endif %}
+			<p class="text-muted da-gebeurtenis-meta">
+				Vastgelegd door
+				{{ g.actor }}
+				op
+				{{ g.datum | datumNL }}
+				om
+				{{ g.tijd }}
+				{% if g.grond %}
+					· {{ g.grond }}
+				{% endif %}
+				{% if g.herstelt %}
+					· vervangt de afspraak hieronder
+				{% endif %}
+				{% if g.gecorrigeerdDoor %}
+					· gecorrigeerd, zie hierboven
+				{% endif %}
+			</p>
+		</li>
+	{% endfor %}
+</ol>

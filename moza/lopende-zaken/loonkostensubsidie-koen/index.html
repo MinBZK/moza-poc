@@ -1,0 +1,158 @@
+---
+title: "MijnOverheid Zakelijk: Loonkostensubsidie voor Koen de Wit"
+permalink: "/moza/lopende-zaken/loonkostensubsidie-koen/"
+styles: ["/assets/da-iemand-aannemen.css"]
+---
+{% import "da-macros.njk" as da %}
+{% include "side-nav-overheid.njk" %}
+
+<article id="hoofd-inhoud">
+	<nav class="breadcrumb">
+		<ol>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
+			<li>
+				<a href="{{ '/moza/lopende-zaken/' | url }}">Lopende zaken</a>
+			</li>
+			<li aria-current="page">{{ daKoen.zaak.onderwerp }}</li>
+		</ol>
+	</nav>
+
+	<div id="da-nog-niet-verstuurd" class="feedback feedback-info" hidden>
+		{% include "icon-feedback-info.njk" %}
+		<div>
+			<p>Deze zaak bestaat nog niet: de aanvraag is nog niet verstuurd. <a href="{{ '/moza/iemand-aannemen/concept-aanvraag-loonkostensubsidie/' | url }}">Bekijk de concept-aanvraag</a>.</p>
+		</div>
+	</div>
+
+	<section id="da-zaak" class="card tabs">
+		{% include "lopende-zaken-tabs.njk" %}
+
+		<h1>{{ daKoen.zaak.onderwerp }}</h1>
+
+		<h2>Over deze zaak</h2>
+		<dl class="data-overview">
+			<div>
+				<dt>Organisatie</dt>
+				<dd>{{ daKoen.zaak.organisatie }}</dd>
+			</div>
+			<div>
+				<dt>Zaaknummer</dt>
+				<dd>{{ daKoen.zaak.nummer }}</dd>
+			</div>
+			<div>
+				<dt>Verstuurd</dt>
+				<dd>5 oktober 2026</dd>
+			</div>
+			<div>
+				<dt>Regel</dt>
+				<dd>{{ daKoen.zaak.regel }}</dd>
+			</div>
+			<div>
+				<dt>Status</dt>
+				<dd data-da-status>In behandeling</dd>
+			</div>
+		</dl>
+
+		<h2>Voortgang</h2>
+		<ol id="da-voortgang" class="status-track">
+			<li data-fase="ontvangst">
+				<details>
+					<summary>
+						<span class="visually-hidden" data-stapnaam>Voltooide stap:</span>
+						Verstuurd en ontvangen
+					</summary>
+					<div class="status-details">
+						<p class="status-date">5 en 6 oktober 2026</p>
+						<p>U heeft de aanvraag verstuurd. De gemeente heeft hem ontvangen en in behandeling genomen onder zaaknummer {{ daKoen.zaak.nummer }}.</p>
+					</div>
+				</details>
+			</li>
+			<li data-fase="meting">
+				<details>
+					<summary>
+						<span class="visually-hidden" data-stapnaam>Stap:</span>
+						Loonwaarde gemeten
+					</summary>
+					<div class="status-details">
+						<p class="status-date">20 oktober 2026</p>
+						<p>Een arbeidsdeskundige van de gemeente heeft de loonwaarde van {{ daKoen.kandidaat.voornaam }} gemeten op de werkplek.</p>
+					</div>
+				</details>
+			</li>
+			<li data-fase="loonwaarde">
+				<details>
+					<summary>
+						<span class="visually-hidden" data-stapnaam>Stap:</span>
+						Loonwaarde vastgesteld
+					</summary>
+					<div class="status-details">
+						<p class="status-date">27 oktober 2026</p>
+						<p>Het college heeft de loonwaarde vastgesteld op 60 procent van het wettelijk minimumloon.</p>
+					</div>
+				</details>
+			</li>
+			<li data-fase="besluit">
+				<details>
+					<summary>
+						<span class="visually-hidden" data-stapnaam>Stap:</span>
+						Besluit genomen
+					</summary>
+					<div class="status-details">
+						<p class="status-date">3 november 2026</p>
+						<p>Loonkostensubsidie toegekend: € 897,41 per maand vanaf 1 oktober 2026. <a href="{{ daKoen.zaak.url | url }}besluit/">Bekijk het besluit</a>.</p>
+					</div>
+				</details>
+			</li>
+			<li data-fase="betaling">
+				<details>
+					<summary>
+						<span class="visually-hidden" data-stapnaam>Stap:</span>
+						Eerste betaling
+					</summary>
+					<div class="status-details">
+						<p class="status-date">27 november 2026</p>
+						<p>Oktober en november zijn betaald: € 1.794,82.</p>
+					</div>
+				</details>
+			</li>
+		</ol>
+
+		<h2>Alles wat is vastgelegd</h2>
+		<p class="text-muted">Nieuwste bovenaan. Elke regel is een vastlegging: regelgeving, een besluit of een stap in de uitvoering, met wie het vastlegde en wanneer. Een correctie vervangt niets; de oude regel blijft staan met de nieuwe erboven.</p>
+		{% include "da-tijdlijn.njk" %}
+
+		<h2>Komt hierna</h2>
+		<ul class="da-komt-hierna">
+			{% for k in daKoen.komtHierna %}
+				<li>
+					<strong>{{ k.datum | datumNL }}</strong>,{{ k.actor }}:{{ k.titel }}
+					{% if k.tekst %}
+						{{ k.tekst }}
+					{% endif %}
+					<span class="text-muted">({{ k.grond }})</span>
+				</li>
+			{% endfor %}
+		</ul>
+	</section>
+
+	<section class="card da-onderzoeker" data-feature="Onderzoeksbediening" data-feature-type="functionaliteit">
+		<h2>Voor de onderzoeker</h2>
+		<div class="da-veld">
+			<label for="da-fase">Toon de zaak op het moment</label>
+			<select id="da-fase">
+				{% for f in daKoen.fasen %}
+					{% if f.id != 'indicatie' %}
+						<option value="{{ f.id }}">
+							{{ f.label }}
+						</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+		</div>
+		<p><button class="link-button" type="button" data-da-reset>Begin het scenario opnieuw</button></p>
+	</section>
+
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
+</article>

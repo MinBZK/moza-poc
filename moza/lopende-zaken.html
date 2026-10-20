@@ -1,5 +1,6 @@
 ---
 title: "MijnOverheid Zakelijk: Lopende zaken"
+styles: ["/assets/da-iemand-aannemen.css"]
 ---
 
 {% include "side-nav-overheid.njk" %}
@@ -7,7 +8,9 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 <article id="hoofd-inhoud">
 	<nav class="breadcrumb">
 		<ol>
-			<li><a href="{{ '/moza/' | url }}">Home</a></li>
+			<li>
+				<a href="{{ '/moza/' | url }}">Home</a>
+			</li>
 			<li aria-current="page">Lopende zaken</li>
 		</ol>
 	</nav>
@@ -28,27 +31,44 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 					</tr>
 				</thead>
 				<tbody id="zaken-overzicht">
+					<tr data-da-zaak hidden>
+						<td>{{ daKoen.zaak.organisatie }}</td>
+						<td>
+							<a href="{{ daKoen.zaak.url | url }}">{{ daKoen.zaak.onderwerp }}</a>
+						</td>
+						<td>5 oktober 2026</td>
+						<td data-da-status>In behandeling</td>
+					</tr>
 					<tr>
 						<td>Gemeente Lansingerland</td>
-						<td><a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a></td>
-						<td><time datetime="2026-05-21">21 mei 2026</time></td>
+						<td>
+							<a href="{{ '/moza/lopende-zaken/omgevingsvergunning-verbouwing/' | url }}">Omgevingsvergunning verbouwing bedrijfspand</a>
+						</td>
+						<td>
+							<time datetime="2026-05-21">21 mei 2026</time>
+						</td>
 						<td>In behandeling genomen</td>
 					</tr>
 					<tr>
 						<td>Rijksdienst voor Ondernemend Nederland</td>
-						<td><a href="{{ '/moza/lopende-zaken/subsidie/' | url }}">Subsidie aangevraagd</a></td>
-						<td><time datetime="2026-03-19">19 maart 2026</time></td>
+						<td>
+							<a href="{{ '/moza/lopende-zaken/subsidie/' | url }}">Subsidie aangevraagd</a>
+						</td>
+						<td>
+							<time datetime="2026-03-19">19 maart 2026</time>
+						</td>
 						<td>Volledigheid gecontroleerd</td>
 					</tr>
 					<tr>
 						<td>Gemeente Lansingerland</td>
-						<td><a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a></td>
-						<td><time datetime="2026-05-06">6 mei 2026</time></td>
 						<td>
-							<div class="feedback feedback-warning">
-								{% include "icon-feedback-warning.njk" %}
-								Extra informatie opgevraagd
-							</div>
+							<a href="{{ '/moza/lopende-zaken/melding-openbare-ruimte/' | url }}">Melding openbare ruimte</a>
+						</td>
+						<td>
+							<time datetime="2026-05-06">6 mei 2026</time>
+						</td>
+						<td>
+							<div class="feedback feedback-warning">{% include "icon-feedback-warning.njk" %} Extra informatie opgevraagd</div>
 						</td>
 					</tr>
 				</tbody>
@@ -91,4 +111,5 @@ title: "MijnOverheid Zakelijk: Lopende zaken"
 			</li>
 		</ul>
 	</section>
+	<script src="{{ '/assets/javascript/da-iemand-aannemen.js' | url }}" defer></script>
 </article>
