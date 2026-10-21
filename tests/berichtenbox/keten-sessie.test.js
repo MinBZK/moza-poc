@@ -177,6 +177,33 @@ describe("een herstel dat zelf mislukt", () => {
 	});
 });
 
+describe("een herstel dat traag is", () => {
+	it("zegt niet dat het misschien gelukt is: de 401 zegt al dat er niets verwijderd is", async () => {
+		// Voorgoed verwijderen is niet terug te draaien; "wij weten niet of het gelukt is" zou de
+		// bezoeker laten twijfelen over iets wat zeker niet gebeurde.
+		const IN_PRULLENBAK = antwoord(200, { berichten: [{ berichtId: "1dc16f8f-653d-49ae-87a9-fb4b6e15c156", magazijnId: "00000001000000000000", afzenderNaam: "Belastingdienst", onderwerp: "Aanslag", publicatietijdstip: "2026-10-01T09:00:00Z", map: "Prullenbak" }] });
+		let lijsten = 0;
+		const lijst = () => {
+			lijsten += 1;
+			if (lijsten === 1) return GEEN_RONDE;
+			if (lijsten === 2) return IN_PRULLENBAK;
+			throw new DOMException("te traag", "TimeoutError");
+		};
+		await start([
+			["/api/v1/berichten/1dc16f8f", () => ONGELDIG],
+			["/api/v1/berichten?", lijst],
+			["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"))],
+		]);
+		const id = window.BerichtenboxKeten.huidigeUitkomst.berichten[0].id;
+
+		const uitkomst = await window.BerichtenboxKeten.verwijder(id);
+
+		expect(uitkomst.fout).toBeTruthy();
+		expect(uitkomst.fout).not.toContain("weten niet");
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten).toHaveLength(1);
+	});
+});
+
 describe("te veel sessies", () => {
 	it("zegt wat de bezoeker kan doen als het stelsel geen sessie meer geeft", async () => {
 		const { aanroepen } = await start([["/api/v1/sessies", antwoord(429, { type: "urn:fbs:fout:te-veel-sessies" })]]);
