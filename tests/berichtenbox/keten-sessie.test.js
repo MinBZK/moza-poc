@@ -160,6 +160,23 @@ describe("een sessie die het stelsel niet meer kent", () => {
 	});
 });
 
+describe("een herstel dat zelf mislukt", () => {
+	it("zegt bij het bericht dezelfde reden als de melding erboven, niet dat de sessie verlopen is", async () => {
+		// Verversen lost een 429 niet op; "Ververs de pagina om opnieuw in te loggen" zou de bezoeker
+		// een rondje laten maken.
+		await start([
+			["/api/v1/berichten/1dc16f8f", () => ONGELDIG],
+			["/api/v1/berichten?", reeks(GEEN_RONDE, LIJST)],
+			["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), antwoord(429, { type: "urn:fbs:fout:te-veel-sessies" }))],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(window.BerichtenboxKeten.huidigeUitkomst.berichten[0].id);
+
+		expect(uitkomst.fout).toContain("op te veel plekken tegelijk ingelogd");
+		expect(window.BerichtenboxKeten.melding.tekst).toBe(uitkomst.fout);
+	});
+});
+
 describe("te veel sessies", () => {
 	it("zegt wat de bezoeker kan doen als het stelsel geen sessie meer geeft", async () => {
 		const { aanroepen } = await start([["/api/v1/sessies", antwoord(429, { type: "urn:fbs:fout:te-veel-sessies" })]]);
