@@ -35,7 +35,9 @@ export async function stackDraait() {
 	}
 }
 
-const NODIG = ["feature-flags.js", "personas.js"];
+// keten-sessie.js vóór personas.js, net als in base.njk: personas.js beëindigt de sessie van een
+// vorige persona via window.KetenSessie, en het keten-script start er een.
+const NODIG = ["feature-flags.js", "keten-sessie.js", "personas.js"];
 
 /**
  * @param pad     bv. "/moza/berichtenbox/?persona=proeftuin-een"
@@ -103,6 +105,7 @@ export async function laadLive(pad, { opslag = maakOpslag() } = {}) {
 		klokken.forEach((id) => clearInterval(id));
 		globalThis.setInterval = echteInterval;
 		delete window.BerichtenboxKeten;
+		delete window.KetenSessie;
 		delete window.Berichtenbox;
 	}
 

@@ -38,7 +38,8 @@
 				{% include "icon-persoon.njk" %}
 				<span data-profiel="naam">Robin Vogel</span>
 			</span>
-			<a class="icon-link" href="{{ '/moza/uitgelogd/' | url }}">
+			{# data-uitloggen: keten-sessie.js beëindigt bij een klik de sessie bij het Federatief Berichtenstelsel. #}
+			<a class="icon-link" href="{{ '/moza/uitgelogd/' | url }}" data-uitloggen>
 				{% include "icon-inloggen.njk" %}
 				Uitloggen
 			</a>
