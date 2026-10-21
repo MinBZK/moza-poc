@@ -1923,6 +1923,8 @@
 		sluitStroom();
 
 		if (pollHerstelPogingen >= POLL_HERSTEL_LIMIET) {
+			// Er draait nu geen ronde, dus wat er van een eerdere mislukte ronde staat, gaat hier niet over.
+			laatsteRondeFout = null;
 			stopPoll();
 			meld("mededeling", POLL_GESTOPT_TEKSTEN.sessie);
 			return Promise.resolve(null);
@@ -1933,6 +1935,7 @@
 		const herstel = herhaal();
 		if (!herstel) {
 			pollHerstelBezig = false;
+			laatsteRondeFout = null;
 			// Er valt niets te herhalen — geen kvk-nummer, dus ook geen sessie om terug te halen. Dat
 			// hoort niet voor te komen op een pagina die aan het pollen is; vandaar de regel.
 			console.error("[Berichtenbox] De sessie is verlopen, maar er valt geen ophaalronde te herhalen; het pollen stopt.");
@@ -1979,6 +1982,16 @@
 	 * een 409: dan staan er bij het stelsel geen opgehaalde berichten meer. Mislukt het herstel, dan
 	 * werpt dit de reden daarvan, zodat de knop hetzelfde zegt als de melding.
 	 */
+	// Alleen deze redenen van een mislukte herstelronde zeggen iets over het verzoek van de bezoeker.
+	// Een andere — een tijdslimiet bijvoorbeeld — zou de knop laten zeggen dat we niet weten of het
+	// gelukt is, terwijl de 401 of 409 vaststaat: er is niets uitgevoerd.
+	const REDENEN_OP_SESSIENIVEAU = ["sessieOngeldig", "geenSessie", "teVeelSessies", "configuratie"];
+
+	function oorzaakVanHerstel(fout) {
+		const oorzaak = laatsteRondeFout;
+		return oorzaak && REDENEN_OP_SESSIENIVEAU.indexOf(redenVan(oorzaak)) !== -1 ? oorzaak : fout;
+	}
+
 	async function metGeldigeSessie(doe) {
 		try {
 			return await doe();
@@ -1986,7 +1999,7 @@
 			if (redenVan(fout) !== "sessieOngeldig" && redenVan(fout) !== "geenSessie") throw fout;
 			// Loopt er al een herstel, dan wachten we dat af in plaats van er een tweede naast te zetten.
 			const uitkomst = await (pollHerstelBezig ? ronde.catch(() => null) : herstelSessie());
-			if (!uitkomst) throw laatsteRondeFout || fout;
+			if (!uitkomst) throw oorzaakVanHerstel(fout);
 			return doe();
 		}
 	}
