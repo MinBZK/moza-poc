@@ -222,7 +222,7 @@ Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-
 #### De ontvanger bij een bijlage uit het stelsel
 
 Een bijlage uit het Federatief Berichtenstelsel is een gewone URL die de browser zelf ophaalt, en
-het stelsel eist daarbij de header `X-Ontvanger`. Een `<a href>` en een `<object data>` kunnen die
+het stelsel eist daarbij de header `X-Ontvanger` (en `X-Sessie`, zie hieronder). Een `<a href>` en een `<object data>` kunnen die
 niet meesturen, dus zet `berichtenbox-keten.js` de ontvanger in een cookie en maakt de proxy er weer
 een header van (`location ~ ^/api/v1/berichten/.../bijlagen/...` in de template). Alle andere
 aanroepen zetten de header gewoon zelf.
@@ -241,9 +241,16 @@ persoonsgegeven.
 Bij een persona-wissel wordt het gewist, op het nieuwe én op het oude pad, want anders haalt een klik
 het document van de vorige persona op.
 
+Naast de ontvanger staat de sessie van het tabblad bij het stelsel in een cookie, `sessie`, met
+dezelfde eigenschappen; de proxy maakt er de header `X-Sessie` van. Die zet `keten-sessie.js`, en het
+id zelf staat in sessionStorage (`berichtenbox-sessie:<ontvanger>`). Een cookie geldt voor alle
+tabbladen en een sessie voor één, dus de berichtenbox zet beide cookies terug zodra zijn tabblad
+weer zichtbaar wordt.
+
 Uit die identiteit volgt één regel voor de proxy-config: **zet `$http_cookie` nergens in een
 logformaat of debug-regel.** Het standaard nginx-logformaat doet dat niet, en zo hoort het te
-blijven.
+blijven. Voor het sessie-cookie geldt dat nog sterker: het sessie-id is een geheim, en hoort ook niet
+in een URL of in de console.
 
 #### Op een deployment
 

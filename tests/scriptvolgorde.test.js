@@ -26,6 +26,13 @@ describe("scriptvolgorde in base.njk", () => {
 		expect(positie("feature-flags.js")).toBeLessThan(positie("personas.js"));
 	});
 
+	it("laadt keten-sessie.js vóór personas.js", () => {
+		// personas.js beëindigt bij elke paginalading de sessie bij het stelsel van een vorige
+		// persona, via window.KetenSessie. Andersom blijft die sessie een kwartier open staan.
+		expect(positie("keten-sessie.js")).toBeGreaterThanOrEqual(0);
+		expect(positie("keten-sessie.js")).toBeLessThan(positie("personas.js"));
+	});
+
 	it("laadt personas.js vóór content-interactions.js", () => {
 		// personas.js wist bij een wisseling de gegevens van de vorige persona (hidden:, read:,
 		// favorite:), en content-interactions.js leest die. Andersom toont die nog één keer wat er
