@@ -95,6 +95,9 @@
 		     persona-kiezer hangt in het flags-paneel dat dát script bouwt. En
 		     content-interactions.js ná personas.js, want personas.js wist bij een wisseling de
 		     gegevens van de vorige persona (hidden:, read:, favorite:) die dát script leest. -->
+		<!-- keten-sessie.js vóór personas.js: dat beëindigt bij elke paginalading de sessie bij het
+		     stelsel van een vorige persona, en heeft daar window.KetenSessie voor nodig. -->
+		<script src="{{ '/assets/javascript/keten-sessie.js' | url }}" defer></script>
 		<script src="{{ '/assets/javascript/personas.js' | url }}" defer></script>
 		<!-- nl-wallet-portaal.js ná personas.js: het zoekt de actieve persona op via window.Personas. -->
 		<script src="{{ '/assets/javascript/nl-wallet-portaal.js' | url }}" defer></script>

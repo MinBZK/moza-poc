@@ -10,8 +10,8 @@
  *
  * - de Host-header volgt de upstream, niet `localhost` — het stelsel zit achter een gedeelde
  *   ingress die op die header routeert;
- * - voor een bijlage-adres wordt het cookie `ontvanger` een `X-Ontvanger`-header, want een
- *   `<a href>` kan geen eigen header meesturen;
+ * - voor een bijlage-adres worden de cookies `ontvanger` en `sessie` de headers `X-Ontvanger` en
+ *   `X-Sessie`, want een `<a href>` kan geen eigen header meesturen;
  * - de ophaalronde is een SSE-stroom: niets bufferen, ruime timeout.
  *
  * Alleen voor lokaal ontwikkelen. In een uitgerolde omgeving draait nginx en komt dit bestand niet
@@ -69,11 +69,13 @@ function proxy(doel, host, extra = {}) {
 			proxyReq.removeHeader("origin");
 
 			// Een bijlage staat in een <a href> en kan geen header meesturen; de browser zet de
-			// ontvanger daarom in een cookie. Alleen invullen als de browser zelf niets stuurde:
-			// een fetch met X-Ontvanger hoort voor te gaan.
-			if (BIJLAGE.test(req.url.split("?")[0]) && !req.headers["x-ontvanger"]) {
+			// ontvanger en de sessie daarom in een cookie. Alleen invullen als de browser zelf niets
+			// stuurde: een fetch met de header hoort voor te gaan.
+			if (BIJLAGE.test(req.url.split("?")[0])) {
 				const ontvanger = leesCookie(req, "ontvanger");
-				if (ontvanger) proxyReq.setHeader("X-Ontvanger", ontvanger);
+				if (ontvanger && !req.headers["x-ontvanger"]) proxyReq.setHeader("X-Ontvanger", ontvanger);
+				const sessie = leesCookie(req, "sessie");
+				if (sessie && !req.headers["x-sessie"]) proxyReq.setHeader("X-Sessie", sessie);
 			}
 		},
 		onError(fout, req, res) {

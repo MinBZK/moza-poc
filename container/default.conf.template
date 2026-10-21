@@ -225,9 +225,12 @@ server {
 
     # --- Berichtenbox: een bijlage ophalen ---
     # Apart van /api/v1/ hieronder om één reden: een <a href> en een <object data> kunnen geen
-    # eigen header meesturen, en het stelsel eist X-Ontvanger. Zonder die header antwoordt het met
-    # 400. De browser zet de ontvanger daarom in een cookie en de proxy maakt er weer een header
-    # van. Zelfde afspraak als bij de Digitale Assistent, waar de backend X-Test-User injecteert.
+    # eigen header meesturen, en het stelsel eist X-Ontvanger en X-Sessie. Zonder de eerste
+    # antwoordt het met 400, zonder de tweede met 401. De browser zet ze daarom in een cookie
+    # (`ontvanger` en `sessie`) en de proxy maakt er weer headers van. Zelfde afspraak als bij de
+    # Digitale Assistent, waar de backend X-Test-User injecteert.
+    #
+    # Het sessie-id is een geheim: zet $http_cookie en $cookie_sessie nergens in een logformaat.
     #
     # In het cookie en niet in de URL: de ontvanger hoort bij de zitting, niet bij het adres van
     # het document. Anders staat in elke gekopieerde link, in de geschiedenis en in elk logboek wie
@@ -259,6 +262,7 @@ server {
         proxy_pass $backend_keten$uri?magazijnId=$arg_magazijnId;
         proxy_set_header Host $backend_keten_host;
         proxy_set_header X-Ontvanger $cookie_ontvanger;
+        proxy_set_header X-Sessie $cookie_sessie;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_ssl_server_name on;

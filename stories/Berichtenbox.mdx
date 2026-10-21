@@ -106,6 +106,6 @@ De Berichtenbox bestaat uit drie lagen: de bronnen, een datalaag zonder kennis v
 
 De Berichtenbox bewaart de staat onder de localStorage-sleutel `berichtenbox`: gelezen, gearchiveerde en verwijderde berichten, de indeling in mappen, eigen mappen, nieuwe berichten uit de dataset, en of het eerste bezoek al geweest is. Het aantal ongelezen berichten staat apart onder `unread:count`, zodat de teller in de zijnavigatie ook op andere pagina’s klopt.
 
-De staat hoort bij één persona. Na een wissel van persona begint die leeg: andere bedrijven hebben andere post. Berichten uit het stelsel komen niet in localStorage; die bewaart het stelsel 12 uur in een sessie op de server.
+De staat hoort bij één persona. Na een wissel van persona begint die leeg: andere bedrijven hebben andere post. Berichten uit het stelsel komen niet in localStorage; die bewaart het stelsel in een sessie op de server, per tabblad. Een sessie verloopt na een kwartier zonder verkeer, en uiterlijk na 12 uur.
 
 Resetten kan met **localStorage wissen** in het Flags-paneel rechtsonder, met de resetlink op de Berichtenbox-pagina, of in de console van de browser met `localStorage.removeItem("berichtenbox")`.
