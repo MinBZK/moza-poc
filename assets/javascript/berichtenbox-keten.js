@@ -554,8 +554,9 @@
 	 *
 	 * Een 401 betekent bij de uitvraag altijd hetzelfde: de sessie ontbreekt, is verlopen, of hoort
 	 * bij een andere ontvanger, en die gevallen zijn bewust niet te onderscheiden. Dan vergeten we
-	 * haar, zodat het volgende verzoek een nieuwe start. Wat er daarna moet gebeuren — een nieuwe
-	 * ophaalronde, want een nieuwe sessie is leeg — beslist de aanroeper.
+	 * haar, zodat het volgende verzoek een nieuwe start. Wat er daarna moet gebeuren — zo nodig een
+	 * nieuwe ophaalronde, want was dit de laatste sessie van de ontvanger, dan staat er niets meer
+	 * klaar — beslist de aanroeper.
 	 */
 	async function vraagKeten(ontvanger, pad, opties, limiet) {
 		const sessie = await sessieVoor(ontvanger);
@@ -739,7 +740,7 @@
 		if (respons.status === 409) {
 			clearTimeout(stilteKlok);
 			// Eén ontvanger, één ronde tegelijk. Dat is geen fout: een andere pagina van deze
-			// berichtenbox is bezig, en het resultaat komt in dezelfde sessie terecht. De aanroeper
+			// berichtenbox is bezig, en het resultaat komt in dezelfde sessiecache terecht. De aanroeper
 			// wacht die af in plaats van de bezoeker een storing te tonen.
 			throw ketenFout("bezig", "er loopt al een ophaalronde voor deze ontvanger");
 		}
@@ -988,8 +989,8 @@
 		const adres = "/api/v1/berichten?pagina=" + pagina + "&paginaGrootte=" + PAGINA_GROOTTE;
 		const limiet = Math.min(LIJST_LIMIET_MS, Math.max(resterend, 1));
 		const respons = await vraagKeten(ontvanger, adres, null, limiet);
-		// De uitvraag levert de lijst uit de sessie, en die vult de ophaalronde. Heeft de sessie nog
-		// geen ronde gehad, of loopt die nog, dan antwoordt hij met 409. Dat is geen storing bij een
+		// De uitvraag levert de lijst uit de sessiecache van de ontvanger, en die vult de ophaalronde.
+		// Staat daar nog niets klaar, of loopt de ronde nog, dan antwoordt hij met 409. Dat is geen storing bij een
 		// bron maar een toestand die met een ronde over gaat. Een sessie die er niet meer is, geeft
 		// een 401; dat vangt `vraagKeten` al af.
 		if (respons.status === 409) throw ketenFout("geenSessie", "er staan (nog) geen opgehaalde berichten klaar");
@@ -1283,7 +1284,13 @@
 		meld("storing", STELSEL_TEKSTEN[sleutel]);
 	}
 
+	// Waarom de laatste ronde mislukte, of null. Voor een verzoek dat na een herstelronde opnieuw had
+	// moeten gaan: zonder dit zegt de knop "uw sessie is verlopen" terwijl de melding erboven zegt dat
+	// u op te veel plekken bent ingelogd, en verversen dan niets oplost.
+	let laatsteRondeFout = null;
+
 	function mislukt(fout) {
+		laatsteRondeFout = fout;
 		const reden = redenVan(fout);
 		console.error("[Berichtenbox] keten niet bereikbaar (" + reden + ")", fout);
 		meldStoring(reden);
@@ -1331,6 +1338,7 @@
 		// Een nieuwe ronde weet nog niets. Bleef dit van de vorige staan, dan houdt een geslaagde
 		// herhaalronde een lege berichtenbox waar hij berichten had moeten opleveren.
 		nietsOpTeHalen = false;
+		laatsteRondeFout = null;
 
 		let aangesloten;
 		try {
@@ -1965,10 +1973,11 @@
 	 * Voert een verzoek uit, en herhaalt het één keer na een herstelronde als het stelsel de sessie
 	 * niet kende. Voor de verzoeken die de bezoeker zelf doet — een bericht openen, verplaatsen,
 	 * verwijderen —: die horen niet te mislukken omdat het tabblad een kwartier stil stond. Een 401
-	 * voert niets uit, dus herhalen kan ook bij een wijziging. Een nieuwe sessie is leeg, dus de ronde
-	 * moet klaar zijn voordat het verzoek opnieuw gaat: anders kent de sessie het bericht niet. Om
-	 * dezelfde reden ook bij een 409: dan staan er bij het stelsel geen opgehaalde berichten meer,
-	 * bijvoorbeeld omdat de laatste sessie van deze ontvanger verliep.
+	 * voert niets uit, dus herhalen kan ook bij een wijziging. Was dit de laatste sessie van de
+	 * ontvanger, dan staat er voor de nieuwe niets klaar, dus de herstelronde moet klaar zijn voordat
+	 * het verzoek opnieuw gaat: anders kent het stelsel het bericht niet. Om dezelfde reden ook bij
+	 * een 409: dan staan er bij het stelsel geen opgehaalde berichten meer. Mislukt het herstel, dan
+	 * werpt dit de reden daarvan, zodat de knop hetzelfde zegt als de melding.
 	 */
 	async function metGeldigeSessie(doe) {
 		try {
@@ -1977,7 +1986,7 @@
 			if (redenVan(fout) !== "sessieOngeldig" && redenVan(fout) !== "geenSessie") throw fout;
 			// Loopt er al een herstel, dan wachten we dat af in plaats van er een tweede naast te zetten.
 			const uitkomst = await (pollHerstelBezig ? ronde.catch(() => null) : herstelSessie());
-			if (!uitkomst) throw fout;
+			if (!uitkomst) throw laatsteRondeFout || fout;
 			return doe();
 		}
 	}
@@ -2357,7 +2366,7 @@
 		// zetten we de eigen ontvanger en sessie terug. Niet als er intussen een andere persona
 		// gekozen is: dan hoort deze pagina bij iemand anders.
 		const zetCookiesTerug = () => {
-			if (!ontvangerVanRonde || document.visibilityState === "hidden" || window.KetenSessie.afgemeld || actiefKvkNummerStil() !== kvkNummer) return;
+			if (!ontvangerVanRonde || document.visibilityState === "hidden" || actiefKvkNummerStil() !== kvkNummer || window.KetenSessie.afgemeld) return;
 			zetOntvangerCookie(ontvangerVanRonde);
 			window.KetenSessie.zetCookie(ontvangerVanRonde);
 		};

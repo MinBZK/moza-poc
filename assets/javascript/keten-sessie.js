@@ -2,8 +2,9 @@
  * keten-sessie.js
  *
  * De inlogsessie bij de berichtenuitvraag van het Federatief Berichtenstelsel
- * (MinBZK/MijnOverheidZakelijk#943). Het stelsel bewaart de opgehaalde berichten onder een sessie,
- * en elk verzoek onder `/api/v1/berichten` noemt die sessie in de header `X-Sessie`.
+ * (MinBZK/MijnOverheidZakelijk#943). Het stelsel bewaart de opgehaalde berichten per ontvanger,
+ * zolang er een sessie voor die ontvanger loopt, en elk verzoek onder `/api/v1/berichten` noemt de
+ * sessie in de header `X-Sessie`.
  *
  * Deze demo kent geen echte inlog: per tabblad geldt het kiezen van een persona als inloggen. Een
  * andere persona kiezen of op "Uitloggen" klikken beëindigt de sessie van de vorige. Het starten
