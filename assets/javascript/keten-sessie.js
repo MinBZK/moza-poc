@@ -66,8 +66,9 @@
 	 *
 	 * Het cookie blijft staan. Het geldt voor alle tabbladen en kan de sessie van een ander tabblad
 	 * dragen, en wat erin staat is vanaf deze pagina niet te lezen: het hoort bij een ander pad. Na
-	 * een 401 komt er toch meteen een nieuwe sessie, en die overschrijft het. Alleen uitloggen
-	 * (`beeindig`) wist het.
+	 * een 401 komt er toch meteen een nieuwe sessie, en die overschrijft het. Alleen het beëindigen
+	 * van een sessie wist het: `beeindig` (uitloggen, of personas.js die de sessie van een vorige
+	 * persona beëindigt) en de persona-wissel in personas.js.
 	 */
 	function vergeet(ontvanger, id) {
 		const huidige = bewaard(ontvanger);
@@ -119,6 +120,11 @@
 		if (!id) return Promise.resolve();
 		vergeet(ontvanger);
 		wisCookie();
+		return meldAf(ontvanger, id);
+	}
+
+	/** Het verzoek zelf: beëindigt deze sessie bij het stelsel, ook een die hier nooit bewaard is. */
+	function meldAf(ontvanger, id) {
 		return fetch("/api/v1/sessies/huidige", {
 			method: "DELETE",
 			headers: { "X-Ontvanger": ontvanger, "X-Sessie": id },
@@ -184,7 +190,12 @@
 	// `keepalive`, dus de link hoeft niet te wachten. Zonder JavaScript is er ook geen sessie.
 	document.addEventListener("click", function (gebeurtenis) {
 		const doel = gebeurtenis.target;
-		if (!doel || typeof doel.closest !== "function" || !doel.closest("[data-uitloggen]")) return;
+		const link = doel && typeof doel.closest === "function" ? doel.closest("[data-uitloggen]") : null;
+		if (!link) return;
+		// Opent de klik de link ergens anders — een nieuw tabblad, een nieuw venster — dan blijft de
+		// bezoeker hier, en hoort dit tabblad niet stil uitgelogd te worden.
+		const elders = gebeurtenis.ctrlKey || gebeurtenis.metaKey || gebeurtenis.shiftKey || gebeurtenis.altKey || gebeurtenis.button !== 0 || (link.target && link.target !== "_self");
+		if (gebeurtenis.defaultPrevented || elders) return;
 		afgemeld = true;
 		// Eerst het volgen stil, dan afmelden: anders ziet de stroom het afmelden nog voorbijkomen.
 		if (window.BerichtenboxKeten) window.BerichtenboxKeten.stopPollen();
@@ -202,6 +213,7 @@
 		zetCookie: zetCookie,
 		beeindig: beeindig,
 		beeindigBehalve: beeindigBehalve,
+		meldAf: meldAf,
 		ontvangerVan: ontvangerVan,
 	};
 })();

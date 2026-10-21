@@ -222,7 +222,7 @@ Een persona toevoegen is dus twee stappen: een profiel in de backend en het KvK-
 #### De ontvanger bij een bijlage uit het stelsel
 
 Een bijlage uit het Federatief Berichtenstelsel is een gewone URL die de browser zelf ophaalt, en
-het stelsel eist daarbij de header `X-Ontvanger`. Een `<a href>` en een `<object data>` kunnen die
+het stelsel eist daarbij de header `X-Ontvanger` (en `X-Sessie`, zie hieronder). Een `<a href>` en een `<object data>` kunnen die
 niet meesturen, dus zet `berichtenbox-keten.js` de ontvanger in een cookie en maakt de proxy er weer
 een header van (`location ~ ^/api/v1/berichten/.../bijlagen/...` in de template). Alle andere
 aanroepen zetten de header gewoon zelf.

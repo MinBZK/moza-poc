@@ -171,7 +171,7 @@ describe("te veel sessies", () => {
 
 describe("uitloggen", () => {
 	function laadSessie() {
-		document.body.innerHTML = '<a href="/moza/uitgelogd/" data-uitloggen>Uitloggen</a>';
+		document.body.innerHTML = '<a href="#uitgelogd" data-uitloggen>Uitloggen</a>';
 		new Function(SESSIE_BRON).call(window);
 		const aanroepen = [];
 		vi.stubGlobal("fetch", async (pad, opties) => {
@@ -186,8 +186,6 @@ describe("uitloggen", () => {
 		window.KetenSessie.bewaar("KVK:90000011", "sessie_van_een_tabblad");
 
 		const link = document.querySelector("[data-uitloggen]");
-		// De navigatie zelf kan jsdom niet; die is hier ook niet de vraag.
-		link.addEventListener("click", (gebeurtenis) => gebeurtenis.preventDefault());
 		link.click();
 
 		expect(aanroepen).toHaveLength(1);
@@ -213,9 +211,8 @@ describe("uitloggen", () => {
 		// bezoeker anders meteen weer inloggen, met een sessie die niemand afsluit.
 		const { aanroepen, ontvanger } = await start([["/api/v1/berichten?", LIJST]]);
 		const stopPollen = vi.spyOn(window.BerichtenboxKeten, "stopPollen");
-		document.body.insertAdjacentHTML("beforeend", '<a href="/moza/uitgelogd/" data-uitloggen>Uitloggen</a>');
+		document.body.insertAdjacentHTML("beforeend", '<a href="#uitgelogd" data-uitloggen>Uitloggen</a>');
 		const link = document.querySelector("[data-uitloggen]");
-		link.addEventListener("click", (gebeurtenis) => gebeurtenis.preventDefault());
 
 		link.click();
 		const voor = aanroepen.length;
@@ -230,8 +227,177 @@ describe("uitloggen", () => {
 
 	it("doet niets zonder bewaarde sessie", () => {
 		const aanroepen = laadSessie();
-		document.querySelector("[data-uitloggen]").addEventListener("click", (gebeurtenis) => gebeurtenis.preventDefault());
 		document.querySelector("[data-uitloggen]").click();
 		expect(aanroepen).toHaveLength(0);
+	});
+});
+
+describe("een wijziging na een 401", () => {
+	const BERICHT = "1dc16f8f-653d-49ae-87a9-fb4b6e15c156";
+	const IN_PRULLENBAK = antwoord(200, { berichten: [{ berichtId: BERICHT, magazijnId: "00000001000000000000", afzenderNaam: "Belastingdienst", onderwerp: "Aanslag", publicatietijdstip: "2026-10-01T09:00:00Z", map: "Prullenbak" }] });
+
+	/** Het adres van één bericht, met per methode een eigen reeks antwoorden. */
+	function berichtAdres(perMethode) {
+		return ["/api/v1/berichten/" + BERICHT, (pad, opties) => perMethode[(opties && opties.method) || "GET"]()];
+	}
+
+	const wijzigingen = (aanroepen, methode) => aanroepen.filter((aanroep) => aanroep.methode === methode && aanroep.pad.indexOf("/api/v1/berichten/" + BERICHT) === 0);
+
+	it("archiveert alsnog: na een nieuwe sessie en een ronde gaat hetzelfde verzoek nog één keer", async () => {
+		// Een 401 voert niets uit, dus herhalen kan; een nieuwe sessie kent het bericht pas na de ronde.
+		const { aanroepen } = await start([berichtAdres({ PATCH: reeks(ONGELDIG, antwoord(200, {})) }), ["/api/v1/berichten?", reeks(GEEN_RONDE, LIJST, GEEN_RONDE, LIJST)], ["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"))]]);
+		const id = window.BerichtenboxKeten.huidigeUitkomst.berichten[0].id;
+
+		expect(await window.BerichtenboxKeten.verplaats(id, "archief")).toEqual({});
+
+		const patches = wijzigingen(aanroepen, "PATCH");
+		expect(patches.map((aanroep) => aanroep.headers["X-Sessie"])).toEqual(["eerste_sessie_00000001", "tweede_sessie_00000002"]);
+		expect(patches[1].body).toBe(patches[0].body);
+		const tussen = aanroepen.slice(aanroepen.indexOf(patches[0]), aanroepen.indexOf(patches[1]));
+		expect(naar(tussen, "/api/v1/berichten/_ophalen")).toHaveLength(1);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten[0].plek).toBe("archief");
+	});
+
+	it("verwijdert alsnog, en leest een 401 nooit als een bericht dat al weg was", async () => {
+		await start([berichtAdres({ DELETE: reeks(ONGELDIG, antwoord(204, null)) }), ["/api/v1/berichten?", reeks(GEEN_RONDE, IN_PRULLENBAK, GEEN_RONDE, IN_PRULLENBAK)], ["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"))]]);
+		const id = window.BerichtenboxKeten.huidigeUitkomst.berichten[0].id;
+
+		expect(await window.BerichtenboxKeten.verwijder(id)).toEqual({});
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten).toHaveLength(0);
+	});
+
+	it("laat het bericht staan en zegt wat helpt als ook de nieuwe sessie geweigerd wordt", async () => {
+		const { aanroepen } = await start([berichtAdres({ DELETE: () => ONGELDIG }), ["/api/v1/berichten?", reeks(GEEN_RONDE, IN_PRULLENBAK, GEEN_RONDE, IN_PRULLENBAK)], ["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"), sessieAntwoord("derde__sessie_00000003"))]]);
+		const id = window.BerichtenboxKeten.huidigeUitkomst.berichten[0].id;
+
+		const uitkomst = await window.BerichtenboxKeten.verwijder(id);
+
+		expect(uitkomst.fout).toContain("Ververs de pagina");
+		expect(uitkomst.fout).not.toContain("Probeer het opnieuw");
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten).toHaveLength(1);
+		expect(wijzigingen(aanroepen, "DELETE")).toHaveLength(2);
+	});
+
+	it("start voor twee wijzigingen tegelijk maar één nieuwe sessie", async () => {
+		// Elke sessie telt mee voor de vijf per ontvanger; twee herstelrondes naast elkaar kosten er twee.
+		const TWEE = antwoord(200, {
+			berichten: [
+				{ berichtId: BERICHT, magazijnId: "00000001000000000000", afzenderNaam: "Belastingdienst", onderwerp: "Aanslag", publicatietijdstip: "2026-10-01T09:00:00Z" },
+				{ berichtId: "2ec27f9f-653d-49ae-87a9-fb4b6e15c157", magazijnId: "00000001000000000000", afzenderNaam: "Belastingdienst", onderwerp: "Teruggaaf", publicatietijdstip: "2026-10-02T09:00:00Z" },
+			],
+		});
+		const eersteSessie = (opties) => opties.headers["X-Sessie"] === "eerste_sessie_00000001";
+		const { aanroepen } = await start([...[BERICHT, "2ec27f9f-653d-49ae-87a9-fb4b6e15c157"].map((nummer) => ["/api/v1/berichten/" + nummer, (pad, opties) => (eersteSessie(opties) ? ONGELDIG : antwoord(200, {}))]), ["/api/v1/berichten?", reeks(GEEN_RONDE, TWEE, GEEN_RONDE, TWEE)], ["/api/v1/sessies", reeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"), sessieAntwoord("derde__sessie_00000003"))]]);
+		const [een, twee] = window.BerichtenboxKeten.huidigeUitkomst.berichten.map((bericht) => bericht.id);
+		const voor = aanroepen.length;
+
+		const uitkomsten = await Promise.all([window.BerichtenboxKeten.verplaats(een, "archief"), window.BerichtenboxKeten.verplaats(twee, "archief")]);
+
+		expect(uitkomsten).toEqual([{}, {}]);
+		expect(naar(aanroepen.slice(voor), "/api/v1/sessies")).toHaveLength(1);
+		expect(naar(aanroepen.slice(voor), "/api/v1/berichten/_ophalen")).toHaveLength(1);
+	});
+});
+
+describe("een 401 die bij een oude sessie hoort", () => {
+	it("gooit een sessie die intussen vernieuwd is niet weg", () => {
+		new Function(SESSIE_BRON).call(window);
+		window.KetenSessie.bewaar("KVK:90000011", "nieuwe_sessie_00000002");
+
+		window.KetenSessie.vergeet("KVK:90000011", "oude__sessie_000000001");
+
+		expect(window.KetenSessie.bewaard("KVK:90000011")).toBe("nieuwe_sessie_00000002");
+	});
+});
+
+describe("de cookies als het tabblad weer in beeld komt", () => {
+	function zichtbaar(staat) {
+		Object.defineProperty(document, "visibilityState", { configurable: true, get: () => staat });
+		document.dispatchEvent(new Event("visibilitychange"));
+	}
+
+	afterEach(() => zichtbaar("visible"));
+
+	it("zet de eigen ontvanger en sessie terug, want een ander tabblad kan ze overschreven hebben", async () => {
+		const { ontvanger } = await start([["/api/v1/berichten?", LIJST]]);
+		const regels = [];
+		const herstel = spionOpCookie(regels);
+		try {
+			zichtbaar("visible");
+		} finally {
+			herstel();
+		}
+		expect(regels.some((regel) => regel.indexOf("sessie=" + SESSIE_ID + ";") === 0)).toBe(true);
+		expect(regels.some((regel) => regel.indexOf("ontvanger=" + ontvanger + ";") === 0)).toBe(true);
+	});
+
+	it("laat ze staan als het tabblad verborgen is, of als er intussen een andere persona gekozen is", async () => {
+		await start([["/api/v1/berichten?", LIJST]]);
+		const regels = [];
+		const herstel = spionOpCookie(regels);
+		try {
+			zichtbaar("hidden");
+			window.Personas.actief = () => ({ id: "proeftuin-twee", stelsel: true, bedrijf: { kvkNummer: "90000012" } });
+			zichtbaar("visible");
+		} finally {
+			herstel();
+		}
+		expect(regels).toEqual([]);
+	});
+});
+
+describe("uitloggen, de randgevallen", () => {
+	function laad() {
+		document.body.innerHTML = '<a href="#uitgelogd" data-uitloggen>Uitloggen</a>';
+		new Function(SESSIE_BRON).call(window);
+		const aanroepen = [];
+		vi.stubGlobal("fetch", async (pad, opties) => {
+			aanroepen.push({ pad, opties });
+			return antwoord(204, null);
+		});
+		return aanroepen;
+	}
+
+	it("logt dit tabblad niet uit als de link in een nieuw tabblad opengaat", () => {
+		const aanroepen = laad();
+		window.KetenSessie.bewaar("KVK:90000011", "sessie_van_een_tabblad");
+		const link = document.querySelector("[data-uitloggen]");
+		link.addEventListener("click", (gebeurtenis) => gebeurtenis.preventDefault(), { once: true });
+
+		link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }));
+
+		expect(aanroepen).toHaveLength(0);
+		expect(window.KetenSessie.afgemeld).toBe(false);
+		expect(window.KetenSessie.bewaard("KVK:90000011")).toBe("sessie_van_een_tabblad");
+	});
+
+	it("beëindigt een sessie die nog onderweg was toen de bezoeker uitlogde, in plaats van haar te bewaren", async () => {
+		bezoeker += 1;
+		const kvkNummer = String(bezoeker);
+		let geefSessie;
+		const onderweg = new Promise((klaar) => {
+			geefSessie = klaar;
+		});
+		const gestart = startKeten(
+			[
+				["/api/demo/personas", personasVoor(kvkNummer)],
+				["/api/v1/sessies/huidige", antwoord(204, null)],
+				["/api/v1/sessies", () => onderweg],
+			],
+			"/moza/berichtenbox/?poll=0",
+			kvkNummer
+		);
+		await vi.waitFor(() => expect(window.KetenSessie).toBeTruthy());
+		document.body.insertAdjacentHTML("beforeend", '<a href="#uitgelogd" data-uitloggen>Uitloggen</a>');
+		await new Promise((klaar) => setTimeout(klaar, 0));
+
+		document.querySelector("[data-uitloggen]").click();
+		geefSessie(sessieAntwoord("laat__sessie_000000001"));
+		const { aanroepen } = await gestart;
+
+		const afmelden = aanroepen.filter((aanroep) => aanroep.pad === "/api/v1/sessies/huidige");
+		expect(afmelden).toHaveLength(1);
+		expect(afmelden[0].headers["X-Sessie"]).toBe("laat__sessie_000000001");
+		expect(sessionStorage.getItem("berichtenbox-sessie:KVK:" + kvkNummer)).toBe(null);
 	});
 });
