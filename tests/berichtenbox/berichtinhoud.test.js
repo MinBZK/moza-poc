@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { bericht, bouwDemoDetailPagina, laadBerichtenbox, laatLaden } from "./dom.js";
 
 // Het pad waarop berichtenbox-keten.js het ontvanger-cookie zet, uit die bron gelezen. Het cookie
-// moet meereizen naar het adres dat bijlageAdres() hieronder bouwt; die twee staan in verschillende
-// bestanden zonder gedeelde constante. Bewegen ze los van elkaar, dan mist de proxy de header
+// moet meereizen naar elk adres dat bijlageAdres() uit `_links.self` volgt; die twee staan in
+// verschillende bestanden zonder gedeelde constante. Bewegen ze los van elkaar, dan mist de proxy de header
 // X-Ontvanger, antwoordt het stelsel met 400 en is elke bijlage-link stuk.
 const ONTVANGER_PAD = readFileSync(process.cwd() + "/assets/javascript/berichtenbox-keten.js", "utf8").match(/ONTVANGER_PAD = "([^"]+)"/)[1];
 
@@ -27,6 +27,15 @@ const KETEN_BERICHT = bericht({
 	inhoud: "",
 	uitKeten: true,
 });
+
+/**
+ * Een bijlage zoals het berichtdetail van het stelsel haar levert: met haar eigen ophaal-adres in
+ * `_links.self.href`. Het adres is bewust een parameter en niet afgeleid uit de id: de render-laag
+ * hoort het te volgen, niet zelf samen te stellen.
+ */
+function bijlageMetLink(bijlageId, naam, href = "/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/" + bijlageId + "?magazijnId=" + KETEN_BERICHT.magazijnId) {
+	return { bijlageId, naam, _links: { self: { href } } };
+}
 
 /** De alinea's als één regel. Per <p>, want die plakken in textContent aan elkaar. */
 function tekst() {
@@ -145,10 +154,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// De lijst wist nog van geen bijlagen: die staan pas in het antwoord per bericht.
 		window.BerichtenboxKeten = nepKeten(async () => ({
 			inhoud: "Zie de bijlage.",
-			bijlagen: [
-				{ bijlageId: "b-1", naam: "beschikking.pdf" },
-				{ bijlageId: "b-2", naam: "toelichting.pdf" },
-			],
+			bijlagen: [bijlageMetLink("b-1", "beschikking.pdf"), bijlageMetLink("b-2", "toelichting.pdf")],
 		}));
 		bouwDemoDetailPagina(KETEN_BERICHT);
 
@@ -165,7 +171,8 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		const regels = [...lijst.querySelectorAll("li")].map((li) => li.textContent);
 		expect(regels).toEqual(["beschikking.pdf", "toelichting.pdf"]);
 
-		// Elke naam is een echte link naar de bijlage bij het stelsel, en gewone navigatie: geen
+		// Elke naam is een echte link naar de bijlage bij het stelsel — elk haar eigen adres, niet dat
+		// van de eerste — en gewone navigatie: geen
 		// "download"-attribuut, want dat zou opslaan afdwingen wat de server ook meegeeft. Het
 		// stelsel levert een PDF inline, dus die hoort in de viewer van de browser te openen; een
 		// type dat het niet inline stuurt wordt alsnog opgeslagen, met de bestandsnaam die de keten
@@ -182,8 +189,9 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(links.every((a) => a.classList.contains("content-link") && a.querySelector("svg"))).toBe(true);
 
 		// En het ontvanger-cookie reist mee naar dát adres. Niet als tekstvergelijking maar door de
-		// browser te laten beslissen: het cookie staat op ONTVANGER_PAD, de link komt uit
-		// bijlageAdres(), en alleen als het eerste het tweede dekt gaat hij mee. Zonder deze
+		// browser te laten beslissen: het cookie staat op ONTVANGER_PAD, de link is wat
+		// bijlageAdres() uit `_links.self` volgde, en alleen als het eerste het tweede dekt gaat hij
+		// mee. Zonder deze
 		// assertie kan elk van beide verschuiven zonder dat er iets rood wordt, terwijl dan elke
 		// bijlage een 400 uit het stelsel oplevert.
 		document.cookie = "ontvanger=KVK:90000011; path=" + ONTVANGER_PAD;
@@ -307,17 +315,25 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// Een binnengedruppeld dataset-bericht landt op dezelfde pagina. Bleef de markering staan,
 		// dan mag een schermlezer de inhoud van die subtree onderdrukken: de brief staat er wel en
 		// is er niet.
-		const uitDataset = bericht({ id: "msg-los", inhoud: "Alinea een.\n\nAlinea twee." });
-		window.BerichtenboxKeten = { bezig: false, aangesloten: false, melding: null, voortgang: null, berichten: async () => null, opWijziging: () => {} };
-		bouwDemoDetailPagina(uitDataset);
+		//
+		// Met nep-timers: een dataset-bericht start de nagebootste bijlagen, en die timer van
+		// anderhalve seconde zou anders afgaan in een latere test, op diens pagina.
+		vi.useFakeTimers();
+		try {
+			const uitDataset = bericht({ id: "msg-los", inhoud: "Alinea een.\n\nAlinea twee." });
+			window.BerichtenboxKeten = { bezig: false, aangesloten: false, melding: null, voortgang: null, berichten: async () => null, opWijziging: () => {} };
+			bouwDemoDetailPagina(uitDataset);
 
-		await laadBerichtenbox();
-		await laatLaden();
-		await laatLaden();
+			await laadBerichtenbox();
+			await vi.advanceTimersByTimeAsync(0);
 
-		const body = document.querySelector("[data-demo-body]");
-		expect(body.textContent).toContain("Alinea een.");
-		expect(body.hasAttribute("aria-busy")).toBe(false);
+			const body = document.querySelector("[data-demo-body]");
+			expect(body.textContent).toContain("Alinea een.");
+			expect(body.hasAttribute("aria-busy")).toBe(false);
+		} finally {
+			vi.clearAllTimers();
+			vi.useRealTimers();
+		}
 	});
 
 	it("zegt niet 'mogelijk verwijderd' als een bron tijdens de ronde wegviel", async () => {
@@ -369,26 +385,85 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		expect(document.querySelector("[data-nagebootst]").hidden).toBe(true);
 	});
 
-	it("ontsnapt een bijlage-id dat het adres zou kunnen breken", async () => {
-		// De id komt van buiten. Rauw in het pad zetten maakt er een heel ander adres van — met een
-		// schuine streep zelfs een ander eindpunt.
+	it("volgt het adres uit _links.self, ook waar samenstellen iets anders zou geven", async () => {
+		// De spec van de berichtenuitvraag vraagt afnemers het adres te volgen en niet zelf samen te
+		// stellen. Een href die niet uit berichtId, bijlageId en magazijnId is af te leiden, bewijst
+		// dat de link gevolgd wordt.
+		const href = "/api/v1/berichten/ander-bericht/bijlagen/ander-id?magazijnId=00000000000000200000";
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [bijlageMetLink("b-1", "besluit.pdf", href)] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const links = [...document.querySelectorAll("[data-berichtenbox-attachments-list] a")];
+		expect(links.map((a) => a.getAttribute("href"))).toEqual([href]);
+		expect(console.error).not.toHaveBeenCalled();
+	});
+
+	// Elk van deze levert de naam zonder link. Geen terugval naar zelf samenstellen: de bijlage-id
+	// staat er steeds bij, dus een adres maken zou kunnen, en juist dat hoort niet te gebeuren.
+	it.each([
+		["_links ontbreekt", { bijlageId: "b-1", naam: "a.pdf" }],
+		["self ontbreekt", { bijlageId: "b-1", naam: "a.pdf", _links: {} }],
+		["href is leeg", bijlageMetLink("b-1", "a.pdf", "")],
+		["href is geen tekst", bijlageMetLink("b-1", "a.pdf", 42)],
+		// Een adres uit een antwoord mag geen link naar een andere origin worden.
+		["href is absoluut", bijlageMetLink("b-1", "a.pdf", "https://elders.example/api/v1/berichten/x/bijlagen/b-1")],
+		["href is protocol-relatief", bijlageMetLink("b-1", "a.pdf", "//elders.example/api/v1/berichten/x/bijlagen/b-1")],
+		// Buiten het cookiepad krijgt de link geen ontvanger mee en antwoordt het stelsel met 400.
+		["href ligt buiten /api/v1/berichten/", bijlageMetLink("b-1", "a.pdf", "/api/v1/elders/x/bijlagen/b-1")],
+		["href is relatief zonder schuine streep", bijlageMetLink("b-1", "a.pdf", "api/v1/berichten/x/bijlagen/b-1")],
+		// Begint goed, maar wijst na het oplossen van de punten ergens anders heen.
+		["href klimt uit /api/v1/berichten/", bijlageMetLink("b-1", "a.pdf", "/api/v1/berichten/../../admin")],
+		["href klimt eruit met ontsnapte punten", bijlageMetLink("b-1", "a.pdf", "/api/v1/berichten/%2e%2e/elders")],
+		["href klimt eruit met backslashes", bijlageMetLink("b-1", "a.pdf", "/api/v1/berichten/..\\..\\admin")],
+	])("toont de naam zonder link als %s", async (_geval, bijlage) => {
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [bijlage] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const item = document.querySelector("[data-berichtenbox-attachments-list] li");
+		expect(item.textContent).toBe("a.pdf");
+		expect(item.querySelector("a")).toBeNull();
+		// Een fout aan de kant van het stelsel, dus zichtbaar voor wie de console openzet.
+		expect(console.error).toHaveBeenCalledWith(expect.stringContaining("_links.self.href"), expect.objectContaining({ bijlageId: "b-1" }));
+	});
+
+	it("weigert alleen de bijlage met een slechte link, niet de rest", async () => {
+		// Per bijlage beoordeeld: één ongeldige href mag de andere hun link niet kosten, en ze mogen
+		// ook niet elkaars adres krijgen.
 		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({
 			inhoud: "De brief.",
-			bijlagen: [{ bijlageId: "../../admin?x=1", naam: "raar.pdf" }],
+			bijlagen: [bijlageMetLink("b-1", "eerste.pdf"), bijlageMetLink("b-2", "tweede.pdf", "https://elders.example/b-2"), bijlageMetLink("b-3", "derde.pdf")],
 		}));
 
 		await laadBerichtenbox();
 		await laatLaden();
 		await laatLaden();
 
-		const link = document.querySelector("[data-berichtenbox-attachments-list] a");
-		expect(link.getAttribute("href")).toBe("/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/" + encodeURIComponent("../../admin?x=1") + "?magazijnId=" + KETEN_BERICHT.magazijnId);
+		const items = [...document.querySelectorAll("[data-berichtenbox-attachments-list] li")];
+		expect(items.map((li) => li.textContent)).toEqual(["eerste.pdf", "tweede.pdf", "derde.pdf"]);
+		expect(items.map((li) => (li.querySelector("a") ? li.querySelector("a").getAttribute("href") : null))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/b-1?magazijnId=" + KETEN_BERICHT.magazijnId, null, "/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/b-3?magazijnId=" + KETEN_BERICHT.magazijnId]);
+	});
+
+	it("geeft één bijlage haar eigen link", async () => {
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [bijlageMetLink("b-1", "enige.pdf")] }));
+
+		await laadBerichtenbox();
+		await laatLaden();
+		await laatLaden();
+
+		const links = [...document.querySelectorAll("[data-berichtenbox-attachments-list] a")];
+		expect(links.map((a) => a.getAttribute("href"))).toEqual(["/api/v1/berichten/" + KETEN_BERICHT.berichtId + "/bijlagen/b-1?magazijnId=" + KETEN_BERICHT.magazijnId]);
 	});
 
 	it("laat de tekst-versie verborgen: het stelsel levert er geen", async () => {
 		// De nabootsing biedt die wel aan. Voor een echt bericht zou dat een document beloven dat
 		// niet bestaat.
-		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{ bijlageId: "b-1", naam: "a.pdf" }] }));
+		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [bijlageMetLink("b-1", "a.pdf")] }));
 
 		await laadBerichtenbox();
 		await laatLaden();
@@ -397,20 +472,6 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// Het hele PDF-blok blijft dicht, dus ook de tekst-versie — die het stelsel sowieso niet levert.
 		expect(document.querySelector("[data-berichtenbox-tekst-download]").hidden).toBe(true);
 		expect(document.querySelector(".berichtenbox-detail-pdf").hidden).toBe(true);
-	});
-
-	it("toont een bijlage zonder id wel, maar zonder link", async () => {
-		// Zonder id valt er geen adres te maken. Dat de bijlage bestaat is waar; hem als link tonen
-		// zou een klik opleveren die nergens heen gaat.
-		metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "De brief.", bijlagen: [{ naam: "zoek.pdf" }] }));
-
-		await laadBerichtenbox();
-		await laatLaden();
-		await laatLaden();
-
-		const item = document.querySelector("[data-berichtenbox-attachments-list] li");
-		expect(item.textContent).toBe("zoek.pdf");
-		expect(item.querySelector("a")).toBeNull();
 	});
 
 	it("geeft een naamloze bijlage toch een regel", async () => {
@@ -493,7 +554,7 @@ describe("de inhoud van een bericht uit het stelsel", () => {
 		// meer maar een onwaarheid — met een werkende downloadknop erbij.
 		vi.useFakeTimers();
 		try {
-			metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "Zie de bijlage.", bijlagen: [{ bijlageId: "b-1", naam: "besluit-2026.pdf" }] }));
+			metBericht({ ...KETEN_BERICHT, heeftBijlage: true }, async () => ({ inhoud: "Zie de bijlage.", bijlagen: [bijlageMetLink("b-1", "besluit-2026.pdf")] }));
 
 			await laadBerichtenbox();
 			await vi.advanceTimersByTimeAsync(5000);

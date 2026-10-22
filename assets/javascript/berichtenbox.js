@@ -2308,24 +2308,43 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * vroeger deed, slaat zo'n bericht juist over. Elke afloop moet hier dus langs, ook de mislukte:
 	 * een laadindicator die niet afloopt laat de bezoeker wachten op iets dat nooit komt.
 	 *
-	 * De namen komen op het scherm mét een werkende link: `bijlageAdres()` hieronder bouwt
-	 * het adres bij het stelsel, en de proxy zet de ontvanger uit het cookie om in de header die het
-	 * stelsel eist. Valt er geen adres te maken, dan komt de naam er als gewone tekst te staan,
-	 * zonder link — zie `maakBijlageRegel`, dat die tak zelf toelicht.
+	 * De namen komen op het scherm mét een werkende link: het stelsel geeft elke bijlage haar eigen
+	 * adres mee, `bijlageAdres()` hieronder controleert dat, en de proxy zet de ontvanger uit het
+	 * cookie om in de header die het stelsel eist. Is er geen bruikbaar adres, dan komt de naam er
+	 * als gewone tekst te staan, zonder link — zie `maakBijlageRegel`, dat die tak zelf toelicht.
 	 */
+	// Waar een bijlage-adres moet liggen: onder het pad van het ontvanger-cookie (`ONTVANGER_PAD`
+	// in berichtenbox-keten.js). Daarbuiten reist dat cookie niet mee, maakt de proxy er geen
+	// X-Ontvanger van en antwoordt het stelsel met 400. Een test houdt die afspraak vast.
+	const BIJLAGE_PAD = "/api/v1/berichten/";
+
 	/**
-	 * Het adres van één bijlage bij het stelsel, of null als er geen te maken is.
+	 * Het adres van één bijlage bij het stelsel, of null als er geen bruikbaar adres is.
 	 *
-	 * Eén plek, want de lijst en de viewer moeten naar hetzelfde wijzen. Alle id's ontsnappen: ze
-	 * komen van buiten en horen in hun eigen deel van het adres te blijven. Het stelsel wil ook de
-	 * organisatie weten, want hetzelfde berichtnummer kan bij twee organisaties voorkomen. Geen
+	 * Het adres komt uit `_links.self.href` in het berichtdetail. De spec van de berichtenuitvraag
+	 * vraagt afnemers die link te volgen en het adres niet zelf samen te stellen, en daarom is er
+	 * geen terugval naar samenstellen uit `berichtId`, `bijlageId` en `magazijnId`: die zou elke
+	 * fout aan de kant van het stelsel verbergen achter een adres dat toevallig nog werkt.
+	 *
+	 * Gevolgd wordt alleen een relatief pad onder `BIJLAGE_PAD`. Een absolute of protocol-relatieve
+	 * URL uit een antwoord mag geen link naar een andere origin worden, en een pad elders krijgt het
+	 * ontvanger-cookie niet. Ook na het oplossen van `..` moet het daar nog liggen: anders wijst
+	 * `/api/v1/berichten/../../elders` op het scherm ergens anders heen dan het lijkt. Geen
 	 * pathPrefix — het stelsel zit bij de proxy altijd op /api/, net als de andere aanroepen in
 	 * berichtenbox-keten.js.
 	 */
 	function bijlageAdres(bijlage, bericht) {
-		const bijlageId = bijlage && bijlage.bijlageId;
-		if (!bijlageId || !bericht || !bericht.berichtId || !bericht.magazijnId) return null;
-		return "/api/v1/berichten/" + encodeURIComponent(bericht.berichtId) + "/bijlagen/" + encodeURIComponent(bijlageId) + "?magazijnId=" + encodeURIComponent(bericht.magazijnId);
+		const href = bijlage && bijlage._links && bijlage._links.self && bijlage._links.self.href;
+		if (typeof href === "string" && href.startsWith(BIJLAGE_PAD)) {
+			try {
+				const opgelost = new URL(href, window.location.origin);
+				if (opgelost.origin === window.location.origin && opgelost.pathname.startsWith(BIJLAGE_PAD)) return href;
+			} catch {
+				// Onleesbaar adres; hieronder gemeld als ongeldige link.
+			}
+		}
+		console.error("[Berichtenbox] Bijlage zonder bruikbare link in _links.self.href; de naam staat er zonder link.", { bericht: bericht && bericht.id, bijlageId: bijlage && bijlage.bijlageId, href });
+		return null;
 	}
 
 	function rondBijlagenAf(bijlagen, bericht, detail, geantwoord) {

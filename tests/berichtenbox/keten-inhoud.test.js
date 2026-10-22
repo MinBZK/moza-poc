@@ -192,9 +192,9 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 	});
 
 	it("stuurt het cookie mee naar het adres dat een bijlage-link gebruikt", async () => {
-		// Het smalle pad is alleen zinnig als het het adres dekt dat bijlageAdres() in
-		// berichtenbox.js bouwt. Dat is een afspraak tussen twee bestanden zonder gedeelde constante;
-		// hier houden we hem vast. Een assertie op de string "path=..." zou een typefout in het pad
+		// Het smalle pad is alleen zinnig als het de adressen dekt die bijlageAdres() in
+		// berichtenbox.js uit `_links.self` volgt. Dat is een afspraak tussen twee bestanden zonder
+		// gedeelde constante; hier houden we hem vast. Een assertie op de string "path=..." zou een typefout in het pad
 		// niet vangen, deze wel: de browser beslist zelf of hij het cookie meestuurt.
 		await startKeten([
 			["/api/demo/personas", PERSONAS],
@@ -244,6 +244,25 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 		expect(laatste.pad).toBe("/api/v1/berichten/" + BERICHT_ID + "?magazijnId=" + MAGAZIJN_ID);
 		// Zonder deze header levert het stelsel de berichten van niemand.
 		expect(laatste.headers["X-Ontvanger"]).toBe(ONTVANGER);
+	});
+
+	it("geeft het adres van elke bijlage ongewijzigd door aan de render-laag", async () => {
+		// Het stelsel levert per bijlage `_links.self.href`, en de render-laag volgt dat. Valt het
+		// in het transport weg, dan staat elke bijlage er zonder link.
+		const bijlagen = [
+			{ bijlageId: "b-1", naam: "a.pdf", _links: { self: { href: "/api/v1/berichten/" + BERICHT_ID + "/bijlagen/b-1?magazijnId=" + MAGAZIJN_ID } } },
+			{ bijlageId: "b-2", naam: "b.pdf", _links: { self: { href: "/api/v1/berichten/" + BERICHT_ID + "/bijlagen/b-2?magazijnId=" + MAGAZIJN_ID } } },
+		];
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+			["/api/v1/berichten/", antwoord(200, { inhoud: "De brief.", bijlagen })],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
+
+		expect(uitkomst.bijlagen).toEqual(bijlagen);
 	});
 
 	it("ontsnapt een berichtId dat het adres zou kunnen breken", async () => {
