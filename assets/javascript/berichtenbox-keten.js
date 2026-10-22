@@ -428,8 +428,8 @@
 		return "configuratie";
 	}
 
-	// Waar het ontvanger-cookie voor geldt. Moet het adres dekken dat `bijlageAdres()` in
-	// berichtenbox.js bouwt; een test houdt die afspraak vast.
+	// Waar het ontvanger-cookie voor geldt. Moet de bijlage-adressen dekken die `bijlageAdres()` in
+	// berichtenbox.js uit `_links.self` volgt (`BIJLAGE_PAD`); een test houdt die afspraak vast.
 	const ONTVANGER_PAD = "/api/v1/berichten";
 
 	/**
