@@ -113,6 +113,27 @@ module.exports = function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy("ux-onderzoeken/style.css");
 	eleventyConfig.addWatchTarget("ux-onderzoeken/style.css");
 
+	// Verhuismelding: verwijst bezoekers naar de nieuwe prototype-omgeving. Een transform en geen
+	// include in base.njk, omdat niet elke pagina die layout gebruikt (mailbox, mox, de
+	// DigiD-nabootsing hebben een eigen of geen layout). Tekst en opmaak staan in
+	// _includes/verhuismelding.html; leegmaken of weghalen zet de melding uit. Elke keer opnieuw
+	// gelezen, zodat de dev-server een wijziging meteen toont.
+	const verhuismeldingPad = path.join(__dirname, "_includes", "verhuismelding.html");
+	eleventyConfig.addWatchTarget(verhuismeldingPad);
+	eleventyConfig.addTransform("verhuismelding", function (inhoud) {
+		if (!(this.page.outputPath || "").endsWith(".html")) return inhoud;
+		const einde = inhoud.lastIndexOf("</body>");
+		if (einde === -1) return inhoud;
+		let melding = "";
+		try {
+			melding = fs.readFileSync(verhuismeldingPad, "utf8").trim();
+		} catch (e) {
+			return inhoud;
+		}
+		if (!melding) return inhoud;
+		return inhoud.slice(0, einde) + melding + "\n" + inhoud.slice(einde);
+	});
+
 	// Dev-server: nooit cachen, zodat de browser geen oude (gecachete)
 	// pagina's blijft tonen. Voorkomt dat je handmatig de cache moet legen.
 	eleventyConfig.setServerOptions({

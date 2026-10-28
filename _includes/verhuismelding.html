@@ -1,0 +1,32 @@
+<!--
+	Verhuismelding: verwijst bezoekers van deze oude prototype-omgeving naar de nieuwe.
+	Dit is de enige plek om de tekst te wijzigen. .eleventy.js voegt dit blok bij de build toe
+	aan elke HTML-pagina, ook aan pagina's die base.njk niet gebruiken. Is dit bestand leeg of
+	weg, dan verschijnt er niets. Opmaak: style/verhuismelding.css, gedrag:
+	assets/javascript/verhuismelding.js.
+
+	Zonder JavaScript staat de melding gewoon open boven de pagina en sluit de knop haar
+	(form method="dialog" doet dat zelf). Met JavaScript wordt ze modaal: de pagina erachter is
+	niet bereikbaar zolang ze openstaat, en Esc sluit haar. Elke pagina toont haar opnieuw, tenzij
+	de bezoeker "Toon deze melding niet meer" aanvinkt; "Hard reset" in het Flags-paneel brengt
+	haar dan terug.
+-->
+<link rel="stylesheet" href="/style/verhuismelding.css" />
+<dialog id="verhuismelding" class="verhuismelding" aria-labelledby="verhuismelding-titel" open>
+	<h2 id="verhuismelding-titel">MijnOverheid Zakelijk is verhuisd</h2>
+	<p>U bekijkt een oude versie van het prototype van MijnOverheid Zakelijk. Deze versie werken we niet meer bij maar blijft bewaard ter referentie.</p>
+	<p>De nieuwe versie staat op een ander adres. Daar gebruiken we andere technieken. Zo kunnen we het prototype beter aansluiten op echte diensten en gegevens.</p>
+	<p>Het nieuwe adres is moza.mijnoverheidzakelijk.nl.</p>
+	<p class="verhuismelding__niet-meer" hidden>
+		<label>
+			<input type="checkbox" data-verhuismelding-niet-meer />
+			Verberg deze melding
+			<small>(Hard reset in feature flags toont melding opnieuw)</small>
+		</label>
+	</p>
+	<form class="verhuismelding__acties" method="dialog">
+		<a class="verhuismelding__naar-nieuw" autofocus href="https://moza.mijnoverheidzakelijk.nl/">Ga naar de nieuwe versie</a>
+		<button class="verhuismelding__sluit">Bekijk de oude versie</button>
+	</form>
+</dialog>
+<script src="/assets/javascript/verhuismelding.js"></script>
