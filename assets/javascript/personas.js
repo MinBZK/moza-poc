@@ -602,6 +602,15 @@
 		heading.textContent = "Persona's";
 		panel.insertBefore(heading, clearBtn);
 
+		// Wie dit prototype bekijkt, verwacht het gedrag van een echt portaal: één inlog voor alle
+		// tabbladen. Hier is dat anders, omdat het sessie-id per tabblad in sessionStorage staat
+		// (keten-sessie.js). Zonder uitleg lijkt een tweede tabblad dat opnieuw ophaalt, of de
+		// melding over te veel plekken tegelijk, een fout.
+		var uitleg = document.createElement("p");
+		uitleg.className = "feature-flags-uitleg";
+		uitleg.textContent = "Een persona kiezen werkt hier als inloggen. Haalt de persona berichten uit het Federatief Berichtenstelsel, dan heeft elk tabblad een eigen sessie. Een nieuw tabblad logt dus opnieuw in, en een andere persona kiezen logt de vorige uit. In een echt portaal geldt één inlog voor alle tabbladen.";
+		panel.insertBefore(uitleg, clearBtn);
+
 		var list = document.createElement("ul");
 		var archiefList = document.createElement("ul");
 		var aantalArchief = 0;
