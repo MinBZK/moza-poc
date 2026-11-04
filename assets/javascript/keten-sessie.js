@@ -20,6 +20,13 @@
  * van herladen, dus `pagehide` zou de sessie ook bij elke herlading beëindigen. Een gesloten
  * tabblad laat zijn sessie verlopen: na een kwartier zonder verkeer ruimt het stelsel haar op.
  *
+ * Het portaal is de klok (besluit in MinBZK/moza-poc-fbs-berichtenbox#421 t/m #393): wanneer de
+ * bezoeker inactief is, bepaalt de berichtenbox, niet het stelsel. Daarom houdt dit bestand bij
+ * wanneer de bezoeker voor het laatst iets deed, en verlengt het de sessie bij activiteit
+ * (`POST /api/v1/sessies/huidige/_verlengen`), hoogstens eens per minuut. Niet op een timer, en
+ * niet omdat er een verbinding openstaat: een open tabblad op een onbeheerde werkplek hoort na een
+ * kwartier uitgelogd te zijn.
+ *
  * Draait vóór `personas.js`, dat bij elke paginalading de sessies van een andere persona beëindigt.
  */
 (function () {
@@ -35,6 +42,19 @@
 	// paginalading een nieuwe sessie, en de oude verloopt vanzelf. Niet als kopie ernaast: wist iets
 	// anders sessionStorage, dan hoort de sessie ook hier weg te zijn.
 	const geheugen = {};
+
+	// Binnen deze tijd na de laatste klik, toets of navigatie telt de bezoeker als actief. Wat in dat
+	// venster gebeurt, mag de sessie verlengen; daarbuiten vraagt de berichtenbox niets meer op
+	// zonder dat de bezoeker erom vraagt. Zo leeft een sessie hoogstens een minuut langer dan het
+	// kwartier inactiviteit dat het stelsel aanhoudt.
+	const ACTIEF_VENSTER_MS = 60 * 1000;
+	// Hoogstens zo vaak verlengen. Dat vraagt het stelsel, en vaker levert niets op: een sessie
+	// verloopt pas na een kwartier.
+	const VERLENG_RITME_MS = 60 * 1000;
+	// Wanneer deze sessie voor het laatst verlengd werd, per ontvanger. In sessionStorage, zodat het
+	// ritme ook over een navigatie heen geldt: anders verlengt elke paginalading opnieuw.
+	const VERLENGD_VOORVOEGSEL = "berichtenbox-sessie-verlengd:";
+	const verlengdInGeheugen = {};
 
 	function sleutel(ontvanger) {
 		return VOORVOEGSEL + ontvanger;
@@ -75,8 +95,10 @@
 		const huidige = bewaard(ontvanger);
 		if (!huidige || (id && id !== huidige)) return;
 		delete geheugen[ontvanger];
+		delete verlengdInGeheugen[ontvanger];
 		try {
 			sessionStorage.removeItem(sleutel(ontvanger));
+			sessionStorage.removeItem(VERLENGD_VOORVOEGSEL + ontvanger);
 		} catch (fout) {
 			/* geen sessionStorage */
 		}
@@ -203,6 +225,112 @@
 		beeindigBehalve(null);
 	});
 
+	// --- Het portaal is de klok -----------------------------------------------------------------
+
+	// Een paginalading is een navigatie, en die telt als activiteit.
+	let laatsteActiviteit = Date.now();
+	const activiteitKijkers = [];
+
+	/** Deed de bezoeker in de afgelopen minuut iets op deze pagina? */
+	function bezoekerActief() {
+		return Date.now() - laatsteActiviteit < ACTIEF_VENSTER_MS;
+	}
+
+	function verlengdOp(ontvanger) {
+		try {
+			const bewaard = parseInt(sessionStorage.getItem(VERLENGD_VOORVOEGSEL + ontvanger), 10);
+			if (Number.isFinite(bewaard)) return bewaard;
+		} catch (fout) {
+			/* geen sessionStorage: dan alleen het geheugen */
+		}
+		return verlengdInGeheugen[ontvanger] || 0;
+	}
+
+	function zetVerlengdOp(ontvanger, tijdstip) {
+		verlengdInGeheugen[ontvanger] = tijdstip;
+		try {
+			if (tijdstip) sessionStorage.setItem(VERLENGD_VOORVOEGSEL + ontvanger, String(tijdstip));
+			else sessionStorage.removeItem(VERLENGD_VOORVOEGSEL + ontvanger);
+		} catch (fout) {
+			/* geen sessionStorage: dan alleen het geheugen */
+		}
+	}
+
+	/**
+	 * Verlengt de sessie van deze ontvanger bij het stelsel, als dat de afgelopen minuut niet al
+	 * gebeurde. Een gewoon verzoek onder `/api/v1/berichten` verlengt haar ook; dat telt hier niet
+	 * mee, dus soms gaat er binnen een minuut één verzoek te veel. Dat is goedkoper dan elke aanroep
+	 * in de berichtenbox hier laten aantekenen.
+	 *
+	 * Een 401 betekent dat de sessie al niet meer liep; verlengen maakt haar niet opnieuw geldig. Dan
+	 * vergeten we haar, zodat het volgende verzoek een nieuwe start. Wat de bezoeker daarvan ziet,
+	 * regelt de berichtenbox bij dat volgende verzoek.
+	 */
+	function verleng(ontvanger) {
+		const id = bewaard(ontvanger);
+		if (!id) return;
+		const nu = Date.now();
+		if (nu - verlengdOp(ontvanger) < VERLENG_RITME_MS) return;
+		zetVerlengdOp(ontvanger, nu);
+
+		const opnieuwBijVolgende = () => {
+			// Mislukt, maar de sessie loopt misschien nog: de volgende activiteit probeert het weer.
+			if (verlengdOp(ontvanger) === nu) zetVerlengdOp(ontvanger, 0);
+		};
+		fetch("/api/v1/sessies/huidige/_verlengen", {
+			method: "POST",
+			headers: { "X-Ontvanger": ontvanger, "X-Sessie": id },
+		}).then(
+			(respons) => {
+				if (respons.status === 401) {
+					console.info("[Berichtenbox] De sessie liep al niet meer; het volgende verzoek start een nieuwe.");
+					vergeet(ontvanger, id);
+				} else if (!respons.ok) {
+					console.warn("[Berichtenbox] Verlengen van de sessie mislukte (" + respons.status + ").");
+					opnieuwBijVolgende();
+				}
+			},
+			(fout) => {
+				console.warn("[Berichtenbox] Verlengen van de sessie mislukte.", fout);
+				opnieuwBijVolgende();
+			}
+		);
+	}
+
+	function verlengAlles() {
+		if (afgemeld) return;
+		bewaardeOntvangers().forEach(verleng);
+	}
+
+	function bijActiviteit() {
+		laatsteActiviteit = Date.now();
+		verlengAlles();
+		activiteitKijkers.forEach((kijker) => {
+			try {
+				kijker();
+			} catch (fout) {
+				console.error("[Berichtenbox] Een luisteraar op activiteit van de bezoeker struikelde.", fout);
+			}
+		});
+	}
+
+	// Wat als activiteit telt: een klik of aanraking, een toets, scrollen met het wiel, en terugkomen
+	// op de pagina (een ander tabblad, de terugknop). Bewegen met de muis niet: dat gebeurt ook
+	// zonder dat iemand de pagina gebruikt. Spraakbediening en schakelaars komen als klik of toets
+	// binnen. In de vangfase, zodat een onderdeel dat de gebeurtenis tegenhoudt dit niet ongedaan maakt.
+	["pointerdown", "keydown", "wheel"].forEach((soort) => {
+		document.addEventListener(soort, bijActiviteit, { capture: true, passive: true });
+	});
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") bijActiviteit();
+	});
+	window.addEventListener("pageshow", (gebeurtenis) => {
+		if (gebeurtenis.persisted) bijActiviteit();
+	});
+	// De navigatie zelf. Na DOMContentLoaded, en niet al hier: dan heeft personas.js de sessie van
+	// een vorige persona al beëindigd, en verlengen we alleen die van de actieve.
+	document.addEventListener("DOMContentLoaded", verlengAlles);
+
 	window.KetenSessie = {
 		/** Heeft de bezoeker in dit document op "Uitloggen" geklikt? Dan start er geen sessie meer. */
 		get afgemeld() {
@@ -216,5 +344,10 @@
 		beeindigBehalve: beeindigBehalve,
 		meldAf: meldAf,
 		ontvangerVan: ontvangerVan,
+		bezoekerActief: bezoekerActief,
+		/** Meldt elke klik, toets of terugkeer van de bezoeker, nadat die als activiteit geteld is. */
+		opActiviteit: function (kijker) {
+			activiteitKijkers.push(kijker);
+		},
 	};
 })();

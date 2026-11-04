@@ -36,3 +36,29 @@ describe("nginx: een bijlage uit het stelsel", () => {
 		expect(regels.filter((regel) => regel.includes("$http_cookie"))).toEqual([]);
 	});
 });
+
+describe("nginx: een fout bij een bijlage", () => {
+	// Een bijlage opent in een eigen tabblad, dus de browser toont het antwoord zelf. Een
+	// problem+json is daar onleesbaar; een 401 is sinds de sessie het gewone gevolg van een kwartier
+	// niets doen.
+	const { BIJLAGE_FOUTEN } = require(process.cwd() + "/server/keten-proxy.js");
+
+	function benoemdeLocation(naam) {
+		const begin = TEMPLATE.indexOf("location @" + naam + " {");
+		expect(begin).toBeGreaterThanOrEqual(0);
+		return TEMPLATE.slice(begin, TEMPLATE.indexOf("\n    }", begin));
+	}
+
+	it("vangt 401, 429 en 503 van het stelsel af", () => {
+		const blok = bijlageBlok();
+		expect(blok).toMatch(/proxy_intercept_errors on;/);
+		expect(blok).toMatch(/error_page 401 = @bijlage_sessie_verlopen;/);
+		expect(blok).toMatch(/error_page 429 503 = @bijlage_even_niet;/);
+	});
+
+	it("zegt hetzelfde als de dev-proxy, met dezelfde status", () => {
+		expect(benoemdeLocation("bijlage_sessie_verlopen")).toContain("return " + BIJLAGE_FOUTEN[401].status + ' "' + BIJLAGE_FOUTEN[401].tekst + '";');
+		expect(benoemdeLocation("bijlage_even_niet")).toContain("return " + BIJLAGE_FOUTEN[503].status + ' "' + BIJLAGE_FOUTEN[503].tekst + '";');
+		expect(BIJLAGE_FOUTEN[429]).toEqual(BIJLAGE_FOUTEN[503]);
+	});
+});

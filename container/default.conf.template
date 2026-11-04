@@ -266,6 +266,27 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_ssl_server_name on;
+
+        # Wat het stelsel bij een fout antwoordt, toont de browser hier zelf: een problem+json die
+        # niemand kan lezen. Bij de fouten die de bezoeker zelf kan oplossen komt er een zin voor in
+        # de plaats. Een 401 is sinds de sessie het gewone gevolg van een kwartier niets doen; een
+        # 503 of 429 betekent te veel downloads tegelijk, of een opslag die even niet antwoordt.
+        # Dezelfde teksten als BIJLAGE_FOUTEN in server/keten-proxy.js; een test houdt ze gelijk.
+        proxy_intercept_errors on;
+        error_page 401 = @bijlage_sessie_verlopen;
+        error_page 429 503 = @bijlage_even_niet;
+    }
+
+    location @bijlage_sessie_verlopen {
+        types { }
+        default_type text/plain;
+        return 401 "Uw sessie is verlopen. Ga naar het bericht en open de bijlage daar opnieuw.";
+    }
+
+    location @bijlage_even_niet {
+        types { }
+        default_type text/plain;
+        return 503 "Deze bijlage is nu even niet op te halen. Probeer het over een minuut opnieuw.";
     }
 
     # --- Berichtenbox: berichten uit het Federatief Berichtenstelsel ---

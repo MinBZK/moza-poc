@@ -2309,8 +2309,8 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	 * een laadindicator die niet afloopt laat de bezoeker wachten op iets dat nooit komt.
 	 *
 	 * De namen komen op het scherm mét een werkende link: het stelsel geeft elke bijlage haar eigen
-	 * adres mee, `bijlageAdres()` hieronder controleert dat, en de proxy zet de ontvanger uit het
-	 * cookie om in de header die het stelsel eist. Is er geen bruikbaar adres, dan komt de naam er
+	 * adres mee, `bijlageAdres()` hieronder controleert dat, en de proxy zet de ontvanger en de
+	 * sessie uit de cookies om in de headers die het stelsel eist. Is er geen bruikbaar adres, dan komt de naam er
 	 * als gewone tekst te staan, zonder link — zie `maakBijlageRegel`, dat die tak zelf toelicht.
 	 */
 	// Waar een bijlage-adres moet liggen: onder het pad van het ontvanger-cookie (`ONTVANGER_PAD`

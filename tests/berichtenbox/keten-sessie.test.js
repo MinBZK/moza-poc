@@ -445,3 +445,142 @@ describe("uitloggen, de randgevallen", () => {
 		expect(sessionStorage.getItem("berichtenbox-sessie:KVK:" + kvkNummer)).toBe(null);
 	});
 });
+
+describe("het portaal is de klok", () => {
+	// De berichtenbox bepaalt wanneer de bezoeker inactief is, niet het stelsel. Ze verlengt de
+	// sessie bij een klik, toets of terugkeer, hoogstens eens per minuut, en nooit op een timer.
+	const ONTVANGER_HIER = "KVK:90000099";
+	const verlengingen = (aanroepen) => aanroepen.filter((aanroep) => aanroep.pad === "/api/v1/sessies/huidige/_verlengen");
+
+	function laadSessie(antwoordOpVerlengen = () => antwoord(200, {})) {
+		new Function(SESSIE_BRON).call(window);
+		const aanroepen = [];
+		vi.stubGlobal("fetch", async (pad, opties) => {
+			aanroepen.push({ pad, opties });
+			return antwoordOpVerlengen();
+		});
+		return aanroepen;
+	}
+
+	const toets = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "a" }));
+
+	beforeEach(() => vi.useFakeTimers());
+	afterEach(() => vi.useRealTimers());
+
+	it("verlengt bij een toets, met de ontvanger en de sessie, en zonder body", async () => {
+		const aanroepen = laadSessie();
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+
+		const verlengd = verlengingen(aanroepen);
+		expect(verlengd).toHaveLength(1);
+		expect(verlengd[0].opties).toEqual({ method: "POST", headers: { "X-Ontvanger": ONTVANGER_HIER, "X-Sessie": "sessie_van_een_tabblad" } });
+	});
+
+	it("verlengt hoogstens eens per minuut, ook over een paginalading heen", async () => {
+		const opDeEerstePagina = laadSessie();
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+		toets();
+		await vi.advanceTimersByTimeAsync(30000);
+		toets();
+		expect(verlengingen(opDeEerstePagina)).toHaveLength(1);
+
+		// Een nieuwe pagina in hetzelfde tabblad: het ritme staat in sessionStorage.
+		const opDeTweedePagina = laadSessie();
+		document.dispatchEvent(new Event("DOMContentLoaded"));
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(verlengingen(opDeTweedePagina)).toHaveLength(0);
+
+		await vi.advanceTimersByTimeAsync(31000);
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(verlengingen(opDeTweedePagina)).toHaveLength(1);
+	});
+
+	it("verlengt niet op een timer: zonder activiteit gaat er niets", async () => {
+		const aanroepen = laadSessie();
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+
+		await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
+
+		expect(verlengingen(aanroepen)).toHaveLength(0);
+	});
+
+	it("vergeet de sessie als het stelsel haar niet meer kent: verlengen maakt haar niet opnieuw geldig", async () => {
+		laadSessie(() => antwoord(401, { type: "urn:fbs:fout:sessie-ongeldig" }));
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(window.KetenSessie.bewaard(ONTVANGER_HIER)).toBe(null);
+	});
+
+	it("probeert het bij de volgende activiteit opnieuw als verlengen mislukte", async () => {
+		const aanroepen = laadSessie(() => antwoord(503, {}));
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(verlengingen(aanroepen)).toHaveLength(2);
+		expect(window.KetenSessie.bewaard(ONTVANGER_HIER)).toBe("sessie_van_een_tabblad");
+	});
+
+	it("verlengt niets zonder sessie, en niets na uitloggen", async () => {
+		document.body.innerHTML = '<a href="#uitgelogd" data-uitloggen>Uitloggen</a>';
+		const aanroepen = laadSessie(() => antwoord(204, null));
+
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(verlengingen(aanroepen)).toHaveLength(0);
+
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_van_een_tabblad");
+		document.querySelector("[data-uitloggen]").click();
+		window.KetenSessie.bewaar(ONTVANGER_HIER, "sessie_na_het_uitloggen");
+		toets();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(verlengingen(aanroepen)).toHaveLength(0);
+	});
+
+	it("telt de bezoeker een minuut na de laatste klik of toets als actief, en daarna niet meer", async () => {
+		laadSessie();
+		expect(window.KetenSessie.bezoekerActief()).toBe(true);
+
+		await vi.advanceTimersByTimeAsync(61000);
+		expect(window.KetenSessie.bezoekerActief()).toBe(false);
+
+		document.dispatchEvent(new Event("pointerdown"));
+		expect(window.KetenSessie.bezoekerActief()).toBe(true);
+	});
+
+	it("telt terugkomen op het tabblad als activiteit, en weggaan niet", async () => {
+		laadSessie();
+		await vi.advanceTimersByTimeAsync(61000);
+		const zet = (staat) => {
+			Object.defineProperty(document, "visibilityState", { configurable: true, get: () => staat });
+			document.dispatchEvent(new Event("visibilitychange"));
+		};
+
+		zet("hidden");
+		expect(window.KetenSessie.bezoekerActief()).toBe(false);
+		zet("visible");
+		expect(window.KetenSessie.bezoekerActief()).toBe(true);
+	});
+
+	it("meldt activiteit aan wie erop wacht, nadat die geteld is", async () => {
+		laadSessie();
+		await vi.advanceTimersByTimeAsync(61000);
+		const gezien = [];
+		window.KetenSessie.opActiviteit(() => gezien.push(window.KetenSessie.bezoekerActief()));
+
+		toets();
+
+		expect(gezien).toEqual([true]);
+	});
+});
