@@ -10,8 +10,8 @@
  *
  * - de Host-header volgt de upstream, niet `localhost` — het stelsel zit achter een gedeelde
  *   ingress die op die header routeert;
- * - voor een bijlage-adres wordt het cookie `ontvanger` een `X-Ontvanger`-header, want een
- *   `<a href>` kan geen eigen header meesturen;
+ * - voor een bijlage-adres worden de cookies `ontvanger` en `sessie` de headers `X-Ontvanger` en
+ *   `X-Sessie`, want een `<a href>` kan geen eigen header meesturen;
  * - de ophaalronde is een SSE-stroom: niets bufferen, ruime timeout.
  *
  * Alleen voor lokaal ontwikkelen. In een uitgerolde omgeving draait nginx en komt dit bestand niet
@@ -33,6 +33,17 @@ const DEMO = process.env.BACKEND_DEMO || KETEN;
 const hostVan = (doel, override) => override || (doel ? new URL(doel).host : "");
 
 const BIJLAGE = /^\/api\/v1\/berichten\/[^/]+\/bijlagen\/[^/]+$/;
+
+// Een bijlage is een <a href>, dus wat het stelsel bij een fout antwoordt, toont de browser zelf:
+// een problem+json die niemand kan lezen. Bij de fouten die de bezoeker zelf kan oplossen zet de
+// proxy er daarom een zin voor in de plaats, met dezelfde tekst en status als nginx in
+// `container/default.conf.template` (`@bijlage_sessie_verlopen`, `@bijlage_even_niet`); een test
+// houdt die gelijk. Een 401 is sinds de sessie het gewone gevolg van een kwartier niets doen.
+const BIJLAGE_FOUTEN = {
+	401: { status: 401, tekst: "Uw sessie is verlopen. Ga naar het bericht en open de bijlage daar opnieuw." },
+	429: { status: 503, tekst: "Deze bijlage is nu even niet op te halen. Probeer het over een minuut opnieuw." },
+	503: { status: 503, tekst: "Deze bijlage is nu even niet op te halen. Probeer het over een minuut opnieuw." },
+};
 
 function leesCookie(req, naam) {
 	const ruw = req.headers.cookie;
@@ -69,11 +80,13 @@ function proxy(doel, host, extra = {}) {
 			proxyReq.removeHeader("origin");
 
 			// Een bijlage staat in een <a href> en kan geen header meesturen; de browser zet de
-			// ontvanger daarom in een cookie. Alleen invullen als de browser zelf niets stuurde:
-			// een fetch met X-Ontvanger hoort voor te gaan.
-			if (BIJLAGE.test(req.url.split("?")[0]) && !req.headers["x-ontvanger"]) {
+			// ontvanger en de sessie daarom in een cookie. Alleen invullen als de browser zelf niets
+			// stuurde: een fetch met de header hoort voor te gaan.
+			if (BIJLAGE.test(req.url.split("?")[0])) {
 				const ontvanger = leesCookie(req, "ontvanger");
-				if (ontvanger) proxyReq.setHeader("X-Ontvanger", ontvanger);
+				if (ontvanger && !req.headers["x-ontvanger"]) proxyReq.setHeader("X-Ontvanger", ontvanger);
+				const sessie = leesCookie(req, "sessie");
+				if (sessie && !req.headers["x-sessie"]) proxyReq.setHeader("X-Sessie", sessie);
 			}
 		},
 		onError(fout, req, res) {
@@ -109,16 +122,33 @@ function ketenProxy() {
 	const personas = proxy(PERSONAS, personasHost);
 	const demo = proxy(DEMO, demoHost);
 	const keten = proxy(KETEN, ketenHost);
+	// Zelf het antwoord afhandelen, alleen voor een bijlage: dan kan een fout een leesbare zin
+	// worden. Al het andere gaat ongewijzigd door, als stroom: een bijlage kan groot zijn.
+	const bijlage = proxy(KETEN, ketenHost, {
+		selfHandleResponse: true,
+		onProxyRes(proxyRes, req, res) {
+			const fout = BIJLAGE_FOUTEN[proxyRes.statusCode];
+			if (fout) {
+				proxyRes.resume();
+				res.writeHead(fout.status, { "Content-Type": "text/plain; charset=utf-8" });
+				res.end(fout.tekst);
+				return;
+			}
+			res.writeHead(proxyRes.statusCode, proxyRes.headers);
+			proxyRes.pipe(res);
+		},
+	});
 
 	return [
 		function ketenProxyMiddleware(req, res, next) {
 			const pad = (req.url || "").split("?")[0];
 			if (pad === "/api/demo/personas") return personas(req, res, next);
 			if (pad.startsWith("/api/demo/")) return demo(req, res, next);
+			if (BIJLAGE.test(pad)) return bijlage(req, res, next);
 			if (pad.startsWith("/api/v1/")) return keten(req, res, next);
 			return next();
 		},
 	];
 }
 
-module.exports = { ketenProxy };
+module.exports = { ketenProxy, BIJLAGE_FOUTEN };

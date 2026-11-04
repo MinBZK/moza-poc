@@ -144,11 +144,28 @@
 	}
 
 	/**
+	 * Logt een vorige persona uit bij het Federatief Berichtenstelsel. In deze demo is een persona
+	 * kiezen inloggen, dus een andere kiezen is uitloggen: de sessie van de vorige gaat eerst dicht
+	 * en uit sessionStorage, en berichtenbox-keten.js start bij het eerste verzoek een nieuwe.
+	 *
+	 * Los van de herkomst hieronder, en vóór alle returns daarin. Die staat in localStorage en geldt
+	 * voor alle tabbladen; een sessie staat per tabblad in sessionStorage. Kiest een ander tabblad
+	 * een andere persona, dan is die hier bij de volgende paginalading actief, en zegt de herkomst al
+	 * dat er niets gewisseld is, terwijl dit tabblad de sessie van de vorige nog heeft.
+	 */
+	function meldAndereSessiesAf(persona) {
+		if (!window.KetenSessie) return;
+		window.KetenSessie.beeindigBehalve(window.KetenSessie.ontvangerVan(persona));
+	}
+
+	/**
 	 * Wist de opgeslagen gegevens als ze bij een andere persona horen. Draait bij elke paginalading,
 	 * dus het werkt ook bij `?persona=` — die schrijft niets op en zou anders langs een hook op de
 	 * wisselaar heen glippen.
 	 */
 	function ruimOpBijWisseling(actiefId) {
+		meldAndereSessiesAf(vindPersona(actiefId));
+
 		var vorige;
 		try {
 			vorige = localStorage.getItem(HERKOMST_KEY);
@@ -164,6 +181,8 @@
 		try {
 			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
 			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+			// De sessie die keten-sessie.js ernaast zet: die hoort bij dezelfde persona.
+			document.cookie = "sessie=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
 		} catch (e) {
 			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
 			// vorige, en dat hoort zichtbaar te zijn.
@@ -189,6 +208,8 @@
 		try {
 			document.cookie = "ontvanger=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
 			document.cookie = "ontvanger=; path=/; SameSite=Strict; Max-Age=0";
+			// De sessie die keten-sessie.js ernaast zet: die hoort bij dezelfde persona.
+			document.cookie = "sessie=; path=/api/v1/berichten; SameSite=Strict; Max-Age=0";
 		} catch (e) {
 			// Geen lege catch: lukt dit niet, dan houdt de volgende persona de ontvanger van de
 			// vorige, en dat hoort zichtbaar te zijn.
@@ -580,6 +601,15 @@
 		heading.className = "feature-flags-group-heading";
 		heading.textContent = "Persona's";
 		panel.insertBefore(heading, clearBtn);
+
+		// Wie dit prototype bekijkt, verwacht het gedrag van een echt portaal: één inlog voor alle
+		// tabbladen. Hier is dat anders, omdat het sessie-id per tabblad in sessionStorage staat
+		// (keten-sessie.js). Zonder uitleg lijkt een tweede tabblad dat opnieuw ophaalt, of de
+		// melding over te veel plekken tegelijk, een fout.
+		var uitleg = document.createElement("p");
+		uitleg.className = "feature-flags-uitleg";
+		uitleg.textContent = "Een persona kiezen werkt hier als inloggen. Haalt de persona berichten uit het Federatief Berichtenstelsel, dan heeft elk tabblad een eigen sessie. Een nieuw tabblad logt dus opnieuw in, en een andere persona kiezen logt de vorige uit. In een echt portaal geldt één inlog voor alle tabbladen.";
+		panel.insertBefore(uitleg, clearBtn);
 
 		var list = document.createElement("ul");
 		var archiefList = document.createElement("ul");

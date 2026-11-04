@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { antwoord, personasVoor, ruimKetenOp, sseAntwoord, startKeten } from "./keten-harnas.js";
+import { antwoord, personasVoor, ruimKetenOp, sessieAntwoord, sseAntwoord, startKeten, zetBezoeker } from "./keten-harnas.js";
 import { ketenBron } from "../../assets/javascript/berichtenbox/keten-bron.js";
 
 /**
@@ -392,6 +392,102 @@ describe("opnieuw verbinden", () => {
 	});
 });
 
+describe("het portaal is de klok: zonder activiteit verlengt het volgen de sessie niet", () => {
+	// De lijst lezen verlengt de sessie; de stroom en haar hartslag niet. Een tabblad dat niemand
+	// gebruikt, hoort zich zo niet ingelogd te houden (MinBZK/moza-poc-fbs-berichtenbox#421 t/m #393).
+
+	it("leest na een herverbinding de lijst niet zolang de bezoeker niets doet, en wel bij de volgende toets", async () => {
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), lijstMet("b-1"), lijstMet("b-3", "b-2", "b-1"))]]);
+		const laatste = volgGemeld();
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger);
+
+		zetBezoeker(false);
+		volg.stromen[0].breek();
+		await vi.advanceTimersByTimeAsync(1500);
+		volg.stromen[1].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		// Wel opnieuw verbonden, en een bericht uit de stroom komt er gewoon bij.
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(voor.volgen + 1);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst);
+		volg.stromen[1].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-3") });
+		await vi.advanceTimersByTimeAsync(0);
+		expect(ids(laatste())).toEqual(["b-3", "b-1"]);
+
+		zetBezoeker(true);
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+		// De lijst brengt b-2, dat tijdens de onderbreking binnenkwam.
+		expect(ids(laatste())).toEqual(["b-3", "b-2", "b-1"]);
+	});
+
+	it("leest de lijst na een herverbinding meteen als de bezoeker net iets deed", async () => {
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet()]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger);
+
+		volg.stromen[0].breek();
+		await vi.advanceTimersByTimeAsync(1500);
+		volg.stromen[1].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
+	});
+
+	it("zegt na `sessie-verlopen` dat de sessie verlopen is, start geen nieuwe, en logt pas bij de volgende toets opnieuw in", async () => {
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = aanroepen.filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger || aanroep.pad === "/api/v1/sessies").length;
+
+		zetBezoeker(false);
+		volg.stromen[0].stuur({ event: "sessie-verlopen" });
+		await vi.advanceTimersByTimeAsync(60000);
+
+		const erna = aanroepen.filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger || aanroep.pad === "/api/v1/sessies");
+		expect(erna.length).toBe(voor);
+		expect(window.BerichtenboxKeten.melding).toEqual({ soort: "mededeling", tekst: expect.stringContaining("Uw sessie is verlopen") });
+		expect(sessionStorage.getItem("berichtenbox-sessie:" + ontvanger)).toBe(null);
+
+		zetBezoeker(true);
+		await vi.advanceTimersByTimeAsync(0);
+
+		const t = tellingen(aanroepen, ontvanger);
+		expect(t.rondes).toBe(1);
+		expect(t.volgen).toBe(2);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+		expect(sessionStorage.getItem("berichtenbox-sessie:" + ontvanger)).not.toBe(null);
+	});
+
+	it("draait bij een 409 op het openen geen ronde zolang de bezoeker niets doet", async () => {
+		// Een lege sessie, geen verlopen: geen melding, maar de ronde verlengt de sessie en wacht dus.
+		const volg = volgAdres(null, GEEN_SESSIE());
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		volg.stromen[0].stuur({ event: "hartslag" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		zetBezoeker(false);
+		volg.stromen[0].breek();
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(0);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
+
+		zetBezoeker(true);
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(1);
+	});
+});
+
 describe("een verlopen sessie", () => {
 	it("draait na `sessie-verlopen` een nieuwe ronde en verbindt daarna opnieuw", async () => {
 		const volg = volgAdres();
@@ -405,6 +501,40 @@ describe("een verlopen sessie", () => {
 
 		expect(tellingen(aanroepen, ontvanger).rondes).toBe(voor.rondes + 1);
 		expect(tellingen(aanroepen, ontvanger).volgen).toBe(voor.volgen + 1);
+	});
+
+	it("start na `sessie-verlopen` eerst een nieuwe sessie, en gebruikt die daarna overal", async () => {
+		// Het stelsel beëindigde de sessie: verlopen, of uitgelogd. Dezelfde opnieuw proberen geeft
+		// alleen nog 401's; een nieuwe sessie is leeg, dus daarna hoort er een ronde bij.
+		const volg = volgAdres();
+		const sessies = lijstReeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"));
+		const { aanroepen, ontvanger } = await startVolgKeten([["/api/v1/sessies", sessies], volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = aanroepen.length;
+
+		volg.stromen[0].stuur({ event: "sessie-verlopen" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		const erna = aanroepen.slice(voor).filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger);
+		expect(erna.filter((aanroep) => aanroep.pad === "/api/v1/sessies")).toHaveLength(1);
+		const metSessie = erna.filter((aanroep) => aanroep.pad.indexOf("/api/v1/berichten") === 0);
+		expect(metSessie.map((aanroep) => aanroep.pad.split("?")[0])).toEqual(expect.arrayContaining(["/api/v1/berichten/_ophalen", "/api/v1/berichten/_volgen"]));
+		expect(metSessie.every((aanroep) => aanroep.headers["X-Sessie"] === "tweede_sessie_00000002")).toBe(true);
+		expect(sessionStorage.getItem("berichtenbox-sessie:" + ontvanger)).toBe("tweede_sessie_00000002");
+	});
+
+	it("start bij een 401 op het openen een nieuwe sessie en een nieuwe ronde", async () => {
+		// Een sessie die bij het verbinden al ongeldig is, geeft geen stroom maar een 401.
+		const volg = volgAdres(antwoord(401, { type: "urn:fbs:fout:sessie-ongeldig" }));
+		const sessies = lijstReeks(sessieAntwoord("eerste_sessie_00000001"), sessieAntwoord("tweede_sessie_00000002"));
+		const { aanroepen, ontvanger } = await startVolgKeten([["/api/v1/sessies", sessies], volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet(), GEEN_SESSIE(), lijstMet())]]);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(1);
+		expect(tellingen(aanroepen, ontvanger).volgen).toBe(2);
+		const laatsteVolgen = aanroepen.filter((aanroep) => aanroep.pad.indexOf("_volgen") !== -1).pop();
+		expect(laatsteVolgen.headers["X-Sessie"]).toBe("tweede_sessie_00000002");
+		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 
 	it("draait bij een 409 op het openen een nieuwe ronde", async () => {

@@ -22,14 +22,24 @@
  * En zolang de pagina openstaat volgt hij wat er binnenkomt. Standaard over een verbinding waarop
  * het stelsel zelf meldt dat er een bericht bij is (`_volgen`); lukt die niet, dan kijkt hij
  * periodiek of de lijst veranderd is. Allebei zonder ophaalronde, dus de organisaties merken er
- * niets van, en allebei houden ze de sessie bij het stelsel warm zolang de bezoeker kijkt: de lijst
- * verlengt haar bij elke aanroep, de stroom bij de hartslag (zo ontworpen in
- * MinBZK/moza-poc-fbs-berichtenbox#336).
+ * niets van.
+ *
+ * Geen van beide houdt de sessie in leven als de bezoeker niets doet. Het portaal is de klok:
+ * alleen activiteit van de bezoeker verlengt de sessie (keten-sessie.js). De stroom verlengt haar
+ * niet, en de lijst wel — dus vragen we de lijst alleen op als de bezoeker de afgelopen minuut
+ * actief was (`bezoekerActief`). Anders wachten we op de volgende klik of toets. Zo is een open
+ * tabblad op een onbeheerde werkplek na een kwartier uitgelogd, zoals het stelsel vraagt
+ * (MinBZK/moza-poc-fbs-berichtenbox#421 t/m #393).
  *
  * Berichten uit de keten komen niet in localStorage. Wat eerder opgehaald is staat op de server, in
- * een sessiecache per ontvanger. Elke berichtenbox-pagina vraagt daarom zelf de lijst op — ook het
- * archief, de prullenbak en een detailpagina — en draait alleen een ophaalronde als die sessie er
- * nog niet is. De lijst draagt per bericht de naam van de afzender, dus meer is er niet nodig.
+ * een sessiecache per ontvanger die blijft zolang er een sessie voor die ontvanger loopt. Elk verzoek
+ * noemt de sessie van dit tabblad in `X-Sessie` (zie keten-sessie.js). Elke berichtenbox-pagina
+ * vraagt daarom zelf de lijst op — ook het archief, de prullenbak en een detailpagina — en draait
+ * alleen een ophaalronde als er nog niets klaarstaat. Kent het stelsel de sessie niet meer (een
+ * 401), dan start er een nieuwe, zo nodig met een nieuwe ronde: in deze demo staat dat voor
+ * opnieuw inloggen. Maar alleen als de bezoeker actief is; anders zegt de berichtenbox dat de
+ * sessie verlopen is, en logt ze pas bij de volgende klik of toets opnieuw in. De lijst draagt
+ * per bericht de naam van de afzender, dus meer is er niet nodig.
  *
  * Er is geen stille terugval. Lukt het ophalen niet voor een persona die aantoonbaar aangesloten
  * is, dan blijft deze bron de bron en zegt de melding wat er misging; terugvallen op de dataset zou
@@ -39,6 +49,7 @@
  * Let op: de ontvanger gaat als header `X-Ontvanger` mee en is in de browser aan te passen. Dit is
  * geen authenticatie, net zomin als `X-Test-User` bij de Digitale Assistent; de keten-backend moet
  * zijn eigen allowlist hanteren. Aanvaardbaar voor een gesloten testgroep met fictieve gegevens.
+ * De sessie verandert daar niets aan: wie een ontvanger noemt, krijgt er een sessie voor.
  */
 (function () {
 	"use strict";
@@ -60,6 +71,11 @@
 	// dan is de bezoeker beter af met de mededeling dan met een blijvend "wordt opgehaald".
 	const INHOUD_LIMIET_MS = 10000;
 	const STILTE_LIMIET_MS = 30000;
+	// Een sessie starten is één verzoek aan de uitvraag zelf, zonder organisaties erachter.
+	const SESSIE_LIMIET_MS = 10000;
+	// De vorm van een sessie-id volgens de uitvraag. Wat er anders terugkomt, sturen we niet mee: de
+	// uitvraag zou het met een 401 weigeren, en dan start er bij elk verzoek een nieuwe sessie.
+	const SESSIE_VORM = /^[A-Za-z0-9_-]{22}$/;
 
 	// De berichtenlijst komt per pagina, en het stelsel kapt een grotere `paginaGrootte` af op
 	// honderd: om meer vragen levert er niet meer op (gemeten tegen de test-omgeving van het
@@ -82,13 +98,13 @@
 	// Hoe vaak we kijken of er berichten bij gekomen zijn terwijl de berichtenbox openstaat.
 	//
 	// Dit is geen ophaalronde: het is `GET /api/v1/berichten`, dat de sessie leest die de ronde
-	// gevuld heeft. De organisaties merken er niets van. Bijkomend: elke aanroep schuift de
-	// vervaltijd van die sessie op, dus een openstaande berichtenbox houdt zichzelf in leven.
+	// gevuld heeft. De organisaties merken er niets van. Maar elke aanroep schuift de vervaltijd van
+	// die sessie op, en dat mag alleen als de bezoeker iets doet: daarom vraagt een tik niets op als
+	// de bezoeker de afgelopen minuut niet actief was, en wacht hij op de volgende klik of toets.
 	//
 	// Vijftien seconden zichtbaar, zodat een bericht dat tijdens een demonstratie wordt opgevoerd er
-	// staat voordat iemand ernaar hoeft te vragen. Een minuut voor een tabblad dat niemand voor zich heeft:
-	// niet stoppen, want dan verloopt de sessie en kost terugkomen een volle ronde langs alle
-	// organisaties — maar ook geen verkeer voor een scherm dat niemand ziet.
+	// staat voordat iemand ernaar hoeft te vragen. Een minuut voor een tabblad dat niemand voor zich
+	// heeft; daar komt het zelden aan toe, want wie het tabblad niet voor zich heeft, klikt er ook niet.
 	const POLL_ZICHTBAAR_SEC = 15;
 	const POLL_VERBORGEN_SEC = 60;
 	// Ondergrens, ook als iemand om een korter interval vraagt: sneller levert geen zichtbaar
@@ -143,11 +159,21 @@
 		// vangnet-TTL van dat slot (aggregation-lock-ttl=PT2M); blijft een slot staan doordat een pod
 		// midden in een ronde herstart, dan is het daarna vanzelf weer vrij.
 		bezig: "Uw berichten worden op dit moment al opgehaald. Wacht twee minuten en ververs dan de pagina.",
-		// "Zijn nog niet opgehaald": er is geen sessie meer. Anders dan bij de andere meldingen helpt
-		// verversen hier echt, want dan draait de ophaalronde opnieuw en zet die de sessie terug. Deze
-		// tekst hoort bij het eerste laden; verloopt de sessie terwijl de bezoeker kijkt, dan vangt
-		// `pollTik` of `verbindStroom` dat af en draait `herstelSessie` de ronde zelf opnieuw.
+		// "Zijn nog niet opgehaald": voor deze ontvanger staat nog niets klaar. Anders dan bij de andere
+		// meldingen helpt verversen hier echt, want dan draait de ophaalronde opnieuw. Deze tekst hoort
+		// bij het eerste laden; gebeurt het terwijl de bezoeker kijkt, dan vangt `pollTik` of
+		// `verbindStroom` dat af en draait `herstelSessie` de ronde zelf opnieuw.
 		geenSessie: "Uw berichten zijn niet meer klaargezet bij het stelsel. Ververs de pagina; dan halen wij ze opnieuw op.",
+		// Een 401: het stelsel kent de sessie niet (meer). Dat herstelt deze laag zelf, met een nieuwe
+		// sessie en een nieuwe ronde; deze tekst komt pas als ook de nieuwe sessie geweigerd wordt.
+		// Verversen is in deze demo opnieuw inloggen, want de geweigerde sessie is dan vergeten.
+		sessieOngeldig: "Uw sessie is verlopen of ongeldig. Ververs de pagina om opnieuw in te loggen.",
+		// Een 503 bij één bericht: de tijdelijke opslag van het stelsel antwoordde even niet. De sessie
+		// blijft geldig, dus na een minuut opnieuw proberen helpt.
+		tijdelijk: "Wij konden dit bericht nu even niet ophalen. Ververs de pagina over een minuut om het opnieuw te proberen.",
+		// Een 429 bij het starten van een sessie. Een gesloten tabblad meldt zich niet af, dus ook
+		// daar loopt een sessie nog een kwartier door; dat zegt de laatste zin.
+		teVeelSessies: "U bent op te veel plekken tegelijk ingelogd. Log uit in een ander tabblad en ververs dan deze pagina. Of wacht een kwartier: dan vervalt een sessie die u niet meer gebruikt.",
 		afgebroken: "Het ophalen bij de bronnen is halverwege afgebroken. Uw berichten zijn daardoor niet volledig opgehaald. Ververs de pagina om het opnieuw te proberen.",
 		// De berichtenlijst komt per pagina. Breekt dat halverwege af, dan is er niets mis bij de
 		// bronnen: die hebben hun berichten al klaargezet, en de pagina's ervoor kwamen gewoon binnen.
@@ -170,6 +196,7 @@
 	// Het bericht blijft waar het was, dus opnieuw proberen kan: de knop staat er nog.
 	const UIT_MAP_TRAAG = "Het uit de map halen duurde te lang, dus wij weten niet of het gelukt is. Ververs de pagina om te zien waar het bericht staat.";
 	const UIT_MAP_FOUT = "Wij konden dit bericht niet uit de map halen. Het staat nog in de map. Probeer het opnieuw.";
+	const UIT_MAP_TIJDELIJK = "Wij konden dit bericht nu even niet uit de map halen. Probeer het over een minuut opnieuw.";
 
 	// Wat de bezoeker met zijn knop vroeg, in zijn woorden: de knoppen heten "Archiveren",
 	// "Verwijderen" en "Terugplaatsen in inbox", niet "verplaatsen".
@@ -181,6 +208,9 @@
 	 * behalve als we dat weten: na een geweigerd verzoek kan de wijziging toch gedaan zijn.
 	 */
 	const wijzigFout = (wat) => "Het is niet gelukt om dit bericht " + wat + ". Probeer het opnieuw.";
+	// Een 503: de tijdelijke opslag van het stelsel antwoordde even niet. Dat gebeurt vóórdat de
+	// wijziging uitgevoerd wordt, en de sessie blijft geldig.
+	const wijzigTijdelijk = (wat) => "Het is nu even niet gelukt om dit bericht " + wat + ". Probeer het over een minuut opnieuw.";
 	// Een tijdslimiet, of een 502: volgens de uitvraag kan de organisatie de wijziging dan al
 	// gedaan hebben terwijl het antwoord ons niet bereikte.
 	const wijzigOnzeker = (wat, waar) => "Wij weten niet of het gelukt is om dit bericht " + wat + ". Ververs de pagina om te zien " + waar + ".";
@@ -212,6 +242,12 @@
 		sessie: "Nieuwe berichten verschijnen niet meer vanzelf. Ververs de pagina om ze op te halen.",
 		fouten: "Wij konden niet meer kijken of er nieuwe berichten zijn. Wat er nu staat klopt, maar er komen er niet vanzelf bij. Ververs de pagina.",
 	};
+
+	// De sessie verliep terwijl de bezoeker niets deed. Geen nieuwe sessie op eigen houtje: dat zou
+	// levend houden wat net verlopen is. Bij de volgende klik of toets logt deze demo opnieuw in.
+	// Geen oorzaak genoemd: een kwartier niets doen is de gewone, maar ook het plafond van twaalf uur
+	// of een beëindigde sessie komen hier uit.
+	const SESSIE_VERLOPEN_TEKST = "Uw sessie is verlopen. Klik ergens op deze pagina of druk op een toets. Dan halen wij uw berichten opnieuw op.";
 
 	// Geen storing bij een bron, maar een toestand van deze omgeving: er is niets kapot, er valt
 	// hier alleen niets op te halen. Toch een melding en geen stilte, want dit raakt alleen wie een
@@ -480,6 +516,78 @@
 		return fetch(pad, Object.assign({ signal: AbortSignal.timeout(limiet) }, opties));
 	}
 
+	// Een sessie die onderweg gestart wordt. Komen er intussen meer verzoeken — de lijst en de stroom
+	// tegelijk — dan wachten die op dezelfde, in plaats van elk een eigen sessie te starten.
+	let sessieStart = null;
+
+	/**
+	 * De sessie van dit tabblad bij het stelsel: de bewaarde, of een nieuwe.
+	 *
+	 * Een nieuwe pas bij het eerste verzoek dat er een nodig heeft, en niet al bij het kiezen van de
+	 * persona. Elke sessie telt mee voor de vijf die een ontvanger tegelijk mag hebben, ook een die
+	 * niemand gebruikt; een pagina zonder berichtenbox hoort er dus geen te starten.
+	 */
+	function sessieVoor(ontvanger) {
+		const bewaard = window.KetenSessie.bewaard(ontvanger);
+		if (bewaard) return Promise.resolve(bewaard);
+		// Uitgelogd: dan hoort dit document niet zelf weer in te loggen.
+		if (window.KetenSessie.afgemeld) return Promise.reject(ketenFout("sessieOngeldig", "de bezoeker is uitgelogd"));
+		if (!sessieStart) {
+			sessieStart = startSessie(ontvanger).finally(() => {
+				sessieStart = null;
+			});
+		}
+		return sessieStart;
+	}
+
+	async function startSessie(ontvanger) {
+		let respons;
+		try {
+			respons = await metTijdslimiet("/api/v1/sessies", { method: "POST", headers: { "X-Ontvanger": ontvanger } }, SESSIE_LIMIET_MS);
+		} catch (fout) {
+			// Niet doorlaten naar redenVan: een tijdslimiet zou "de bronnen reageren niet meer"
+			// opleveren, terwijl er nog geen bron bevraagd is.
+			throw ketenFout("onbereikbaar", "sessie starten mislukt (" + (fout && fout.name) + ")");
+		}
+		if (respons.status === 429) throw ketenFout("teVeelSessies", "deze ontvanger heeft te veel sessies tegelijk");
+		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "een sessie starten"), "sessie starten mislukt (" + respons.status + ")");
+
+		const sessie = await respons.json();
+		// Het id zelf hoort niet in de console: het is een geheim.
+		if (!sessie || typeof sessie.sessieId !== "string" || !SESSIE_VORM.test(sessie.sessieId)) {
+			throw ketenFout("onbereikbaar", "sessie starten: het antwoord heeft geen bruikbaar sessieId");
+		}
+		// Uitgelogd terwijl dit verzoek onderweg was: het afmelden vond deze sessie toen nog niet. Niet
+		// bewaren, maar meteen beëindigen, anders blijft er een sessie open die niemand afsluit.
+		if (window.KetenSessie.afgemeld) {
+			window.KetenSessie.meldAf(ontvanger, sessie.sessieId);
+			throw ketenFout("sessieOngeldig", "de bezoeker logde uit terwijl de sessie startte");
+		}
+		window.KetenSessie.bewaar(ontvanger, sessie.sessieId);
+		return sessie.sessieId;
+	}
+
+	/**
+	 * Een verzoek aan de uitvraag, met de ontvanger en de sessie erbij. Zonder `limiet` geen
+	 * tijdslimiet: de stromen bewaken hun stilte zelf.
+	 *
+	 * Een 401 betekent bij de uitvraag altijd hetzelfde: de sessie ontbreekt, is verlopen, of hoort
+	 * bij een andere ontvanger, en die gevallen zijn bewust niet te onderscheiden. Dan vergeten we
+	 * haar, zodat het volgende verzoek een nieuwe start. Wat er daarna moet gebeuren — zo nodig een
+	 * nieuwe ophaalronde, want was dit de laatste sessie van de ontvanger, dan staat er niets meer
+	 * klaar — beslist de aanroeper.
+	 */
+	async function vraagKeten(ontvanger, pad, opties, limiet) {
+		const sessie = await sessieVoor(ontvanger);
+		const verzoek = Object.assign({}, opties, { headers: Object.assign({ "X-Ontvanger": ontvanger, "X-Sessie": sessie }, opties && opties.headers) });
+		const respons = await (limiet ? metTijdslimiet(pad, verzoek, limiet) : fetch(pad, verzoek));
+		if (respons.status === 401) {
+			window.KetenSessie.vergeet(ontvanger, sessie);
+			throw ketenFout("sessieOngeldig", "het stelsel kent de sessie niet (meer)");
+		}
+		return respons;
+	}
+
 	// De demo-omgeving is de enige die weet welke nummers de keten kent. Een leeg antwoord betekent
 	// "niet aangesloten" en mag stil blijven; een onbereikbare of onbegrijpelijke demo-omgeving is
 	// een storing en moet dat zeggen — anders is het verschil met "niet aangesloten" onzichtbaar.
@@ -642,10 +750,7 @@
 
 		let respons;
 		try {
-			respons = await fetch("/api/v1/berichten/_ophalen", {
-				headers: { "X-Ontvanger": ontvanger },
-				signal: afbreker.signal,
-			});
+			respons = await vraagKeten(ontvanger, "/api/v1/berichten/_ophalen", { signal: afbreker.signal });
 		} catch (fout) {
 			clearTimeout(stilteKlok);
 			throw fout;
@@ -654,7 +759,7 @@
 		if (respons.status === 409) {
 			clearTimeout(stilteKlok);
 			// Eén ontvanger, één ronde tegelijk. Dat is geen fout: een andere pagina van deze
-			// berichtenbox is bezig, en het resultaat komt in dezelfde sessie terecht. De aanroeper
+			// berichtenbox is bezig, en het resultaat komt in dezelfde sessiecache terecht. De aanroeper
 			// wacht die af in plaats van de bezoeker een storing te tonen.
 			throw ketenFout("bezig", "er loopt al een ophaalronde voor deze ontvanger");
 		}
@@ -740,14 +845,13 @@
 	/**
 	 * Wacht tot de ronde van een andere pagina klaar is, door de lijst te blijven proberen.
 	 *
-	 * Zolang die ronde loopt heeft de ontvanger nog geen gevulde sessie en antwoordt de lijst met
+	 * Zolang die ronde loopt staan de berichten van de ontvanger nog niet klaar en antwoordt de lijst met
 	 * 409. Dat is hier geen fout maar "nog niet zover". Loopt de wachttijd af, dan gooien we alsnog
 	 * `bezig`: dan zegt de melding dat er al opgehaald wordt en dat verversen zo helpt.
 	 *
-	 * Een 409 hoeft niet van die andere ronde te komen: verloopt de sessie tussen twee pagina's door,
-	 * dan zegt de lijst hetzelfde. Het onderscheid is van buitenaf niet te maken, en de handeling is
-	 * dezelfde. Elke poging begint weer bij pagina 0 — de vorige pagina's zijn dan van een sessie die
-	 * er niet meer is, en die opnieuw ophalen is goedkoper dan ze half met nieuwe mengen.
+	 * Elke poging begint weer bij pagina 0: de vorige pagina's zijn dan van een lijst die er niet
+	 * meer is, en die opnieuw ophalen is goedkoper dan ze half met nieuwe mengen. Een 401 wacht hier
+	 * niet af: zonder sessie komt die andere ronde er voor ons nooit.
 	 */
 	async function wachtOpLijst(ontvanger) {
 		const einde = Date.now() + WACHT_OP_RONDE_MS;
@@ -886,14 +990,15 @@
 	 *
 	 * Een fout ná de eerste pagina krijgt een eigen reden. De teksten van `stil` en `onbereikbaar`
 	 * gaan over de bronnen, en die hebben hier niets misdaan: de ophaalronde was klaar en de vorige
-	 * pagina's kwamen gewoon binnen. `geenSessie` blijft wél zichzelf — daar hangt het herstel aan
-	 * vast: een ronde draaien, en in `wachtOpLijst` opnieuw kijken.
+	 * pagina's kwamen gewoon binnen. `geenSessie` en `sessieOngeldig` blijven wél zichzelf — daar
+	 * hangt het herstel aan vast: een ronde draaien, en in `wachtOpLijst` opnieuw kijken, of eerst
+	 * een nieuwe sessie.
 	 */
 	async function haalLijstPagina(ontvanger, pagina, resterend) {
 		try {
 			return await lijstPaginaOp(ontvanger, pagina, resterend);
 		} catch (fout) {
-			if (pagina === 0 || redenVan(fout) === "geenSessie") throw fout;
+			if (pagina === 0 || redenVan(fout) === "geenSessie" || redenVan(fout) === "sessieOngeldig") throw fout;
 			console.error("[Berichtenbox] de berichtenlijst brak af op pagina " + pagina, fout);
 			throw ketenFout("lijstAfgebroken", "pagina " + pagina + " van de berichtenlijst kwam niet binnen");
 		}
@@ -902,11 +1007,12 @@
 	async function lijstPaginaOp(ontvanger, pagina, resterend) {
 		const adres = "/api/v1/berichten?pagina=" + pagina + "&paginaGrootte=" + PAGINA_GROOTTE;
 		const limiet = Math.min(LIJST_LIMIET_MS, Math.max(resterend, 1));
-		const respons = await metTijdslimiet(adres, { headers: { "X-Ontvanger": ontvanger } }, limiet);
-		// De uitvraag levert de lijst uit een sessie die de ophaalronde vult. Is die er niet meer —
-		// het slot verlopen, de sessie opgeruimd — dan antwoordt hij met 409, en dat is geen storing
-		// bij een bron maar een toestand die met verversen over gaat.
-		if (respons.status === 409) throw ketenFout("geenSessie", "de sessie met opgehaalde berichten bestaat niet meer");
+		const respons = await vraagKeten(ontvanger, adres, null, limiet);
+		// De uitvraag levert de lijst uit de sessiecache van de ontvanger, en die vult de ophaalronde.
+		// Staat daar nog niets klaar, of loopt de ronde nog, dan antwoordt hij met 409. Dat is geen storing bij een
+		// bron maar een toestand die met een ronde over gaat. Een sessie die er niet meer is, geeft
+		// een 401; dat vangt `vraagKeten` al af.
+		if (respons.status === 409) throw ketenFout("geenSessie", "er staan (nog) geen opgehaalde berichten klaar");
 		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de berichtenlijst ophalen"), "berichten laden mislukt (" + respons.status + ")");
 		return respons.json();
 	}
@@ -922,7 +1028,7 @@
 	async function haalInhoud(ontvanger, id) {
 		const sleutel = uitSleutel(id);
 		if (!sleutel) throw ketenFout("weg", "geen bericht-id van het stelsel: " + id);
-		const respons = await metTijdslimiet(berichtAdres(sleutel.berichtId, sleutel.magazijnId), { headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+		const respons = await vraagKeten(ontvanger, berichtAdres(sleutel.berichtId, sleutel.magazijnId), null, INHOUD_LIMIET_MS);
 
 		// Een 404 zegt niet wat wij zouden willen dat hij zegt. Hij kan betekenen dat het bericht er
 		// niet meer is, maar net zo goed dat deze backend de route niet kent, dat een ingress iets
@@ -937,7 +1043,11 @@
 		// Dus zeggen we wat we wél weten. Zodra het stelsel een kenmerk aanbiedt dat "ingetrokken"
 		// van "onbereikbaar" scheidt, kan het onderscheid terug — zie de open vraag in CLAUDE.md.
 		if (respons.status === 404) throw ketenFout("weg", "bericht niet geleverd (404: " + id + ")");
-		if (!respons.ok) throw ketenFout(redenVanRespons(respons, "de inhoud van dit bericht ophalen"), "berichtinhoud laden mislukt (" + respons.status + ")");
+		if (respons.status === 409) throw ketenFout("geenSessie", "er staan (nog) geen opgehaalde berichten klaar");
+		if (!respons.ok) {
+			const reden = redenVanRespons(respons, "de inhoud van dit bericht ophalen");
+			throw ketenFout(reden === "onbereikbaar" && respons.status === 503 ? "tijdelijk" : reden, "berichtinhoud laden mislukt (" + respons.status + ")");
+		}
 
 		const bericht = await respons.json();
 		return {
@@ -958,11 +1068,12 @@
 	 */
 	async function patchMap(ontvanger, berichtId, magazijnId, map) {
 		const adres = berichtAdres(berichtId, magazijnId);
-		const respons = await metTijdslimiet(
+		const respons = await vraagKeten(
+			ontvanger,
 			adres,
 			{
 				method: "PATCH",
-				headers: { "X-Ontvanger": ontvanger, "Content-Type": "application/merge-patch+json" },
+				headers: { "Content-Type": "application/merge-patch+json" },
 				body: JSON.stringify({ map: map }),
 			},
 			INHOUD_LIMIET_MS
@@ -976,13 +1087,18 @@
 	 *
 	 * 404 en 410 zijn "weg": het bericht bestaat niet (meer) of de bezoeker verwijderde het zelf.
 	 * Een 502 zonder proxy-kenmerk is "onzeker": de uitvraag noemt daaronder ook het geval dat de
-	 * organisatie de wijziging deed en alleen het bijwerken van de sessie mislukte.
+	 * organisatie de wijziging deed en alleen het bijwerken van de sessie mislukte. Een 409 is
+	 * hetzelfde als op de lijst: er staan nog geen opgehaalde berichten klaar, en dan helpt een ronde.
+	 * Een 503 is "tijdelijk": de opslag van de sessies antwoordde niet, vóórdat er iets uitgevoerd
+	 * werd. Over een minuut opnieuw proberen helpt, en de sessie blijft geldig.
 	 */
 	function redenVanWijziging(respons, wat) {
 		const reden = redenVanRespons(respons, wat);
 		if (reden === "configuratie") return reden;
+		if (respons.status === 409) return "geenSessie";
 		if (respons.status === 404 || respons.status === 410) return "weg";
 		if (respons.status === 502) return "onzeker";
+		if (respons.status === 503) return "tijdelijk";
 		return reden;
 	}
 
@@ -1009,6 +1125,9 @@
 	function naMislukteWijziging(fout, berichtId, wat, waar) {
 		const reden = redenVan(fout);
 		if (reden === "configuratie") return FOUT_TEKSTEN.configuratie;
+		// Ook na een herstelronde geen bruikbare sessie: opnieuw op de knop drukken helpt dan niet,
+		// verversen wel.
+		if (reden === "sessieOngeldig" || reden === "geenSessie" || reden === "teVeelSessies") return FOUT_TEKSTEN[reden];
 		if (reden === "weg") {
 			werkLijstBij((berichten) => berichten.filter((b) => b.id !== berichtId));
 			return BERICHT_WEG;
@@ -1017,13 +1136,14 @@
 			if (volgtStroom()) planLijstTik();
 			return wijzigOnzeker(wat, waar);
 		}
+		if (reden === "tijdelijk") return wijzigTijdelijk(wat);
 		return wijzigFout(wat);
 	}
 
 	/** Verwijdert een bericht bij de organisatie die het stuurde. Niet terug te draaien. */
 	async function verwijderBericht(ontvanger, berichtId, magazijnId) {
 		const adres = berichtAdres(berichtId, magazijnId);
-		const respons = await metTijdslimiet(adres, { method: "DELETE", headers: { "X-Ontvanger": ontvanger } }, INHOUD_LIMIET_MS);
+		const respons = await vraagKeten(ontvanger, adres, { method: "DELETE" }, INHOUD_LIMIET_MS);
 		if (!respons.ok) throw ketenFout(redenVanWijziging(respons, "een bericht verwijderen"), "verwijderen mislukt (" + respons.status + ")");
 	}
 
@@ -1190,10 +1310,51 @@
 		meld("storing", STELSEL_TEKSTEN[sleutel]);
 	}
 
+	// Waarom de laatste ronde mislukte, of null. Voor een verzoek dat na een herstelronde opnieuw had
+	// moeten gaan: zonder dit zegt de knop "uw sessie is verlopen" terwijl de melding erboven zegt dat
+	// u op te veel plekken bent ingelogd, en verversen dan niets oplost.
+	let laatsteRondeFout = null;
+
 	function mislukt(fout) {
+		laatsteRondeFout = fout;
 		const reden = redenVan(fout);
 		console.error("[Berichtenbox] keten niet bereikbaar (" + reden + ")", fout);
 		meldStoring(reden);
+	}
+
+	/**
+	 * De lijst met de sessie van dit tabblad, en zo nodig eerst de ronde die haar vult.
+	 *
+	 * De opgehaalde berichten staan bij het stelsel per ontvanger, zolang er een sessie voor die
+	 * ontvanger loopt: inbox, archief, prullenbak en een detailpagina zijn hier eigen documenten, en
+	 * de eerste die opengaat — in welk tabblad ook — vult ze voor de rest. Daarom eerst de lijst
+	 * proberen — dat scheelt elke pagina daarna een ronde langs alle magazijnen, een 409 op een ronde
+	 * die al loopt, en een voortgangsbalk voor werk dat al gedaan is. Het antwoord kost één verzoek
+	 * als er nog niets klaarstaat: een 409, en daarna draaien we de ronde zelf.
+	 */
+	async function lijstVanSessie(ontvanger) {
+		// Eerst de sessie, en dan pas het cookie: bij een bewaarde sessie heeft een ander tabblad het
+		// misschien intussen op de zijne gezet.
+		await sessieVoor(ontvanger);
+		window.KetenSessie.zetCookie(ontvanger);
+
+		try {
+			return { lijst: await haalLijst(ontvanger), uitvraag: { organisaties: {}, stil: [], gevonden: null } };
+		} catch (fout) {
+			if (redenVan(fout) !== "geenSessie") throw fout;
+		}
+
+		try {
+			const uitvraag = await haalOp(ontvanger);
+			return { lijst: await haalLijst(ontvanger), uitvraag: uitvraag };
+		} catch (fout) {
+			if (redenVan(fout) !== "bezig") throw fout;
+			// Een andere pagina draait de ronde al voor deze ontvanger: de pagina die de bezoeker net
+			// verliet, of een ander tabblad. Het resultaat komt in dezelfde
+			// sessie terecht, dus wachten levert de bezoeker precies wat hij zocht. Een storingsmelding
+			// zou hier zeggen dat er iets kapot is terwijl het werk gewoon loopt.
+			return { lijst: await wachtOpLijst(ontvanger), uitvraag: { organisaties: {}, stil: [], gevonden: null } };
+		}
 	}
 
 	async function draaiRonde(kvkNummer) {
@@ -1203,6 +1364,7 @@
 		// Een nieuwe ronde weet nog niets. Bleef dit van de vorige staan, dan houdt een geslaagde
 		// herhaalronde een lege berichtenbox waar hij berichten had moeten opleveren.
 		nietsOpTeHalen = false;
+		laatsteRondeFout = null;
 
 		let aangesloten;
 		try {
@@ -1258,36 +1420,15 @@
 			ontvangerVanRonde = aangesloten.ontvanger;
 			zetOntvangerCookie(aangesloten.ontvanger);
 
-			// De sessie bij het stelsel is van de ontvanger en niet van deze pagina: inbox, archief,
-			// prullenbak en een detailpagina zijn hier eigen documenten, en de eerste die opengaat
-			// vult de sessie voor de rest. Daarom eerst de lijst proberen — dat scheelt elke pagina
-			// daarna een ronde langs alle magazijnen, een 409 op een ronde die al loopt, en een
-			// voortgangsbalk voor werk dat al gedaan is.
-			//
-			// De vraag "bestaat die sessie nog" stellen we aan het stelsel en niet aan onszelf. Een
-			// aantekening in deze zitting zou hem in een tweede tabblad missen — sessionStorage hoort
-			// bij één tabblad, de sessie bij de ontvanger — en dan draait daar alsnog een hele ronde
-			// terwijl de berichten klaarstaan. Het antwoord kost één verzoek bij de eerste pagina van
-			// een zitting: een 409, en daarna draaien we de ronde zelf.
-			try {
-				lijst = await haalLijst(aangesloten.ontvanger);
-				uitvraag = { organisaties: {}, stil: [], gevonden: null };
-			} catch (fout) {
-				if (redenVan(fout) !== "geenSessie") throw fout;
-			}
-
-			if (!lijst) {
+			// Een sessie die het stelsel niet (meer) kent, krijgt één keer een opvolger: een kwartier
+			// zonder verkeer, of een herlading van een tabblad dat lang heeft stilgestaan, is de
+			// gewone weg daarheen. Weigert het stelsel ook een verse sessie, dan ligt het daar niet aan.
+			for (let poging = 0; ; poging++) {
 				try {
-					uitvraag = await haalOp(aangesloten.ontvanger);
-					lijst = await haalLijst(aangesloten.ontvanger);
+					({ lijst, uitvraag } = await lijstVanSessie(aangesloten.ontvanger));
+					break;
 				} catch (fout) {
-					if (redenVan(fout) !== "bezig") throw fout;
-					// Een andere pagina van deze berichtenbox draait de ronde al — twee tabbladen die
-					// tegelijk opengaan, bijvoorbeeld. Het resultaat komt in dezelfde sessie terecht,
-					// dus wachten levert de bezoeker precies wat hij zocht. Een storingsmelding zou
-					// hier zeggen dat er iets kapot is terwijl het werk gewoon loopt.
-					lijst = await wachtOpLijst(aangesloten.ontvanger);
-					uitvraag = { organisaties: {}, stil: [], gevonden: null };
+					if (redenVan(fout) !== "sessieOngeldig" || poging > 0) throw fout;
 				}
 			}
 		} catch (fout) {
@@ -1386,7 +1527,7 @@
 	let volgPoging = 0;
 	let volgMislukt = 0;
 	// Hoe vaak `_volgen` met 409 antwoordde sinds de laatste gezonde verbinding. Eén keer is een
-	// verlopen sessie; twee keer, met een ronde ertussen, is iets anders.
+	// sessiecache zonder berichten; twee keer, met een ronde ertussen, is iets anders.
 	let volgConflicten = 0;
 	// Waarom we navragen in plaats van volgen: `null` (we volgen), "tijdelijk" (de verbinding kwam niet
 	// op gang; over vijf minuten weer proberen) of "blijvend" (deze keten kan het niet; tot een
@@ -1398,6 +1539,38 @@
 	// Wat de stroom meldde terwijl er een tik liep. Die tik kan een lijst opleveren die van vóór zo'n
 	// bericht is; zonder dit haalt hij het weer van het scherm.
 	let bijgekomenTijdensTik = null;
+	// Wat er moet gebeuren zodra de bezoeker weer iets doet: `null` (niets), "lijst" (de lijst
+	// opnieuw lezen; die kan onvolledig zijn, want er is een tik of een herverbinding overgeslagen)
+	// of "herstel" (de sessie is weg of leeg, en er hoort een nieuwe ronde bij). Herstel gaat voor.
+	let wachtOpBezoeker = null;
+
+	/**
+	 * Mag het volgen nu iets opvragen dat de sessie verlengt? Alleen als de bezoeker de afgelopen
+	 * minuut iets deed (keten-sessie.js houdt dat bij). Het portaal is de klok: een open tabblad dat
+	 * niemand gebruikt, hoort zichzelf niet ingelogd te houden.
+	 */
+	function bezoekerActief() {
+		return window.KetenSessie.bezoekerActief();
+	}
+
+	/** Uitstellen tot de volgende klik of toets. */
+	function wachtOp(wat) {
+		clearTimeout(pollKlok);
+		pollKlok = null;
+		if (wachtOpBezoeker !== "herstel") wachtOpBezoeker = wat;
+	}
+
+	/**
+	 * De bezoeker doet iets: wat er bleef liggen, gebeurt nu. Een nieuwe sessie en ronde als die
+	 * nodig was, anders de lijst die we oversloegen; bij het navragen plant die tik de volgende.
+	 */
+	function bijBezoeker() {
+		if (!wachtOpBezoeker || !pollMag()) return;
+		const wat = wachtOpBezoeker;
+		wachtOpBezoeker = null;
+		if (wat === "herstel") herstelSessie();
+		else lijstTik();
+	}
 
 	/**
 	 * Een getal uit de instellingen: eerst de URL, dan localStorage, anders de standaardwaarde. Meestal
@@ -1538,6 +1711,14 @@
 		// Een tijdelijke terugval hoorde bij de verbinding van toen; de klok voor de herkansing is bij
 		// het weggaan gestopt.
 		if (volgTeruggevallen === "tijdelijk") volgTeruggevallen = null;
+		// Terugkomen met de terugknop is een actie van de bezoeker. Lag er een herstel klaar, dan is
+		// dit het moment; een lijst die nog gelezen moest worden, komt hieronder vanzelf.
+		const wachtte = wachtOpBezoeker;
+		wachtOpBezoeker = null;
+		if (wachtte === "herstel") {
+			herstelSessie();
+			return;
+		}
 		// Over de stroom haalt `volgen-gestart` de lijst bij; anders kijken we meteen.
 		if (volgtStroom()) {
 			verbindStroom();
@@ -1565,8 +1746,8 @@
 	 * tussenpoos voor een tabblad dat niemand voor zich heeft.
 	 */
 	function opZichtbaarheid() {
-		// Een verborgen tabblad blijft verbonden: het stelsel verlengt de sessie bij elke hartslag, en
-		// een stille verbinding kost niets.
+		// Een verborgen tabblad blijft verbonden: een stille verbinding kost niets, en verlengt de
+		// sessie niet. Doet de bezoeker een kwartier niets, dan meldt de stroom `sessie-verlopen`.
 		if (!pollMag() || volgtStroom()) return;
 
 		// Wel meteen kijken, niet bij élke tabwissel: heen en weer schakelen zou anders een reeks
@@ -1583,6 +1764,14 @@
 		// Eerst kijken of we mogen: de klok wissen vóór die vraag laat een aanroeper die afketst — een
 		// tabwissel, een terugkeer — de geplande tik vernietigen zonder er een voor terug te zetten.
 		if (!pollMag() || pollBezig) return;
+
+		// De lijst verlengt de sessie. Een tik die de bezoeker niet vroeg, een herverbinding of het
+		// periodiek navragen, hoort dat niet te doen bij iemand die er niet is: dan wacht hij op de
+		// volgende klik of toets.
+		if (!bezoekerActief()) {
+			wachtOp("lijst");
+			return;
+		}
 
 		clearTimeout(pollKlok);
 		pollKlok = null;
@@ -1614,9 +1803,18 @@
 		} catch (fout) {
 			if (achterhaald(rondeVanTik, mapVersieVanTik)) return;
 
-			// De sessie is weg. Doorpollen levert niets meer op: alleen een nieuwe ronde vult hem.
-			if (redenVan(fout) === "geenSessie") {
-				herstelSessie();
+			// De sessie is weg, of heeft geen ronde meer. Doorpollen levert niets meer op: alleen een
+			// nieuwe ronde vult haar, en bij een 401 eerst een nieuwe sessie.
+			if (redenVan(fout) === "geenSessie" || redenVan(fout) === "sessieOngeldig") {
+				herstelSessie({ verlopen: redenVan(fout) === "sessieOngeldig" });
+				return;
+			}
+
+			// Geen nieuwe sessie te krijgen: opnieuw proberen start bij elke tik een poging die het
+			// stelsel weigert, en "wij konden niet meer kijken" zou de echte reden verbergen.
+			if (redenVan(fout) === "teVeelSessies") {
+				stopPoll();
+				meld("storing", FOUT_TEKSTEN.teVeelSessies);
 				return;
 			}
 
@@ -1787,18 +1985,43 @@
 	 *
 	 * Dit is de enige plek waar het volgen de organisaties laat bevragen. Dat mag hier: zonder
 	 * sessie is er niets te lezen, en de bezoeker die zijn berichtenbox openhoudt hoort niet stil
-	 * achter te blijven bij een lijst die niet meer bijgewerkt wordt.
+	 * achter te blijven bij een lijst die niet meer bijgewerkt wordt. Was de sessie zelf weg (een
+	 * 401, of `sessie-verlopen`), dan is ze al vergeten, en start de ronde er eerst een nieuwe.
+	 *
+	 * Maar alleen als de bezoeker iets doet: een nieuwe sessie of een ronde voor een tabblad dat
+	 * niemand gebruikt, houdt levend wat net verlopen is. Was de bezoeker de afgelopen minuut niet
+	 * actief, dan wacht het herstel op de volgende klik of toets. Is de sessie zelf weg (`verlopen`:
+	 * een 401, of `sessie-verlopen`), dan zegt de berichtenbox in die tussentijd dat ze verlopen is.
+	 * Een verzoek van de bezoeker zelf (`opVerzoek`: een bericht openen, verplaatsen) wacht nergens
+	 * op. Wie actief is, krijgt meteen een nieuwe sessie: die klik of toets ís de volgende actie
+	 * waar het stelsel om vraagt, en anders moet de bezoeker die net terugkomt twee keer klikken.
+	 *
+	 * Geeft de uitkomst van de ronde, of null als er niets hersteld werd.
 	 */
-	function herstelSessie() {
+	function herstelSessie(opties) {
+		const verlopen = !!(opties && opties.verlopen);
+		const opVerzoek = !!(opties && opties.opVerzoek);
 		clearTimeout(pollKlok);
 		pollKlok = null;
 		// Zonder sessie heeft de stroom niets meer te melden. Na het herstel verbindt `hervat` opnieuw.
 		sluitStroom();
 
+		if (!opVerzoek && !bezoekerActief()) {
+			wachtOpBezoeker = "herstel";
+			if (verlopen) {
+				console.info("[Berichtenbox] De sessie is verlopen; bij de volgende klik of toets volgt een nieuwe.");
+				meld("mededeling", SESSIE_VERLOPEN_TEKST);
+			}
+			return Promise.resolve(null);
+		}
+		wachtOpBezoeker = null;
+
 		if (pollHerstelPogingen >= POLL_HERSTEL_LIMIET) {
+			// Er draait nu geen ronde, dus wat er van een eerdere mislukte ronde staat, gaat hier niet over.
+			laatsteRondeFout = null;
 			stopPoll();
 			meld("mededeling", POLL_GESTOPT_TEKSTEN.sessie);
-			return;
+			return Promise.resolve(null);
 		}
 
 		pollHerstelPogingen += 1;
@@ -1806,28 +2029,30 @@
 		const herstel = herhaal();
 		if (!herstel) {
 			pollHerstelBezig = false;
+			laatsteRondeFout = null;
 			// Er valt niets te herhalen — geen kvk-nummer, dus ook geen sessie om terug te halen. Dat
 			// hoort niet voor te komen op een pagina die aan het pollen is; vandaar de regel.
 			console.error("[Berichtenbox] De sessie is verlopen, maar er valt geen ophaalronde te herhalen; het pollen stopt.");
 			stopPoll();
 			meld("mededeling", POLL_GESTOPT_TEKSTEN.sessie);
-			return;
+			return Promise.resolve(null);
 		}
 
-		herstel.then(
+		return herstel.then(
 			(uitkomst) => {
 				pollHerstelBezig = false;
 				// Een ronde die niets oplevert heeft zichzelf al gemeld; blijven pollen zou daar een
 				// tweede melding overheen leggen.
 				if (!uitkomst) {
 					stopPoll();
-					return;
+					return null;
 				}
 				// De reeks mislukte tikken hoort bij de sessie die weg was, niet bij de nieuwe. En het
 				// hervatten gebeurt hier: `herhaal` probeerde dat al, maar toen zat dit slot nog dicht en
 				// ketste het af op `pollMag()`.
 				pollFouten = 0;
 				hervat();
+				return uitkomst;
 			},
 			(fout) => {
 				pollHerstelBezig = false;
@@ -1836,8 +2061,41 @@
 				console.error("[Berichtenbox] De herstelronde na een verlopen sessie wierp een fout; het pollen stopt.", fout);
 				stopPoll();
 				meld("mededeling", POLL_GESTOPT_TEKSTEN.sessie);
+				return null;
 			}
 		);
+	}
+
+	/**
+	 * Voert een verzoek uit, en herhaalt het één keer na een herstelronde als het stelsel de sessie
+	 * niet kende. Voor de verzoeken die de bezoeker zelf doet — een bericht openen, verplaatsen,
+	 * verwijderen —: die horen niet te mislukken omdat het tabblad een kwartier stil stond. Een 401
+	 * voert niets uit, dus herhalen kan ook bij een wijziging. Was dit de laatste sessie van de
+	 * ontvanger, dan staat er voor de nieuwe niets klaar, dus de herstelronde moet klaar zijn voordat
+	 * het verzoek opnieuw gaat: anders kent het stelsel het bericht niet. Om dezelfde reden ook bij
+	 * een 409: dan staan er bij het stelsel geen opgehaalde berichten meer. Mislukt het herstel, dan
+	 * werpt dit de reden daarvan, zodat de knop hetzelfde zegt als de melding.
+	 */
+	// Alleen deze redenen van een mislukte herstelronde zeggen iets over het verzoek van de bezoeker.
+	// Een andere — een tijdslimiet bijvoorbeeld — zou de knop laten zeggen dat we niet weten of het
+	// gelukt is, terwijl de 401 of 409 vaststaat: er is niets uitgevoerd.
+	const REDENEN_OP_SESSIENIVEAU = ["sessieOngeldig", "geenSessie", "teVeelSessies", "configuratie"];
+
+	function oorzaakVanHerstel(fout) {
+		const oorzaak = laatsteRondeFout;
+		return oorzaak && REDENEN_OP_SESSIENIVEAU.indexOf(redenVan(oorzaak)) !== -1 ? oorzaak : fout;
+	}
+
+	async function metGeldigeSessie(doe) {
+		try {
+			return await doe();
+		} catch (fout) {
+			if (redenVan(fout) !== "sessieOngeldig" && redenVan(fout) !== "geenSessie") throw fout;
+			// Loopt er al een herstel, dan wachten we dat af in plaats van er een tweede naast te zetten.
+			const uitkomst = await (pollHerstelBezig ? ronde.catch(() => null) : herstelSessie({ opVerzoek: true }));
+			if (!uitkomst) throw oorzaakVanHerstel(fout);
+			return doe();
+		}
 	}
 
 	/**
@@ -1879,8 +2137,13 @@
 	 * voorbij, en wat daarvóór binnenkwam staat in de lijst. Daarom haalt die gebeurtenis de lijst
 	 * één keer op. Een bericht op het grensvlak kan in allebei zitten; dubbel tonen we het niet, want
 	 * `voegBijgekomenToe` en de bron kijken allebei naar het id, het paar van organisatie en
-	 * berichtnummer. Opnieuw verbinden na een
-	 * haperende verbinding gaat precies zo, en daarna is de lijst dus weer compleet.
+	 * berichtnummer. Opnieuw verbinden na een haperende verbinding gaat precies zo, met één
+	 * verschil: de lijst lezen verlengt de sessie, en een herverbinding is geen actie van de
+	 * bezoeker. Was die de afgelopen minuut niet actief, dan wacht de lijst op zijn volgende klik of
+	 * toets (`pollTik`); tot dan kan er een bericht ontbreken dat tijdens de onderbreking binnenkwam.
+	 *
+	 * Het openen van de stroom en de hartslag verlengen de sessie niet. Doet de bezoeker een kwartier
+	 * niets, dan meldt de stroom `sessie-verlopen`, en verbinden we niet vanzelf opnieuw.
 	 *
 	 * Een verbinding die niet tot stand komt of wegvalt, blijft stil voor de bezoeker: de lijst die er
 	 * staat klopt, en wie niet verbonden raakt, krijgt het periodiek navragen. Nieuwe berichten
@@ -1907,11 +2170,14 @@
 		};
 
 		// Hoe de stroom eindigde: "afgebroken" (ook netjes geëindigd of niet geopend: opnieuw
-		// verbinden), "verlopen" (het stelsel meldde dat
-		// de sessie weg is), "conflict" (een 409 bij het openen) of "ontbreekt" (deze keten kent
-		// `_volgen` niet).
+		// verbinden), "verlopen" (het stelsel meldde dat de sessie weg is, of kende haar bij het
+		// openen al niet meer: een 401), "conflict" (een 409 bij het openen) of "ontbreekt" (deze
+		// keten kent `_volgen` niet).
 		let einde = "afgebroken";
 		let status = null;
+		// Met welke sessie deze stroom liep. Meldt hij `sessie-verlopen`, dan is alleen díé weg; een
+		// sessie die intussen al vernieuwd is, hoort te blijven.
+		let sessieVanStroom = null;
 		let gezond = false;
 		let wachtMinstens = 0;
 		const geopend = Date.now();
@@ -1919,18 +2185,22 @@
 		// Vóór de fetch, niet erna: na een slaapstand blijft juist het openen hangen.
 		herstartWaakhond();
 		try {
-			const respons = await fetch("/api/v1/berichten/_volgen", {
-				headers: { "X-Ontvanger": ontvangerVanRonde, Accept: "text/event-stream" },
+			// Vóór het verzoek, zodat we weten met welke sessie deze stroom loopt: na de ronde is die er
+			// altijd, en `vraagKeten` neemt dezelfde. Erna lezen kan al een vernieuwde opleveren.
+			sessieVanStroom = window.KetenSessie.bewaard(ontvangerVanRonde);
+			const respons = await vraagKeten(ontvangerVanRonde, "/api/v1/berichten/_volgen", {
+				headers: { Accept: "text/event-stream" },
 				signal: afbreker.signal,
 			});
 			status = respons.status;
+			if (!sessieVanStroom) sessieVanStroom = window.KetenSessie.bewaard(ontvangerVanRonde);
 
 			// Een keten zonder `_volgen` leest dit pad als `GET /berichten/{berichtId}`: 404 zonder
 			// `Accept`, en 406 mét — dat adres levert alleen JSON. Gemeten tegen de publieke omgeving.
 			if (status === 404 || status === 405 || status === 406) {
 				einde = "ontbreekt";
 			} else if (status === 409) {
-				// Zelfde betekenis als een 409 op de lijst: er is (nog) geen sessie, dus een herstelronde.
+				// Zelfde betekenis als een 409 op de lijst: er staat (nog) niets klaar, dus een herstelronde.
 				einde = "conflict";
 			} else if (!respons.ok || !respons.body || !isStroom(respons)) {
 				// Een 503 of 429 zegt hoe lang we moeten wachten: het stelsel is druk, of er staan voor
@@ -1975,8 +2245,11 @@
 				console.info("[Berichtenbox] De stroom met nieuwe berichten eindigde na " + Math.round((Date.now() - geopend) / 1000) + " s.");
 			}
 		} catch (fout) {
+			// Een 401 bij het openen: dezelfde weg als `sessie-verlopen`. `vraagKeten` heeft de sessie
+			// al vergeten, dus de herstelronde start een nieuwe.
+			if (redenVan(fout) === "sessieOngeldig") einde = "verlopen";
 			// De waakhond of het netwerk: opnieuw verbinden.
-			if (volgAfbreker === afbreker) console.warn("[Berichtenbox] De verbinding voor nieuwe berichten viel weg na " + Math.round((Date.now() - geopend) / 1000) + " s.", fout);
+			else if (volgAfbreker === afbreker) console.warn("[Berichtenbox] De verbinding voor nieuwe berichten viel weg na " + Math.round((Date.now() - geopend) / 1000) + " s.", fout);
 		} finally {
 			clearTimeout(waakhond);
 		}
@@ -2018,12 +2291,16 @@
 			return;
 		}
 		if (einde === "verlopen") {
-			console.info("[Berichtenbox] Het stelsel meldt dat de sessie verlopen is; er volgt een nieuwe ophaalronde.");
-			herstelSessie();
+			console.info("[Berichtenbox] Het stelsel meldt dat de sessie verlopen is.");
+			// Verlopen of beëindigd, en in beide gevallen voorgoed: dezelfde sessie opnieuw proberen
+			// levert alleen nog 401's op. Niet vanzelf opnieuw verbinden: met een nieuwe sessie houdt
+			// dat levend wat net verlopen is. Dat beslist `herstelSessie`, naar wat de bezoeker doet.
+			if (sessieVanStroom) window.KetenSessie.vergeet(ontvangerVanRonde, sessieVanStroom);
+			herstelSessie({ verlopen: true });
 			return;
 		}
 		if (einde === "conflict") {
-			// Eén keer is een verlopen sessie, en dan hoort er een ronde bij. Blijft `_volgen` met 409
+			// Eén keer is een sessiecache zonder berichten, en dan hoort er een ronde bij. Blijft `_volgen` met 409
 			// antwoorden terwijl er net een ronde gedraaid heeft, dan ligt het niet aan de sessie:
 			// verder herstellen bevraagt telkens alle organisaties, en houdt na twee keer op met een
 			// mededeling, terwijl het navragen gewoon werkt.
@@ -2175,15 +2452,16 @@
 	const kvkNummer = window.berichtenboxData && paginaGebruiktKeten() && hoortBijStelsel() ? actiefKvkNummer() : null;
 
 	// Geen lokale cache: berichten uit de keten horen niet in localStorage. Wat de bezoeker eerder
-	// ophaalde staat op de server, in een sessiecache per ontvanger met een schuivende TTL, en de
-	// berichtenlijst draagt alles wat het scherm nodig heeft — de naam van de afzender inbegrepen.
-	// Elke berichtenbox-pagina vraagt die lijst dus opnieuw op, en draait alleen een ophaalronde als
-	// er nog geen sessie is.
+	// ophaalde staat op de server, in de sessiecache van de ontvanger — die blijft zolang er een
+	// sessie voor hem loopt, en een sessie vervalt na een kwartier zonder verkeer en uiterlijk na
+	// twaalf uur — en de berichtenlijst draagt alles wat het scherm nodig heeft, de naam van de
+	// afzender inbegrepen. Elke berichtenbox-pagina vraagt die lijst dus opnieuw op, en draait alleen
+	// een ophaalronde als er nog niets klaarstaat.
 	if (kvkNummer) {
 		ronde = draaiRonde(kvkNummer);
 		// Pas kijken of er berichten bij komen als er iets is om mee te vergelijken. De uitkomst
 		// hier vastleggen en niet aan `berichten()` overlaten: die wordt alleen aangeroepen door een
-		// pagina met een bronregister, en het volgen houdt ook op een detailpagina de sessie warm.
+		// pagina met een bronregister, en ook een detailpagina volgt wat er binnenkomt.
 		ronde.then(
 			(uitkomst) => {
 				if (!uitkomst) return;
@@ -2194,6 +2472,23 @@
 				/* een mislukte ronde meldt zichzelf; `berichten()` handelt hem af */
 			}
 		);
+
+		// Een cookie geldt voor alle tabbladen, een sessie voor één. Laadt een ander tabblad later,
+		// dan staat zijn sessie in het cookie, en haalt een klik op een bijlage hier die op met een
+		// sessie die deze berichten misschien niet kent. Dus zodra dit tabblad weer in beeld komt,
+		// zetten we de eigen ontvanger en sessie terug. Niet als er intussen een andere persona
+		// gekozen is: dan hoort deze pagina bij iemand anders.
+		const zetCookiesTerug = () => {
+			if (!ontvangerVanRonde || document.visibilityState === "hidden" || actiefKvkNummerStil() !== kvkNummer || window.KetenSessie.afgemeld) return;
+			zetOntvangerCookie(ontvangerVanRonde);
+			window.KetenSessie.zetCookie(ontvangerVanRonde);
+		};
+		document.addEventListener("visibilitychange", zetCookiesTerug);
+		window.addEventListener("pageshow", zetCookiesTerug);
+
+		// Wat bleef liggen omdat de bezoeker niets deed, gebeurt bij de volgende klik of toets.
+		// keten-sessie.js draait in base.njk altijd eerder; zonder dat is er ook geen sessie.
+		if (window.KetenSessie) window.KetenSessie.opActiviteit(bijBezoeker);
 	}
 
 	window.BerichtenboxKeten = {
@@ -2280,7 +2575,7 @@
 			}
 
 			try {
-				return await haalInhoud(ontvangerVanRonde, berichtId);
+				return await metGeldigeSessie(() => haalInhoud(ontvangerVanRonde, berichtId));
 			} catch (fout) {
 				// "stil" heet hier "traag": dat is de tijdslimiet van één bericht bij één organisatie,
 				// niet het stelsel dat er als geheel mee ophoudt.
@@ -2307,13 +2602,16 @@
 			if (!bericht.map) return {};
 
 			try {
-				await patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, "");
+				await metGeldigeSessie(() => patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, ""));
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht uit zijn map halen mislukt", fout);
 				// Bij een tijdslimiet weten we niet of het stelsel het al gedaan heeft; "het staat nog in
 				// de map" zou dan misschien onwaar zijn.
 				if (redenVan(fout) === "stil") return { fout: UIT_MAP_TRAAG };
-				return { fout: redenVan(fout) === "configuratie" ? FOUT_TEKSTEN.configuratie : UIT_MAP_FOUT };
+				const reden = redenVan(fout);
+				if (reden === "configuratie" || reden === "sessieOngeldig" || reden === "geenSessie" || reden === "teVeelSessies") return { fout: FOUT_TEKSTEN[reden] };
+				if (reden === "tijdelijk") return { fout: UIT_MAP_TIJDELIJK };
+				return { fout: UIT_MAP_FOUT };
 			}
 
 			mapVersie += 1;
@@ -2343,7 +2641,7 @@
 			if ((bericht.plek || "inbox") === plek && !(plek === "inbox" && bericht.map)) return {};
 
 			try {
-				await patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]);
+				await metGeldigeSessie(() => patchMap(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId, plek === "inbox" ? "" : PLEK_MAPPEN[plek]));
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verplaatsen mislukt", fout);
 				return { fout: naMislukteWijziging(fout, berichtId, wat, "waar het bericht staat") };
@@ -2368,7 +2666,7 @@
 			}
 
 			try {
-				await verwijderBericht(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId);
+				await metGeldigeSessie(() => verwijderBericht(ontvangerVanRonde, bericht.berichtId, bericht.magazijnId));
 			} catch (fout) {
 				console.error("[Berichtenbox] bericht verwijderen mislukt", fout);
 				// Het bericht is er al niet meer: dan is bereikt wat de bezoeker vroeg.
@@ -2410,7 +2708,9 @@
 		/**
 		 * Stopt het kijken naar nieuwe berichten, en sluit de stroom. Voor de render-laag: slaat die
 		 * het gedrag van de bron over — na een mislukte eerste lading — dan leest niemand meer wat hier
-		 * gemeld wordt, en is doorvolgen verkeer voor een scherm dat er niets mee doet.
+		 * gemeld wordt, en is doorvolgen verkeer voor een scherm dat er niets mee doet. Ook voor
+		 * keten-sessie.js bij "Uitloggen": eerst het volgen stil, zodat de stroom het afmelden niet als
+		 * `sessie-verlopen` leest en een nieuwe sessie start.
 		 */
 		stopPollen: function () {
 			stopPoll();
