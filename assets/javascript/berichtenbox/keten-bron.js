@@ -65,7 +65,8 @@ function gelijkeMagazijnen(vorige, nieuwe) {
  * hoort dat bericht opnieuw aangeboden te worden — niet als bekend te gelden.
  *
  * Geeft `null` als dit geen aanwas is: er is een bericht verdwenen, er zijn andere organisaties in
- * beeld, of een bericht staat in een andere map of op een andere plek (inbox, archief, prullenbak). Dan is het een andere lijst en die hoort in één keer
+ * beeld, of een bericht staat in een andere map, op een andere plek (inbox, archief, prullenbak) of
+ * is elders gelezen of ongelezen gemarkeerd. Dan is het een andere lijst en die hoort in één keer
  * op het scherm, niet als een reeks binnenkomers. Een organisatie die erbij komt telt mee: haar naam
  * bereikt de render-laag alleen via een hele lijst, want bij een binnenkomer gaan er geen magazijnen
  * mee. Om dezelfde reden telt een binnenkomer in een map als een andere lijst: het mappenoverzicht
@@ -76,9 +77,9 @@ function gelijkeMagazijnen(vorige, nieuwe) {
 function aanwasVan(getoond, nieuwe) {
 	if (!gelijkeMagazijnen(getoond.magazijnen, nieuwe.magazijnen)) return null;
 
-	const nu = new Map((nieuwe.berichten || []).map((bericht) => [bericht.id, plaatsVan(bericht)]));
-	for (const [id, plaats] of getoond.ids) {
-		if (!nu.has(id) || nu.get(id) !== plaats) return null;
+	const nu = new Map((nieuwe.berichten || []).map((bericht) => [bericht.id, toestandVan(bericht)]));
+	for (const [id, toestand] of getoond.ids) {
+		if (!nu.has(id) || nu.get(id) !== toestand) return null;
 	}
 
 	const aanwas = (nieuwe.berichten || []).filter((bericht) => !getoond.ids.has(bericht.id));
@@ -99,11 +100,20 @@ function plaatsVan(bericht) {
 	return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
 }
 
+/**
+ * Plaats en leesstatus samen. Ook die staat in berichtenbox-keten.js en hoort gelijk te blijven: een
+ * bericht dat in een ander tabblad gelezen is, komt als `bericht-gewijzigd` binnen, en het aantal
+ * ongelezen hoort dan mee te zakken.
+ */
+function toestandVan(bericht) {
+	return plaatsVan(bericht) + "\u0000" + (bericht.isOngelezen ? "ongelezen" : "gelezen");
+}
+
 const INBOX_ZONDER_MAP = plaatsVan({});
 
-/** Wat er op het scherm staat, per bericht met zijn plek en map. */
+/** Wat er op het scherm staat, per bericht met zijn plek, map en leesstatus. */
 function getoondeIds(berichten) {
-	return new Map((berichten || []).map((bericht) => [bericht.id, plaatsVan(bericht)]));
+	return new Map((berichten || []).map((bericht) => [bericht.id, toestandVan(bericht)]));
 }
 
 /** Zoveel keer bieden we dezelfde onbruikbare aanwas opnieuw aan; daarna zeggen we het en houden op. */
@@ -396,7 +406,7 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 					// Doorgaan zou een lijst opleveren waar er middenin één ontbreekt, en dat is van een
 					// volledige lijst niet te onderscheiden. De rest wacht op de volgende wijziging.
 					if (fouten && fouten.length) return fouten;
-					getoond.ids.set(bericht.id, plaatsVan(bericht));
+					getoond.ids.set(bericht.id, toestandVan(bericht));
 				}
 				return [];
 			}

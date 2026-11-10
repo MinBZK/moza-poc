@@ -885,6 +885,251 @@ describe("een antwoord dat we niet lezen", () => {
 	});
 });
 
+describe("wat er in een ander tabblad gebeurde (API 0.10.0)", () => {
+	// Bij deze twee staat de sleutel op het hoogste niveau van de melding, niet onder `bericht`.
+	const MAGAZIJN = "00000001000000000000";
+	const gewijzigd = (id, extra = {}) => ({ event: "bericht-gewijzigd", magazijnId: MAGAZIJN, berichtId: id, ...extra });
+	const verwijderd = (id, magazijnId = MAGAZIJN) => ({ event: "bericht-verwijderd", magazijnId: magazijnId, berichtId: id });
+	const zoek = (uitkomst, id) => uitkomst.berichten.find((bericht) => bericht.berichtId === id);
+
+	/** Een keten die volgt en zijn eerste lijst al binnen heeft; `aantalMeldingen` telt de lijsten. */
+	async function volgendeKeten(lijst) {
+		const volg = volgAdres();
+		const gestart = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijst]]);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => {
+			if (toestand.uitkomst) gemeld.push(toestand.uitkomst);
+		});
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const stuur = async (gebeurtenis) => {
+			volg.stromen[0].stuur(gebeurtenis);
+			await vi.advanceTimersByTimeAsync(0);
+		};
+		return { ...gestart, volg, stuur, laatste: () => gemeld[gemeld.length - 1], aantalMeldingen: () => gemeld.length };
+	}
+
+	it("zet de leesstatus en de map zoals ze in `bericht-gewijzigd` staan", async () => {
+		const { stuur, laatste } = await volgendeKeten(lijstMet("b-1", "b-2"));
+
+		await stuur(gewijzigd("b-1", { status: "gelezen", map: "Belasting" }));
+
+		expect(zoek(laatste(), "b-1")).toMatchObject({ isOngelezen: false, plek: "inbox", map: "Belasting" });
+		expect(zoek(laatste(), "b-2")).toMatchObject({ isOngelezen: true, map: null });
+	});
+
+	it("leest een ontbrekende map als de inbox, en het archief en de prullenbak als plek", async () => {
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", antwoord(200, { berichten: [apiBericht("b-1", { map: "Belasting" }), apiBericht("b-2"), apiBericht("b-3")] })]]);
+		const laatste = volgGemeld();
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		volg.stromen[0].stuur(gewijzigd("b-1", { status: "ongelezen" }));
+		volg.stromen[0].stuur(gewijzigd("b-2", { status: "ongelezen", map: "Archief" }));
+		volg.stromen[0].stuur(gewijzigd("b-3", { status: "ongelezen", map: "Prullenbak" }));
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(zoek(laatste(), "b-1")).toMatchObject({ plek: "inbox", map: null });
+		expect(zoek(laatste(), "b-2")).toMatchObject({ plek: "archief", map: null });
+		expect(zoek(laatste(), "b-3")).toMatchObject({ plek: "prullenbak", map: null });
+	});
+
+	it("haalt een bericht weg bij `bericht-verwijderd`, op organisatie én nummer", async () => {
+		// Twee organisaties met hetzelfde berichtnummer: alleen dat van de genoemde organisatie gaat weg.
+		const anders = "00000002000000000000";
+		const { stuur, laatste } = await volgendeKeten(antwoord(200, { berichten: [apiBericht("b-1"), apiBericht("b-1", { magazijnId: anders, afzenderNaam: "RVO" })] }));
+
+		await stuur(verwijderd("b-1", anders));
+
+		expect(laatste().berichten.map((bericht) => bericht.id)).toEqual([MAGAZIJN + ":b-1"]);
+	});
+
+	it("verwerkt dezelfde melding twee keer als één keer, zonder de lijst opnieuw te melden", async () => {
+		// Ook het tabblad dat de wijziging deed, krijgt de melding terug.
+		const { stuur, laatste, aantalMeldingen } = await volgendeKeten(lijstMet("b-1", "b-2"));
+		const voor = aantalMeldingen();
+
+		await stuur(gewijzigd("b-1", { status: "gelezen" }));
+		await stuur(gewijzigd("b-1", { status: "gelezen" }));
+		await stuur(verwijderd("b-2"));
+		await stuur(verwijderd("b-2"));
+
+		expect(aantalMeldingen()).toBe(voor + 2);
+		expect(ids(laatste())).toEqual(["b-1"]);
+		expect(zoek(laatste(), "b-1").isOngelezen).toBe(false);
+	});
+
+	it("negeert een melding over een bericht dat hier niet staat", async () => {
+		const { stuur, aantalMeldingen } = await volgendeKeten(lijstMet("b-1"));
+		const voor = aantalMeldingen();
+
+		await stuur(gewijzigd("b-onbekend", { status: "gelezen" }));
+		await stuur(verwijderd("b-onbekend"));
+
+		expect(aantalMeldingen()).toBe(voor);
+		expect(console.error).not.toHaveBeenCalled();
+	});
+
+	it("vraagt bij een melding niets op: geen lijst, geen bericht", async () => {
+		// Een verzoek verlengt de sessie, en een melding is geen activiteit van de bezoeker.
+		const { stuur, aanroepen, ontvanger } = await volgendeKeten(lijstMet("b-1", "b-2"));
+		const voor = aanroepen.filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger).length;
+
+		await stuur(gewijzigd("b-1", { status: "gelezen", map: "Belasting" }));
+		await stuur(verwijderd("b-2"));
+		await vi.advanceTimersByTimeAsync(30000);
+
+		expect(aanroepen.filter((aanroep) => aanroep.headers["X-Ontvanger"] === ontvanger).length).toBe(voor);
+	});
+
+	it("past een melding die binnenkwam terwijl de lijst onderweg was, daarna nog een keer toe", async () => {
+		// Het antwoord van de lijst kan van vóór de wijziging zijn. Zonder dit staat een verwijderd
+		// bericht weer in de lijst, en een gelezen bericht weer als ongelezen.
+		let geefLijst;
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1", "b-2"), () => new Promise((klaar) => (geefLijst = () => klaar(lijstMet("b-1", "b-2")))))]]);
+		const laatste = volgGemeld();
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur(gewijzigd("b-1", { status: "gelezen" }));
+		volg.stromen[0].stuur(verwijderd("b-2"));
+		await vi.advanceTimersByTimeAsync(0);
+		geefLijst();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(ids(laatste())).toEqual(["b-1"]);
+		expect(zoek(laatste(), "b-1").isOngelezen).toBe(false);
+	});
+
+	it("onthoudt ook een melding over een bericht dat pas met de nieuwe lijst komt", async () => {
+		// Het bericht stond nog niet in de oude lijst; de nieuwe brengt het, met de oude waarden.
+		let geefLijst;
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), () => new Promise((klaar) => (geefLijst = () => klaar(lijstMet("b-2", "b-1")))))]]);
+		const laatste = volgGemeld();
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur(gewijzigd("b-2", { status: "gelezen", map: "Archief" }));
+		await vi.advanceTimersByTimeAsync(0);
+		geefLijst();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(zoek(laatste(), "b-2")).toMatchObject({ isOngelezen: false, plek: "archief" });
+	});
+
+	it("houdt de volgorde aan: een binnenkomer die daarna verwijderd werd, blijft weg", async () => {
+		let geefLijst;
+		const volg = volgAdres();
+		// De lijst is berekend tussen de binnenkomst en de verwijdering: b-2 staat erin.
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), () => new Promise((klaar) => (geefLijst = () => klaar(lijstMet("b-2", "b-1")))))]]);
+		const laatste = volgGemeld();
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur({ event: "bericht-bijgekomen", bericht: apiBericht("b-2") });
+		volg.stromen[0].stuur(verwijderd("b-2"));
+		await vi.advanceTimersByTimeAsync(0);
+		geefLijst();
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(ids(laatste())).toEqual(["b-1"]);
+	});
+
+	it("leest de lijst opnieuw vanaf de eerste pagina als er tijdens het bladeren iets verwijderd werd", async () => {
+		// De rest van de lijst schoof een plaats op: er viel een bericht tussen twee pagina's door.
+		let geefTweede = null;
+		let lezing = 0;
+		const pagina = (pad) => Number(new URL(pad, "http://x").searchParams.get("pagina"));
+		const volgende = { _links: { next: { href: "/api/v1/berichten?pagina=1&paginaGrootte=100" } } };
+		// Lezing 1 is het laden, lezing 2 de tik na `volgen-gestart`: tussen haar twee pagina's gaat b-2
+		// weg, en b-3 schuift naar de eerste pagina, die al gelezen was. Lezing 3 is van na de verwijdering.
+		const lijst = (pad) => {
+			if (pagina(pad) === 0) {
+				lezing += 1;
+				return antwoord(200, { berichten: lezing < 3 ? [apiBericht("b-1"), apiBericht("b-2")] : [apiBericht("b-1"), apiBericht("b-3")], ...volgende });
+			}
+			if (lezing === 1) return antwoord(200, { berichten: [apiBericht("b-3"), apiBericht("b-4")] });
+			if (lezing === 2) return new Promise((klaar) => (geefTweede = () => klaar(antwoord(200, { berichten: [apiBericht("b-4")] }))));
+			return antwoord(200, { berichten: [apiBericht("b-4")] });
+		};
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijst]]);
+		const voor = tellingen(aanroepen, ontvanger).lijst;
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur(verwijderd("b-2"));
+		await vi.advanceTimersByTimeAsync(0);
+		geefTweede();
+		await vi.advanceTimersByTimeAsync(0);
+
+		// Eén lezing van twee pagina's, en daarna nog één van twee.
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor + 4);
+		expect(ids(window.BerichtenboxKeten.huidigeUitkomst)).toEqual(["b-1", "b-3", "b-4"]);
+	});
+
+	it("leest een lijst van één pagina niet opnieuw na een verwijdering", async () => {
+		let geefLijst;
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1", "b-2"), () => new Promise((klaar) => (geefLijst = () => klaar(lijstMet("b-1", "b-2")))))]]);
+
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const tijdensTik = tellingen(aanroepen, ontvanger).lijst;
+		volg.stromen[0].stuur(verwijderd("b-2"));
+		await vi.advanceTimersByTimeAsync(0);
+		geefLijst();
+		await vi.advanceTimersByTimeAsync(30000);
+
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(tijdensTik);
+	});
+
+	it("slaat een melding zonder sleutel over, blijft verbonden en haalt de lijst op", async () => {
+		const { stuur, volg, aanroepen, ontvanger } = await volgendeKeten(lijstMet("b-1"));
+		const voor = tellingen(aanroepen, ontvanger).lijst;
+
+		await stuur({ event: "bericht-gewijzigd", berichtId: "b-1", status: "gelezen" });
+		await stuur({ event: "bericht-gewijzigd", magazijnId: MAGAZIJN, berichtId: "b-1", map: 7 });
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(console.error).toHaveBeenCalled();
+		expect(volg.stromen.length).toBe(1);
+		expect(volg.stromen[0].afgebroken).toBe(false);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor + 1);
+	});
+
+	it("noemt de nieuwe soorten niet als onbekend", async () => {
+		const { stuur } = await volgendeKeten(lijstMet("b-1"));
+
+		await stuur(gewijzigd("b-1", { status: "gelezen" }));
+		await stuur(verwijderd("b-1"));
+
+		expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("Onbekende melding"));
+	});
+
+	it("ziet bij het navragen een elders gelezen bericht als wijziging", async () => {
+		// Zonder stroom komt de leesstatus alleen met de lijst mee; die telt nu ook als wijziging.
+		const gelezen = antwoord(200, { berichten: [apiBericht("b-1", { status: "gelezen" })] });
+		await startKeten(
+			[
+				["/api/demo/personas", personasVoor(String(++bezoeker))],
+				["_volgen", () => antwoord(404, {})],
+				["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), gelezen)],
+				["_ophalen", () => sseAntwoord()],
+			],
+			undefined,
+			String(bezoeker)
+		);
+		const laatste = volgGemeld();
+		await vi.advanceTimersByTimeAsync(15000);
+
+		expect(laatste() && laatste().berichten[0].isOngelezen).toBe(false);
+	});
+});
+
 describe("van stroom tot bron", () => {
 	it("maakt van een bericht uit de stroom één binnenkomer, ook als de lijst het ook heeft", async () => {
 		const volg = volgAdres();
@@ -907,6 +1152,32 @@ describe("van stroom tot bron", () => {
 		const binnenkomers = gemeld.filter((wijziging) => wijziging.nieuwBericht).map((wijziging) => wijziging.nieuwBericht.berichtId);
 		expect(binnenkomers).toEqual(["b-2"]);
 		expect(gemeld.filter((wijziging) => wijziging.berichten)).toEqual([]);
+	});
+
+	it("geeft een elders gelezen of verwijderd bericht door als hele lijst, niet als binnenkomer", async () => {
+		const volg = volgAdres();
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1", "b-2")]]);
+		const bron = ketenBron(window.BerichtenboxKeten);
+		expect(await bron.geldtVoor()).toBe(true);
+		await bron.laad();
+		const gemeld = [];
+		bron.start((wijziging) => {
+			gemeld.push(wijziging);
+			return [];
+		});
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		volg.stromen[0].stuur({ event: "bericht-gewijzigd", magazijnId: "00000001000000000000", berichtId: "b-1", status: "gelezen" });
+		await vi.advanceTimersByTimeAsync(0);
+		volg.stromen[0].stuur({ event: "bericht-verwijderd", magazijnId: "00000001000000000000", berichtId: "b-2" });
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(gemeld.filter((wijziging) => wijziging.nieuwBericht)).toEqual([]);
+		const lijsten = gemeld.filter((wijziging) => wijziging.berichten);
+		expect(lijsten.length).toBe(2);
+		expect(lijsten[0].berichten.find((bericht) => bericht.berichtId === "b-1").isOngelezen).toBe(false);
+		expect(lijsten[1].berichten.map((bericht) => bericht.berichtId)).toEqual(["b-1"]);
 	});
 });
 

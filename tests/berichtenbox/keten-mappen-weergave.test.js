@@ -599,6 +599,74 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 	});
 });
 
+describe("een bericht dat elders verdwijnt terwijl het hier openstaat", () => {
+	// `bericht-verwijderd` op de stroom, of het navragen dat het bericht niet meer in de lijst ziet.
+	const detail = () => document.querySelector("[data-demo-detail]");
+	const nietGevonden = () => document.querySelector("[data-demo-niet-gevonden]");
+
+	async function open(bericht, andere = []) {
+		bouwDemoDetailPagina(bericht);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht, ...andere] } });
+		await laadBerichtenbox();
+		await laatLaden();
+		return keten;
+	}
+
+	it("sluit het bericht en zegt dat het niet meer in de Berichtenbox staat", async () => {
+		const keten = await open(ketenBericht("b2", null), [ketenBericht("b3", null)]);
+		expect(detail().hidden).toBe(false);
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
+
+		expect(detail().hidden).toBe(true);
+		expect(nietGevonden().hidden).toBe(false);
+		expect(nietGevonden().textContent).toContain("staat niet meer in uw Berichtenbox");
+		// De weg terug blijft staan.
+		expect(nietGevonden().querySelector("a").textContent).toBe("Terug naar Berichtenbox");
+	});
+
+	it("zet de focus op de uitleg als die op een knop stond die verdwijnt", async () => {
+		const keten = await open(ketenBericht("b2", null));
+		document.querySelector('[data-actie="archiveren"]').focus();
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(document.activeElement).toBe(nietGevonden());
+	});
+
+	it("laat een bericht dat alleen gewijzigd is gewoon open", async () => {
+		const keten = await open(ketenBericht("b2", "Te bespreken met adviseur"));
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", null, { plek: "archief", isOngelezen: true })] } });
+
+		expect(detail().hidden).toBe(false);
+		expect(nietGevonden().hidden).toBe(true);
+	});
+
+	it("laat het eigen voorgoed verwijderen zelf naar de prullenbak gaan, zonder het bericht eerst te sluiten", async () => {
+		// Het transport haalt het bericht al uit de lijst voordat het antwoord terug is; tot het
+		// wegnavigeren hoort het paneel met de bezig-melding te blijven staan.
+		await open(ketenBericht("b2", null, { plek: "prullenbak" }));
+
+		document.querySelector('[data-actie="voorgoed-verwijderen"]').click();
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
+		expect(nietGevonden().hidden).toBe(true);
+	});
+
+	it("sluit het bericht niet als de lijst niet te vertrouwen is", async () => {
+		// Een organisatie die niet leverde, heeft haar bericht niet weggehaald.
+		const keten = await open(ketenBericht("b2", null));
+		window.Berichtenbox.meld("Niet alle organisaties hebben hun berichten geleverd.", "info", "test");
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(detail().hidden).toBe(false);
+	});
+});
+
 describe("een bericht uit zijn map halen op de detailpagina", () => {
 	const knop = () => document.querySelector('[data-actie="uit-map"]');
 
