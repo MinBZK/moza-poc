@@ -230,7 +230,8 @@ describe("de stroom opent na de ronde", () => {
 
 	it("slaat een melding over die geen JSON is, en blijft verbonden", async () => {
 		const volg = volgAdres();
-		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		// Na de kapotte melding haalt de laag de lijst op; die kent b-2 dan ook, zoals het stelsel.
+		await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstReeks(lijstMet("b-1"), lijstMet("b-2", "b-1"))]]);
 		const laatste = volgGemeld();
 
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
@@ -241,6 +242,23 @@ describe("de stroom opent na de ronde", () => {
 
 		expect(volg.stromen.length).toBe(1);
 		expect(ids(laatste())).toEqual(["b-2", "b-1"]);
+	});
+
+	it("haalt na een melding die geen JSON is de lijst op", async () => {
+		// Welke melding het was, is niet te lezen: een kapotte `bericht-verwijderd` liet anders een
+		// bericht staan tot de volgende binnenkomer.
+		const volg = volgAdres();
+		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijstMet("b-1")]]);
+		volg.stromen[0].stuur({ event: "volgen-gestart" });
+		await vi.advanceTimersByTimeAsync(0);
+		const voor = tellingen(aanroepen, ontvanger).lijst;
+
+		volg.stromen[0].stuurRauw("data:{kapot\n\n");
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(console.error).toHaveBeenCalled();
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor + 1);
+		expect(volg.stromen[0].afgebroken).toBe(false);
 	});
 });
 
@@ -918,6 +936,26 @@ describe("wat er in een ander tabblad gebeurde (API 0.10.0)", () => {
 		expect(zoek(laatste(), "b-2")).toMatchObject({ isOngelezen: true, map: null });
 	});
 
+	it("laat bij `bericht-gewijzigd` de rest van het bericht staan", async () => {
+		// De melding draagt alleen leesstatus en map; afzender, onderwerp en datum komen uit de lijst.
+		const { stuur, laatste } = await volgendeKeten(lijstMet("b-1"));
+		const voor = zoek(window.BerichtenboxKeten.huidigeUitkomst, "b-1");
+
+		await stuur(gewijzigd("b-1", { status: "gelezen", map: "Belasting" }));
+
+		expect(zoek(laatste(), "b-1")).toEqual({ ...voor, isOngelezen: false, plek: "inbox", map: "Belasting" });
+	});
+
+	it("telt een `bericht-gewijzigd` zonder status als ongelezen, net als de lijst", async () => {
+		// Contract 0.10.0: ontbreekt `status`, dan is die onbekend, net als in de lijst.
+		const { stuur, laatste } = await volgendeKeten(antwoord(200, { berichten: [apiBericht("b-1", { status: "gelezen" })] }));
+		expect(zoek(window.BerichtenboxKeten.huidigeUitkomst, "b-1").isOngelezen).toBe(false);
+
+		await stuur(gewijzigd("b-1", { map: "Belasting" }));
+
+		expect(zoek(laatste(), "b-1")).toMatchObject({ isOngelezen: true, map: "Belasting" });
+	});
+
 	it("leest een ontbrekende map als de inbox, en het archief en de prullenbak als plek", async () => {
 		const volg = volgAdres();
 		await startVolgKeten([volg.adres, ["/api/v1/berichten?", antwoord(200, { berichten: [apiBericht("b-1", { map: "Belasting" }), apiBericht("b-2"), apiBericht("b-3")] })]]);
@@ -1058,6 +1096,10 @@ describe("wat er in een ander tabblad gebeurde (API 0.10.0)", () => {
 		const volg = volgAdres();
 		const { aanroepen, ontvanger } = await startVolgKeten([volg.adres, ["/api/v1/berichten?", lijst]]);
 		const voor = tellingen(aanroepen, ontvanger).lijst;
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => {
+			if (toestand.uitkomst) gemeld.push(ids(toestand.uitkomst));
+		});
 
 		volg.stromen[0].stuur({ event: "volgen-gestart" });
 		await vi.advanceTimersByTimeAsync(0);
@@ -1069,6 +1111,10 @@ describe("wat er in een ander tabblad gebeurde (API 0.10.0)", () => {
 		// Eén lezing van twee pagina's, en daarna nog één van twee.
 		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor + 4);
 		expect(ids(window.BerichtenboxKeten.huidigeUitkomst)).toEqual(["b-1", "b-3", "b-4"]);
+		// De lezing waar b-3 tussen de pagina's doorviel, ging niet naar de bron: anders verdween zijn
+		// rij even, en sloot de detailpagina hem als hij openstond.
+		expect(gemeld.length).toBeGreaterThan(0);
+		expect(gemeld.every((lijst) => lijst.includes("b-3"))).toBe(true);
 	});
 
 	it("leest een lijst van één pagina niet opnieuw na een verwijdering", async () => {
@@ -1092,13 +1138,48 @@ describe("wat er in een ander tabblad gebeurde (API 0.10.0)", () => {
 		const voor = tellingen(aanroepen, ontvanger).lijst;
 
 		await stuur({ event: "bericht-gewijzigd", berichtId: "b-1", status: "gelezen" });
-		await stuur({ event: "bericht-gewijzigd", magazijnId: MAGAZIJN, berichtId: "b-1", map: 7 });
 		await vi.advanceTimersByTimeAsync(5000);
 
 		expect(console.error).toHaveBeenCalled();
 		expect(volg.stromen.length).toBe(1);
 		expect(volg.stromen[0].afgebroken).toBe(false);
 		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor + 1);
+	});
+
+	// Elk geval los: in één test zou de eerste kapotte melding de fout en de lijst al leveren, en
+	// bleef ongetoetst of de tweede ook werpt.
+	it.each([
+		["null als map, als de inbox", { status: "gelezen", map: null }, { isOngelezen: false, plek: "inbox", map: null }],
+		["null als leesstatus, als ongelezen", { status: null, map: "Belasting" }, { isOngelezen: true, plek: "inbox", map: "Belasting" }],
+	])("leest in `bericht-gewijzigd` %s, zonder fout en zonder lijst", async (_, velden, verwacht) => {
+		// Veel serializers schrijven null in plaats van het veld weg te laten.
+		const { stuur, laatste, aanroepen, ontvanger } = await volgendeKeten(antwoord(200, { berichten: [apiBericht("b-1", { map: "Oud" })] }));
+		const lijstVoor = tellingen(aanroepen, ontvanger).lijst;
+
+		await stuur(gewijzigd("b-1", velden));
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(zoek(laatste(), "b-1")).toMatchObject(verwacht);
+		expect(console.error).not.toHaveBeenCalled();
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(lijstVoor);
+	});
+
+	it.each([
+		["een map die geen naam is", { status: "gelezen", map: 7 }],
+		["een lege map", { status: "gelezen", map: "" }],
+		["een onbekende leesstatus", { status: "Gelezen" }],
+	])("slaat een `bericht-gewijzigd` met %s over en haalt de lijst op", async (_, velden) => {
+		const { stuur, aantalMeldingen, aanroepen, ontvanger } = await volgendeKeten(lijstMet("b-1"));
+		const nu = () => zoek(window.BerichtenboxKeten.huidigeUitkomst, "b-1");
+		const voor = { meldingen: aantalMeldingen(), lijst: tellingen(aanroepen, ontvanger).lijst, bericht: nu() };
+
+		await stuur(gewijzigd("b-1", velden));
+
+		expect(console.error).toHaveBeenCalled();
+		expect(aantalMeldingen()).toBe(voor.meldingen);
+		expect(nu()).toEqual(voor.bericht);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(voor.lijst + 1);
 	});
 
 	it("noemt de nieuwe soorten niet als onbekend", async () => {
@@ -1178,6 +1259,9 @@ describe("van stroom tot bron", () => {
 		expect(lijsten.length).toBe(2);
 		expect(lijsten[0].berichten.find((bericht) => bericht.berichtId === "b-1").isOngelezen).toBe(false);
 		expect(lijsten[1].berichten.map((bericht) => bericht.berichtId)).toEqual(["b-1"]);
+		// De bron weet wat het stelsel weghaalde: de render-laag sluit het dan ook onder een mededeling.
+		expect(bron.weggehaald("00000001000000000000:b-2")).toBe(true);
+		expect(bron.weggehaald("00000001000000000000:b-1")).toBe(false);
 	});
 });
 

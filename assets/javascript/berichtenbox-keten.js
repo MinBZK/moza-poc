@@ -299,6 +299,11 @@
 	// weer volledig is hem intrekken; een andere melding laat die lijst staan.
 	let meldingOverNietGeleverd = false;
 	let laatsteUitkomst = null;
+
+	// De ids van wat het stelsel met `bericht-verwijderd` weghaalde, zolang de pagina openstaat. Een
+	// bericht dat daarna terugkomt (het stelsel kan het na een mislukte bijwerking weer leveren), staat
+	// gewoon in de lijst, en dan sluit de render-laag het niet: die kijkt eerst of het er nog staat.
+	const weggehaald = new Set();
 	// De laatste berichtenlijst die als wijziging naar de bron ging. Apart van `laatsteUitkomst`, want
 	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
 	// `vergeetGemeldeLijst`), terwijl `laatsteUitkomst` de laatst bekende lijst blijft.
@@ -1818,15 +1823,22 @@
 			// nieuwere heen leggen, en de bron zou een zojuist getoond bericht weer weghalen.
 			if (achterhaald(rondeVanTik, mapVersieVanTik)) return;
 
+			// Een `bericht-verwijderd` terwijl deze lezing bladerde: dan kan de rest van de lijst een
+			// plaats zijn opgeschoven en een bericht tussen twee pagina's zijn doorgevallen. Daarom
+			// nog één lezing, langs dezelfde poort (`bezoekerActief`) als elke tik. De melding zelf
+			// start geen lezing; alleen een lezing die er al was, doet het nog eens.
+			//
+			// Deze lijst gaat dan niet naar de bron. Er kan een bericht in ontbreken dat er wél is, en
+			// dan verdween de rij even en sloot de detailpagina een bericht dat gewoon openstond. De
+			// verwijdering zelf staat er al in: `neemMeldingAan` paste haar meteen toe.
+			if (lijst.paginas > 1 && gemeldTijdensTik.some((melding) => melding.soort === "verwijderd")) {
+				tikNogEens = true;
+				return;
+			}
 			// Pas nullen als het verwerken ook lukte: een antwoord dat aankomt maar niet te lezen is,
 			// hoort mee te tellen in de foutenreeks en niet die van zijn voorgangers te wissen.
 			verwerkPolllijst(lijst);
 			pollFouten = 0;
-			// Een verwijdering in een ander tabblad terwijl deze lezing bladerde: de rest van de lijst
-			// schoof een plaats op, en er viel een bericht tussen twee pagina's door. Deze lezing
-			// hoort nog bij de klik of toets die haar startte, dus mag zij opnieuw beginnen. De
-			// melding zelf start geen lezing; alleen een lezing die er al was, doet het nog eens.
-			if (lijst.paginas > 1 && gemeldTijdensTik.some((melding) => melding.soort === "verwijderd")) tikNogEens = true;
 			// Over de stroom zegt een geslaagde tik niets over de sessie: die komt meteen na een
 			// herstelronde, als de sessie net gevuld is. Daar zet de eerste hartslag de rem terug;
 			// deed deze tik dat, dan draaide een sessie die korter leeft dan één cyclus eindeloos
@@ -2272,7 +2284,11 @@
 						}
 					},
 					(frame, fout) => {
+						// Ook hier de lijst erachteraan, net als bij een melding die niet te verwerken
+						// valt: welke melding het was, is niet te lezen, en een kapotte
+						// `bericht-verwijderd` liet anders een bericht staan tot de volgende binnenkomer.
 						console.error("[Berichtenbox] Een melding uit de stroom was geen JSON; overgeslagen.", frame, fout);
+						planLijstTik();
 					}
 				);
 				console.info("[Berichtenbox] De stroom met nieuwe berichten eindigde na " + Math.round((Date.now() - geopend) / 1000) + " s.");
@@ -2472,19 +2488,25 @@
 	 * verdwijnt uit de lijst, en wat de detailpagina daarmee doet, beslist de render-laag.
 	 *
 	 * Bij deze twee staat de sleutel op het hoogste niveau van de melding, niet onder `bericht` zoals
-	 * bij `bericht-bijgekomen`. Een melding zonder sleutel, of met een map die geen naam is, werpt: de
-	 * aanroeper slaat haar dan over en haalt na een paar seconden de lijst op, net als bij een
-	 * onleesbare binnenkomer.
+	 * bij `bericht-bijgekomen`. Een melding zonder sleutel, met een map die geen naam is of met een
+	 * leesstatus buiten `gelezen` en `ongelezen`, werpt: de aanroeper slaat haar dan over en haalt na
+	 * een paar seconden de lijst op, net als bij een onleesbare binnenkomer. Zonder die controle zette
+	 * een onbekende waarde een gelezen bericht stil op ongelezen. Een ontbrekende `status` werpt niet:
+	 * volgens het contract (0.10.0) is die dan onbekend, net als in de lijst, en telt ze ook zo.
 	 */
 	function verwerkWijzigingElders(gebeurtenis) {
 		if (!bruikbaar(gebeurtenis)) throw new Error(gebeurtenis.event + " zonder berichtId of magazijnId");
 		const id = sleutelVan(gebeurtenis);
 		if (gebeurtenis.event === "bericht-verwijderd") {
+			weggehaald.add(id);
 			neemMeldingAan({ soort: "verwijderd", id: id });
 			return;
 		}
 		if (gebeurtenis.map != null && (typeof gebeurtenis.map !== "string" || gebeurtenis.map === "")) {
 			throw new Error("bericht-gewijzigd met een map die geen naam is: " + JSON.stringify(gebeurtenis.map));
+		}
+		if (gebeurtenis.status != null && gebeurtenis.status !== "gelezen" && gebeurtenis.status !== "ongelezen") {
+			throw new Error("bericht-gewijzigd met een onbekende leesstatus: " + JSON.stringify(gebeurtenis.status));
 		}
 		neemMeldingAan({ soort: "gewijzigd", id: id, toestand: toestandUit(gebeurtenis) });
 	}
@@ -2771,6 +2793,15 @@
 		 */
 		get huidigeUitkomst() {
 			return laatsteUitkomst;
+		},
+
+		/**
+		 * Haalde het stelsel dit bericht weg (`bericht-verwijderd`)? Dat het niet in de lijst staat, zegt
+		 * alleen dat het er niet staat; dit zegt dat het stelsel het weghaalde. Een vraag en geen veld
+		 * op de lijst: een lijst kan onderweg vervangen worden, en dan raakte zo'n veld kwijt.
+		 */
+		weggehaald: function (berichtId) {
+			return weggehaald.has(berichtId);
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */

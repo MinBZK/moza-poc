@@ -2627,12 +2627,10 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	/**
-	 * Is de lijst te vertrouwen als bewijs dat een bericht weg is?
-	 *
-	 * Niet alleen niet bij een mislukte lading. Een ronde die dééls lukt werpt niet — een magazijn dat
-	 * niet antwoordt levert een mededeling, geen uitworp — en dan stond "Mogelijk is het verwijderd"
-	 * onder een melding die de echte oorzaak al benoemde. Staat er iets in het meldingsblok, dan is
-	 * de lijst niet te vertrouwen als bewijs dat dit bericht weg is.
+	 * Geeft `true` als de lijst geen bewijs is dat een bericht weg is: de lading mislukte, de
+	 * laadfout staat, of er staat iets in het meldingsblok. Dat laatste ook bij een ronde die dééls
+	 * lukt. Die werpt niet — een magazijn dat niet antwoordt levert een mededeling, geen uitworp — en
+	 * dan stond "Mogelijk is het verwijderd" onder een melding die de echte oorzaak al benoemde.
 	 */
 	function lijstOnbetrouwbaar() {
 		const storing = document.querySelector("[data-berichtenbox-storing]");
@@ -2640,35 +2638,56 @@ import { ketenBron } from "./berichtenbox/keten-bron.js";
 	}
 
 	/**
-	 * Het bericht dat hier openstaat, staat niet meer in de lijst: in een ander tabblad verwijderd
-	 * (`bericht-verwijderd` op de stroom), of het navragen zag het verdwijnen. Dan sluit de
-	 * detailpagina het, zoals het stelsel vraagt, en zegt ze wat er aan de hand is. Een bericht dat
-	 * alleen gewijzigd is, blijft gewoon open.
+	 * Het bericht dat hier openstaat, staat niet meer in de lijst. Het stelsel haalde het weg
+	 * (`bericht-verwijderd` op de stroom, ook na een wijziging in een ander tabblad), of een lijst
+	 * kwam zonder. Dan sluit de detailpagina het (API 0.10.0, MinBZK/moza-poc-fbs-berichtenbox#439)
+	 * en zegt ze wat er aan de hand is. Een bericht dat alleen gewijzigd is, blijft gewoon open.
 	 *
-	 * Alleen voor een bericht uit het stelsel: de dataset heeft geen ander tabblad dat iets weghaalt.
-	 * Niet tijdens het eigen voorgoed verwijderen: dat navigeert straks zelf naar de prullenbak, en
-	 * tot dan staat het paneel met de bezig-melding er. En niet als de lijst niet te vertrouwen is:
-	 * een organisatie die niet leverde, heeft haar bericht niet weggehaald. Het staat er al, met de
-	 * inhoud erbij, en dat is beter dan een uitspraak die niet klopt.
+	 * Alleen voor een bericht uit het stelsel: die bron meldt wat er elders met een bericht gebeurde.
+	 * Bij de dataset ontbreekt een bericht alleen door de nagebootste bronuitval, en daar hoort de
+	 * uitleg van de unhappy flow bij, niet een tekst over een ander tabblad.
+	 * Niet zolang het eigen voorgoed verwijderen onderweg is: daarna gaat de pagina zelf naar de
+	 * prullenbak. En niet als de lijst geen bewijs is (`lijstOnbetrouwbaar`): een organisatie die
+	 * niet leverde, heeft haar bericht niet weggehaald. Behalve als de bron zegt dat zij het weghaalde
+	 * (`bron.weggehaald`): dan is de mededeling geen reden om het te laten staan.
+	 *
+	 * Het bericht sluit zonder dat de bezoeker iets deed, dus zegt het live-gebied het. Alleen de focus
+	 * verplaatsen is niet genoeg: wie aan het lezen is, heeft die vaak niet in het detail staan.
 	 */
 	function sluitVerdwenenBericht() {
 		const detail = document.querySelector("[data-demo-detail]");
 		if (!detail || detail.hidden || detail.dataset.uitKeten !== "true" || !detail.dataset.berichtId) return;
-		if (voorgoedOnderweg || lijstOnbetrouwbaar()) return;
-		if (data.berichten.some((bericht) => bericht.id === detail.dataset.berichtId)) return;
+		const id = detail.dataset.berichtId;
+		if (voorgoedOnderweg) return;
+		const bron = register.actief();
+		const doorBronWeggehaald = !!bron && typeof bron.weggehaald === "function" && bron.weggehaald(id);
+		if (!doorBronWeggehaald && lijstOnbetrouwbaar()) return;
+		if (data.berichten.some((bericht) => bericht.id === id)) return;
 
 		const melding = document.querySelector("[data-demo-niet-gevonden]");
-		if (!melding) return;
-		// De focus stond misschien op een knop die nu verdwijnt; dan landt die bij de uitleg en niet
-		// bovenaan de pagina. Stond hij elders, dan laten we hem daar.
+		if (!melding) {
+			console.error("[Berichtenbox] Het geopende bericht staat niet meer in de lijst, maar de pagina heeft geen [data-demo-niet-gevonden].");
+			return;
+		}
+		const tekst = "Dit bericht staat niet meer in uw Berichtenbox. Mogelijk heeft u het in een ander tabblad verwijderd.";
+		// De focus stond misschien op een knop die nu verdwijnt; dan landt hij bij het blok met de
+		// uitleg en niet bovenaan de pagina. Stond hij elders, dan blijft hij daar.
 		const focusWeg = detail.contains(document.activeElement);
 		const uitleg = melding.querySelector("p");
-		if (uitleg) uitleg.textContent = "Dit bericht staat niet meer in uw Berichtenbox. Mogelijk is het in een ander tabblad verwijderd.";
+		if (uitleg) uitleg.textContent = tekst;
 		detail.hidden = true;
 		melding.hidden = false;
+		// Titel en kruimel noemden het onderwerp van een bericht dat er niet meer staat.
+		document.title = "MijnOverheid Zakelijk: Bericht";
+		const kruimel = document.querySelector("[data-demo-breadcrumb]");
+		if (kruimel) kruimel.textContent = "Bericht";
 		if (focusWeg) {
 			melding.tabIndex = -1;
 			melding.focus();
+		} else {
+			// Met de focus erop leest de schermlezer het blok al voor; anders twee keer hetzelfde.
+			const live = document.querySelector("[data-demo-verdwenen-status]");
+			if (live) live.textContent = tekst;
 		}
 	}
 

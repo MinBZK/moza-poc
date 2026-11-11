@@ -266,6 +266,11 @@ export function ketenBron(keten, { meldStoring = () => {}, verbergMelding = () =
 			return keten.verplaats(berichtId, plek);
 		},
 
+		/** Haalde het stelsel dit bericht weg (`bericht-verwijderd`), en viel het niet alleen uit de lijst? */
+		weggehaald(berichtId) {
+			return !!keten && typeof keten.weggehaald === "function" && keten.weggehaald(berichtId);
+		},
+
 		/** Verwijdert een bericht voorgoed bij de organisatie die het stuurde. Geeft `{}` of `{ fout }`. */
 		async verwijderVoorgoed(berichtId) {
 			if (!keten || typeof keten.verwijder !== "function") {
