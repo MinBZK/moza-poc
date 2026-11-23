@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { antwoord, personasVoor, ruimKetenOp, sseAntwoord, startKeten } from "./keten-harnas.js";
+import { antwoord, personasVoor, ruimKetenOp, sseAntwoord, startKeten, zetBezoeker } from "./keten-harnas.js";
 
 /**
  * De pollcyclus van `berichtenbox-keten.js`: nieuwe berichten die verschijnen terwijl de
@@ -132,6 +132,55 @@ describe("de pollcyclus haalt op zonder de organisaties te bevragen", () => {
 		await vi.advanceTimersByTimeAsync(45000);
 
 		expect(gemeld).toEqual([]);
+	});
+});
+
+describe("het portaal is de klok: zonder activiteit vraagt het pollen niets na", () => {
+	// Elke keer de lijst opvragen verlengt de sessie. Een tabblad dat niemand gebruikt, hoort zich
+	// daarmee niet tot het plafond van twaalf uur ingelogd te houden.
+
+	it("slaat een tik over als de bezoeker niets doet, en kijkt meteen bij de volgende toets", async () => {
+		const { aanroepen, ontvanger } = await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(LEEG(), EEN_BERICHT())]]));
+		const na = tellingen(aanroepen, ontvanger);
+		const gemeld = [];
+		window.BerichtenboxKeten.opWijziging((toestand) => gemeld.push(toestand.uitkomst));
+
+		zetBezoeker(false);
+		await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst);
+
+		zetBezoeker(true);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst + 1);
+		expect(gemeld[gemeld.length - 1].berichten.map((bericht) => bericht.berichtId)).toEqual(["b-1"]);
+
+		// En daarna weer het gewone ritme.
+		await vi.advanceTimersByTimeAsync(15000);
+		expect(tellingen(aanroepen, ontvanger).lijst).toBe(na.lijst + 2);
+	});
+
+	it("zegt bij een 401 zonder activiteit dat de sessie verlopen is, en logt pas bij de volgende toets opnieuw in", async () => {
+		// De tik ging nog net, maar de 401 kwam terug toen de bezoeker al weg was.
+		let geefAntwoord;
+		const onderweg = new Promise((klaar) => {
+			geefAntwoord = () => klaar(antwoord(401, { type: "urn:fbs:fout:sessie-ongeldig" }));
+		});
+		const { aanroepen, ontvanger } = await startPollKeten(ronde([["/api/v1/berichten?", lijstReeks(LEEG(), onderweg, GEEN_SESSIE(), LEEG())]]));
+		const na = tellingen(aanroepen, ontvanger);
+
+		await vi.advanceTimersByTimeAsync(15000);
+		zetBezoeker(false);
+		geefAntwoord();
+		await vi.advanceTimersByTimeAsync(60000);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(na.rondes);
+		expect(window.BerichtenboxKeten.melding).toEqual({ soort: "mededeling", tekst: expect.stringContaining("Uw sessie is verlopen") });
+
+		zetBezoeker(true);
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(tellingen(aanroepen, ontvanger).rondes).toBe(na.rondes + 1);
+		expect(window.BerichtenboxKeten.melding).toBe(null);
 	});
 });
 

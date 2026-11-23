@@ -427,6 +427,23 @@ describe("het archief en de prullenbak als mappen bij het stelsel", () => {
 		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.berichtId === "b2")).toMatchObject({ plek: "inbox", map: "Te bespreken met adviseur" });
 	});
 
+	// Een 503 komt van de opslag van de sessies, vóórdat er iets uitgevoerd is. De sessie blijft
+	// geldig, en over een minuut opnieuw proberen helpt; dat zegt de tekst.
+	it.each([
+		["verplaatsen", (keten) => keten.verplaats(idVan("b2"), "archief"), "Het is nu even niet gelukt om dit bericht te archiveren. Probeer het over een minuut opnieuw."],
+		["uit de map halen", (keten) => keten.haalUitMap(idVan("b2")), "Wij konden dit bericht nu even niet uit de map halen. Probeer het over een minuut opnieuw."],
+	])("zegt bij een 503 op het %s dat het over een minuut weer kan, en laat het bericht staan", async (_, wijzig, tekst) => {
+		await start([
+			["/api/v1/berichten?", lijstMet({})],
+			["?magazijnId=", antwoord(503, { title: "Service Unavailable" }, "application/problem+json")],
+		]);
+
+		const uitkomst = await wijzig(window.BerichtenboxKeten);
+
+		expect(uitkomst.fout).toBe(tekst);
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.find((b) => b.berichtId === "b2")).toMatchObject({ plek: "inbox", map: "Te bespreken met adviseur" });
+	});
+
 	it("weigert een plek die het niet kent, zonder iets te vragen en zonder opnieuw proberen aan te raden", async () => {
 		const { aanroepen } = await start([["/api/v1/berichten?", lijstMet({})]]);
 
@@ -550,6 +567,18 @@ describe("het archief en de prullenbak als mappen bij het stelsel", () => {
 		const uitkomst = await window.BerichtenboxKeten.verwijder(idVan("p1"));
 
 		expect(uitkomst.fout).toBe("Het is niet gelukt om dit bericht voorgoed te verwijderen. Probeer het opnieuw.");
+		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.berichtId === "p1")).toBe(true);
+	});
+
+	it("zegt bij een 503 op het voorgoed verwijderen dat het over een minuut weer kan", async () => {
+		await start([
+			["/api/v1/berichten?", lijstMet({}, MET_ARCHIEF)],
+			["?magazijnId=", antwoord(503, { title: "Service Unavailable" }, "application/problem+json")],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.verwijder(idVan("p1"));
+
+		expect(uitkomst.fout).toBe("Het is nu even niet gelukt om dit bericht voorgoed te verwijderen. Probeer het over een minuut opnieuw.");
 		expect(window.BerichtenboxKeten.huidigeUitkomst.berichten.some((b) => b.berichtId === "p1")).toBe(true);
 	});
 

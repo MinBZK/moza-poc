@@ -16,9 +16,18 @@ import { resolve } from "node:path";
  */
 
 export const BRON = readFileSync(resolve(process.cwd(), "assets/javascript/berichtenbox-keten.js"), "utf8");
+// De sessie bij het stelsel. In base.njk draait dit vóór het keten-script, en dat leunt erop.
+export const SESSIE_BRON = readFileSync(resolve(process.cwd(), "assets/javascript/keten-sessie.js"), "utf8");
 
 export const ONTVANGER = "KVK:90000011";
 export const BERICHT_ID = "1dc16f8f-653d-49ae-87a9-fb4b6e15c156";
+// Tweeëntwintig tekens uit [A-Za-z0-9_-], de vorm die de uitvraag uitdeelt.
+export const SESSIE_ID = "sessie_van_de_test_001";
+
+/** Wat `POST /api/v1/sessies` antwoordt: een nieuwe sessie. */
+export function sessieAntwoord(sessieId = SESSIE_ID) {
+	return antwoord(201, { sessieId: sessieId, uiterlijkGeldigTot: "2026-10-21T22:00:00Z", _links: { self: { href: "/api/v1/sessies/huidige" } } });
+}
 
 /** Eén antwoord van het stelsel, in de vorm die fetch teruggeeft. */
 export function antwoord(status, body, soort = "application/json") {
@@ -111,6 +120,17 @@ export function personasVoor(kvkNummer) {
 	return antwoord(200, [{ id: "proeftuin-een", label: "Demo-onderneming 1", ontvanger: "KVK:" + kvkNummer, bron: "keten" }]);
 }
 
+let bezoekerAanwezig = true;
+
+/**
+ * Is de bezoeker er? Uit: een tabblad dat niemand gebruikt. Aan, met `klik`: de bezoeker doet weer
+ * iets, en wat bleef liggen gebeurt nu — een toets telt als activiteit, net als in de browser.
+ */
+export function zetBezoeker(aanwezig, { klik = aanwezig } = {}) {
+	bezoekerAanwezig = aanwezig;
+	if (klik) document.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift" }));
+}
+
 /**
  * @param perAdres    Wat fetch per adres teruggeeft.
  * @param pad         De pagina waarop het script draait; een test over `?poll=` geeft zijn eigen mee.
@@ -129,6 +149,10 @@ export async function startKeten(perAdres, pad = "/moza/berichtenbox/", kvkNumme
 		// Een keten zonder `_volgen`, zoals een stelsel van vóór dat endpoint: de client valt dan stil
 		// terug op het periodiek navragen. Een test over de stroom geeft zelf een antwoord voor dit adres.
 		if (pad.indexOf("_volgen") !== -1) return antwoord(404, {});
+		// Een sessie starten en beëindigen lukt, tenzij een test er zelf iets anders voor geeft.
+		if (pad === "/api/v1/sessies") return sessieAntwoord();
+		if (pad === "/api/v1/sessies/huidige") return antwoord(204, null);
+		if (pad === "/api/v1/sessies/huidige/_verlengen") return antwoord(200, { geldigTot: "2026-10-21T10:15:00Z", uiterlijkGeldigTot: "2026-10-21T22:00:00Z" });
 		throw new Error("onverwacht adres in de test: " + pad);
 	});
 
@@ -145,6 +169,11 @@ export async function startKeten(perAdres, pad = "/moza/berichtenbox/", kvkNumme
 		personas: [{ id: "proeftuin-een", stelsel: true, bedrijf: { kvkNummer: kvkNummer } }],
 	};
 
+	if (!window.KetenSessie) new Function(SESSIE_BRON).call(window);
+	// Of de bezoeker de afgelopen minuut iets deed. De meeste tests spelen minuten na zonder een
+	// klik of toets, en gaan over iets anders dan inactiviteit; voor hen is de bezoeker er gewoon.
+	// Een test over inactiviteit zet dit met `zetBezoeker(false)` uit.
+	window.KetenSessie.bezoekerActief = () => bezoekerAanwezig;
 	new Function(BRON).call(window);
 	await window.BerichtenboxKeten.berichten();
 
@@ -174,8 +203,12 @@ export function spionOpCookie(regels) {
 export function ruimKetenOp() {
 	document.cookie = "ontvanger=; path=/api/v1/berichten; Max-Age=0";
 	document.cookie = "ontvanger=; path=/; Max-Age=0";
+	document.cookie = "sessie=; path=/api/v1/berichten; Max-Age=0";
 	window.history.replaceState(null, "", "/moza/berichtenbox/");
+	sessionStorage.clear();
+	bezoekerAanwezig = true;
 	delete window.BerichtenboxKeten;
+	delete window.KetenSessie;
 	delete window.Personas;
 }
 

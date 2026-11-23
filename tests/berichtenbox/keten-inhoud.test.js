@@ -355,12 +355,25 @@ describe("de inhoud van één bericht ophalen bij het stelsel", () => {
 			["/api/demo/personas", PERSONAS],
 			["_ophalen", sseAntwoord()],
 			["/api/v1/berichten?", LIJST],
-			["/api/v1/berichten/", antwoord(503, {})],
+			["/api/v1/berichten/", antwoord(500, {})],
 		]);
 
 		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
 
 		expect(uitkomst.fout).toContain("Er gaat iets mis met het ophalen");
+	});
+
+	it("zegt bij een 503 dat het over een minuut weer kan: de opslag antwoordde even niet", async () => {
+		await startKeten([
+			["/api/demo/personas", PERSONAS],
+			["_ophalen", sseAntwoord()],
+			["/api/v1/berichten?", LIJST],
+			["/api/v1/berichten/", antwoord(503, {})],
+		]);
+
+		const uitkomst = await window.BerichtenboxKeten.inhoudVan(SLEUTEL);
+
+		expect(uitkomst.fout).toBe("Wij konden dit bericht nu even niet ophalen. Ververs de pagina over een minuut om het opnieuw te proberen.");
 	});
 
 	it("overleeft een antwoord dat geen JSON is", async () => {

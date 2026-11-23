@@ -76,3 +76,19 @@ describe("waar een persona-wissel op uitkomt", () => {
 		expect(wisselViaPaneel()).toBe("/moza/lopende-zaken/?persona=Bloemenkweker");
 	});
 });
+
+describe("de uitleg bij de persona-kiezer", () => {
+	// Per tabblad een eigen sessie is geen standaardgedrag van een portaal. Wie dat niet weet, leest
+	// een tweede tabblad dat opnieuw ophaalt als een fout.
+	it("zegt dat kiezen inloggen is, per tabblad, en dat een echt portaal één inlog heeft", () => {
+		draai("/moza/");
+
+		const uitleg = document.querySelector(".feature-flags-panel .feature-flags-uitleg");
+		expect(uitleg).not.toBe(null);
+		expect(uitleg.textContent).toContain("werkt hier als inloggen");
+		expect(uitleg.textContent).toContain("elk tabblad een eigen sessie");
+		expect(uitleg.textContent).toContain("één inlog voor alle tabbladen");
+		// Boven de lijst, zodat het gelezen wordt vóór er gekozen wordt.
+		expect(uitleg.compareDocumentPosition(document.querySelector(".feature-flags-panel ul")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+});
