@@ -17,6 +17,7 @@
  *       haalUitMap:    async (berichtId) => ({}) | ({ fout }),          // optioneel: uit zijn map, terug naar de inbox
  *       verplaats:     async (berichtId, plek) => ({}) | ({ fout }),    // optioneel: naar inbox, archief of prullenbak
  *       verwijderVoorgoed: async (berichtId) => ({}) | ({ fout }),      // optioneel: niet terug te draaien
+ *       weggehaald:    (berichtId) => boolean,                          // optioneel: haalde de bron het zelf weg?
  *     }
  *
  * De laatste drie zijn er voor een bron waar de plek van een bericht bij de bron zelf staat, zoals
@@ -45,6 +46,10 @@
  *
  * Een wijziging heeft twee vormen: een hele lijst (`{ berichten, magazijnen, mappen }`) of één
  * binnenkomer (`{ nieuwBericht }`). De render-laag zet die laatste bovenaan en laat de rest staan.
+ * `weggehaald` zegt of de bron een bericht zelf weghaalde, en het niet alleen niet meer leverde.
+ * Een geopend bericht dat weggehaald is, sluit de render-laag ook als een mededeling de lijst als
+ * bewijs onbruikbaar maakt. Een vraag en geen veld op de wijziging: een wijziging kan mislukken of
+ * door een volgende ingehaald worden, en dan raakte dat veld kwijt.
  *
  * De volgorde van registreren is de voorrang: de eerste bron waarvoor `geldtVoor` waar is, wint.
  * De dataset-bron hoort daarom achteraan — die is altijd van toepassing en vangt op wat geen

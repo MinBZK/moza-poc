@@ -9,7 +9,8 @@
  * daarheen en niet naar de browser: een bericht uit zijn map halen, archiveren, weggooien,
  * terugzetten en voorgoed verwijderen. Een map hoort bij het bericht en staat bij de organisatie
  * die het stuurde, en het archief en de prullenbak zijn daar ook mappen. Markeren en de leesstatus
- * blijven op de bestaande localStorage-state.
+ * blijven op de bestaande localStorage-state. De leesstatus die het stelsel noemt — in de lijst, en
+ * in `bericht-gewijzigd` op de stroom — is het uitgangspunt; een markering in deze browser gaat voor.
  *
  * Dit is de transportlaag, en verder niets: hij haalt op, en meldt wat hij ziet. Wat daarvan op het
  * scherm komt en waar, bepaalt `berichtenbox/keten-bron.js` — die maakt hier een bron van, zoals de
@@ -20,8 +21,8 @@
  * af voordat hij zegt dat hij van toepassing is.
  *
  * En zolang de pagina openstaat volgt hij wat er binnenkomt. Standaard over een verbinding waarop
- * het stelsel zelf meldt dat er een bericht bij is (`_volgen`); lukt die niet, dan kijkt hij
- * periodiek of de lijst veranderd is. Allebei zonder ophaalronde, dus de organisaties merken er
+ * het stelsel zelf meldt dat er een bericht bij is, en wat er in een ander tabblad met een bericht
+ * gebeurde (`_volgen`); lukt die niet, dan kijkt hij periodiek of de lijst veranderd is. Allebei zonder ophaalronde, dus de organisaties merken er
  * niets van.
  *
  * Geen van beide houdt de sessie in leven als de bezoeker niets doet. Het portaal is de klok:
@@ -235,6 +236,15 @@
 		return (bericht.plek || "inbox") + "\u0000" + (bericht.map || "");
 	}
 
+	/**
+	 * Plaats en leesstatus samen: alles wat er aan een bericht kan veranderen zonder dat het erbij
+	 * komt of weggaat. De leesstatus telt mee sinds `bericht-gewijzigd` (API 0.10.0): leest de
+	 * ondernemer een bericht elders, dan hoort het aantal ongelezen hier mee te zakken.
+	 */
+	function toestandVan(bericht) {
+		return plaatsVan(bericht) + "\u0000" + (bericht.isOngelezen ? "ongelezen" : "gelezen");
+	}
+
 	// Het pollen geeft het op. Geen storing maar een mededeling: de lijst die er staat klopt nog, en
 	// wat er misgaat is dat zij zich niet meer bijwerkt. Zeggen wat er aan de hand is en wat de
 	// bezoeker eraan kan doen — verversen begint met een nieuwe ophaalronde en zet alles terug.
@@ -289,6 +299,11 @@
 	// weer volledig is hem intrekken; een andere melding laat die lijst staan.
 	let meldingOverNietGeleverd = false;
 	let laatsteUitkomst = null;
+
+	// De ids van wat het stelsel met `bericht-verwijderd` weghaalde, zolang de pagina openstaat. Een
+	// bericht dat daarna terugkomt (het stelsel kan het na een mislukte bijwerking weer leveren), staat
+	// gewoon in de lijst, en dan sluit de render-laag het niet: die kijkt eerst of het er nog staat.
+	const weggehaald = new Set();
 	// De laatste berichtenlijst die als wijziging naar de bron ging. Apart van `laatsteUitkomst`, want
 	// alleen deze mag op null: kon de bron de lijst niet tonen, dan telt zij weer als wijziging (zie
 	// `vergeetGemeldeLijst`), terwijl `laatsteUitkomst` de laatst bekende lijst blijft.
@@ -873,12 +888,14 @@
 	 * demonstratie hoort de hele berichtenbox te tonen en niet de eerste honderd, dus blijven we
 	 * bladeren zolang het stelsel een volgende pagina noemt.
 	 *
-	 * Geeft `{ berichten, afgekapt, nietGeleverd }`. `afgekapt` staat aan als we bij de bovengrens
+	 * Geeft `{ berichten, afgekapt, nietGeleverd, paginas }`. `afgekapt` staat aan als we bij de bovengrens
 	 * stopten terwijl er nog een volgende pagina was — dan zegt de berichtenbox erbij dat er meer kan
 	 * zijn. `nietGeleverd` zegt welke organisaties in de laatste ronde niet leverden; zie
 	 * `nietGeleverdVan`. Elke andere reden om te stoppen is een fout en werpt: een halve lijst die zich
 	 * voordoet als een hele is het ergste wat hier kan gebeuren, want daar is aan het scherm niets van
-	 * te zien.
+	 * te zien. `paginas` is hoeveel pagina's er gelezen zijn: een `bericht-verwijderd` tijdens een
+	 * lezing van meer dan één pagina kan een bericht over de paginagrens hebben laten vallen (zie
+	 * `pollTik`).
 	 */
 	async function haalLijst(ontvanger) {
 		const berichten = [];
@@ -925,9 +942,9 @@
 
 			// Een lege pagina is het einde, ook als er nog een `next` naast staat: nog een ronde langs
 			// hetzelfde antwoord levert niets nieuws op.
-			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false, nietGeleverd: nietGeleverd };
+			if (deel.berichten.length === 0 || !heeftVolgende(deel)) return { berichten: berichten, afgekapt: false, nietGeleverd: nietGeleverd, paginas: pagina + 1 };
 		}
-		return { berichten: berichten, afgekapt: true, nietGeleverd: nietGeleverd };
+		return { berichten: berichten, afgekapt: true, nietGeleverd: nietGeleverd, paginas: MAX_PAGINAS };
 	}
 
 	/**
@@ -1190,15 +1207,27 @@
 			datum: (bericht.publicatietijdstip || "").slice(0, 10),
 			// Het volledige tijdstip, zodat sorteren op datum ook berichten van dezelfde dag ordent.
 			tijdstip: bericht.publicatietijdstip || "",
-			isOngelezen: bericht.status !== "gelezen",
-			// Het archief en de prullenbak zijn bij het stelsel mappen, maar hier een plek: ze hebben
-			// hun eigen tabblad en horen niet in het mappenoverzicht.
-			plek: plekVanMap(bericht.map),
-			map: plekVanMap(bericht.map) === "inbox" ? bericht.map || null : null,
+			...toestandUit(bericht),
 			heeftBijlage: (bericht.aantalBijlagen || 0) > 0,
 			// Merkteken voor berichtenbox.js: dit bericht heeft geen server-gerenderde
 			// detailpagina, want die worden bij de build uit de dataset gegenereerd.
 			uitKeten: true,
+		};
+	}
+
+	/**
+	 * Leesstatus, plek en map, in de vorm van de berichtenbox. Uit een element van de lijst, en uit
+	 * een `bericht-gewijzigd` van de stroom: die draagt dezelfde velden met dezelfde betekenis. Een
+	 * ontbrekende `status` is onbekend en telt als ongelezen, een ontbrekende `map` is de inbox.
+	 */
+	function toestandUit(ruw) {
+		const plek = plekVanMap(ruw.map);
+		return {
+			isOngelezen: ruw.status !== "gelezen",
+			// Het archief en de prullenbak zijn bij het stelsel mappen, maar hier een plek: ze hebben
+			// hun eigen tabblad en horen niet in het mappenoverzicht.
+			plek: plek,
+			map: plek === "inbox" ? ruw.map || null : null,
 		};
 	}
 
@@ -1536,9 +1565,12 @@
 	// Soorten gebeurtenissen die we niet kennen en al in de console noemden. Eén keer per soort: de
 	// hartslag komt elke twintig seconden, en een onbekende soort mogelijk net zo vaak.
 	const onbekendeSoorten = new Set();
-	// Wat de stroom meldde terwijl er een tik liep. Die tik kan een lijst opleveren die van vóór zo'n
-	// bericht is; zonder dit haalt hij het weer van het scherm.
-	let bijgekomenTijdensTik = null;
+	// Wat de stroom meldde terwijl er een tik liep, in volgorde: binnenkomers, wijzigingen en
+	// verwijderingen. Die tik kan een lijst opleveren die van vóór zo'n melding is; zonder dit haalt
+	// hij een binnenkomer weer van het scherm, zet hij een verwijderd bericht terug, of maakt hij een
+	// gelezen bericht weer ongelezen. Daarom gaat alles hierin na het vervangen van de lijst nog een
+	// keer overheen; dat mag, want elke melding is idempotent (`pasMeldingToe`).
+	let gemeldTijdensTik = null;
 	// Wat er moet gebeuren zodra de bezoeker weer iets doet: `null` (niets), "lijst" (de lijst
 	// opnieuw lezen; die kan onvolledig zijn, want er is een tik of een herverbinding overgeslagen)
 	// of "herstel" (de sessie is weg of leeg, en er hoort een nieuwe ronde bij). Herstel gaat voor.
@@ -1776,7 +1808,7 @@
 		clearTimeout(pollKlok);
 		pollKlok = null;
 		pollBezig = true;
-		bijgekomenTijdensTik = new Map();
+		gemeldTijdensTik = [];
 		laatsteTikOp = Date.now();
 		// Waar deze tik bij hoort. Draait er onderweg een nieuwe ophaalronde, dan is wat hier
 		// terugkomt ouder dan wat die ronde opleverde.
@@ -1791,6 +1823,18 @@
 			// nieuwere heen leggen, en de bron zou een zojuist getoond bericht weer weghalen.
 			if (achterhaald(rondeVanTik, mapVersieVanTik)) return;
 
+			// Een `bericht-verwijderd` terwijl deze lezing bladerde: dan kan de rest van de lijst een
+			// plaats zijn opgeschoven en een bericht tussen twee pagina's zijn doorgevallen. Daarom
+			// nog één lezing, langs dezelfde poort (`bezoekerActief`) als elke tik. De melding zelf
+			// start geen lezing; alleen een lezing die er al was, doet het nog eens.
+			//
+			// Deze lijst gaat dan niet naar de bron. Er kan een bericht in ontbreken dat er wél is, en
+			// dan verdween de rij even en sloot de detailpagina een bericht dat gewoon openstond. De
+			// verwijdering zelf staat er al in: `neemMeldingAan` paste haar meteen toe.
+			if (lijst.paginas > 1 && gemeldTijdensTik.some((melding) => melding.soort === "verwijderd")) {
+				tikNogEens = true;
+				return;
+			}
 			// Pas nullen als het verwerken ook lukte: een antwoord dat aankomt maar niet te lezen is,
 			// hoort mee te tellen in de foutenreeks en niet die van zijn voorgangers te wissen.
 			verwerkPolllijst(lijst);
@@ -1839,7 +1883,7 @@
 			}
 		} finally {
 			pollBezig = false;
-			bijgekomenTijdensTik = null;
+			gemeldTijdensTik = null;
 			if (tikNogEens) {
 				tikNogEens = false;
 				setTimeout(pollTik, 0);
@@ -1892,15 +1936,14 @@
 		// Vóór het samenvoegen hieronder tellen: een binnenkomer uit de stroom maakt de lijst weer even
 		// lang en verstopt zo een bericht zonder id.
 		const overgeslagen = ruw.length - bruikbare.length;
-		const berichten = bruikbare.map((bericht) => naarBerichtenboxVorm(bericht));
+		let berichten = bruikbare.map((bericht) => naarBerichtenboxVorm(bericht));
 
 		// Wat de stroom meldde terwijl deze lijst onderweg was, kan er nog niet in staan. Het staat al
-		// op het scherm; zonder dit ziet de bron het verdwijnen en haalt hij het weer weg.
-		if (bijgekomenTijdensTik) {
-			const inLijst = new Set(berichten.map((bericht) => bericht.id));
-			for (const bericht of bijgekomenTijdensTik.values()) {
-				if (!inLijst.has(bericht.id)) berichten.unshift(bericht);
-			}
+		// op het scherm; zonder dit ziet de bron een binnenkomer verdwijnen, of een verwijderd bericht
+		// terugkomen. In de volgorde waarin het binnenkwam: een bericht dat binnenkwam en daarna
+		// weggegooid werd, hoort weg te blijven.
+		if (gemeldTijdensTik) {
+			for (const melding of gemeldTijdensTik) berichten = pasMeldingToe(berichten, melding);
 		}
 
 		werkNietGeleverdBij(lijst.nietGeleverd);
@@ -1948,14 +1991,15 @@
 	}
 
 	/**
-	 * Dezelfde berichten, op dezelfde plek en in dezelfde mappen. Dat telt mee: een bericht dat uit
-	 * zijn map gehaald of gearchiveerd is — in een ander tabblad, of door de organisatie zelf — is
-	 * voor het overzicht een wijziging, ook al staat er geen bericht bij of af.
+	 * Dezelfde berichten, op dezelfde plek, in dezelfde mappen en met dezelfde leesstatus. Dat telt
+	 * mee: een bericht dat uit zijn map gehaald, gearchiveerd of gelezen is — in een ander tabblad, of
+	 * door de organisatie zelf — is voor het overzicht een wijziging, ook al staat er geen bericht bij
+	 * of af.
 	 */
 	function zelfdeBerichten(vorige, nieuwe) {
 		if (vorige.length !== nieuwe.length) return false;
-		const oud = new Map(vorige.map((bericht) => [bericht.id, plaatsVan(bericht)]));
-		return nieuwe.every((bericht) => oud.has(bericht.id) && oud.get(bericht.id) === plaatsVan(bericht));
+		const oud = new Map(vorige.map((bericht) => [bericht.id, toestandVan(bericht)]));
+		return nieuwe.every((bericht) => oud.has(bericht.id) && oud.get(bericht.id) === toestandVan(bericht));
 	}
 
 	/**
@@ -2135,7 +2179,8 @@
 	 *
 	 * De stroom begint met `volgen-gestart`: vanaf dan komt elk nieuw bericht als `bericht-bijgekomen`
 	 * voorbij, en wat daarvóór binnenkwam staat in de lijst. Daarom haalt die gebeurtenis de lijst
-	 * één keer op. Een bericht op het grensvlak kan in allebei zitten; dubbel tonen we het niet, want
+	 * één keer op. Wat er in een ander tabblad met een bericht gebeurt, komt als `bericht-gewijzigd` of
+	 * `bericht-verwijderd` (zie `verwerkWijzigingElders`). Een bericht op het grensvlak kan in allebei zitten; dubbel tonen we het niet, want
 	 * `voegBijgekomenToe` en de bron kijken allebei naar het id, het paar van organisatie en
 	 * berichtnummer. Opnieuw verbinden na een haperende verbinding gaat precies zo, met één
 	 * verschil: de lijst lezen verlengt de sessie, en een herverbinding is geen actie van de
@@ -2239,7 +2284,11 @@
 						}
 					},
 					(frame, fout) => {
+						// Ook hier de lijst erachteraan, net als bij een melding die niet te verwerken
+						// valt: welke melding het was, is niet te lezen, en een kapotte
+						// `bericht-verwijderd` liet anders een bericht staan tot de volgende binnenkomer.
 						console.error("[Berichtenbox] Een melding uit de stroom was geen JSON; overgeslagen.", frame, fout);
+						planLijstTik();
 					}
 				);
 				console.info("[Berichtenbox] De stroom met nieuwe berichten eindigde na " + Math.round((Date.now() - geopend) / 1000) + " s.");
@@ -2268,6 +2317,8 @@
 				}
 			} else if (soort === "bericht-bijgekomen") {
 				voegBijgekomenToe(gebeurtenis.bericht);
+			} else if (soort === "bericht-gewijzigd" || soort === "bericht-verwijderd") {
+				verwerkWijzigingElders(gebeurtenis);
 			} else if (soort === "sessie-verlopen") {
 				einde = "verlopen";
 				return true;
@@ -2421,17 +2472,75 @@
 			planLijstTik();
 			return;
 		}
-		const bericht = naarBerichtenboxVorm(ruw);
-		if (bijgekomenTijdensTik) bijgekomenTijdensTik.set(bericht.id, bericht);
+		neemMeldingAan({ soort: "bijgekomen", bericht: naarBerichtenboxVorm(ruw) });
+	}
 
-		// Zonder eerdere lijst valt er niets aan toe te voegen; de tik na `volgen-gestart` brengt het.
+	/**
+	 * Wat er in een ander tabblad met een bericht gebeurde: gelezen of ongelezen gemarkeerd, naar een
+	 * andere map verplaatst (`bericht-gewijzigd`), of verwijderd (`bericht-verwijderd`).
+	 *
+	 * Ook het tabblad dat de wijziging zelf deed, krijgt de melding: het stelsel weet niet welke
+	 * verbinding bij welk tabblad hoort. Daarom idempotent: `bericht-gewijzigd` draagt de waarden van
+	 * nu, geen verschil, en een melding over een bericht dat hier niet (meer) staat, verandert niets.
+	 *
+	 * Geen verzoek, ook geen lijst: de lijst verlengt de sessie, en een melding is geen activiteit van
+	 * de bezoeker. Een geopend bericht blijft bij een wijziging gewoon staan; een verwijderd bericht
+	 * verdwijnt uit de lijst, en wat de detailpagina daarmee doet, beslist de render-laag.
+	 *
+	 * Bij deze twee staat de sleutel op het hoogste niveau van de melding, niet onder `bericht` zoals
+	 * bij `bericht-bijgekomen`. Een melding zonder sleutel, met een map die geen naam is of met een
+	 * leesstatus buiten `gelezen` en `ongelezen`, werpt: de aanroeper slaat haar dan over en haalt na
+	 * een paar seconden de lijst op, net als bij een onleesbare binnenkomer. Zonder die controle zette
+	 * een onbekende waarde een gelezen bericht stil op ongelezen. Een ontbrekende `status` werpt niet:
+	 * volgens het contract (0.10.0) is die dan onbekend, net als in de lijst, en telt ze ook zo.
+	 */
+	function verwerkWijzigingElders(gebeurtenis) {
+		if (!bruikbaar(gebeurtenis)) throw new Error(gebeurtenis.event + " zonder berichtId of magazijnId");
+		const id = sleutelVan(gebeurtenis);
+		if (gebeurtenis.event === "bericht-verwijderd") {
+			weggehaald.add(id);
+			neemMeldingAan({ soort: "verwijderd", id: id });
+			return;
+		}
+		if (gebeurtenis.map != null && (typeof gebeurtenis.map !== "string" || gebeurtenis.map === "")) {
+			throw new Error("bericht-gewijzigd met een map die geen naam is: " + JSON.stringify(gebeurtenis.map));
+		}
+		if (gebeurtenis.status != null && gebeurtenis.status !== "gelezen" && gebeurtenis.status !== "ongelezen") {
+			throw new Error("bericht-gewijzigd met een onbekende leesstatus: " + JSON.stringify(gebeurtenis.status));
+		}
+		neemMeldingAan({ soort: "gewijzigd", id: id, toestand: toestandUit(gebeurtenis) });
+	}
+
+	/**
+	 * Een melding uit de stroom in de lijst zetten, en onthouden voor de tik die onderweg is. Zonder
+	 * eerdere lijst valt er niets bij te werken; de tik na `volgen-gestart` brengt het dan. Verandert
+	 * er niets — een binnenkomer die er al stond, de echo van een eigen wijziging — dan meldt de laag
+	 * ook niets: elke lijst die naar de bron gaat, tekent de pagina opnieuw.
+	 */
+	function neemMeldingAan(melding) {
+		if (gemeldTijdensTik) gemeldTijdensTik.push(melding);
 		if (!laatsteUitkomst) return;
-		if (laatsteUitkomst.berichten.some((bestaand) => bestaand.id === bericht.id)) return;
 
-		const berichten = [bericht].concat(laatsteUitkomst.berichten);
+		const berichten = pasMeldingToe(laatsteUitkomst.berichten, melding);
+		if (berichten === laatsteUitkomst.berichten) return;
 		laatsteUitkomst = { berichten: berichten, magazijnen: magazijnenVan(berichten, organisatiesVanRonde) };
 		laatstGemeld = berichten;
 		laatWeten();
+	}
+
+	/**
+	 * Eén melding uit de stroom toegepast op een lijst. Geeft dezelfde lijst terug als er niets
+	 * verandert, zodat twee keer dezelfde melding hetzelfde oplevert als één keer.
+	 */
+	function pasMeldingToe(berichten, melding) {
+		const plek = berichten.findIndex((bericht) => bericht.id === (melding.bericht ? melding.bericht.id : melding.id));
+		if (melding.soort === "bijgekomen") return plek === -1 ? [melding.bericht].concat(berichten) : berichten;
+		if (plek === -1) return berichten;
+		if (melding.soort === "verwijderd") return berichten.filter((_, index) => index !== plek);
+
+		const bijgewerkt = Object.assign({}, berichten[plek], melding.toestand);
+		if (toestandVan(bijgewerkt) === toestandVan(berichten[plek])) return berichten;
+		return berichten.map((bericht, index) => (index === plek ? bijgewerkt : bericht));
 	}
 
 	// --- Start --------------------------------------------------------------------------------
@@ -2684,6 +2793,15 @@
 		 */
 		get huidigeUitkomst() {
 			return laatsteUitkomst;
+		},
+
+		/**
+		 * Haalde het stelsel dit bericht weg (`bericht-verwijderd`)? Dat het niet in de lijst staat, zegt
+		 * alleen dat het er niet staat; dit zegt dat het stelsel het weghaalde. Een vraag en geen veld
+		 * op de lijst: een lijst kan onderweg vervangen worden, en dan raakte zo'n veld kwijt.
+		 */
+		weggehaald: function (berichtId) {
+			return weggehaald.has(berichtId);
 		},
 
 		/** Meldt zich bij elke wijziging: een nieuwe melding, nieuwe voortgang, nieuwe berichten. */

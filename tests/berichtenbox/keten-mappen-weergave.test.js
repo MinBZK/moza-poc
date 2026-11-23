@@ -599,6 +599,176 @@ describe("archiveren en weggooien op de detailpagina van een bericht uit het ste
 	});
 });
 
+describe("een bericht dat elders verdwijnt terwijl het hier openstaat", () => {
+	// `bericht-verwijderd` op de stroom, of het navragen dat het bericht niet meer in de lijst ziet.
+	const detail = () => document.querySelector("[data-demo-detail]");
+	const nietGevonden = () => document.querySelector("[data-demo-niet-gevonden]");
+
+	async function open(bericht, andere = []) {
+		bouwDemoDetailPagina(bericht);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten: [bericht, ...andere] } });
+		await laadBerichtenbox();
+		await laatLaden();
+		return keten;
+	}
+
+	it("sluit het bericht en zegt dat het niet meer in de Berichtenbox staat", async () => {
+		const keten = await open(ketenBericht("b2", null), [ketenBericht("b3", null)]);
+		expect(detail().hidden).toBe(false);
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null)] } });
+
+		expect(detail().hidden).toBe(true);
+		expect(nietGevonden().hidden).toBe(false);
+		expect(nietGevonden().textContent).toContain("staat niet meer in uw Berichtenbox");
+		// De weg terug blijft staan.
+		expect(nietGevonden().querySelector("a").textContent).toBe("Terug naar Berichtenbox");
+	});
+
+	it("zet de focus op de uitleg als die op een knop stond die verdwijnt", async () => {
+		const keten = await open(ketenBericht("b2", null));
+		document.querySelector('[data-actie="archiveren"]').focus();
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(document.activeElement).toBe(nietGevonden());
+		// Het blok met de focus wordt al voorgelezen; het live-gebied erbij gaf het twee keer.
+		expect(document.querySelector("[data-demo-verdwenen-status]").textContent).toBe("");
+	});
+
+	it("laat een bericht dat alleen gewijzigd is gewoon open", async () => {
+		const keten = await open(ketenBericht("b2", "Te bespreken met adviseur"));
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", null, { plek: "archief", isOngelezen: true })] } });
+
+		expect(detail().hidden).toBe(false);
+		expect(nietGevonden().hidden).toBe(true);
+	});
+
+	it("laat het eigen voorgoed verwijderen zelf naar de prullenbak gaan, zonder het bericht eerst te sluiten", async () => {
+		// Het transport haalt het bericht al uit de lijst voordat het antwoord terug is; tot het
+		// wegnavigeren hoort het paneel met de bezig-melding te blijven staan.
+		await open(ketenBericht("b2", null, { plek: "prullenbak" }));
+
+		document.querySelector('[data-actie="voorgoed-verwijderen"]').click();
+		document.querySelector("[data-voorgoed-bevestig]").click();
+		await laatLaden();
+
+		expect(window.Berichtenbox.navigatieDoel()).toBe("/moza/berichtenbox/berichtenbox-prullenbak/");
+		expect(nietGevonden().hidden).toBe(true);
+	});
+
+	it("sluit het bericht niet als de lijst niet te vertrouwen is", async () => {
+		// Een organisatie die niet leverde, heeft haar bericht niet weggehaald.
+		const keten = await open(ketenBericht("b2", null));
+		window.Berichtenbox.meld("Niet alle organisaties hebben hun berichten geleverd.", "info", "test");
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(detail().hidden).toBe(false);
+	});
+
+	it("sluit het bericht wél als de bron zegt dat zij het weghaalde, ook met een mededeling erboven", async () => {
+		// `bericht-verwijderd` is geen ontbrekend bericht maar een uitspraak van het stelsel. Bleef het
+		// open, dan gaf elke knop daarna een 404.
+		const keten = await open(ketenBericht("b2", null));
+		window.Berichtenbox.meld("Niet alle organisaties hebben hun berichten geleverd.", "info", "test");
+		keten.keten.weggehaald = (id) => id === "b2";
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(detail().hidden).toBe(true);
+		expect(nietGevonden().hidden).toBe(false);
+	});
+
+	it("sluit een weggehaald bericht ook bij een latere lijst, als de eerste niet aankwam", async () => {
+		// Een lijst kan mislukken of ingehaald worden; daarom vraagt de render-laag het de bron en
+		// leest ze het niet van één lijst af.
+		const keten = await open(ketenBericht("b2", null), [ketenBericht("b3", null)]);
+		window.Berichtenbox.meld("Niet alle organisaties hebben hun berichten geleverd.", "info", "test");
+		keten.keten.weggehaald = (id) => id === "b2";
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b3", null), ketenBericht("b4", null)] } });
+
+		expect(detail().hidden).toBe(true);
+	});
+
+	it("laat een mededeling het sluiten tegenhouden als een ánder bericht weggehaald werd", async () => {
+		const keten = await open(ketenBericht("b2", null), [ketenBericht("b3", null)]);
+		window.Berichtenbox.meld("Niet alle organisaties hebben hun berichten geleverd.", "info", "test");
+		keten.keten.weggehaald = (id) => id === "b3";
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(detail().hidden).toBe(false);
+	});
+
+	it("zegt het live-gebied dat het bericht sloot als de focus er niet in stond", async () => {
+		// Wie leest, heeft de focus vaak nergens; zonder deze zin sluit het bericht onhoorbaar.
+		const keten = await open(ketenBericht("b2", null));
+		document.activeElement.blur();
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(document.querySelector("[data-demo-verdwenen-status]").textContent).toBe("Dit bericht staat niet meer in uw Berichtenbox. Mogelijk heeft u het in een ander tabblad verwijderd.");
+		expect(document.activeElement).toBe(document.body);
+	});
+
+	it("zegt het sluiten één keer, ook als er daarna nog lijsten komen", async () => {
+		const keten = await open(ketenBericht("b2", null));
+		document.activeElement.blur();
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+		const live = document.querySelector("[data-demo-verdwenen-status]");
+		live.textContent = "";
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b4", null)] } });
+
+		expect(live.textContent).toBe("");
+	});
+
+	it("laat een bericht open dat weggehaald was maar weer in de lijst staat", async () => {
+		// Het stelsel kan een bericht na een mislukte bijwerking weghalen en later weer leveren.
+		const keten = await open(ketenBericht("b2", null), [ketenBericht("b3", null)]);
+		keten.keten.weggehaald = (id) => id === "b2";
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [ketenBericht("b2", null), ketenBericht("b4", null)] } });
+
+		expect(detail().hidden).toBe(false);
+	});
+
+	it("noemt in de titel niet meer het onderwerp van het verdwenen bericht", async () => {
+		const keten = await open(ketenBericht("b2", null));
+		expect(document.title).toContain("Onderwerp b2");
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [] } });
+
+		expect(document.title).toBe("MijnOverheid Zakelijk: Bericht");
+	});
+});
+
+describe("een bericht dat elders gelezen is", () => {
+	const ongelezenRijen = () => document.querySelectorAll(".berichtenbox-row.is-unread").length;
+	const tekst = (kiezer) => document.querySelector(kiezer).textContent.trim();
+
+	it("verlaagt de teller, het bolletje in het menu en de ongelezen rijen", async () => {
+		// Hierom telt de leesstatus als wijziging van de lijst (`toestandVan`).
+		const berichten = [ketenBericht("b1", null, { isOngelezen: true }), ketenBericht("b2", null, { isOngelezen: true }), ketenBericht("b3", null)];
+		bouwPagina([]);
+		const keten = zetKeten({ uitkomst: { ...UITKOMST, berichten } });
+		await laadBerichtenbox();
+		await laatLaden();
+		expect(tekst("[data-berichtenbox-counter-unread]")).toBe("2");
+		expect(tekst('[data-berichtenbox-count="ongelezen"]')).toBe("2");
+		expect(ongelezenRijen()).toBe(2);
+
+		keten.meld({ uitkomst: { ...UITKOMST, berichten: [berichten[0], { ...berichten[1], isOngelezen: false }, berichten[2]] } });
+
+		expect(tekst("[data-berichtenbox-counter-unread]")).toBe("1");
+		expect(tekst('[data-berichtenbox-count="ongelezen"]')).toBe("1");
+		expect(ongelezenRijen()).toBe(1);
+	});
+});
+
 describe("een bericht uit zijn map halen op de detailpagina", () => {
 	const knop = () => document.querySelector('[data-actie="uit-map"]');
 

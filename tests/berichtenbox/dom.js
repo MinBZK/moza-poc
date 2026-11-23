@@ -355,6 +355,7 @@ export function bouwDemoDetailPagina(bericht, { berichten = [bericht] } = {}) {
 				<button class="icon-button" data-actie="voorgoed-verwijderen" hidden aria-expanded="false">Voorgoed verwijderen</button>
 			</div>
 		</section>
+		<p class="visually-hidden" data-demo-verdwenen-status role="status"></p>
 		<div class="berichtenbox-empty" data-demo-niet-gevonden hidden>
 			<p>Dit bericht kon niet worden gevonden. Mogelijk is het verwijderd.</p>
 			<p><a href="/moza/berichtenbox/" class="btn-cta">Terug naar Berichtenbox</a></p>
